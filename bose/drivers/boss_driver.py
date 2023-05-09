@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 from selenium import webdriver
 
@@ -10,7 +11,7 @@ import random
 from time import sleep
 from bose.drivers.local_storage import LocalStorage
 from bose.opponent import Opponent
-from bose.utils import pretty_format_time, relative_path, sleep_for_n_seconds, sleep_forever
+from bose.utils import relative_path, sleep_for_n_seconds, sleep_forever
 from bose.wait import Wait
 
 
@@ -30,6 +31,9 @@ class BossDriver(webdriver.Chrome):
 
     def sleep(self, n):
         sleep_for_n_seconds(n)
+
+    def wait_for_enter(self):
+        input("Press Enter To Continue...")
 
     def short_random_sleep(self):
         sleep_for_n_seconds(random.uniform(2, 4))
@@ -169,7 +173,7 @@ window.scrollBy(0, 10000);
     def add_local_storage_dict(self, local_storage):
         storage = LocalStorage(self)
         for key in local_storage:
-            storage.set(key, local_storage[key])
+            storage.set_item(key, local_storage[key])
 
     
     def add_cookies_and_local_storage_dict(self, site_data):
@@ -202,7 +206,7 @@ window.scrollBy(0, 10000);
         return LocalStorage(self)
 
 
-    def get_links(self, starts_with = None, wait=None):
+    def get_links(self, search = None, wait=None):
         
         def extract_links(elements):
             def extract_link(el):
@@ -218,13 +222,13 @@ window.scrollBy(0, 10000);
             return link is not None
 
         def is_starts_with(link):
-            if starts_with == None:
+            if search == None:
                 return True
-            return link.startswith(starts_with)
+            return search in link
 
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
-    def get_images(self, starts_with = None, wait=None):
+    def get_images(self, search = None, wait=None):
         
         def extract_links(elements):
             def extract_link(el):
@@ -240,9 +244,9 @@ window.scrollBy(0, 10000);
             return link is not None
 
         def is_starts_with(link):
-            if starts_with == None:
+            if search == None:
                 return True
-            return link.startswith(starts_with)
+            return search in link
 
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
@@ -275,11 +279,12 @@ window.scrollBy(0, 10000);
             raise Exception(f"Page {target} not found")
         return False
 
-    def save_screenshot(self, filename = pretty_format_time(datetime.now()) + ".png" ):
+    def save_screenshot(self, filename =  datetime.now().strftime('%Y-%m-%d_%H-%M-%S')+ ".png" ):
         try:
             saving_screenshot_at = relative_path(
                 f'{self.task_path}/{filename}', 0)
             self.get_screenshot_as_file(
                 saving_screenshot_at)
         except:
+            traceback.print_exc()
             print('Failed to save screenshot')

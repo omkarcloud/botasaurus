@@ -1,14 +1,15 @@
 from selenium.common.exceptions import WebDriverException
 from bose.user_agent import UserAgentInstance, UserAgent
 from bose.window_size import WindowSize, WindowSizeInstance
-from bose.utils import relative_path, silentremove
+from bose.utils import NETWORK_ERRORS, is_windows, relative_path, retry_if_is_error, silentremove
 from selenium.webdriver.chrome.options import Options as GoogleChromeOptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from undetected_chromedriver.v2 import ChromeOptions
+from undetected_chromedriver import ChromeOptions
 from bose.drivers.boss_driver import BossDriver
 
 from bose.drivers.boss_undetected_driver import BossUndetectedDriver
 import shutil
+import os
 
 class RetryException(Exception):
     pass
@@ -69,7 +70,7 @@ def add_essential_options(options, profile, window_size, user_agent):
             window_size = WindowSizeInstance.get_hashed(profile)
     else: 
         if window_size == WindowSize.RANDOM:
-            window_size = WindowSizeInstance.get_random(profile)
+            window_size = WindowSizeInstance.get_random()
         elif window_size == WindowSize.HASHED:
             window_size = WindowSizeInstance.get_hashed(profile)
         else: 
@@ -78,6 +79,8 @@ def add_essential_options(options, profile, window_size, user_agent):
     window_size = WindowSize.window_size_to_string(window_size)
     options.add_argument(f"--window-size={window_size}")
 
+    if profile is not None:
+        profile = str(profile)
     if user_agent == None:
         if profile == None:
             user_agent = UserAgentInstance.get_random()
@@ -85,12 +88,11 @@ def add_essential_options(options, profile, window_size, user_agent):
             user_agent = UserAgentInstance.get_hashed(profile)
     else: 
         if user_agent == UserAgent.RANDOM:
-            user_agent = UserAgentInstance.get_random(profile)
+            user_agent = UserAgentInstance.get_random()
         elif user_agent == UserAgent.HASHED:
             user_agent = UserAgentInstance.get_hashed(profile)
         else: 
             user_agent = user_agent
-
     
     add_useragent(options, user_agent)
 
@@ -165,7 +167,8 @@ def create_driver(config: BrowserConfig):
         print(driver_string)
 
         if is_undetected:
-            driver = BossUndetectedDriver(desired_capabilities=desired_capabilities,
+            driver = BossUndetectedDriver(
+                desired_capabilities=desired_capabilities,
                               options=options
                             )
         else:
@@ -177,8 +180,6 @@ def create_driver(config: BrowserConfig):
                 ["--disable-web-security", "--disable-site-isolation-trials", "--disable-application-cache"])
 
             path = relative_path(get_driver_path(), 0)
-
-            print(f'driver path: {path}' )
 
             driver = BossDriver(
                 desired_capabilities=desired_capabilities,

@@ -48,11 +48,10 @@ class TaskInfo():
   
   def end(self):
     self.data["end_time"] = datetime.now()
-    
     self.data["duration"] = format_time_diff(self.data["start_time"],self.data["end_time"])
     
 
-    self.data["start_time"] =pretty_format_time(self.data["start_time"])
+    self.data["start_time"] = pretty_format_time(self.data["start_time"])
     self.data["end_time"] = pretty_format_time(self.data["end_time"])
 
 

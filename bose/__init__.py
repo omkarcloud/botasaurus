@@ -4,5 +4,6 @@ from .local_storage import LocalStorage
 from .opponent import Opponent
 from .user_agent import UserAgent
 from .window_size import WindowSize
+from .create_driver import BrowserConfig
 from .wait import Wait
 from .output import Output

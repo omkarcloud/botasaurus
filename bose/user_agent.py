@@ -113,6 +113,7 @@ class UserAgent(BaseData):
         return result
 
 
+UserAgentInstance = UserAgent()
 if __name__ == '__main__':
     UserAgentInstance = UserAgent()
     print(UserAgentInstance.get_hashed('a'))

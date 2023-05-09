@@ -20,7 +20,7 @@ setup(
     version='1.0.0',
     license='MIT',
     project_urls={
-        "Documentation": "https://docs.omkar.cloud/",
+        "Documentation": "https://omkar.cloud/bose/docs/",
         "Source": "https://github.com/omkarcloud/boss",
         "Tracker": "https://github.com/omkarcloud/boss/issues",
     },
@@ -35,7 +35,7 @@ setup(
 
     keywords=["crawler", "framework", "scraping", "crawling", "web-scraping", "web-scraping-python", "cloudflare-bypass", "anti-detection", "bot-detection", "automation", "webdriver", "browser"],
     classifiers=[
-        "Framework :: Bose",
+        "Framework :: Scrapy",
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         'Intended Audience :: Developers',

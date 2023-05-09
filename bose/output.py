@@ -25,7 +25,7 @@ class Output:
             filename = filename + ".json"
 
         write_json(data, filename)
-        
+        print(f"View written JSON file at {filename}")        
 
     def write_csv(data, filename):
         """
@@ -46,12 +46,12 @@ class Output:
         if not filename.endswith(".csv"):
             filename = filename + ".csv"
 
-        with open('output/'+ filename, 'w', newline='') as csvfile:
+        with open(filename, 'w', newline='') as csvfile:
             fieldnames = data[0].keys()  # get the fieldnames from the first dictionary
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()  # write the header row
             writer.writerows(data)  # write each row of data
-
+        print(f"View written CSV file at {filename}")        
     def write_xlsx(data, filename):
         """
         Saves a list of dictionaries as an Excel file with the given filename.
@@ -84,6 +84,7 @@ class Output:
 
         # save file
         wb.save(filename)
+        print(f"View written Excel file at {filename}")        
 
     def read_pending():
         return Output.read_json("pending.json")

@@ -19,17 +19,17 @@ class LocalStorage:
             "  keys[i] = ls.key(i); "
             "return keys; ")
 
-    def get(self, key):
+    def get_item(self, key):
         return self.driver.execute_script("return window.localStorage.getItem(arguments[0]);", key)
 
-    def set(self, key, value):
+    def set_item(self, key, value):
         self.driver.execute_script(
             "window.localStorage.setItem(arguments[0], arguments[1]);", key, value)
 
-    def has(self, key):
+    def has_item(self, key):
         return key in self.keys()
 
-    def remove(self, key):
+    def remove_item(self, key):
         self.driver.execute_script(
             "window.localStorage.removeItem(arguments[0]);", key)
 
@@ -37,13 +37,13 @@ class LocalStorage:
         self.driver.execute_script("window.localStorage.clear();")
 
     def __getitem__(self, key):
-        value = self.get(key)
+        value = self.get_item(key)
         if value is None:
             raise KeyError(key)
         return value
 
     def __setitem__(self, key, value):
-        self.set(key, value)
+        self.set_item(key, value)
 
     def __contains__(self, key):
         return key in self.keys()

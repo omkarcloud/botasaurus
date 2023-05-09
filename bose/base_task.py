@@ -1,9 +1,10 @@
+import os
 import traceback
 from bose.create_driver import BrowserConfig, create_driver
 from bose.drivers.boss_driver import BossDriver
-from bose.utils import merge_dicts_in_one_dict, write_file, write_html, write_json
-from local_storage import LocalStorage
-from task_info import TaskInfo
+from bose.utils import relative_path, merge_dicts_in_one_dict, write_file, write_html, write_json
+from .local_storage import LocalStorage
+from .task_info import TaskInfo
 
 
 class RetryException(Exception):
@@ -30,15 +31,22 @@ class BaseTask():
     def get_browser_config(self):
         return self.browser_config
 
-    def create_driver(config: BrowserConfig):
-        create_driver(config)
+    def create_driver(self, config: BrowserConfig):
+        return create_driver(config)
     
     def begin_task(self):
+        def create_task_directory(task_path):
+            path =  relative_path(task_path, 0)
+            if not os.path.exists(path):
+                os.makedirs(path)
+            else:
+                pass
+
         def run_task(is_retry, retry_attempt):
             task = TaskInfo()
             print('Task Started')
             task.start()
-
+            
             def end_task(driver:BossDriver):
                 task.end()
                 task.set_ip()
@@ -54,8 +62,10 @@ class BaseTask():
                 if is_retry: 
                     data["is_retry"] = is_retry
                     data["retry_attempt"] = retry_attempt
-                
+
+                print("Closing Browser")                
                 driver.close()
+                print("Closed Browser")                
 
                 task_info_path  = f'{self.task_path}/task_info.json'
                 
@@ -72,6 +82,7 @@ class BaseTask():
             self.task_path = f'tasks/{count}' 
             self.task_id = count
 
+            create_task_directory(self.task_path)
             driver.task_id = self.task_id
             driver.task_path = self.task_path
 
