@@ -14,10 +14,17 @@ cpython_dependencies = [
     "PyDispatcher>=2.0.5",
 ]
 
+def get_description():
+    try:
+      return open("README.md", encoding="utf-8").read()
+    except:
+      return None
+    
+
 setup(
     name='bose',
     packages=['bose'],
-    version='1.2.0',
+    version='1.2.2',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/bose/docs/",
@@ -26,8 +33,8 @@ setup(
     },
 
     description="The Ultimate Web Scraping Framework",
-    long_description=open("README.md", encoding="utf-8").read(),
-    long_description_content_type="text/markdown",
+    long_description=get_description(),
+    # long_description_content_type="text/markdown",
     author='Chetan Jain',
     author_email='chetan@omkar.cloud',
     maintainer="Chetan Jain",
