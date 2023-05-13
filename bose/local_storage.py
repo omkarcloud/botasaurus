@@ -53,6 +53,19 @@ class JSONStorageBackend(BasicStorageBackend):
             self.json_data.pop(key)
             self.commit_to_disk()
 
+
+    # def get_new_number(self):
+    #     seen = self.get_item('seen', [])
+        
+    #     if len(seen) == 0:
+    #         max_seen = 0
+    #     else:
+    #         max_seen = max(seen)
+        
+    #     new =  max_seen + 1
+    #     self.set_item('seen', seen + [new])
+    #     return new
+
     def clear(self) -> None:
         if os.path.isfile(self.json_path):
             os.remove(self.json_path)
@@ -74,6 +87,9 @@ class _LocalStorage:
 
     def clear(self):
         self.storage_backend_instance.clear()
+
+    # def get_new_number(self):
+    #     return self.storage_backend_instance.get_new_number()
 
 LocalStorage = _LocalStorage()
 

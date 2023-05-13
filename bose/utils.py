@@ -259,3 +259,8 @@ def write_json(data, path,  indent=4):
     with open(path, 'w') as fp:
         json.dump(data, fp, indent=indent)
 
+
+def get_driver_path():
+    executable_name = "chromedriver.exe" if is_windows() else "chromedriver"
+    dest_path = f"build/{executable_name}"
+    return dest_path

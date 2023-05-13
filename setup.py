@@ -17,7 +17,7 @@ cpython_dependencies = [
 setup(
     name='bose',
     packages=['bose'],
-    version='1.0.0',
+    version='1.2.0',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/bose/docs/",

@@ -1,5 +1,5 @@
 from .base_data import BaseData
-from .utils import is_windows, is_mac
+from .utils import is_windows, is_mac, write_json
 
 def get_correct_agent(windows, mac, linux):
     if is_windows():
@@ -116,6 +116,6 @@ class UserAgent(BaseData):
 UserAgentInstance = UserAgent()
 if __name__ == '__main__':
     UserAgentInstance = UserAgent()
-    print(UserAgentInstance.get_hashed('a'))
-    print(UserAgentInstance.get_hashed('a'))
-    print(UserAgentInstance.get_hashed('b'))
+    print(UserAgentInstance.get_random_cycled())
+    print(UserAgentInstance.get_random_cycled())
+    print(UserAgentInstance.get_random_cycled())

@@ -23,10 +23,6 @@ def recreate_build_dir():
     # Create the build directory again
     os.makedirs(build_dir)
 
-def get_driver_path():
-    executable_name = "chromedriver.exe" if is_windows() else "chromedriver"
-    dest_path = f"build/{executable_name}"
-    return dest_path
 
 def move_driver():
     major_version = get_major_version(get_chrome_version())

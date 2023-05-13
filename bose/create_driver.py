@@ -16,13 +16,13 @@ class RetryException(Exception):
 
 
 class BrowserConfig:
-    def __init__(self, user_agent=None, window_size=WindowSize.window_size_1920_1080, profile=None, is_eager=False, use_undetected_driver=False):
+    def __init__(self, user_agent=None, window_size=WindowSize.window_size_1920_1080, profile=None, is_eager=False, use_undetected_driver=False, close_on_crash = False):
         self.user_agent = user_agent
         self.window_size = window_size
         self.profile = profile
         self.is_eager = is_eager
         self.use_undetected_driver = use_undetected_driver
-
+        self.close_on_crash = close_on_crash
 
 def delete_cache(driver):
     print('Deleting Cache')
@@ -81,6 +81,7 @@ def add_essential_options(options, profile, window_size, user_agent):
 
     if profile is not None:
         profile = str(profile)
+
     if user_agent == None:
         if profile == None:
             user_agent = UserAgentInstance.get_random()
@@ -143,7 +144,6 @@ def get_driver_path():
 
 def create_driver(config: BrowserConfig):
     def run():
-
         is_undetected = config.use_undetected_driver
         options = ChromeOptions() if is_undetected else GoogleChromeOptions()
 
@@ -155,7 +155,7 @@ def create_driver(config: BrowserConfig):
         driver_attributes = add_essential_options(options, config.profile, config.window_size, config.user_agent)
 
         if driver_attributes["profile"] is not None:
-            driver_string = "Creating Driver with profile '{}', window_size={}, and user_agent={}".format(driver_attributes["profile"], driver_attributes["window_size"], driver_attributes["user_agent"])
+            driver_string = "Creating Driver with profile {}, window_size={}, and user_agent={}".format(driver_attributes["profile"], driver_attributes["window_size"], driver_attributes["user_agent"])
         else:
             driver_string = "Creating Driver with window_size={} and user_agent={}".format(driver_attributes["window_size"], driver_attributes["user_agent"])
       

@@ -1,5 +1,19 @@
 from itertools import cycle
 import random
+import copy
+
+def copy_list(original_list):
+    """
+    Returns a deep copy of a list containing dictionaries or strings.
+
+    Args:
+    original_list (list): The list to copy.
+
+    Returns:
+    list: A deep copy of the original list.
+    """
+    return copy.deepcopy(original_list)
+
 
 def delete_from_list(list_of_dicts, dict_item):
     for i in range(len(list_of_dicts)):
@@ -7,24 +21,35 @@ def delete_from_list(list_of_dicts, dict_item):
             list_of_dicts.remove(dict_item)
     return list_of_dicts
 
+# see https://stackoverflow.com/questions/27522626/hash-function-in-python-3-3-returns-different-results-between-sessions
+def myHash(text:str):
+  hash=0
+  for ch in text:
+    hash = ( hash*281  ^ ord(ch)*997) & 0xFFFFFFFF
+  return hash
+
 class BaseData():
     def get_data(self):
         pass
     
-    has_items = None
     
+    @property
+    def has_items(self):
+        return len(self.data) > 0
+
     def __init__(self):
         self.has_initialized  = True
         data = self.get_data()
-        random.shuffle(data)
+        # random.shuffle(data)
         self.set_data(data)
 
     def set_data(self, data):
         self.data = data
-        self.cycled_data = cycle(self.data)
-        self.has_items = len(data) > 0
+        copied_list = copy_list(self.data)
+        random.shuffle(copied_list)
+        self.cycled_data = cycle(copied_list)
 
-    def get_one(self):
+    def get_random_cycled(self):
         if self.has_items:
             return next(self.cycled_data)
 
@@ -36,12 +61,14 @@ class BaseData():
 
     def get_hashed(self, value):
         ls   = self.data
-        return ls[hash(value if value is not None else '_') % len(ls)]
+        ls_len = len(ls)
+        hashed_value = myHash(value if value is not None else '_')
+        return ls[hashed_value % ls_len]
 
     def get_n(self, n):
         ls = []
         for i in range(n):
-            ls.append(self.get_one())
+            ls.append(self.get_random_cycled())
         return ls
 
     def get_hundred(self):
@@ -91,11 +118,11 @@ if __name__ == "__main__":
 
     TestInstance = Test() 
     print(TestInstance.data)
-    TestInstance.remove_data(TestInstance.get_one())
-    TestInstance.remove_data(TestInstance.get_one())
-    TestInstance.remove_data(TestInstance.get_one())
-    TestInstance.remove_data(TestInstance.get_one())
-    TestInstance.remove_data(TestInstance.get_one())
-    TestInstance.remove_data(TestInstance.get_one())
-    TestInstance.remove_data(TestInstance.get_one())
+    TestInstance.remove_data(TestInstance.get_random_cycled())
+    TestInstance.remove_data(TestInstance.get_random_cycled())
+    TestInstance.remove_data(TestInstance.get_random_cycled())
+    TestInstance.remove_data(TestInstance.get_random_cycled())
+    TestInstance.remove_data(TestInstance.get_random_cycled())
+    TestInstance.remove_data(TestInstance.get_random_cycled())
+    TestInstance.remove_data(TestInstance.get_random_cycled())
     print(TestInstance.data)

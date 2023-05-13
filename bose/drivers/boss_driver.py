@@ -4,7 +4,7 @@ from selenium import webdriver
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver.remote.webelement import  WebElement
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import random
@@ -12,12 +12,11 @@ from time import sleep
 from bose.drivers.local_storage import LocalStorage
 from bose.opponent import Opponent
 from bose.utils import relative_path, sleep_for_n_seconds, sleep_forever
-from bose.wait import Wait
 
 
 class BossDriver(webdriver.Chrome):
 
-    def get_by_current_page_referrer(self, link, wait=2):
+    def get_by_current_page_referrer(self, link, wait=None):
 
         # selenium.common.exceptions.WebDriverException
         self.execute_script(f"""
@@ -32,8 +31,8 @@ class BossDriver(webdriver.Chrome):
     def sleep(self, n):
         sleep_for_n_seconds(n)
 
-    def wait_for_enter(self):
-        input("Press Enter To Continue...")
+    def wait_for_enter(self, text="Press Enter To Continue..."):
+        input(text)
 
     def short_random_sleep(self):
         sleep_for_n_seconds(random.uniform(2, 4))
@@ -46,7 +45,8 @@ class BossDriver(webdriver.Chrome):
 
     def get_bot_detected_by(self):
 
-        pmx = self.get_element_or_none("//*[text()='Please verify you are a human']")
+        pmx = self.get_element_or_none(
+            "//*[text()='Please verify you are a human']")
         if pmx is not None:
             return Opponent.PERIMETER_X
 
@@ -59,7 +59,6 @@ class BossDriver(webdriver.Chrome):
     def is_bot_detected(self):
         return self.get_bot_detected_by() is not None
 
-
     def get_element_or_none(self, xpath, wait=None) -> WebElement:
         try:
             if wait is None:
@@ -69,7 +68,6 @@ class BossDriver(webdriver.Chrome):
                     EC.presence_of_element_located((By.XPATH, xpath)))
         except:
             return None
-
 
     def get_element_or_none_by_selector(self: WebDriver, selector, wait=None) -> WebElement:
         try:
@@ -81,27 +79,21 @@ class BossDriver(webdriver.Chrome):
         except:
             return None
 
-
     def get_element_by_id(self, id: str, wait=None):
         cleaned = id.lstrip('#')
-        return self.get_element_or_none_by_selector( f'[id="{cleaned}"]', wait)
-
-
+        return self.get_element_or_none_by_selector(f'[id="{cleaned}"]', wait)
 
     def get_element_or_none_by_text_contains(self, text, wait=None):
         text = f'//*[contains(text(), "{text}")]'
-        return self.get_element_or_none(self, text, wait)
-
+        return self.get_element_or_none(text, wait)
 
     def get_element_or_none_by_text(self, text, wait=None):
         text = f'//*[text()="{text}"]'
-        
-        return self.get_element_or_none(self, text, wait)
 
+        return self.get_element_or_none(text, wait)
 
     def get_element_parent(element):
         return element.find_element(By.XPATH, "./..")
-
 
     def get_elements_or_none_by_selector(self: WebDriver, selector, wait=None):
         try:
@@ -118,7 +110,6 @@ class BossDriver(webdriver.Chrome):
     def get_element_text(self, element):
         return element.get_attribute('innerText')
 
-
     def get_innerhtml(self, element):
         return element.get_attribute("innerHTML")
 
@@ -131,7 +122,7 @@ class BossDriver(webdriver.Chrome):
                     EC.presence_of_element_located((By.NAME, selector)))
         except:
             return None
-        
+
     def scroll_site(self):
         self.execute_script(""" 
 window.scrollBy(0, 10000);
@@ -139,14 +130,15 @@ window.scrollBy(0, 10000);
 
     def scroll_element(self, element):
 
-        is_till_end = self.execute_script("return arguments[0].scrollTop === (arguments[0].scrollHeight - arguments[0].offsetHeight)", element)
+        is_till_end = self.execute_script(
+            "return arguments[0].scrollTop === (arguments[0].scrollHeight - arguments[0].offsetHeight)", element)
 
         if is_till_end:
             return False
         else:
             self.execute_script("arguments[0].scrollBy(0, 10000)", element)
-            return True        
-    
+            return True
+
     def get_cookies_dict(self):
         all_cookies = self.get_cookies()
         cookies_dict = {}
@@ -154,37 +146,34 @@ window.scrollBy(0, 10000);
             cookies_dict[cookie['name']] = cookie['value']
         return cookies_dict
 
-    
     def get_local_storage_dict(self):
         storage = LocalStorage(self)
         return storage.items()
-    
+
     def get_cookies_and_local_storage_dict(self):
         cookies = self.get_cookies_dict()
         local_storage = self.get_local_storage_dict()
 
         return {"cookies": cookies, "local_storage": local_storage}
 
-
     def add_cookies_dict(self, cookies):
         for key in cookies:
             self.add_cookie({"name": key, "value": cookies[key]})
-        
+
     def add_local_storage_dict(self, local_storage):
         storage = LocalStorage(self)
         for key in local_storage:
             storage.set_item(key, local_storage[key])
 
-    
     def add_cookies_and_local_storage_dict(self, site_data):
         cookies = site_data["cookies"]
         local_storage = site_data["local_storage"]
         self.add_cookies(cookies)
         self.add_local_storage(local_storage)
-    
+
     def delete_cookies_dict(self):
         self.delete_all_cookies()
-    
+
     def delete_local_storage_dict(self):
         self.execute_script("window.localStorage.clear();")
         self.execute_script("window.sessionStorage.clear();")
@@ -193,21 +182,20 @@ window.scrollBy(0, 10000);
         self.delete_all_cookies()
         self.delete_local_storage_dict()
 
-    def organic_get(self, link, wait=2):
-        self.get_google()
+    def organic_get(self, link, wait=None):
+        self.get("https://www.google.com/")
         self.get_by_current_page_referrer(link, wait)
 
     def get_google(self):
         self.get("https://www.google.com/")
-        self.get_element_or_none_by_selector('input[role="combobox"]', Wait.LONG)
+        # self.get_element_or_none_by_selector('input[role="combobox"]', Wait.VERY_LONG)
 
     @property
     def local_storage(self):
         return LocalStorage(self)
 
+    def get_links(self, search=None, wait=None):
 
-    def get_links(self, search = None, wait=None):
-        
         def extract_links(elements):
             def extract_link(el):
                 return el.get_attribute("href")
@@ -228,8 +216,8 @@ window.scrollBy(0, 10000);
 
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
-    def get_images(self, search = None, wait=None):
-        
+    def get_images(self, search=None, wait=None):
+
         def extract_links(elements):
             def extract_link(el):
                 return el.get_attribute("src")
@@ -250,19 +238,17 @@ window.scrollBy(0, 10000);
 
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
-
-
     def is_in_page(self, target, wait=None, raiseException=False):
-        
+
         def check_page(driver, target):
             if isinstance(target, str):
                 return target in driver.current_url
-            else: 
-                for x in target: 
+            else:
+                for x in target:
                     if x in driver.current_url:
                         return True
                 return False
-        
+
         if wait is None:
             return check_page(self, target)
         else:
@@ -274,12 +260,12 @@ window.scrollBy(0, 10000);
                 sleep_time = 0.2
                 time += sleep_time
                 sleep(sleep_time)
-                
+
         if raiseException:
             raise Exception(f"Page {target} not found")
         return False
 
-    def save_screenshot(self, filename =  datetime.now().strftime('%Y-%m-%d_%H-%M-%S')+ ".png" ):
+    def save_screenshot(self, filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".png"):
         try:
             saving_screenshot_at = relative_path(
                 f'{self.task_path}/{filename}', 0)
