@@ -1,13 +1,13 @@
 from selenium.common.exceptions import WebDriverException
-from bose.user_agent import UserAgentInstance, UserAgent
-from bose.window_size import WindowSize, WindowSizeInstance
-from bose.utils import NETWORK_ERRORS, is_windows, relative_path, retry_if_is_error, silentremove
+from .user_agent import UserAgentInstance, UserAgent
+from .window_size import WindowSize, WindowSizeInstance
+from .utils import NETWORK_ERRORS, is_windows, relative_path, retry_if_is_error, silentremove
 from selenium.webdriver.chrome.options import Options as GoogleChromeOptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from undetected_chromedriver import ChromeOptions
-from bose.drivers.boss_driver import BossDriver
+from .boss_driver import BossDriver
 
-from bose.drivers.boss_undetected_driver import BossUndetectedDriver
+from .boss_undetected_driver import BossUndetectedDriver
 import shutil
 import os
 

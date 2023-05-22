@@ -1,7 +1,7 @@
 import os
 import json
 
-from bose.utils import relative_path
+from .utils import relative_path
 
 
 class localStoragePyStorageException(Exception):
@@ -26,6 +26,9 @@ class BasicStorageBackend:
 
 class JSONStorageBackend(BasicStorageBackend):
     def __init__(self) -> None:
+        self.refresh()
+
+    def refresh(self):
         self.json_path = relative_path( "local_storage.json", 0)
         self.json_data = {}
 
@@ -37,12 +40,16 @@ class JSONStorageBackend(BasicStorageBackend):
         
     def commit_to_disk(self):
         with open(self.json_path, "w") as json_file:
-            json.dump(self.json_data, json_file)
+            json.dump(self.json_data, json_file, indent=4)
 
     def get_item(self, key: str, default = None) -> str:
         if key in self.json_data:
             return self.json_data[key]
         return default
+
+
+    def items(self):
+        return self.json_data
 
     def set_item(self, key: str, value: any) -> None:
         self.json_data[key] = value
@@ -76,6 +83,9 @@ class _LocalStorage:
     def __init__(self) -> None:
         self.storage_backend_instance = JSONStorageBackend()
 
+    def refresh(self) -> None:
+        self.storage_backend_instance.refresh()
+    
     def get_item(self, item: str, default = None) -> any:
         return self.storage_backend_instance.get_item(item, default)
 
@@ -87,6 +97,10 @@ class _LocalStorage:
 
     def clear(self):
         self.storage_backend_instance.clear()
+
+    def items(self):
+        return self.storage_backend_instance.items()
+
 
     # def get_new_number(self):
     #     return self.storage_backend_instance.get_new_number()

@@ -3,7 +3,7 @@ from datetime import datetime
 from requests.exceptions import ReadTimeout
 import traceback
 
-from bose.utils import pretty_format_time
+from .utils import pretty_format_time
 
 def find_safe_ip():
     url = 'https://ipinfo.io/'

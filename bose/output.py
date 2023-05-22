@@ -1,6 +1,6 @@
 import csv
 import openpyxl
-from bose.utils import write_json, read_json
+from .utils import write_json, read_json
 
 class Output:
 
@@ -46,7 +46,7 @@ class Output:
         if not filename.endswith(".csv"):
             filename = filename + ".csv"
 
-        with open(filename, 'w', newline='') as csvfile:
+        with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
             fieldnames = data[0].keys()  # get the fieldnames from the first dictionary
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()  # write the header row

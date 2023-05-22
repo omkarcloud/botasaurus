@@ -1,8 +1,8 @@
 import os
 import traceback
-from bose.create_driver import BrowserConfig, create_driver
-from bose.drivers.boss_driver import BossDriver
-from bose.utils import relative_path, merge_dicts_in_one_dict, write_file, write_html, write_json,get_driver_path
+from .create_driver import BrowserConfig, create_driver
+from .boss_driver import BossDriver
+from .utils import relative_path, merge_dicts_in_one_dict, write_file, write_html, write_json,get_driver_path
 from .local_storage import LocalStorage
 from .task_info import TaskInfo
 
@@ -24,17 +24,13 @@ def get_page_source_safe(driver):
 
 
 def _download_driver():
-    from bose.download_driver import download_driver
+    from .download_driver import download_driver
     download_driver()
     
 class BaseTask():
     def __init__(self):
         self.task_path = None
         self.task_id = None        
-        # if LocalStorage.get_item('is_driver_downloaded',  False) == False:
-        #   print('Downloading Driver in build/ directory.')
-        #   _download_driver()
-        #   LocalStorage.set_item('is_driver_downloaded',  True)
 
 
     browser_config = BrowserConfig()

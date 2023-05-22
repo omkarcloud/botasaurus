@@ -1,6 +1,5 @@
 import traceback
-from datetime import datetime
-from selenium import webdriver
+from undetected_chromedriver import Chrome
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -9,12 +8,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import random
 from time import sleep
-from bose.drivers.local_storage import LocalStorage
-from bose.opponent import Opponent
-from bose.utils import relative_path, sleep_for_n_seconds, sleep_forever
+from .local_storage_driver import LocalStorage
+from .opponent import Opponent
+from .utils import relative_path, sleep_for_n_seconds, sleep_forever
+from datetime import datetime
 
 
-class BossDriver(webdriver.Chrome):
+class BossUndetectedDriver(Chrome):
 
     def get_by_current_page_referrer(self, link, wait=None):
 
@@ -168,8 +168,8 @@ window.scrollBy(0, 10000);
     def add_cookies_and_local_storage_dict(self, site_data):
         cookies = site_data["cookies"]
         local_storage = site_data["local_storage"]
-        self.add_cookies(cookies)
-        self.add_local_storage(local_storage)
+        self.add_cookies_dict(cookies)
+        self.add_local_storage_dict(local_storage)
 
     def delete_cookies_dict(self):
         self.delete_all_cookies()
@@ -179,7 +179,7 @@ window.scrollBy(0, 10000);
         self.execute_script("window.sessionStorage.clear();")
 
     def delete_cookies_and_local_storage_dict(self):
-        self.delete_all_cookies()
+        self.delete_cookies_dict()
         self.delete_local_storage_dict()
 
     def organic_get(self, link, wait=None):

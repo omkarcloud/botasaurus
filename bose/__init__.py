@@ -1,4 +1,4 @@
-from .drivers.boss_driver import BossDriver
+from .boss_driver import BossDriver
 from .base_task import BaseTask
 from .base_data import BaseData
 from .local_storage import LocalStorage
