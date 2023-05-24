@@ -17,7 +17,7 @@ cpython_dependencies = [
 
 def get_description():
     try:
-      return open("README.md", encoding="utf-8").read()
+      return open("README.rst", encoding="utf-8").read()
     except:
       return None
     
@@ -25,7 +25,7 @@ def get_description():
 setup(
     name='bose',
     packages=['bose'],
-    version='1.5.3',
+    version='1.5.5',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/bose/docs/",
