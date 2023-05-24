@@ -238,7 +238,7 @@ window.scrollBy(0, 10000);
 
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
-    def is_in_page(self, target, wait=None, raiseException=False):
+    def is_in_page(self, target, wait=None, raise_exception=False):
 
         def check_page(driver, target):
             if isinstance(target, str):
@@ -261,7 +261,7 @@ window.scrollBy(0, 10000);
                 time += sleep_time
                 sleep(sleep_time)
 
-        if raiseException:
+        if raise_exception:
             raise Exception(f"Page {target} not found")
         return False
 

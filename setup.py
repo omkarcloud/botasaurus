@@ -25,7 +25,7 @@ def get_description():
 setup(
     name='bose',
     packages=['bose'],
-    version='1.5.1',
+    version='1.5.3',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/bose/docs/",
