@@ -4,6 +4,7 @@ from .create_driver import BrowserConfig, create_driver
 from .boss_driver import BossDriver
 from .utils import relative_path, merge_dicts_in_one_dict, write_file, write_html, write_json,get_driver_path
 from .local_storage import LocalStorage
+from .analytics import Analytics
 from .task_info import TaskInfo
 
 
@@ -95,7 +96,7 @@ class BaseTask():
                     data = merge_dicts_in_one_dict(data , driver._init_data)
                 
                 write_json(data , task_info_path)
-
+                Analytics.send_tracking_data()
             count = LocalStorage.get_item('count', 0) + 1
             LocalStorage.set_item('count', count)
 

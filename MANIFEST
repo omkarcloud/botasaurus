@@ -3,6 +3,7 @@ README.rst
 setup.cfg
 setup.py
 bose\__init__.py
+bose\analytics.py
 bose\base_data.py
 bose\base_task.py
 bose\boss_driver.py

@@ -255,3 +255,4 @@ To learn about Bose Bot Development Framework in detail, read the Bose docs at [
 ### If Bose Framework helped in Bot Development, please take a moment to [star the repository](https://github.com/omkarcloud/bose). Your act of starring will help developers in discovering our Repository and contribute towards helping fellow developers in Bot Development. Dhanyawad 🙏! Vande Mataram!
 
 
+> I am an IITian with a perfectionist attitude to work, open to projects. See my projects at [https://dev.to/chetanan/chetan-jains-portfolio-cl6](https://dev.to/chetanan/chetan-jains-portfolio-cl6) 
