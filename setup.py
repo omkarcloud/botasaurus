@@ -4,7 +4,7 @@ from distutils.core import setup
 install_requires = [
     "requests",
     "chromedriver-autoinstaller==0.4.0",
-    "selenium>=4.0.0",
+    "selenium==4.5.0",
     "undetected_chromedriver>=3.4.6",
     "openpyxl>=3.0.3",
     "beautifulsoup4>=4.11.2",
@@ -21,11 +21,11 @@ def get_description():
     except:
       return None
     
-
+            
 setup(
     name='bose',
     packages=['bose'],
-    version='1.6.5',
+    version='1.7.5',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/bose/docs/",
