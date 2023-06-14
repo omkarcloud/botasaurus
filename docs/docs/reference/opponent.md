@@ -5,7 +5,7 @@ sidebar_position: 60
 
 The Opponent class represents anti-bot services like Cloudflare or PerimeterX.
 
-It's commonly used to determine which captcha service detected the bot usually in conjunction with the `BossDriver.get_bot_detected_by` method.
+It's commonly used to determine which captcha service detected the bot usually in conjunction with the `BoseDriver.get_bot_detected_by` method.
 
 ```python
 from bose import BaseTask, Opponent

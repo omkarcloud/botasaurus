@@ -29,8 +29,8 @@ setup(
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/bose/docs/",
-        "Source": "https://github.com/omkarcloud/boss",
-        "Tracker": "https://github.com/omkarcloud/boss/issues",
+        "Source": "https://github.com/omkarcloud/bose",
+        "Tracker": "https://github.com/omkarcloud/bose/issues",
     },
 
     description="The Ultimate Web Scraping Framework",

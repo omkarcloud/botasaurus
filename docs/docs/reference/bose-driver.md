@@ -1,7 +1,7 @@
 ---
 sidebar_position: 10
 ---
-# Boss Driver
+# Bose Driver
 
 Bose Driver extends the functionality of the Selenium webdriver to make more easier to use for Website Automation and Scraping. 
 
@@ -147,7 +147,7 @@ html = driver.get_innerhtml(element)
 This method returns the parent element of a given web element.
 
 ```python
-parent_element = BossDriver.get_element_parent(element)
+parent_element = BoseDriver.get_element_parent(element)
 ```
 
 12. `scroll_site()`:

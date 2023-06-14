@@ -224,7 +224,7 @@ LocalStorage.set_item("pages", 5)
 print(LocalStorage.get_item("pages"))
 ```
 
-## Boss Driver
+## Bose Driver
 
 The driver you receive in the **`run`** method of the Task is an extended version of Selenium that adds powerful methods to make working with Selenium much easier. Some of the popular methods added to the Selenium driver by Bose Framework are:
 

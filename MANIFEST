@@ -6,8 +6,8 @@ bose\__init__.py
 bose\analytics.py
 bose\base_data.py
 bose\base_task.py
-bose\boss_driver.py
-bose\boss_undetected_driver.py
+bose\bose_driver.py
+bose\bose_undetected_driver.py
 bose\create_driver.py
 bose\download_driver.py
 bose\local_storage.py
@@ -16,6 +16,7 @@ bose\opponent.py
 bose\output.py
 bose\task_info.py
 bose\temp_mail.py
+bose\account_generator.py
 bose\user_agent.py
 bose\utils.py
 bose\wait.py

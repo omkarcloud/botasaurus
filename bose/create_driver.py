@@ -5,9 +5,9 @@ from .utils import NETWORK_ERRORS, is_windows, relative_path, retry_if_is_error,
 from selenium.webdriver.chrome.options import Options as GoogleChromeOptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from undetected_chromedriver import ChromeOptions
-from .boss_driver import BossDriver
+from .bose_driver import BoseDriver
 
-from .boss_undetected_driver import BossUndetectedDriver
+from .bose_undetected_driver import BoseUndetectedDriver
 import shutil
 import os
 
@@ -167,7 +167,7 @@ def create_driver(config: BrowserConfig):
         print(driver_string)
 
         if is_undetected:
-            driver = BossUndetectedDriver(
+            driver = BoseUndetectedDriver(
                 desired_capabilities=desired_capabilities,
                               options=options
                             )
@@ -181,7 +181,7 @@ def create_driver(config: BrowserConfig):
 
             path = relative_path(get_driver_path(), 0)
 
-            driver = BossDriver(
+            driver = BoseDriver(
                 desired_capabilities=desired_capabilities,
                 chrome_options=options,
                 executable_path=path,

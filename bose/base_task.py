@@ -1,7 +1,7 @@
 import os
 import traceback
 from .create_driver import BrowserConfig, create_driver
-from .boss_driver import BossDriver
+from .bose_driver import BoseDriver
 from .utils import relative_path, merge_dicts_in_one_dict, write_file, write_html, write_json,get_driver_path
 from .local_storage import LocalStorage
 from .analytics import Analytics
@@ -73,7 +73,7 @@ class BaseTask():
 
 
             final_image = "final.png"
-            def end_task(driver:BossDriver):
+            def end_task(driver:BoseDriver):
                 task.end()
                 task.set_ip()
                 data = task.data
@@ -143,7 +143,7 @@ class BaseTask():
 
         return run_task(False, 0)
 
-    def run(self, driver: BossDriver):
+    def run(self, driver: BoseDriver):
         pass
 
 

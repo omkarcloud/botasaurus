@@ -89,15 +89,15 @@ export function Thanks(): JSX.Element {
         <h1 className="hero__title">{'Thanks'}</h1>
         <div style={{ textAlign: 'left' }} className="page-body">
           <p className="">
-            Boss framework stands on the shoulders of giants. We leverage various
+            Bose framework stands on the shoulders of giants. We leverage various
             projects to simplify web scraping for you. We extend our gratitude to the
-            following individuals who have developed the software that Boss framework
+            following individuals who have developed the software that Bose framework
             relies on:
           </p>
           <ul className="bulleted-list">
             <li style={{ listStyleType: "disc" }}>
               Jason Huggins, the creator of the Selenium library, which is the backbone
-              of Boss framework. Thank you, Jason, for creating Selenium.
+              of Bose framework. Thank you, Jason, for creating Selenium.
             </li>
             <li style={{ listStyleType: "disc" }}>
               Leon, who developed the undetected-chromedriver library, which we utilize
@@ -116,7 +116,7 @@ export function Thanks(): JSX.Element {
               Clark, for creating openpyxl.
             </li>
             <li style={{ listStyleType: "disc" }}>
-              Kenneth Reitz, who developed the requests library, which is used in Boss
+              Kenneth Reitz, who developed the requests library, which is used in Bose
               framework. Thank you, Kenneth Reitz, for creating requests.
             </li>
           </ul>

@@ -22,13 +22,13 @@ Therefore, we are grateful to Netaji for his role in turbo boosting Bharat's fre
 
 ## Thanks 
 
-Boss framework stands on the shoulders of giants. We leverage various projects to simplify web scraping for you. We extend our gratitude to the following individuals who have developed the software that Boss framework relies on:
+Bose framework stands on the shoulders of giants. We leverage various projects to simplify web scraping for you. We extend our gratitude to the following individuals who have developed the software that Bose framework relies on:
 
--   Jason Huggins, the creator of the Selenium library, which is the backbone of Boss framework. Thank you, Jason, for creating Selenium.
+-   Jason Huggins, the creator of the Selenium library, which is the backbone of Bose framework. Thank you, Jason, for creating Selenium.
 -   Leon, who developed the undetected-chromedriver library, which we utilize to avoid detection by anti-bot detection services such as Cloudflare. Thank you, Leon.
 -   Chida, who developed the chromedriver-autoinstaller library, which we employ to download the driver for your Chrome version that is utilized to launch the browser. Thank you, Chida.
 -   Eric Gazoni and Charlie Clark, who created the openpyxl library, which we utilize to save data as Excel files. Thank you, Eric Gazoni and Charlie Clark, for creating openpyxl.
--   Kenneth Reitz, who developed the requests library, which is used in Boss framework. Thank you, Kenneth Reitz, for creating requests.
+-   Kenneth Reitz, who developed the requests library, which is used in Bose framework. Thank you, Kenneth Reitz, for creating requests.
 
 ## Responsible Usage
 

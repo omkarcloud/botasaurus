@@ -14,7 +14,7 @@ from .utils import relative_path, sleep_for_n_seconds, sleep_forever
 from datetime import datetime
 
 
-class BossUndetectedDriver(Chrome):
+class BoseUndetectedDriver(Chrome):
 
     def get_by_current_page_referrer(self, link, wait=None):
 

@@ -14,7 +14,7 @@ from .opponent import Opponent
 from .utils import relative_path, sleep_for_n_seconds, sleep_forever
 
 
-class BossDriver(webdriver.Chrome):
+class BoseDriver(webdriver.Chrome):
 
     def get_by_current_page_referrer(self, link, wait=None):
 

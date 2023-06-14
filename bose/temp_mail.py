@@ -1,9 +1,57 @@
+from time import sleep
+import traceback
 import random
 from bs4 import BeautifulSoup
 import requests
 import re
-from .utils import * 
+from urllib.error import ContentTooShortError
+from http.client import RemoteDisconnected
+from urllib.error import ContentTooShortError, URLError
 
+NETWORK_ERRORS = [RemoteDisconnected, URLError,
+                  ConnectionAbortedError, ContentTooShortError,  BlockingIOError]
+
+
+def istuple(el):
+    return type(el) is tuple
+
+
+def is_errors_instance(instances, error):
+    for i in range(len(instances)):
+        ins = instances[i]
+        if isinstance(error, ins):
+            return True, i
+    return False, -1
+
+def retry_if_is_error(func, instances=None, retries=2, wait_time=None):
+    tries = 0
+    errors_only_instances = list(
+        map(lambda el: el[0] if istuple(el) else el, instances))
+
+    while tries < retries:
+        tries += 1
+        try:
+            created_result = func()
+            return created_result
+        except Exception as e:
+            is_valid_error, index = is_errors_instance(
+                errors_only_instances, e)
+
+            if not is_valid_error:
+                raise e
+
+            traceback.print_exc()
+
+            if istuple(instances[index]):
+                instances[index][1]()
+
+            if tries == retries:
+                raise e
+
+            print('Retrying')
+
+            if wait_time is not None:
+                sleep(wait_time)
 def extract_links_from_html(html):
     soup = BeautifulSoup(html, features="html.parser")
     xs = []
@@ -46,8 +94,6 @@ def get_domains():
 
 
 class TempMail():
-    def get_domains():
-        return get_domains()
 
     def generate_email(username):
         # ['1secmail.com', '1secmail.net', '1secmail.org']
@@ -72,6 +118,9 @@ class TempMail():
         }
 
         requests.post(url, data=data)
+
+    def get_domains():
+        return get_domains()
 
     def get_email_link(email):
         def run():
@@ -137,11 +186,15 @@ class TempMail():
         return data
 
     def get_email_link_and_delete_mailbox(email):
-        TempMail.get_email_link(email)
+        link = TempMail.get_email_link(email)
         TempMail.deleteMailbox(email)
+        return link 
 
 if __name__ == '__main__':
-    print('Running')
-    email = TempMail.generate_email('temp')
-    print(email)
-    print(TempMail.get_email_link_and_delete_mailbox(email))
+    link = TempMail.get_email_link("shyam@1secmail.com")
+    print(link) 
+
+
+    # email = TempMail.generate_email('temp')
+    # print(email)
+    # print(TempMail.get_email_link_and_delete_mailbox(email))
