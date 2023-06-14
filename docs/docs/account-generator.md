@@ -20,7 +20,7 @@ Generates an account
 **Example**
 
 ```python
-from omkar_account_generator import AccountGenerator, Gender, Country
+from bose.account_generator import AccountGenerator, Gender, Country
 
 account = AccountGenerator.generate_account(gender = Gender.WOMEN, country=Country.IN)
 print(account)
@@ -60,7 +60,7 @@ Generates multiple user accounts.
 **Example**
 
 ```python
-from omkar_account_generator import AccountGenerator, Gender, Country
+from bose.account_generator import AccountGenerator, Gender, Country
 
 accounts = AccountGenerator.generate_accounts(3, gender = Gender.WOMEN, country=Country.IN)
 print(accounts)

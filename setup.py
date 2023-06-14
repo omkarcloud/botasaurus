@@ -25,10 +25,10 @@ def get_description():
 setup(
     name='bose',
     packages=['bose'],
-    version='1.7.5',
+    version='1.8.0',
     license='MIT',
     project_urls={
-        "Documentation": "https://omkar.cloud/bose/docs/",
+        "Documentation": "https://omkar.cloud/bose/",
         "Source": "https://github.com/omkarcloud/bose",
         "Tracker": "https://github.com/omkarcloud/bose/issues",
     },

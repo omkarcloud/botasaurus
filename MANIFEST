@@ -3,6 +3,7 @@ README.rst
 setup.cfg
 setup.py
 bose\__init__.py
+bose\account_generator.py
 bose\analytics.py
 bose\base_data.py
 bose\base_task.py
@@ -16,7 +17,6 @@ bose\opponent.py
 bose\output.py
 bose\task_info.py
 bose\temp_mail.py
-bose\account_generator.py
 bose\user_agent.py
 bose\utils.py
 bose\wait.py
