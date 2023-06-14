@@ -20,13 +20,13 @@ Enter Bose. Bose is the first bot development framework in the Developer Communi
 
 Clone Starter Template
 
-```
+```bash
 git clone https://github.com/omkarcloud/bose-starter my-bose-project
 ```
 
 Then change into that directory, install dependencies, open vscode, and start the project:
 
-```
+```bash
 cd my-bose-project
 python -m pip install -r requirements.txt
 code .
