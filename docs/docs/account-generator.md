@@ -31,7 +31,7 @@ print(account)
 ```json
 {
     "name": "Vibha Almeida",
-    "username": "vibhaalmeida@examplecom",
+    "username": "vibhaalmeida",
     "email": "vibha.almeida@gmail.com",
     "password": "letter16",
     "profile_picture": "https://randomuser.me/api/portraits/women/81.jpg",
@@ -72,7 +72,7 @@ print(accounts)
 [
     {
         "name": "Sahana Nayak",
-        "username": "sahananayak@examplecom",
+        "username": "sahananayak",
         "email": "sahana.nayak@gmail.com",
         "password": "vietnam6",
         "profile_picture": "https://randomuser.me/api/portraits/women/35.jpg",
@@ -87,7 +87,7 @@ print(accounts)
     },
     {
         "name": "Madhura Shroff",
-        "username": "madhurashroff@examplecom",
+        "username": "madhurashroff",
         "email": "madhura.shroff@gmail.com",
         "password": "bettina1",
         "profile_picture": "https://randomuser.me/api/portraits/women/87.jpg",
@@ -102,7 +102,7 @@ print(accounts)
     },
     {
         "name": "Hetal Kavser",
-        "username": "hetalkavser@examplecom",
+        "username": "hetalkavser",
         "email": "hetal.kavser@gmail.com",
         "password": "django27",
         "profile_picture": "https://randomuser.me/api/portraits/women/94.jpg",
