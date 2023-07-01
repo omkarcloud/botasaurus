@@ -27,3 +27,7 @@ Thumbs.db
 # OSX miscellaneous
 .DS_Store
 Deployment
+steps.txt
+steps.md    
+
+developing/

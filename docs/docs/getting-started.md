@@ -1,8 +1,8 @@
 ---
-sidebar_position: 2
+sidebar_position: 1
 ---
 
-# Getting Started
+# 🚀 Getting Started
 
 :::info Prerequisites
 
@@ -25,12 +25,10 @@ code .
 python main.py
 ```
 
-The first run will take some time as it downloads the chrome driver executable, subsequent runs will be fast.
-
-<!-- Once started it will scrape google search for "bose web scraping framework" keyword and store the results in /output/finished.json -->
-Once started it will scrape data and store the results in /output/finished.json
+<!-- Once started it will scrape google search for "bose web scraping framework" keyword and store the results in `output/finished.json` -->
+Once started it will scrape data and store the results in `output/finished.json`
 <!-- ![Result](./img/google-scraping.png) -->
 
 ## Next Steps
 
-The best way to learn Bose is by going through the comprehensive [tutorial](tutorial/tutorial.md).
+The best way to learn Bose is by going through the comprehensive [tutorial](tutorial.md).

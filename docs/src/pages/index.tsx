@@ -1,14 +1,14 @@
-import React from 'react';
-import clsx from 'clsx';
-import Link from '@docusaurus/Link';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import Layout from '@theme/Layout';
-import HomepageFeatures, { Inspired, Thanks } from '@site/src/components/HomepageFeatures';
+import React from 'react'
+import clsx from 'clsx'
+import Link from '@docusaurus/Link'
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
+import Layout from '@theme/Layout'
+import HomepageFeatures, { Inspired, Thanks } from '@site/src/components/HomepageFeatures'
 
-import styles from './index.module.css';
+import styles from './index.module.css'
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext()
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
@@ -20,10 +20,19 @@ function HomepageHeader() {
             to="/docs/tutorial/">
             Read Tutorial
           </Link>
+          <iframe
+            src="https://ghbtns.com/github-btn.html?user=omkarcloud&repo=bose&type=star&count=true&size=large"
+            frameBorder={0}
+            scrolling={'0'}
+            width={170}
+            height={30}
+            title="GitHub"
+            style={{ border: 0, colorScheme: "auto" }}
+          />
         </div>
       </div>
     </header>
-  );
+  )
 }
 
 
@@ -39,5 +48,5 @@ export default function Home(): JSX.Element {
         <Thanks/> */}
       </main>
     </Layout>
-  );
+  )
 }

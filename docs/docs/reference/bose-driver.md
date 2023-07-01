@@ -48,15 +48,14 @@ This method pauses the execution of the script for `n` seconds. You can use it l
 driver.sleep(10)  # sleep for 10 seconds
 ```
 
-4.  `wait_for_enter()`: 
+4.  `prompt()`: 
 
 
-
-This method waits for the user to press the Enter key to continue. You can use it like this:
+This method prompts the user to press the Enter key to continue. You can use it like this:
 
 
 ```python
-driver.wait_for_enter()
+driver.prompt()
 ```
 
 5.  `short_random_sleep()` and `long_random_sleep()`: 

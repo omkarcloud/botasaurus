@@ -50,7 +50,7 @@ Output.write_pending(data)
 ```
 
 
-### `read_finished()`
+### `read_finished_json()`
 
 Reads a JSON file in "output/finished.json" and returns its contents as a Python object.
 
@@ -58,13 +58,13 @@ Reads a JSON file in "output/finished.json" and returns its contents as a Python
 **Example**
 
 ```python
-data = Output.read_finished()
+data = Output.read_finished_json()
 
 # Print the contents
 print(data)
 ```
 
-### `write_finished(data)`
+### `write_finished_json(data)`
 
 Writes a Python object to the "output/finished.json" file.
 
@@ -79,7 +79,7 @@ data = [
 ]
 
 # Write the data to the file "finished.json"
-Output.write_finished(data)
+Output.write_finished_json(data)
 ```
 
 ### `read_json(filename)`

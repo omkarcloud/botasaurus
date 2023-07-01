@@ -1,14 +1,19 @@
 ---
-sidebar_position: 4
-title: Inspiration And Thanks
+sidebar_position: 1000
 ---
 
-# Inspiration 
+# Dhanyawad 
+
+## Inspiration 
 
 
 :::info 
 
+बोस् वेब् स्क्रैपिंग् फ्रेम्वर्क् सुभाष चन्द्र बोसे को अर्पितम् अस्ति।
+
 बोस वेब स्क्रैपिंग फ्रेमवर्क सुभाष चंद्र बोस को समर्पित है।
+
+The Bose Web Scraping Framework is dedicated to Subhash Chandra Bose.
 
 :::
 
@@ -27,12 +32,17 @@ Bose framework stands on the shoulders of giants. We leverage various projects t
 -   Jason Huggins, the creator of the Selenium library, which is the backbone of Bose framework. Thank you, Jason, for creating Selenium.
 -   Leon, who developed the undetected-chromedriver library, which we utilize to avoid detection by anti-bot detection services such as Cloudflare. Thank you, Leon.
 -   Chida, who developed the chromedriver-autoinstaller library, which we employ to download the driver for your Chrome version that is utilized to launch the browser. Thank you, Chida.
--   Eric Gazoni and Charlie Clark, who created the openpyxl library, which we utilize to save data as Excel files. Thank you, Eric Gazoni and Charlie Clark, for creating openpyxl.
 -   Kenneth Reitz, who developed the requests library, which is used in Bose framework. Thank you, Kenneth Reitz, for creating requests.
 
 ## Responsible Usage
 
-The Bose Framework is made to help humanity. So please uphold dharma and don’t harm others for your own benefit.  
+The Bose Framework is made to help humanity. So please uphold dharma and remember thee golden words.
+
+:::success
+
+**Feel free to use your bots to do whatever you want, just don't harm someone.**
+
+:::
 
 ---
 🙏 Made in Bharat 🇮🇳. Vande Mataram 🙏

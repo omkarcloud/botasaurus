@@ -6,8 +6,8 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula")
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "Bose",
-  tagline: "Swiss Army Knife for Bot Developers",
+  title: "🤖 Bose Framework 🤖",
+  tagline: "Bose is a Swiss Army knife 🔪 for web scraping and browser automation 🤖 that helps you create bots fast. ⚡️",
   url: "https://www.omkar.cloud",
   trailingSlash: true,
 
@@ -85,7 +85,7 @@ const config = {
           // {to: '/blog', label: 'Blog', position: 'left'},
           {
             href: "https://github.com/omkarcloud/bose",
-            label: "GitHub",
+            label: "Love It? Star It! ★",
             position: "right",
           },
         ],
@@ -110,8 +110,8 @@ const config = {
               //   href: 'https://stackoverflow.com/questions/tagged/bose',
               // },
               {
-                label: "GitHub",
-                href: "https://github.com/omkarcloud/bose",
+                label: "GitHub Discuss",
+                href: "https://github.com/omkarcloud/bose/discussions",
               },
             ],
           },

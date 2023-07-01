@@ -11,30 +11,29 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: 'Anti-blocking',
     Svg: require('@site/static/img/undraw_mountain.svg').default,
     description: (
       <>
-        Bose was designed from the ground up to be easily installed and
-        get you up and scrape even the complex of sites.
+      Bose adds <strong>anti-blocking</strong> features and <strong>common user agents</strong> to evade blocking from Cloudflare, PerimeterX, and other anti-bot services.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Helpful Utils',
     Svg: require('@site/static/img/undraw_tree.svg').default,
     description: (
       <>
-        Bose lets you focus on scraping, and we&apos;ll do boring bootstrap, logging and debugging.
+        Bose includes tools for <strong>account generation</strong>, <strong>temporary email</strong>, and <strong>saving data as CSV/JSON</strong> and many more.
       </>
     ),
   },
   {
-    title: 'Powered by Selenium',
+    title: 'Debug Support',
     Svg: require('@site/static/img/undraw_react.svg').default,
     description: (
       <>
-        We have extended Selenium to make it really easy to scrape websites.      </>
+        Bose automatically prevents the browser from closing when an exception occurs, making it easier to debug your scripts.</>
     ),
   },
 ]
@@ -111,11 +110,6 @@ export function Thanks(): JSX.Element {
               launch the browser. Thank you, Chida.
             </li>
             <li style={{ listStyleType: "disc" }}>
-              Eric Gazoni and Charlie Clark, who created the openpyxl library, which we
-              utilize to save data as Excel files. Thank you, Eric Gazoni and Charlie
-              Clark, for creating openpyxl.
-            </li>
-            <li style={{ listStyleType: "disc" }}>
               Kenneth Reitz, who developed the requests library, which is used in Bose
               framework. Thank you, Kenneth Reitz, for creating requests.
             </li>
@@ -133,7 +127,7 @@ export function Thanks(): JSX.Element {
     </section>
   )
 }
-
+  
 
 export default function HomepageFeatures(): JSX.Element {
   return (
