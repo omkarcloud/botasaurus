@@ -131,10 +131,10 @@ window.scrollBy(0, 10000);
 
     def scroll_element(self, element):
 
-        is_till_end = self.execute_script(
-            "return arguments[0].scrollTop === (arguments[0].scrollHeight - arguments[0].offsetHeight)", element)
+        did_element_scroll = self.execute_script(
+            "return Math.round(arguments[0].scrollTop) === Math.round(Math.round(arguments[0].scrollHeight) - Math.round(arguments[0].offsetHeight))", element)
 
-        if is_till_end:
+        if did_element_scroll:
             return False
         else:
             self.execute_script("arguments[0].scrollBy(0, 10000)", element)
