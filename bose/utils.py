@@ -1,3 +1,4 @@
+from datetime import datetime
 import errno
 import json
 import sys
@@ -136,9 +137,6 @@ def remove_nones(list):
 
 
 
-def wait_for_enter(message="Press Enter To Continue..."):
-    return input(message)
-
 
 
 def exit_with_failed_status():
@@ -264,3 +262,16 @@ def get_driver_path():
     executable_name = "chromedriver.exe" if is_windows() else "chromedriver"
     dest_path = f"build/{executable_name}"
     return dest_path
+
+
+datetime_format = '%Y-%m-%d %H:%M:%S'
+
+def str_to_datetime(when):
+    return datetime.strptime(
+        when, datetime_format)
+
+
+def datetime_to_str(when):
+    return when.strftime(datetime_format)
+
+

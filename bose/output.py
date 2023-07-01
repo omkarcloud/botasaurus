@@ -1,6 +1,6 @@
+import requests
 import csv
-import openpyxl
-from .utils import write_json, read_json
+from .utils import relative_path, write_json, read_json
 
 class Output:
 
@@ -51,49 +51,31 @@ class Output:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()  # write the header row
             writer.writerows(data)  # write each row of data
-        print(f"View written CSV file at {filename}")        
-    def write_xlsx(data, filename):
-        """
-        Saves a list of dictionaries as an Excel file with the given filename.
-        Each dictionary in the list corresponds to a row in the Excel file.
-        The keys of each dictionary correspond to column names in the Excel file.
-        """
-        if len(data) == 0:
-            print("Data is empty.")
-            return
+        print(f"View written CSV file at {filename}")     
 
-        if not filename.startswith("output/"):
-            filename = "output/" +  filename
 
-        if not filename.endswith(".xlsx"):
-            filename = filename + ".xlsx"
-
-        wb = openpyxl.Workbook()
-        ws = wb.active
-
-        # write headers
-        headers = list(data[0].keys())
-        for col_num, header in enumerate(headers, start=1):
-            ws.cell(row=1, column=col_num).value = header
-
-        # write data
-        if data:
-            for row_num, data in enumerate(data, start=2):
-                for col_num, key in enumerate(headers, start=1):
-                    ws.cell(row=row_num, column=col_num).value = data.get(key)
-
-        # save file
-        wb.save(filename)
-        print(f"View written Excel file at {filename}")        
-
-    def read_pending():
-        return Output.read_json("pending.json")
-
-    def write_pending(data):
-        return Output.write_json(data, "pending.json")
-
-    def read_finished():
+    def read_finished_json():
         return Output.read_json("finished.json")
 
-    def write_finished(data):
+    def write_finished_json(data):
         return Output.write_json(data, 'finished.json')
+
+
+    def write_finished_csv(data):
+        return Output.write_csv(data, 'finished.csv')
+
+    def save_image(url, filename = None):
+        if filename is None:
+            filename = url.split("/")[-1]
+    
+        response = requests.get(url)
+        if response.status_code == 200:
+            # Extract the filename from the URL
+            output_dir = "output"
+
+            # Save the image in the output directory
+            with open(relative_path(
+                f'{output_dir}/{filename}', 0), "wb") as f:
+                f.write(response.content)
+        else:
+            print("Failed to download the image.")

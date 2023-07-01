@@ -6,7 +6,6 @@ install_requires = [
     "chromedriver-autoinstaller==0.4.0",
     "selenium==4.5.0",
     "undetected_chromedriver>=3.4.6",
-    "openpyxl>=3.0.3",
     "beautifulsoup4>=4.11.2",
 
 ]
@@ -25,7 +24,7 @@ def get_description():
 setup(
     name='bose',
     packages=['bose'],
-    version='1.8.1',
+    version='2.0.0',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/bose/",

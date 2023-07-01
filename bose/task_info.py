@@ -1,25 +1,11 @@
 import requests
 from datetime import datetime
-from requests.exceptions import ReadTimeout
 import traceback
+
+from .ip_utils import find_ip_details
 
 from .utils import pretty_format_time
 
-def find_safe_ip():
-    url = 'https://ipinfo.io/'
-    try:
-        response = requests.get(url, timeout=10)
-        data =  (response.json())
-
-        if "readme" in data:
-           del data["readme"]
-        return data
-    except ReadTimeout:
-        return None
-    except Exception:
-        traceback.print_exc()
-        return None
-    
 
 def format_time_diff(start_time, end_time):
     time_diff = end_time - start_time
@@ -46,6 +32,7 @@ class TaskInfo():
     self.data["start_time"] = datetime.now()
     pass
   
+  
   def end(self):
     self.data["end_time"] = datetime.now()
     self.data["duration"] = format_time_diff(self.data["start_time"],self.data["end_time"])
@@ -56,7 +43,10 @@ class TaskInfo():
 
 
   def set_ip(self):
-    self.data["ip_details"] = find_safe_ip()
+    self.data["ip_details"] = find_ip_details()
+
+  def set_task_name(self, task_name):
+    self.data["task_name"] = task_name
 
 
 if __name__ == "__main__":

@@ -8,3 +8,6 @@ from .window_size import WindowSize
 from .create_driver import BrowserConfig
 from .wait import Wait
 from .output import Output
+from .task_config import TaskConfig
+from .schedule_utils import ScheduleUtils
+from .profile import Profile

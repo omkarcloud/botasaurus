@@ -11,10 +11,8 @@ from urllib.error import ContentTooShortError, URLError
 NETWORK_ERRORS = [RemoteDisconnected, URLError,
                   ConnectionAbortedError, ContentTooShortError,  BlockingIOError]
 
-
 def istuple(el):
     return type(el) is tuple
-
 
 def is_errors_instance(instances, error):
     for i in range(len(instances)):

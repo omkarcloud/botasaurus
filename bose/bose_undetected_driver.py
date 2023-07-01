@@ -8,6 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import random
 from time import sleep
+from .beep_utils import beep_input
 from .local_storage_driver import LocalStorage
 from .opponent import Opponent
 from .utils import relative_path, sleep_for_n_seconds, sleep_forever
@@ -31,8 +32,8 @@ class BoseUndetectedDriver(Chrome):
     def sleep(self, n):
         sleep_for_n_seconds(n)
 
-    def wait_for_enter(self, text="Press Enter To Continue..."):
-        input(text)
+    def prompt(self, text="Press Enter To Continue..."):
+        return beep_input(text, self.beep)
 
     def short_random_sleep(self):
         sleep_for_n_seconds(random.uniform(2, 4))
@@ -265,6 +266,7 @@ window.scrollBy(0, 10000);
             raise Exception(f"Page {target} not found")
         return False
 
+
     def save_screenshot(self, filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".png"):
         try:
             saving_screenshot_at = relative_path(
@@ -274,3 +276,17 @@ window.scrollBy(0, 10000);
         except:
             traceback.print_exc()
             print('Failed to save screenshot')
+
+    def prompt_to_solve_captcha(self):
+        print('')
+        print('   __ _ _ _    _                          _       _           ')
+        print('  / _(_) | |  (_)                        | |     | |          ')
+        print(' | |_ _| | |   _ _ __      ___ __ _ _ __ | |_ ___| |__   __ _ ')
+        print(' |  _| | | |  | | `_ \    / __/ _` | `_ \| __/ __| `_ \ / _` |') 
+        print(' | | | | | |  | | | | |  | (_| (_| | |_) | || (__| | | | (_| |')   # Tells user to solve captcha
+        print(' |_| |_|_|_|  |_|_| |_|   \___\__,_| .__/ \__\___|_| |_|\__,_|')
+        print('                                   | |                        ')
+        print('                                   |_|                        ')
+        print('')
+
+        return beep_input('Press fill in the captcha and press enter to continue ...', self.beep)
