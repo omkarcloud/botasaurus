@@ -10,7 +10,6 @@ sidebar_position: 20
 -   `profile`: An string representing the profile of the web browser. By default no profile is used meaning the browser is like new with no history each time task is run. 
 -   `use_undetected_driver`: A boolean value that specifies whether to use an undetected driver or not. Default value is `False` which means it will not use undetected driver. You may want to set it to `True` in case you are automating sites protected by Services like Cloudflare. 
 -   `is_eager`: A boolean value that specifies whether to eagerly start selecting elements before the page has loaded completely. Default value is `False` meaning that it will wait for pages to load before selecting elements. You may want to set it to `True` in case the page is taking a long time to load but elements are selectable.
--   `close_on_crash`: A boolean value that specifies whether to close the browser window on crash or not. Default value is `False` meaning that it will prompt the user to press enter to close the browser.
 
 Usage
 -----

@@ -1,3 +1,7 @@
+---
+sidebar_position: 20
+---
+
 # Web Scraping Template
 
 This Web Scraping Template provides you with a great starting point when creating web scraping bots.
@@ -39,7 +43,7 @@ Here are some best practices for web scraping:
 
 1. Instead of individually visiting each page to gather links, it is advisable to search for pagination links within sitemaps or RSS feeds. In most cases, these sources provide all links in an organized manner.
 
-![sitemap](/img/sitemap.png)
+![sitemap](https://raw.githubusercontent.com/omkarcloud/web-scraping-template/master/img/sitemap.png)
 
 2. Make the bot look humane by adding random waits using methods like `driver.short_random_sleep` and `driver.long_random_sleep`.
 

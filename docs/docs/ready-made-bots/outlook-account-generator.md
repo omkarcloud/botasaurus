@@ -52,6 +52,8 @@ label: Outlook Account Generator
 
 ## 🚀 Getting Started
 
+_If you are not a techy person or don't know how to use git. You can follow [this video](https://www.youtube.com/watch?v=RwCWcaKBahI) to make bot run._
+
 1️⃣ Clone the Magic 🧙‍♀️:
 
 ```shell
@@ -83,13 +85,11 @@ _Once Bot is Completed Running. The Accounts will be saved in `profiles.json`_
 
 Watch this video to see the bot in action!
 
-<!-- TODO:
-
-[![Outlook Account Generator](./screenshots/outlook-account-generator.png)](https://www.youtube.com/watch?v=zOlvYakogSU) -->
+[![Outlook Account Generator](https://raw.githubusercontent.com/omkarcloud/outlook-account-generator/master/images/youtube-video.png)](https://www.youtube.com/watch?v=RwCWcaKBahI)
 
 ## 🤔 FAQs
 
-❓ **It is generating only 3
+### ❓ **It is generating only 3
 
  accounts. How can I generate more than 3 accounts?**
 
@@ -101,13 +101,13 @@ config = {
 }
 ```
 
-❓ **Why are you not using proxies and captcha-solving services to solve captchas?**
+### ❓ **Why are you not using proxies and captcha-solving services to solve captchas?**
 
 I attempted to solve the captcha using 2captcha, but unfortunately, it proved to be unsolvable. This issue arises because the location where the account is being created differs from the location where the captcha is being solved. The captcha system detects this mismatch, causing the captcha prompt to appear repeatedly in a loop.
 
 The bot will automatically prompt you when a captcha needs to be solved.
 
-❓ **Why am I prompted to change my IP address?**
+### ❓ **Why am I prompted to change my IP address?**
 
 After using the bot to create a few accounts and becoming familiar with how it works, the bot will prompt you to change the IP address after each account creation.
 
@@ -117,7 +117,7 @@ The reason we want you to change your IP is that if you create multiple accounts
 
 To protect your account from being suspended, we prompt you to change the IP address, ensuring that a single account is created from a single IP.
 
-Changing your IP is an easy process. To learn about multiple methods to change your IP address, visit this [link](https://www.omkar.cloud/bose/docs/guides/change-ip/)
+Changing your IP is an easy process. To learn about multiple methods to change your IP address, visit this [link](https://www.omkar.cloud/bose/docs/guides/change-ip/#methods-for-changing-ip)
 
 Furthermore, one of the most effective methods for changing the IP is the **Enable and Disable Airplane Mode** technique outlined below:
 
@@ -126,7 +126,9 @@ Furthermore, one of the most effective methods for changing the IP is the **Enab
 3. Now, turn the hotspot on again.
 4. You will get a new IP assigned.
 
-❓ **The code is well-structured and organized. Most Selenium codebases are messy. How did you do it?**
+
+
+### ❓ **The code is well-structured and organized. Most Selenium codebases are messy. How did you do it?**
 
 I use the Bose Framework, a Bot Development Framework that greatly simplifies the process of creating bots.
 
@@ -146,7 +148,7 @@ You can see `outlook_sign_up_task.py` to understand the simplicity Bose Brings.
 
 Explore the Bose Framework [here](https://www.omkar.cloud/bose/).
 
-❓ **What is the purpose of the "visit_outlook_accounts_task"?**
+### ❓ **What is the purpose of the "visit_outlook_accounts_task"?**
 
 After creating each account, it is saved as a profile.
 
@@ -162,17 +164,15 @@ tasks_to_be_run = [
 ]
 ```
 
-❓ **How can I thank you?**
+### ❓ **How can I thank you?**
 
 Star ⭐ the repository.
 
 Your star will send me a Telegram Notification, and it will bring a smile to my face :)
 
-❓ **I'm interested in creating more bots. Can you assist me?**
+### ❓ **I'm interested in creating more bots. Can you assist me?**
 
-Certainly! As a professional scraper, I'd
-
- be delighted to discuss your requirements further. Feel free to reach out to me at chetan@omkar.cloud.
+Certainly! As a professional scraper, I'd be delighted to discuss your requirements further. Feel free to reach out to me at chetan@omkar.cloud.
 
 ## _PS: I have a great suggestion for you. You probably use Outlook accounts to log into some website and automate actions, Isn't it? I recommend using the Bose Framework for writing your automation code directly in this repository. This will really save you a large chunk of development time._
 

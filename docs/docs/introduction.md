@@ -18,8 +18,7 @@ Bots's that scraped Google Maps for leads generation, or scraped g2.com for Prod
 
 AND along with that I has also made some painful mistakes for example I automated linkedin using another account and got my real linkedin account blocked. Pretty Painful Isn't it?
 
-<!-- TODO: IMAGE change to docusuarus -->
-![LinkedIn Restricted Account](/img/linkedin-restricted.png)
+![LinkedIn Restricted Account](https://www.omkar.cloud/bose/assets/images/linkedin-restricted-4dc86138036cb000741c3c17ab5168a7.png)
 
 Based on the hard lessons I learnt in Bot Development. I have built Bose Framework. 
 

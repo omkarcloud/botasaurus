@@ -72,40 +72,41 @@ def delete_profile_path(user_id):
 
 def add_essential_options(options, profile, window_size, user_agent):
     options.add_argument("--start-maximized")
-
-    if window_size == None:
-        if profile == None:
-            window_size = WindowSizeInstance.get_random()
+    if window_size != WindowSize.REAL:
+        if window_size == None:
+            if profile == None:
+                window_size = WindowSizeInstance.get_random()
+            else:
+                window_size = WindowSizeInstance.get_hashed(profile)
         else:
-            window_size = WindowSizeInstance.get_hashed(profile)
-    else:
-        if window_size == WindowSize.RANDOM:
-            window_size = WindowSizeInstance.get_random()
-        elif window_size == WindowSize.HASHED:
-            window_size = WindowSizeInstance.get_hashed(profile)
-        else:
-            window_size = window_size
+            if window_size == WindowSize.RANDOM:
+                window_size = WindowSizeInstance.get_random()
+            elif window_size == WindowSize.HASHED:
+                window_size = WindowSizeInstance.get_hashed(profile)
+            else:
+                window_size = window_size
 
-    window_size = WindowSize.window_size_to_string(window_size)
-    options.add_argument(f"--window-size={window_size}")
+        window_size = WindowSize.window_size_to_string(window_size)
+        options.add_argument(f"--window-size={window_size}")
 
     if profile is not None:
         profile = str(profile)
 
-    if user_agent == None:
-        if profile == None:
-            user_agent = UserAgentInstance.get_random()
+    if user_agent != UserAgent.REAL:
+        if user_agent == None:
+            if profile == None:
+                user_agent = UserAgentInstance.get_random()
+            else:
+                user_agent = UserAgentInstance.get_hashed(profile)
         else:
-            user_agent = UserAgentInstance.get_hashed(profile)
-    else:
-        if user_agent == UserAgent.RANDOM:
-            user_agent = UserAgentInstance.get_random()
-        elif user_agent == UserAgent.HASHED:
-            user_agent = UserAgentInstance.get_hashed(profile)
-        else:
-            user_agent = user_agent
+            if user_agent == UserAgent.RANDOM:
+                user_agent = UserAgentInstance.get_random()
+            elif user_agent == UserAgent.HASHED:
+                user_agent = UserAgentInstance.get_hashed(profile)
+            else:
+                user_agent = user_agent
 
-    add_useragent(options, user_agent)
+        add_useragent(options, user_agent)
 
     has_user = profile is not None
 

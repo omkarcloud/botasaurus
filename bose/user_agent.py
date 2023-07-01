@@ -11,6 +11,7 @@ def get_correct_agent(windows, mac, linux):
 
 class UserAgent(BaseData):
 
+    REAL = "REAL"
     RANDOM = "RANDOM"
     HASHED = "HASHED"
 

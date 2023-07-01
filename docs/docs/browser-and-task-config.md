@@ -57,6 +57,9 @@ if in office setting to not distriub people set to false.
 `output_filename`
 File name you want to save the putput returned from run.
 
+`close_on_crash`
+A boolean value that specifies whether to close the browser window on crash or not. Default value is `False` meaning that it will prompt the user to press enter to close the browser.
+
 ### Good Config for Bot Creation Tasks is 
 
 

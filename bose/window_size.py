@@ -3,6 +3,7 @@ from .base_data import BaseData
 class WindowSize(BaseData):
 
     RANDOM = "RANDOM"
+    REAL = "REAL"
     HASHED = "HASHED"
 
     window_size_1920_1080 = [1920, 1080, ]

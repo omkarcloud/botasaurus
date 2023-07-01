@@ -5,7 +5,6 @@ sidebar_position: 90
 
 Below is the roadmap we envision for the Bose Framework:
 
-<!-- - Documentation Redo [Priority] -->
 - Reach out to YouTubers/Bloggers to promote Bose.
 - Implement Captcha Solving directly within the Bose Framework.
 - Integrate built-in IP rotation functionality to handle requests effectively.
