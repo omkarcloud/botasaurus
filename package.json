@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "upload": "rm -rf dist/ bose.egg-info && python setup.py sdist && pip install -e . && python -m twine upload dist/*",
-    "install": "rm -rf dist/ bose.egg-info  && python setup.py sdist && pip install -e ."
+    "upload": "rm -rf dist/ bose.egg-info  MANIFEST && python setup.py sdist && pip install -e . && python -m twine upload dist/*",
+    "install": "rm -rf dist/ bose.egg-info  MANIFEST && python setup.py sdist && pip install -e ."
   }
 }

@@ -59,7 +59,7 @@ class Task(BaseTask):
 4. If your bot gets detected and your IP is blocked, follow these steps to bypass the IP block:
 
     - Close the browser.
-    - Change your IP by using a method like the "Mobile Aeroplane Method" as described in the ["Changing IP" lesson](./change-ip/#methods).
+    - Change your IP by using a method like the "Mobile Aeroplane Method" as described in the ["Changing IP" lesson](../change-ip/#methods-for-changing-ip).
     - If you are using a profile, then if possible, delete the stored profile in the profiles folder to remove cookies and local storage set by bot blocking services.
     - Now, rerun the bot. 
 
@@ -107,11 +107,11 @@ class Task(BaseTask):
 
 4. Make the bot look humane by adding random waits. You can use the `driver.short_random_sleep` and `driver.long_random_sleep` methods for it. 
 
-5. Use a real-looking name, email, username, and password generated using the [Account Generator Module](./utilities/account-generator-module/).
+5. Use a real-looking name, email, username, and password generated using the [Account Generator Module](../../niceties/account-generator/).
 
-To see these best practices in action, I highly recommend reviewing the code of the Outlook account creator bot provided [here](./pre-created-bots/outlook-bot.md).
+To see these best practices in action, I highly recommend reviewing the code of the Outlook account creator bot provided [here](https://github.com/omkarcloud/outlook-account-generator/blob/master/src/outlook_sign_up_task.py).
 
-Also, use this template for a great starting point when creating multiple accounts on a website. The template is available [here](./templates/multiple-account-creation.md). 
+Also, use this template for a great starting point when creating multiple accounts on a website. The template is available [here](../../templates/multiple-account-generation-template/). 
 
 
 ## What will the Target Website do if they recognize an Account created by Bot? 
@@ -151,7 +151,7 @@ Note that most websites do not implement bot protection as many frontend develop
 
 So, it is recommended to only add IP rotation or random waits if you are getting blocked.
 
-Also, use this template for a great starting point when creating multiple accounts on a website. The template is available [here](./templates/web-scraping.md). 
+Also, use this template for a great starting point when creating multiple accounts on a website. The template is available [here](../../templates/web-scraping-template/). 
 
 ## What are some popular proxy services you can suggest?
 

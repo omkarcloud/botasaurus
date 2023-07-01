@@ -3,7 +3,7 @@ sidebar_position: 30
 ---
 # G2 Scraper
 
-![G2 Scraper CSV Result](./img/g2_result.png)
+![G2 Scraper CSV Result](https://raw.githubusercontent.com/omkarcloud/g2-scraper/master/img/example_result.png)
 
 This is a Python script that allows you to scrape product information from G2. The script first gets the product links and then scrape the products.
 
@@ -39,4 +39,4 @@ python main.py
 ```
 - The products will be extracted and stored in the output/finished.csv and output/finished.json file after scraping.
 
-![G2 Scraper CSV Result](./img/g2_result.png)
+![G2 Scraper CSV Result](https://raw.githubusercontent.com/omkarcloud/g2-scraper/master/img/example_result.png)

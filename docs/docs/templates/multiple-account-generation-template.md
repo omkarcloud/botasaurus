@@ -65,7 +65,7 @@ class Task(BaseTask):
 
 4. Make the bot look humane by adding random waits. You can use the `driver.short_random_sleep` and `driver.long_random_sleep` methods for it. 
 
-5. Use a real-looking name, email, username, and password generated using the [Account Generator Module](./utilities/account-generator-module/).
+5. Use a real-looking name, email, username, and password generated using the [Account Generator Module](../../niceties/account-generator/).
 
-To see these best practices in action, I highly recommend reviewing the code of the Outlook account creator bot provided [here](./pre-created-bots/outlook-bot.md).
+To see these best practices in action, I highly recommend reviewing the code of the Outlook account creator bot provided [here](https://github.com/omkarcloud/outlook-account-generator/blob/master/src/outlook_sign_up_task.py).
 
