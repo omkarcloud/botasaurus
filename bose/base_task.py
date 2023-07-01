@@ -142,7 +142,7 @@ class BaseTask():
             # print('Launching Task')
             task = TaskInfo()
             task_name = self.__class__.__name__
-            TaskInfo.set_task_name(task_name)
+            task.set_task_name(task_name)
 
             final_image = "final.png"
             def end_task(driver:BoseDriver):
