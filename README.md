@@ -28,7 +28,7 @@
 
 ## 🚀 Introduction 
 
-Hi,
+👋 Hello,
 
 I've made A LOT of bots in my life.
 
