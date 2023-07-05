@@ -14,6 +14,8 @@ class UserAgent(BaseData):
     REAL = "REAL"
     RANDOM = "RANDOM"
     HASHED = "HASHED"
+    
+    google_bot = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" 
 
     user_agent_106 = get_correct_agent("Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.37",
                                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
