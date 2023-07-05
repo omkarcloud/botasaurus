@@ -3,7 +3,7 @@
 </p>
   <div align="center" style="margin-top: 0;">
   <h1>✨ Bose Framework 🤖</h1>
-  <p>💦 Swiss Army Knife for Bot Development 💦</p>
+  <p>🚀 Swiss Army Knife for Bot Development 🤖</p>
 </div>
 <em>
   <h5 align="center">(Programming Language - Python 3)</h5>

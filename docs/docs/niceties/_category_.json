@@ -1,7 +1,7 @@
 {
   "label": "Niceties",
   "position": 20,
-  "collapsed": true, 
+  "collapsed": false, 
     "link": {
     "type": "generated-index"
   }

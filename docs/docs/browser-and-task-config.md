@@ -1,5 +1,5 @@
 ---
-sidebar_position: 40
+sidebar_position: 25
 ---
 # Browser and Task Config
 
@@ -35,8 +35,25 @@ On the other hand, Bose Framework simplifies these complexities by encapsulating
 from bose import BaseTask, BrowserConfig, UserAgent, WindowSize
 
 class Task(BaseTask):
-    browser_config = BrowserConfig(user_agent=UserAgent.user_agent_106, window_size=WindowSize.window_size_1280_720, profile=1)
+    browser_config = BrowserConfig(user_agent=UserAgent.user_agent_106, window_size=WindowSize.window_size_1280_720, )
 ```
+
+
+Also, We have introduced an incredible feature called Tiny Profile. Unlike the Traditional Chrome Profile, which can easily reach a size of 100 MB, the Tiny Profile significantly reduces profile sizes. By persisting the cookies of each website you visit within the browser session, the Tiny Profile achieves profile sizes of approximately 1 KB.
+
+What does this mean for you? Well, suppose you need to create 1000 accounts on a website. With the Tiny Profile, you can store the information for all 1000 accounts in just 1 MB of storage.
+
+Below is an example of how to utilize the Tiny Profile feature in your code:
+
+```python
+from bose import *
+
+class Task(BaseTask):
+    browser_config = BrowserConfig(profile=1, is_tiny_profile=True)
+```
+
+By setting `is_tiny_profile` to `True` in the `BrowserConfig` object, you can take advantage of the Tiny Profile functionality. This will allow you to efficiently manage and store large amounts of account data within a minimal amount of storage space.
+
 
 
 ## Task Config
@@ -72,8 +89,20 @@ class Task(BaseTask):
 
 ## Running Tasks
 
-LEt's say want to run many tasks then just name them one after another. example
+If you wish to execute multiple sequentially, you can specify them in the `config.py` file as follows:
+
+```python
+from .linkedin_signup import LinkedinSignupTask
+from .linkedin_post import LinkedinPostTask
+
+tasks_to_be_run = [
+    LinkedinSignupTask,
+    LinkedinPostTask
+]
 ```
-python main.py linkedin_signup linkedin_post
+
+To run these tasks, you can use the following command:
+
+```shell
+python main.py
 ```
-in this case linkedin_signup task wiol be run and then linkedin_post task

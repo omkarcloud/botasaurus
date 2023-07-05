@@ -4,7 +4,9 @@ sidebar_position: 3
 
 # Tutorial
 
-Following examples shows how to create a Task to create 100 Outlook accounts.
+Following examples shows how to create a Task to create 100 Outlook accounts. 
+
+Please Read the Getting Started and Niceties to learn about Bose.
 
 <!-- TODO: Tutorial REDO -->
 
