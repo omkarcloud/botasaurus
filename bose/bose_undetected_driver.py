@@ -277,7 +277,7 @@ window.scrollBy(0, 10000);
             traceback.print_exc()
             print('Failed to save screenshot')
 
-    def prompt_to_solve_captcha(self):
+    def prompt_to_solve_captcha(self, more_rules = []):
         print('')
         print('   __ _ _ _    _                          _       _           ')
         print('  / _(_) | |  (_)                        | |     | |          ')
@@ -289,4 +289,14 @@ window.scrollBy(0, 10000);
         print('                                   |_|                        ')
         print('')
 
-        return beep_input('Press fill in the captcha and press enter to continue ...', self.beep)
+        print('General Rules of Captcha Solving')
+        print(' - Solve it Fast')
+
+        for t in more_rules:
+            print(t)
+        # print('- Solve it Fast')
+        # print('1. If')
+
+        return beep_input('Press fill in the captcha, the faster the less detectable, then press enter to continue ...', self.beep)
+
+        # return beep_input('Press fill in the captcha and press enter to continue ...', self.beep)
