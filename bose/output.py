@@ -74,8 +74,10 @@ class Output:
             output_dir = "output"
 
             # Save the image in the output directory
+            path = f'{output_dir}/{filename}'
             with open(relative_path(
-                f'{output_dir}/{filename}', 0), "wb") as f:
+                path, 0), "wb") as f:
                 f.write(response.content)
         else:
             print("Failed to download the image.")
+            return path

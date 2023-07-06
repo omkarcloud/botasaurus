@@ -151,7 +151,7 @@ It comes equipped with several features, including:
 
 ## Getting the Most out of Bose
 
-To get the most out of Bose, you should read the [Tutorial](tutorial/tutorial.md).
+To get the most out of Bose, you should read the [Tutorial](tutorial.md).
 
 The tutorial is the best way to start your Bose adventure. It's readable and feature-ful. You'll go all the way from `git clone` to scraping Google Maps! And by the end, you should feel comfortable enough to scrape websites using Bose framework.
 
@@ -163,7 +163,7 @@ Additionally, We warmly welcome you to Bose Community!
 
 As you can probably tell from the sidebar, Bose's docs are organized into two sections:
 
-- [Tutorial](tutorial/tutorial.md)
+- [Tutorial](tutorial.md)
 - [Reference](/docs/category/reference/)
 <!-- - [How To](/docs/category/how-to/) -->
 

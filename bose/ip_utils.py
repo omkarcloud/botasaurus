@@ -12,7 +12,8 @@ def find_ip_details():
            del data["readme"]
         return data
     except ReadTimeout:
-        return None
+        print('Refetching IP')
+        return find_ip_details()
     except Exception:
         traceback.print_exc()
         return None
