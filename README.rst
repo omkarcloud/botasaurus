@@ -1,8 +1,6 @@
 🚀 Introducing ✨ Bose Framework - The Swiss Army Knife for Bot Developers 🤖
 =============================================================================
 
-.. figure:: https://www.omkar.cloud/bose/assets/images/featured-0bacb14445a1b4cf367c10cd01454000.jpg
-
 Bot Development is Tough.
 
 Bot Detectors like Cloudflare are ready to defend websites from our
