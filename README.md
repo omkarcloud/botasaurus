@@ -95,12 +95,25 @@ Similarly, to how Netaji launched a brave attack to free India, I hope that most
 
 Read the Get Started Guide [here](https://www.omkar.cloud/bose/docs/tutorial/).
 
+## Sponsors
 
-## Support Our Work
+Bose is an MIT-licensed open source project with its ongoing development made possible entirely by the support of these awesome sponsers. If you'd like to join them, please consider [sponsoring Bose's development](https://github.com/sponsors/omkarcloud).
+
+<p align="center">
+  <h3 align="center">Special Sponsor</h3>
+</p>
+
+<p align="center">
+  <a target="_blank" href="https://www.omkar.cloud/l/bright-data/">
+  <img alt="special sponsor Bright Data" src="https://www.omkar.cloud/images/bright-data-banner.png" width="250">
+  </a>
+</p>
+
+<!-- ## Support Our Work
 
 Thanks to Bose Framework, you've been able to save countless hours of your development time. If you like Bose Framework and would like to see it get it grow better, kindly consider [sponsoring us](https://github.com/sponsors/omkarcloud).
 
-Your sponsorship helps us continue improving bose. We greatly appreciate your support.
+Your sponsorship helps us continue improving bose. We greatly appreciate your support. -->
 
 ## License
 
