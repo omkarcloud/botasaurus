@@ -128,17 +128,19 @@ class BoseDriver(webdriver.Chrome):
         self.execute_script(""" 
 window.scrollBy(0, 10000);
 """)
+        
+    def can_element_be_scrolled(self, element):
+        # <=3 is a fix to handle floating point numbers
+        result = not (self.execute_script(
+            "return Math.abs(arguments[0].scrollTop - (arguments[0].scrollHeight - arguments[0].offsetHeight)) <= 3", element))
+        return result
 
     def scroll_element(self, element):
-
-        did_element_scroll = self.execute_script(
-            "return Math.round(arguments[0].scrollTop) === Math.round(Math.round(arguments[0].scrollHeight) - Math.round(arguments[0].offsetHeight))", element)
-
-        if did_element_scroll:
-            return False
-        else:
+        if self.can_element_be_scrolled(element):
             self.execute_script("arguments[0].scrollBy(0, 10000)", element)
             return True
+        else:
+            return False
 
     def get_cookies_dict(self):
         all_cookies = self.get_cookies()
@@ -269,6 +271,11 @@ window.scrollBy(0, 10000);
 
     def save_screenshot(self, filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".png"):
         try:
+
+
+            if not filename.endswith(".png"):
+                filename = filename + ".png"
+
             saving_screenshot_at = relative_path(
                 f'{self.task_path}/{filename}', 0)
             self.get_screenshot_as_file(

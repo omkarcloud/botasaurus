@@ -29,20 +29,20 @@ def launch_tasks(*tasks):
 
         task  = Task()
         task_config = task.get_task_config()
+        data = task.get_data()
+        if type(data) is not list:
+            data = [data]
 
         should_first_beep = len(tasks) > 1
 
-        if task_config.prompt_to_close_browser: 
-            prompt_message = f"Kindly close other browsers where {task_config.target_website} is open to prevent detection from {task_config.target_website} and press enter to continue..."
-            beep_input(prompt_message, task_config.beep and should_first_beep)
+        if len(data) > 0:
+            if task_config.prompt_to_close_browser: 
+                prompt_message = f"Kindly close other browsers where {task_config.target_website} is open to prevent detection from {task_config.target_website} and press enter to continue..."
+                beep_input(prompt_message, task_config.beep and should_first_beep)
 
-        if task_config.change_ip: 
-            prompt_change_ip(task_config.beep and should_first_beep)
-
-        data = task.get_data()
+            if task_config.change_ip: 
+                prompt_change_ip(task_config.beep and should_first_beep)
         
-        if type(data) is not list:
-            data = [data]
         
         schedules = task.schedule(data)
 
