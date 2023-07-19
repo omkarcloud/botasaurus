@@ -28,6 +28,7 @@ class Output:
         print(f"View written JSON file at {filename}")        
 
     def write_csv(data, filename):
+        
         """
         Save a list of dictionaries as a CSV file.
 
@@ -35,10 +36,13 @@ class Output:
             data: a list of dictionaries
             filename: the name of the CSV file to save
         """
+        
+        if type(data) is dict:
+            data = [data]
+
         if len(data) == 0:
             print("Data is empty.")
             return
-
 
         if not filename.startswith("output/"):
             filename = "output/" +  filename
