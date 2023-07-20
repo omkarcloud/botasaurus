@@ -252,7 +252,12 @@ def read_json(path):
     with open(path, 'r') as fp:
         users = json.load(fp)
         return users
-    
+
+def read_file(path):
+    with open(path, 'r') as fp:
+        content = fp.read()
+        return content
+        
 def write_json(data, path,  indent=4):
     with open(path, 'w') as fp:
         json.dump(data, fp, indent=indent)
@@ -275,3 +280,7 @@ def datetime_to_str(when):
     return when.strftime(datetime_format)
 
 
+def get_current_profile_path(config): 
+    profiles_path = f'profiles/{config.profile}/'
+    # profiles_path =  relative_path(path, 0)
+    return profiles_path

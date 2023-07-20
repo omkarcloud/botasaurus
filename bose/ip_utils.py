@@ -1,34 +1,41 @@
 import requests
 from requests.exceptions import ReadTimeout
 import traceback
-
-def find_ip_details():
+def find_ip_details(max_retries=5):
     url = 'https://www.omkar.cloud/backend/ipinfo/'
     try:
         response = requests.get(url, timeout=10)
-        data =  (response.json())
+        data = response.json()
 
         if "readme" in data:
            del data["readme"]
         return data
-    except ReadTimeout:
-        print('Refetching IP')
-        return find_ip_details()
-    except Exception:
+    except requests.exceptions.ReadTimeout:
+        if max_retries > 0:
+            print('ReadTimeout occurred. Retrying...')
+            return find_ip_details(max_retries - 1)
+        else:
+            print('Max retries exceeded. Unable to fetch IP details.')
+            return None
+    except Exception as e:
         traceback.print_exc()
         return None
-    
 
-def find_ip():
+def find_ip(attempts=5):
     url = 'https://checkip.amazonaws.com/'
     try:
         response = requests.get(url, timeout=10)
-        return (response.text).strip()
+        return response.text.strip()
 
-        # requests.exceptions.ReadTimeout
     except ReadTimeout:
-        return None
-    except Exception:
+        if attempts > 1:
+            print("ReadTimeout occurred. Retrying...")
+            return find_ip(attempts - 1)
+        else:
+            print("Max attempts reached. Failed to get IP address.")
+            return None
+
+    except Exception as e:
         traceback.print_exc()
         return None
 

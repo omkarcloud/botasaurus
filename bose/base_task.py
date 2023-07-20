@@ -1,13 +1,13 @@
 import os
 import traceback
-from .beep_utils import beep_input
+from joblib import Parallel, delayed
 
 from .profile import Profile
 
 from .schedule_utils import ScheduleUtils
 from .create_driver import BrowserConfig, create_driver
 from .bose_driver import BoseDriver
-from .utils import relative_path,read_json,  merge_dicts_in_one_dict, write_file, write_html, write_json,get_driver_path
+from .utils import relative_path,merge_dicts_in_one_dict, write_file, write_html, write_json,get_driver_path
 from .local_storage import LocalStorage
 from .analytics import Analytics
 from .task_info import TaskInfo
@@ -32,55 +32,6 @@ def get_page_source_safe(driver):
 def _download_driver():
     from .download_driver import download_driver
     download_driver()
-    
-
-def get_current_profile_path(config: BrowserConfig): 
-    profiles_path = f'profiles/{config.profile}/'
-    # profiles_path =  relative_path(path, 0)
-    return profiles_path
-    
-def save_cookies(driver, config):
-    current_profile_data = get_current_profile_path(config) + 'profile.json'
-    current_profile_data_path =  relative_path(current_profile_data, 0)
-
-    driver.execute_cdp_cmd('Network.enable', {})
-    cookies = (driver.execute_cdp_cmd('Network.getAllCookies', {}))
-    driver.execute_cdp_cmd('Network.disable', {})
-
-    if type(cookies) is not list:
-         cookies = cookies.get('cookies')
-    write_json(cookies, current_profile_data_path)
-
-def load_cookies(driver: BoseDriver, config):
-    current_profile = get_current_profile_path(config)
-    current_profile_path =  relative_path(current_profile, 0)
-
-    if not os.path.exists(current_profile_path):
-        os.makedirs(current_profile_path)
-    
-
-    current_profile_data = get_current_profile_path(config) + 'profile.json'
-    current_profile_data_path =  relative_path(current_profile_data, 0)
-
-    if not os.path.isfile(current_profile_data_path):
-        return
-
-    cookies = read_json(current_profile_data_path)
-    # Enables network tracking so we may use Network.setCookie method
-    driver.execute_cdp_cmd('Network.enable', {})
-    # Iterate through pickle dict and add all the cookies
-    for cookie in cookies:
-        # Fix issue Chrome exports 'expiry' key but expects 'expire' on import
-        if 'expiry' in cookie:
-            cookie['expires'] = cookie['expiry']
-            del cookie['expiry']
-        # Replace domain 'apple.com' with 'microsoft.com' cookies
-        cookie['domain'] = cookie['domain'].replace('apple.com', 'microsoft.com')
-        # Set the actual cookie
-        driver.execute_cdp_cmd('Network.setCookie', cookie)
-        
-    driver.execute_cdp_cmd('Network.disable', {})
-
 
 class BaseTask():
     def __init__(self):
@@ -111,15 +62,41 @@ class BaseTask():
         return ScheduleUtils.no_delay(data)
 
 
+
+        
+    def set_config_on_driver(self, driver):
+            driver.task_id = self.task_id
+            driver.task_path = self.task_path
+            driver.beep = self._task_config.beep
+
     def create_driver(self, config: BrowserConfig):
-        return create_driver(config)
+        driver =  create_driver(config)
+        self.set_config_on_driver(driver)
+        return driver
     
+    # simple headless drivers no profile options
+    def parallel(self, callable, data_list= [None], n = 2):
+        def run(data):
+            config = self.get_browser_config(data)
+            driver = self.create_driver(config)
+            
+            result = callable(driver, data)
+            
+            driver.close()
+            return result
+        
+        n = min(len(data_list), n)
+
+        result = (Parallel(n_jobs=n, backend="threading")(delayed(run)(l) for l in data_list))
+        return result 
+        
+
     def begin_task(self, data, task_config:TaskConfig):
         def create_directories(task_path):
 
             driver_path =  relative_path(get_driver_path(), 0)
             if not os.path.isfile(driver_path):
-                print('Downloading Driver in build/ directory ...')
+                print('[INFO] Downloading Chrome Driver in build/ directory. This is a one-time process. Download in progress...')
                 _download_driver()
 
             tasks_path =  relative_path('tasks/', 0)
@@ -138,6 +115,7 @@ class BaseTask():
             if not os.path.exists(path):
                 os.makedirs(path)
 
+        
         def run_task(is_retry, retry_attempt):
             # print('Launching Task')
             task = TaskInfo()
@@ -148,7 +126,7 @@ class BaseTask():
             def end_task(driver:BoseDriver):
                 task.end()
                 task.set_ip()
-                data = task.data
+                data = task.get_data()
                 driver.save_screenshot(final_image)
                 
                 html_path  = f'{self.task_path}/page.html'
@@ -178,30 +156,30 @@ class BaseTask():
             create_directories(self.task_path)
             
             task.start()
+
+            self._task_config = task_config 
             config = self.get_browser_config(data)
             driver = self.create_driver(config)
 
             if config.profile is not None:
                 Profile.profile = config.profile
 
-            driver.task_id = self.task_id
-            driver.task_path = self.task_path
-            driver.beep = task_config.beep
+
+            self.set_config_on_driver(driver)
+
             self.beep = task_config.beep
 
             final_image_path = f'{self.task_path}/{final_image}'
             
-            
-            if config.is_tiny_profile:
-                load_cookies(driver, config)
-
-            def close_driver(driver):
+            def close_driver(driver:BoseDriver):
                 print("Closing Browser")                
-                if config.is_tiny_profile:
-                    save_cookies(driver, config)
                 # set tiny profile data
                 driver.close()
-                print("Closed Browser")                
+                print("Closed Browser")  
+
+                if self.task_config.log_time:
+                    duration = task.get_data()['duration']
+                    print(f'Task done in {duration}.')              
 
             result = None
             try:

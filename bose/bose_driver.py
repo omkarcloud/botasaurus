@@ -12,10 +12,24 @@ from time import sleep
 from .beep_utils import beep_input
 from .local_storage_driver import LocalStorage
 from .opponent import Opponent
-from .utils import relative_path, sleep_for_n_seconds, sleep_forever
+from .utils import get_current_profile_path, read_file, relative_path, sleep_for_n_seconds, sleep_forever, write_json
+
+    
+def save_cookies(driver, config):
+            current_profile_data = get_current_profile_path(config) + 'profile.json'
+            current_profile_data_path =  relative_path(current_profile_data, 0)
+
+            driver.execute_cdp_cmd('Network.enable', {})
+            cookies = (driver.execute_cdp_cmd('Network.getAllCookies', {}))
+            driver.execute_cdp_cmd('Network.disable', {})
+
+            if type(cookies) is not list:
+                cookies = cookies.get('cookies')
+            write_json(cookies, current_profile_data_path)
 
 
 class BoseDriver(webdriver.Chrome):
+    beep = True
 
     def get_by_current_page_referrer(self, link, wait=None):
 
@@ -128,7 +142,7 @@ class BoseDriver(webdriver.Chrome):
         self.execute_script(""" 
 window.scrollBy(0, 10000);
 """)
-        
+
     def can_element_be_scrolled(self, element):
         # <=3 is a fix to handle floating point numbers
         result = not (self.execute_script(
@@ -219,6 +233,14 @@ window.scrollBy(0, 10000);
 
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
+
+
+    def execute_file(self, filename):
+        if not filename.endswith(".js"):
+            filename = filename + ".js"
+        content = read_file(filename)
+        return self.execute_script(content)
+
     def get_images(self, search=None, wait=None):
 
         def extract_links(elements):
@@ -268,29 +290,29 @@ window.scrollBy(0, 10000);
             raise Exception(f"Page {target} not found")
         return False
 
-
     def save_screenshot(self, filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".png"):
         try:
-
 
             if not filename.endswith(".png"):
                 filename = filename + ".png"
 
+            final_path = f'{self.task_path}/{filename}'
             saving_screenshot_at = relative_path(
-                f'{self.task_path}/{filename}', 0)
+                final_path, 0)
             self.get_screenshot_as_file(
                 saving_screenshot_at)
+            # print('Saved screenshot at {0}'.format(final_path))
         except:
             traceback.print_exc()
             print('Failed to save screenshot')
 
-    def prompt_to_solve_captcha(self, more_rules = []):
+    def prompt_to_solve_captcha(self, more_rules=[]):
         print('')
         print('   __ _ _ _    _                          _       _           ')
         print('  / _(_) | |  (_)                        | |     | |          ')
         print(' | |_ _| | |   _ _ __      ___ __ _ _ __ | |_ ___| |__   __ _ ')
-        print(' |  _| | | |  | | `_ \    / __/ _` | `_ \| __/ __| `_ \ / _` |') 
-        print(' | | | | | |  | | | | |  | (_| (_| | |_) | || (__| | | | (_| |')   # Tells user to solve captcha
+        print(' |  _| | | |  | | `_ \    / __/ _` | `_ \| __/ __| `_ \ / _` |')
+        print(' | | | | | |  | | | | |  | (_| (_| | |_) | || (__| | | | (_| |')
         print(' |_| |_|_|_|  |_|_| |_|   \___\__,_| .__/ \__\___|_| |_|\__,_|')
         print('                                   | |                        ')
         print('                                   |_|                        ')
@@ -307,3 +329,8 @@ window.scrollBy(0, 10000);
         return beep_input('Press fill in the captcha, the faster the less detectable, then press enter to continue ...', self.beep)
 
         # return beep_input('Press fill in the captcha and press enter to continue ...', self.beep)
+    def close(self) -> None:
+        if (self.browser_config.is_tiny_profile):
+            save_cookies(self, self.browser_config)
+
+        return super().close()

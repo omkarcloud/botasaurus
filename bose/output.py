@@ -1,6 +1,6 @@
 import requests
 import csv
-from .utils import relative_path, write_json, read_json, write_html
+from .utils import read_file, relative_path, write_json, read_json, write_html
 
 class Output:
 
@@ -97,6 +97,15 @@ class Output:
         print(f"View written HTML file at {filename}")
 
 
+    def read_html(data, filename):
+        if not filename.startswith("output/"):
+            filename = "output/" +  filename
+
+        if not filename.endswith(".html"):
+            filename = filename + ".html"
+
+        return read_file(filename)
+
 
     def write_file(data, filename):
         if not filename.startswith("output/"):
@@ -107,4 +116,9 @@ class Output:
         print(f"View written file at {filename}")
 
 
+    def read_file(data, filename):
+        if not filename.startswith("output/"):
+            filename = "output/" +  filename
+
+        return read_file(filename)
 

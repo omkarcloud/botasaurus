@@ -1,7 +1,7 @@
 from selenium.common.exceptions import WebDriverException
 from .user_agent import UserAgentInstance, UserAgent
 from .window_size import WindowSize, WindowSizeInstance
-from .utils import NETWORK_ERRORS, is_windows, relative_path, retry_if_is_error, silentremove
+from .utils import NETWORK_ERRORS, get_current_profile_path, is_windows, read_json, relative_path, retry_if_is_error, silentremove
 from selenium.webdriver.chrome.options import Options as GoogleChromeOptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from undetected_chromedriver import ChromeOptions
@@ -11,22 +11,34 @@ from .bose_undetected_driver import BoseUndetectedDriver
 import shutil
 import os
 
+
 class RetryException(Exception):
     pass
 
 class BrowserConfig:
-    def __init__(self, user_agent=None, headless= False,  window_size=WindowSize.window_size_1920_1080, profile=None, is_eager=False, use_undetected_driver=False, is_tiny_profile=False):
+    def __init__( self, 
+                  headless=False,  
+                  use_undetected_driver=False, 
+                  block_images_fonts_css = False, 
+                  profile=None, 
+                  is_tiny_profile=False,
+                  user_agent=None,
+                  window_size=WindowSize.window_size_1920_1080, 
+                  is_eager=False, 
+                  ):
         self.user_agent = user_agent
-        self.headless = headless    
+        self.headless = headless
         self.window_size = window_size
-        
+        self.block_images_fonts_css = block_images_fonts_css
+
+
         if profile is not None:
             self.profile = str(profile)
-        else: 
+        else:
             self.profile = None
         self.is_eager = is_eager
         self.use_undetected_driver = use_undetected_driver
-        
+
         self.is_tiny_profile = is_tiny_profile
 
         if self.is_tiny_profile and self.profile is None:
@@ -156,6 +168,37 @@ def get_driver_path():
     return dest_path
 
 
+def load_cookies(driver: BoseDriver, config):
+    current_profile = get_current_profile_path(config)
+    current_profile_path = relative_path(current_profile, 0)
+
+    if not os.path.exists(current_profile_path):
+        os.makedirs(current_profile_path)
+
+    current_profile_data = get_current_profile_path(config) + 'profile.json'
+    current_profile_data_path = relative_path(current_profile_data, 0)
+
+    if not os.path.isfile(current_profile_data_path):
+        return
+
+    cookies = read_json(current_profile_data_path)
+    # Enables network tracking so we may use Network.setCookie method
+    driver.execute_cdp_cmd('Network.enable', {})
+    # Iterate through pickle dict and add all the cookies
+    for cookie in cookies:
+        # Fix issue Chrome exports 'expiry' key but expects 'expire' on import
+        if 'expiry' in cookie:
+            cookie['expires'] = cookie['expiry']
+            del cookie['expiry']
+        # Replace domain 'apple.com' with 'microsoft.com' cookies
+        cookie['domain'] = cookie['domain'].replace(
+            'apple.com', 'microsoft.com')
+        # Set the actual cookie
+        driver.execute_cdp_cmd('Network.setCookie', cookie)
+
+    driver.execute_cdp_cmd('Network.disable', {})
+
+
 def create_driver(config: BrowserConfig):
     def run():
         is_undetected = config.use_undetected_driver
@@ -168,6 +211,15 @@ def create_driver(config: BrowserConfig):
             print("Running in Docker, So adding sandbox arguments")
             options.arguments.extend(
                 ["--no-sandbox", "--disable-setuid-sandbox"])
+
+        if config.block_images_fonts_css:
+            options.add_experimental_option(
+                "prefs", {
+                    "profile.managed_default_content_settings.images": 2,
+                    "profile.managed_default_content_settings.stylesheet": 2,
+                    "profile.managed_default_content_settings.fonts": 2,
+                }
+            )
 
         driver_attributes = add_essential_options(
             options, None if config.is_tiny_profile else config.profile, config.window_size, config.user_agent)
@@ -216,4 +268,8 @@ def create_driver(config: BrowserConfig):
         run, NETWORK_ERRORS + [(WebDriverException, lambda: delete_corrupted_files(config.profile) if config.profile else None)], 5)
     print("Launched Browser")
 
+    if config.is_tiny_profile:
+        load_cookies(driver, config)
+
+    driver.browser_config = config
     return driver
