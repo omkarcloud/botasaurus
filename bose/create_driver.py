@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.options import Options as GoogleChromeOptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from undetected_chromedriver import ChromeOptions
 from .bose_driver import BoseDriver
+from selenium.webdriver import Proxy  # noqa
 
 from .bose_undetected_driver import BoseUndetectedDriver
 import shutil
@@ -18,6 +19,7 @@ class RetryException(Exception):
 class BrowserConfig:
     def __init__( self, 
                   headless=False,  
+                  proxy=None,  
                   use_undetected_driver=False, 
                   block_images_fonts_css = False, 
                   profile=None, 
@@ -27,6 +29,7 @@ class BrowserConfig:
                   is_eager=False, 
                   ):
         self.user_agent = user_agent
+        self.proxy = proxy
         self.headless = headless
         self.window_size = window_size
         self.block_images_fonts_css = block_images_fonts_css
@@ -206,6 +209,20 @@ def create_driver(config: BrowserConfig):
 
         if config.headless:
             options.add_argument('--headless=new')
+
+
+        if config.proxy is not None:
+                proxy = Proxy()
+                proxy.http_proxy = config.proxy
+                proxy.ssl_proxy = config.proxy
+
+                try:
+                    proxy.no_proxy = config.proxy
+                except KeyError:
+                    pass
+
+                options.proxy = proxy
+            # options.add_argument('--proxy-server={}'.format(config.proxy))
 
         if is_docker():
             print("Running in Docker, So adding sandbox arguments")

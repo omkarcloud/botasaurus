@@ -96,7 +96,6 @@ class BaseTask():
 
             driver_path =  relative_path(get_driver_path(), 0)
             if not os.path.isfile(driver_path):
-                print('[INFO] Downloading Chrome Driver in build/ directory. This is a one-time process. Download in progress...')
                 _download_driver()
 
             tasks_path =  relative_path('tasks/', 0)

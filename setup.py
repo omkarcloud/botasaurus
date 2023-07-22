@@ -7,6 +7,7 @@ install_requires = [
     "selenium==4.5.0",
     "undetected_chromedriver>=3.4.6",
     "beautifulsoup4>=4.11.2",
+    "joblib==1.2.0",
 
 ]
 extras_require = {}
@@ -24,7 +25,7 @@ def get_description():
 setup(
     name='bose',
     packages=['bose'],
-    version='2.0.8',
+    version='2.0.10',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/bose/",
