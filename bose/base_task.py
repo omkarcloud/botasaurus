@@ -1,5 +1,7 @@
 import os
 import traceback
+import itertools
+
 from joblib import Parallel, delayed
 
 from .profile import Profile
@@ -75,10 +77,11 @@ class BaseTask():
         return driver
     
     # simple headless drivers no profile options
-    def parallel(self, callable, data_list= [None], n = 2):
-        def run(data):
+    def parallel(self, callable, data_list= [None], n = 2,available_drivers=[]):
+        def run(data,driver = None):
             config = self.get_browser_config(data)
-            driver = self.create_driver(config)
+            if driver is None:
+                driver = self.create_driver(config)
             
             result = callable(driver, data)
             
@@ -86,8 +89,7 @@ class BaseTask():
             return result
         
         n = min(len(data_list), n)
-
-        result = (Parallel(n_jobs=n, backend="threading")(delayed(run)(l) for l in data_list))
+        result = (Parallel(n_jobs=n, backend="threading")(delayed(run)(l,d) for l,d in itertools.zip_longest(data_list,available_drivers,fillvalue=None)))
         return result 
         
 
