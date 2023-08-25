@@ -79,9 +79,14 @@ class BaseTask():
         def run(data):
             config = self.get_browser_config(data)
             driver = self.create_driver(config)
-            
-            result = callable(driver, data)
-            
+            result = []
+            try:
+                result = callable(driver, data)
+            except Exception as e:
+              if not self._task_config.close_on_crash:
+                driver.prompt("Press Enter To Close Browser")
+              else:
+                raise e
             driver.close()
             return result
         

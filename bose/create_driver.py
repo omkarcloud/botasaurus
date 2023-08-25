@@ -6,8 +6,6 @@ from selenium.webdriver.chrome.options import Options as GoogleChromeOptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from undetected_chromedriver import ChromeOptions
 from .bose_driver import BoseDriver
-from selenium.webdriver import Proxy  # noqa
-
 from .bose_undetected_driver import BoseUndetectedDriver
 import shutil
 import os
@@ -210,20 +208,10 @@ def create_driver(config: BrowserConfig):
         if config.headless:
             options.add_argument('--headless=new')
 
-
+        selwireOptions = None
         if config.proxy is not None:
-                proxy = Proxy()
-                proxy.http_proxy = config.proxy
-                proxy.ssl_proxy = config.proxy
-
-                try:
-                    proxy.no_proxy = config.proxy
-                except KeyError:
-                    pass
-
-                options.proxy = proxy
-            # options.add_argument('--proxy-server={}'.format(config.proxy))
-
+                selwireOptions = {'proxy': {'http': config.proxy, 'https': config.proxy}}
+        
         if is_docker():
             print("Running in Docker, So adding sandbox arguments")
             options.arguments.extend(
@@ -256,6 +244,8 @@ def create_driver(config: BrowserConfig):
         print(driver_string)
 
         if is_undetected:
+            if selwireOptions is not None:
+                raise Exception("Cannot use proxy with Undetected Driver")
             driver = BoseUndetectedDriver(
                 desired_capabilities=desired_capabilities,
                 options=options
@@ -269,13 +259,22 @@ def create_driver(config: BrowserConfig):
                 ["--disable-web-security", "--disable-site-isolation-trials", "--disable-application-cache"])
 
             path = relative_path(get_driver_path(), 0)
+            if selwireOptions is not None:
+                from .bose_driver_selenium_wire import BoseDriverSeleniumWire
 
-            driver = BoseDriver(
-                desired_capabilities=desired_capabilities,
-                chrome_options=options,
-                executable_path=path,
-            )
+                driver = BoseDriverSeleniumWire(
+                                    desired_capabilities=desired_capabilities,
+                                    seleniumwire_options=selwireOptions,
+                                    chrome_options=options,
+                                    executable_path=path,
+                                )  
+            else:
+                driver = BoseDriver(
 
+                    desired_capabilities=desired_capabilities,
+                    chrome_options=options,
+                    executable_path=path,
+                )
         if driver_attributes["profile"] is None:
             del driver_attributes["profile"]
 

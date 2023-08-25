@@ -3,12 +3,12 @@ from distutils.core import setup
 
 install_requires = [
     "requests",
-    "chromedriver-autoinstaller==0.4.0",
+    "chromedriver-autoinstaller-fix",
     "selenium==4.5.0",
     "undetected_chromedriver>=3.4.6",
     "beautifulsoup4>=4.11.2",
     "joblib==1.2.0",
-
+    "selenium-wire",
 ]
 extras_require = {}
 cpython_dependencies = [
@@ -25,7 +25,7 @@ def get_description():
 setup(
     name='bose',
     packages=['bose'],
-    version='2.0.10',
+    version='2.0.14',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/bose/",

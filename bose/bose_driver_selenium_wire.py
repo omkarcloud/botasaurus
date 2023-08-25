@@ -1,6 +1,6 @@
 import traceback
 from datetime import datetime
-from selenium import webdriver
+from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
@@ -27,7 +27,7 @@ def save_cookies(driver, config):
             write_json(cookies, current_profile_data_path)
 
 
-class BoseDriver(webdriver.Chrome):
+class BoseDriverSeleniumWire(webdriver.Chrome):
     beep = True
 
     def get_by_current_page_referrer(self, link, wait=None):

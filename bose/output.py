@@ -15,7 +15,7 @@ class Output:
 
     def write_json(data, filename):
         if len(data) == 0:
-            print("Data is empty.")
+            print("No JSON File written as data list is empty.")
             return
 
         if not filename.startswith("output/"):
@@ -41,7 +41,8 @@ class Output:
             data = [data]
 
         if len(data) == 0:
-            print("Data is empty.")
+            print("No CSV File written as data list is empty.")
+            # print("Data is empty.")
             return
 
         if not filename.startswith("output/"):
