@@ -2,7 +2,7 @@
 sidebar_position: 9.5
 ---
 
-# Go Headless
+# Using Proxy
 
 The following example demonstrates how to use a proxy:
 

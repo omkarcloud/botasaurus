@@ -4,7 +4,7 @@ from chromedriver_autoinstaller_fix import get_chrome_version
 from chromedriver_autoinstaller_fix.utils import get_major_version
 import os
 import shutil
-print("Ram")
+
 def is_windows():
     return os.name == 'nt'
 

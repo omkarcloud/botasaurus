@@ -18,6 +18,7 @@ class BrowserConfig:
     def __init__( self, 
                   headless=False,  
                   proxy=None,  
+                  lang=None,  
                   use_undetected_driver=False, 
                   block_images_fonts_css = False, 
                   profile=None, 
@@ -29,6 +30,7 @@ class BrowserConfig:
         self.user_agent = user_agent
         self.proxy = proxy
         self.headless = headless
+        self.lang = lang
         self.window_size = window_size
         self.block_images_fonts_css = block_images_fonts_css
 
@@ -216,6 +218,9 @@ def create_driver(config: BrowserConfig):
             print("Running in Docker, So adding sandbox arguments")
             options.arguments.extend(
                 ["--no-sandbox", "--disable-setuid-sandbox"])
+
+        if config.lang is not None:
+            options.add_argument(f'--lang={config.lang}')
 
         if config.block_images_fonts_css:
             options.add_experimental_option(
