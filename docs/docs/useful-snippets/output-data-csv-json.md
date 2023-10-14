@@ -8,7 +8,7 @@ sidebar_position: 50
 The following example demonstrates how to output data as CSV or JSON:
 
 ```python 
-from bose import Output
+from botasaurus import Output
 
 # Data to be written to the file
 data = [

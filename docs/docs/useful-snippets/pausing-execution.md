@@ -7,7 +7,7 @@ sidebar_position: 40
 This example shows how to pause execution in the driver, which can be useful for debugging purposes:
 
 ```python 
-from bose import *
+from botasaurus import *
 
 class Task(BaseTask):
     def run(self, driver, data):

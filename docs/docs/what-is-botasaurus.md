@@ -1,30 +1,7 @@
-<p align="center">
-  <img src="https://www.omkar.cloud/images/favicon/prod/favicon-256x256.png" alt="omkar" />
-</p>
-  <div align="center" style="margin-top: 0;">
-  <h1>✨ Botasaurus Framework 🤖</h1>
-  <p>🚀 Swiss Army Knife for Bot Development 🤖</p>
-</div>
-<em>
-  <h5 align="center">(Programming Language - Python 3)</h5>
-</em>
-<p align="center">
-  <a href="#">
-    <img alt="botasaurus forks" src="https://img.shields.io/github/forks/omkarcloud/botasaurus?style=for-the-badge" />
-  </a>
-  <a href="#">
-    <img alt="Repo stars" src="https://img.shields.io/github/stars/omkarcloud/botasaurus?style=for-the-badge&color=yellow" />
-  </a>
-  <a href="#">
-    <img alt="botasaurus License" src="https://img.shields.io/github/license/omkarcloud/botasaurus?color=orange&style=for-the-badge" />
-  </a>
-  <a href="https://github.com/omkarcloud/botasaurus/issues">
-    <img alt="issues" src="https://img.shields.io/github/issues/omkarcloud/botasaurus?color=purple&style=for-the-badge" />
-  </a>
-</p>
-<p align="center">
-  <img src="https://views.whatilearened.today/views/github/omkarcloud/botasaurus.svg" width="80px" height="28px" alt="View" />
-</p>
+---
+sidebar_position: 1
+description: Botasaurus is a Swiss Army knife 🔪 for web scraping and browser automation 🤖 that helps you create bots fast. ⚡️
+---
 
 # Botasaurus - Your Ultimate Selenium-Based Bot Development Framework
 
@@ -217,6 +194,4 @@ Power of Bots is Immense, A Bot
 
 So, Ready to unlock the power of Bots? 
 
-📚 **Read the Tutorial** [here](https://www.omkar.cloud/botasaurus/docs/sign-up-tutorial/) and embark on your journey of bot mastery! 🚀
-
-## Love It? Star It! ⭐
+📚 **Read the Tutorial** [here](sign-up-tutorial.md) and embark on your journey of bot mastery! 🚀

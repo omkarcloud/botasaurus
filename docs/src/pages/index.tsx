@@ -21,7 +21,7 @@ function HomepageHeader() {
             Read Tutorial
           </Link>
           <iframe
-            src="https://ghbtns.com/github-btn.html?user=omkarcloud&repo=bose&type=star&count=true&size=large"
+            src="https://ghbtns.com/github-btn.html?user=omkarcloud&repo=botasaurus&type=star&count=true&size=large"
             frameBorder={0}
             scrolling={'0'}
             width={170}
@@ -39,7 +39,7 @@ function HomepageHeader() {
 export default function Home(): JSX.Element {
   return (
     <Layout
-      title={`Bose Framework`}
+      title={`Botasaurus Framework`}
       description="The Ultimate Web Scraping Framework">
       <HomepageHeader />
       <main>

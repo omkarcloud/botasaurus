@@ -7,7 +7,7 @@ class Analytics:
             cookies = {}
             headers = {}
             json_data = {
-                'type': 'bose_usage',
+                'type': 'botasaurus_usage',
                 'data': {
                     'task_name': task_name, 
                     "count": LocalStorage.get_item('count', 0)

@@ -1,4 +1,4 @@
-from .bose_driver import BoseDriver
+from .botasaurus_driver import BotasaurusDriver
 from .base_task import BaseTask
 from .base_data import BaseData
 from .local_storage import LocalStorage

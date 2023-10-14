@@ -6,8 +6,8 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula")
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "🤖 Bose Framework 🤖",
-  tagline: "Bose is a Swiss Army knife 🔪 for web scraping and browser automation 🤖 that helps you create bots fast. ⚡️",
+  title: "🤖 Botasaurus Framework 🤖",
+  tagline: "Botasaurus is a Swiss Army knife 🔪 for web scraping and browser automation 🤖 that helps you create bots fast. ⚡️",
   url: "https://www.omkar.cloud",
   trailingSlash: true,
 
@@ -18,15 +18,15 @@ const config = {
       async: true,
     },
     {
-      src: "/bose/ga.js",
+      src: "/botasaurus/ga.js",
     },
   ],
-  baseUrl: "/bose/",
+  baseUrl: "/botasaurus/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: "omkarcloud", // Usually your GitHub org/user name.
-  projectName: "bose", // Usually your repo name.
+  projectName: "botasaurus", // Usually your repo name.
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -49,7 +49,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            "https://github.com/omkarcloud/bose/blob/master/docs",
+            "https://github.com/omkarcloud/botasaurus/blob/master/docs",
         },
         blog: false,
         theme: {
@@ -70,9 +70,9 @@ const config = {
       // Replace with your project's social card
       image: "img/twitter-card.png",
       navbar: {
-        title: "Bose",
+        title: "Botasaurus",
         logo: {
-          alt: "Bose Logo",
+          alt: "Botasaurus Logo",
           src: "img/logo.svg",
         },
         items: [
@@ -84,7 +84,7 @@ const config = {
           },
           // {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: "https://github.com/omkarcloud/bose",
+            href: "https://github.com/omkarcloud/botasaurus",
             label: "Love It? Star It! ★",
             position: "right",
           },
@@ -97,8 +97,8 @@ const config = {
             title: "Docs",
             items: [
               {
-                label: "Introduction",
-                to: "/docs/introduction/",
+                label: "What is Botasaurus?",
+                to: "/docs/what-is-botasaurus/",
               },
             ],
           },
@@ -107,11 +107,11 @@ const config = {
             items: [
               // {
               //   label: 'Stack Overflow',
-              //   href: 'https://stackoverflow.com/questions/tagged/bose',
+              //   href: 'https://stackoverflow.com/questions/tagged/botasaurus',
               // },
               {
                 label: "GitHub Discuss",
-                href: "https://github.com/omkarcloud/bose/discussions",
+                href: "https://github.com/omkarcloud/botasaurus/discussions",
               },
             ],
           },
@@ -124,7 +124,7 @@ const config = {
               // },
               {
                 label: "GitHub",
-                href: "https://github.com/omkarcloud/bose",
+                href: "https://github.com/omkarcloud/botasaurus",
               },
             ],
           },

@@ -5,8 +5,8 @@ from .utils import NETWORK_ERRORS, get_current_profile_path, is_windows, read_js
 from selenium.webdriver.chrome.options import Options as GoogleChromeOptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from undetected_chromedriver import ChromeOptions
-from .bose_driver import BoseDriver
-from .bose_undetected_driver import BoseUndetectedDriver
+from .botasaurus_driver import BotasaurusDriver
+from .botasaurus_undetected_driver import BotasaurusUndetectedDriver
 import shutil
 import os
 
@@ -20,7 +20,7 @@ class BrowserConfig:
                   proxy=None,  
                   lang=None,  
                   use_undetected_driver=False, 
-                  block_images_fonts_css = False, 
+                  block_images = False, 
                   profile=None, 
                   is_tiny_profile=False,
                   user_agent=None,
@@ -32,7 +32,7 @@ class BrowserConfig:
         self.headless = headless
         self.lang = lang
         self.window_size = window_size
-        self.block_images_fonts_css = block_images_fonts_css
+        self.block_images = block_images
 
 
         if profile is not None:
@@ -171,7 +171,7 @@ def get_driver_path():
     return dest_path
 
 
-def load_cookies(driver: BoseDriver, config):
+def load_cookies(driver: BotasaurusDriver, config):
     current_profile = get_current_profile_path(config)
     current_profile_path = relative_path(current_profile, 0)
 
@@ -222,7 +222,7 @@ def create_driver(config: BrowserConfig):
         if config.lang is not None:
             options.add_argument(f'--lang={config.lang}')
 
-        if config.block_images_fonts_css:
+        if config.block_images:
             options.add_experimental_option(
                 "prefs", {
                     "profile.managed_default_content_settings.images": 2,
@@ -251,7 +251,7 @@ def create_driver(config: BrowserConfig):
         if is_undetected:
             if selwireOptions is not None:
                 raise Exception("Cannot use proxy with Undetected Driver")
-            driver = BoseUndetectedDriver(
+            driver = BotasaurusUndetectedDriver(
                 desired_capabilities=desired_capabilities,
                 options=options
             )
@@ -265,16 +265,16 @@ def create_driver(config: BrowserConfig):
 
             path = relative_path(get_driver_path(), 0)
             if selwireOptions is not None:
-                from .bose_driver_selenium_wire import BoseDriverSeleniumWire
+                from .botasaurus_driver_selenium_wire import BotasaurusDriverSeleniumWire
 
-                driver = BoseDriverSeleniumWire(
+                driver = BotasaurusDriverSeleniumWire(
                                     desired_capabilities=desired_capabilities,
                                     seleniumwire_options=selwireOptions,
                                     chrome_options=options,
                                     executable_path=path,
                                 )  
             else:
-                driver = BoseDriver(
+                driver = BotasaurusDriver(
 
                     desired_capabilities=desired_capabilities,
                     chrome_options=options,

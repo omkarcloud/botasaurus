@@ -10,7 +10,7 @@ Here's an example:
 
 
 ```python 
-from bose import *
+from botasaurus import *
 
 class Task(BaseTask):
 

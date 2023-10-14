@@ -1,6 +1,6 @@
 import traceback
 from datetime import datetime
-from seleniumwire import webdriver
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
@@ -12,8 +12,8 @@ from .beep_utils import beep_input
 from .local_storage_driver import LocalStorage
 from .opponent import Opponent
 from .utils import get_current_profile_path, read_file, relative_path, sleep_for_n_seconds, sleep_forever, write_json
-from selenium.common.exceptions import (NoSuchElementException)
 from .wait import Wait
+from selenium.common.exceptions import (NoSuchElementException)
 
     
 def save_cookies(driver, config):
@@ -29,7 +29,7 @@ def save_cookies(driver, config):
             write_json(cookies, current_profile_data_path)
 
 
-class BoseDriverSeleniumWire(webdriver.Chrome):
+class BotasaurusDriver(webdriver.Chrome):
     beep = True
 
     def get_by_current_page_referrer(self, link, wait=None):

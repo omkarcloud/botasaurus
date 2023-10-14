@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # 🌐 Google Maps Scraping Tutorial
@@ -59,7 +59,7 @@ Here's the quick setup process:
 Clone the Botasaurus Starter Template:
 
 ```bash
-git clone https://github.com/omkarcloud/bose-starter my-bose-project
+git clone https://github.com/omkarcloud/botasaurus-starter my-botasaurus-project
 ```
 
 **2. Navigate and Prepare**:
@@ -67,7 +67,7 @@ git clone https://github.com/omkarcloud/bose-starter my-bose-project
 Move to the project directory:
 
 ```bash
-cd my-bose-project
+cd my-botasaurus-project
 ```
 
 If you prefer Visual Studio Code for development, open the project in Visual Studio Code:
@@ -105,7 +105,7 @@ European users may encounter a form to accept cookies. We've also added code to 
 Implementing this code is simple:
 
 ```python
-from bose import *
+from botasaurus import *
 import urllib.parse
 
 # Define a custom task for scraping data from Google Maps
@@ -116,7 +116,7 @@ class GoogleMapsScraperTask(BaseTask):
         queries = ["restaurants in delhi"]
         return queries
 
-    def run(self, driver: BoseDriver, query):
+    def run(self, driver: BotasaurusDriver, query):
         
         # Visit Google Maps
         def visit_google_maps():
@@ -197,7 +197,7 @@ For each extracted link, we will navigate to the page and scrape information abo
 
 ```python
             # Visit an individual place and extract data
-            def scrape_place_data(driver: BoseDriver, link):
+            def scrape_place_data(driver: BotasaurusDriver, link):
                 driver.get(link)
                 
                 # Accept Cookies for European users
@@ -241,7 +241,7 @@ For each extracted link, we will navigate to the page and scrape information abo
 For each link in our `places_links` list, we'll call the `extract_place_details` function and gather the data:
 
 ```python
-def extract_data(driver: BoseDriver, places_links):
+def extract_data(driver: BotasaurusDriver, places_links):
     places_data = [scrape_place_data(driver, link) for link in places_links]
     return places_data
 ```
@@ -299,7 +299,7 @@ So, simply return `scraped_places` to save them as a CSV and JSON File:
 
 ```python
 class GoogleMapsScraperTask(BaseTask):
-    def run(self, driver: BoseDriver, query):
+    def run(self, driver: BotasaurusDriver, query):
 
         # ... [rest of the scraping and extraction process]
 
@@ -318,12 +318,12 @@ Fortunately, we can enhance the cost efficiency and speed of our scraper by bloc
 In Botasaurus, you can easily configure the browser used by your bot to block images. Here's the simple code to do so:
 
 ```python
-from bose import *
+from botasaurus import *
 
 class GoogleMapsScraperTask(BaseTask):
 
     # Configure the browser to block images for faster scraping
-    browser_config = BrowserConfig(block_images_fonts_css=True)
+    browser_config = BrowserConfig(block_images=True)
 
 ```
 ## 🚀 Launch It
@@ -334,21 +334,20 @@ Now, it's time to launch the bot and see it in action!
 
 1. In the repository cloned earlier, open `task.py` and paste the following code.
 ```python
-from bose import *
+from botasaurus import *
 import urllib.parse
-
 # Define a custom task for scraping data from Google Maps
 
 class GoogleMapsScraperTask(BaseTask):
     # Configure the browser to block images for faster scraping
-    browser_config = BrowserConfig(block_images_fonts_css=True)
+    browser_config = BrowserConfig(block_images=True)
 
     # Define the search queries (customize as needed)
     def get_data(self):
         queries = ["restaurants in delhi"]
         return queries
 
-    def run(self, driver: BoseDriver, query):
+    def run(self, driver: BotasaurusDriver, query):
 
         # Visit Google Maps
         def visit_google_maps():
@@ -384,7 +383,7 @@ class GoogleMapsScraperTask(BaseTask):
             return driver.links(places_links_selector)
 
         # Visit an individual place and extract data
-        def scrape_place_data(driver: BoseDriver, link):
+        def scrape_place_data(driver: BotasaurusDriver, link):
             driver.get(link)
 
             # Accept Cookies for European users
@@ -427,7 +426,7 @@ class GoogleMapsScraperTask(BaseTask):
             }
 
         # Main extraction process
-        def extract_data(driver: BoseDriver, places_links):
+        def extract_data(driver: BotasaurusDriver, places_links):
             places_data = [scrape_place_data(
                 driver, link) for link in places_links]
             return places_data
@@ -473,7 +472,7 @@ Docker enables the encapsulation of an application along with its dependencies. 
 
 Additionally, it also helps in reducing vendor lock-in.
 
-Thankfully, our `bose-starter` already comes with a `Dockerfile` and a `docker-compose.yml` file, making the dockerization process easy.
+Thankfully, our `botasaurus-starter` already comes with a `Dockerfile` and a `docker-compose.yml` file, making the dockerization process easy.
 
 To run your scraper inside a Docker container, execute the following command:
 

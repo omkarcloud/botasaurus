@@ -23,14 +23,14 @@ def get_description():
     
             
 setup(
-    name='bose',
-    packages=['bose'],
-    version='2.0.17',
+    name='botasaurus',
+    packages=['botasaurus'],
+    version='2.0.18',
     license='MIT',
     project_urls={
-        "Documentation": "https://omkar.cloud/bose/",
-        "Source": "https://github.com/omkarcloud/bose",
-        "Tracker": "https://github.com/omkarcloud/bose/issues",
+        "Documentation": "https://omkar.cloud/botasaurus/",
+        "Source": "https://github.com/omkarcloud/botasaurus",
+        "Tracker": "https://github.com/omkarcloud/botasaurus/issues",
     },
 
     description="The Ultimate Web Scraping Framework",

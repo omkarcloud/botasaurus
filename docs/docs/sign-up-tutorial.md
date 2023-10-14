@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 # 🚀 Sign Up Tutorial
@@ -61,13 +61,13 @@ code .  # Optionally, open the project in VSCode
 Within your project directory, create a Python script named `main.py` and paste the following code into `main.py`:
 
 ```python
-from bose.launch_tasks import launch_tasks
-from bose import *
+from botasaurus.launch_tasks import launch_tasks
+from botasaurus import *
 
 # Define a custom scraping Task
 class ScrapeHeadingTask(BaseTask):
 
-    def run(self, driver: BoseDriver, data):
+    def run(self, driver: BotasaurusDriver, data):
         # Visit the Omkar Cloud website
         driver.get("https://www.omkar.cloud/")
 
@@ -93,7 +93,7 @@ class ScrapeHeadingTask(BaseTask):
 
 - Inside the `run` method, we are automatically passed a Selenium driver by Botasaurus.
 ```python
-    def run(self, driver: BoseDriver, data):
+    def run(self, driver: BotasaurusDriver, data):
 ```  
 
 - In the `run` method:
@@ -375,7 +375,7 @@ Here's how it works:
              accounts = AccountGenerator.generate_accounts(3, country=Country.IN)
              return accounts
 
-         def run(self, driver: BoseDriver, account):
+         def run(self, driver: BotasaurusDriver, account):
              name = account['name']
              email = account['email']
              ...
@@ -395,7 +395,7 @@ When an account is successfully created, it's essential to store its details usi
 To store the account details after creation, you can use the `Profile.set_profile` method as follows:
 
 ```python
-def run(self, driver: BoseDriver, account):
+def run(self, driver: BotasaurusDriver, account):
     ...  # Code to Sign Up 
     Profile.set_profile(account)
 ```
@@ -423,9 +423,9 @@ While this seems basic, it provides a foundation for understanding how profiles 
 This code enables the capture of screenshots for each created account:
 
 ```python
-from bose.account_generator import AccountGenerator, Country
-from bose.temp_mail import TempMail
-from bose import *
+from botasaurus.account_generator import AccountGenerator, Country
+from botasaurus.temp_mail import TempMail
+from botasaurus import *
 
 # Define a custom task for taking screenshots
 class ScreenShotTask(BaseTask):
@@ -442,7 +442,7 @@ class ScreenShotTask(BaseTask):
         )
 
     # Define the action to perform: in this case, take a screenshot
-    def run(self, driver: BoseDriver, account):
+    def run(self, driver: BotasaurusDriver, account):
         username = account['username']
         driver.get("https://www.omkar.cloud/")
         driver.save_screenshot(username)
@@ -489,7 +489,7 @@ In above code, we define `get_browser_config()` which determines the profile pat
 --- 
 
 ```python
-def run(self, driver: BoseDriver, account):
+def run(self, driver: BotasaurusDriver, account):
     username = account['username']
     driver.get("https://www.omkar.cloud/")
     driver.save_screenshot(username)
@@ -518,12 +518,12 @@ Loading image resources can have a couple of significant downsides like:
 
 By blocking images from loading, we can achieve faster scraping and also a healthier wallet.
 
-To configure the browser to block images, use the following code, setting the `block_images_fonts_css` parameter to `True`:
+To configure the browser to block images, use the following code, setting the `block_images` parameter to `True`:
 
 ```python
     def get_browser_config(self, account):
         return BrowserConfig(
-            block_images_fonts_css=True, # <--- 
+            block_images=True, # <--- 
             profile=account['username'],
             is_tiny_profile=True,
         )
@@ -538,9 +538,9 @@ Finally, it's time to put all the pieces together. Follow these steps to create 
 1. Create a Python script named `main.py` and paste the following code into `main.py`:
 
 ```python
-from bose.account_generator import AccountGenerator, Country
-from bose.temp_mail import TempMail
-from bose import *
+from botasaurus.account_generator import AccountGenerator, Country
+from botasaurus.temp_mail import TempMail
+from botasaurus import *
 
 class SignUpTask(BaseTask):
 
@@ -548,14 +548,14 @@ class SignUpTask(BaseTask):
         return BrowserConfig(
             profile=account['username'],
             is_tiny_profile=True,
-            block_images_fonts_css=True
+            block_images=True
         )
 
     def get_data(self):
         accounts = AccountGenerator.generate_accounts(3, country=Country.IN)
         return accounts
 
-    def run(self, driver: BoseDriver, account):
+    def run(self, driver: BotasaurusDriver, account):
         name = account['name']
         email = account['email']
         password = account['password']
@@ -580,13 +580,13 @@ class ScreenShotTask(BaseTask):
         return BrowserConfig(
             profile=account['username'],
             is_tiny_profile=True,
-            block_images_fonts_css=True
+            block_images=True
         )
 
     def get_data(self):
         return Profile.get_profiles()
 
-    def run(self, driver: BoseDriver, account):
+    def run(self, driver: BotasaurusDriver, account):
         username = account['username']
         driver.get("https://www.omkar.cloud/")
         driver.save_screenshot(username)
@@ -643,9 +643,9 @@ Screenshots of each user's dashboard will be captured and placed in the respecti
 After inspecting the output, I encourage you to read the final code provided below to grasp the underlying logic and understand how the pieces fit together.
 
 ```python
-from bose.account_generator import AccountGenerator, Country
-from bose.temp_mail import TempMail
-from bose import *
+from botasaurus.account_generator import AccountGenerator, Country
+from botasaurus.temp_mail import TempMail
+from botasaurus import *
 
 class SignUpTask(BaseTask):
 
@@ -653,14 +653,14 @@ class SignUpTask(BaseTask):
         return BrowserConfig(
             profile=account['username'],
             is_tiny_profile=True,
-            block_images_fonts_css=True
+            block_images=True
         )
 
     def get_data(self):
         accounts = AccountGenerator.generate_accounts(3, country=Country.IN)
         return accounts
 
-    def run(self, driver: BoseDriver, account):
+    def run(self, driver: BotasaurusDriver, account):
         name = account['name']
         email = account['email']
         password = account['password']
@@ -685,13 +685,13 @@ class ScreenShotTask(BaseTask):
         return BrowserConfig(
             profile=account['username'],
             is_tiny_profile=True,
-            block_images_fonts_css=True
+            block_images=True
         )
 
     def get_data(self):
         return Profile.get_profiles()
 
-    def run(self, driver: BoseDriver, account):
+    def run(self, driver: BotasaurusDriver, account):
         username = account['username']
         driver.get("https://www.omkar.cloud/")
         driver.save_screenshot(username)

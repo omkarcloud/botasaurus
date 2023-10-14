@@ -6,7 +6,7 @@ from .profile import Profile
 
 from .schedule_utils import ScheduleUtils
 from .create_driver import BrowserConfig, create_driver
-from .bose_driver import BoseDriver
+from .botasaurus_driver import BotasaurusDriver
 from .utils import relative_path,merge_dicts_in_one_dict, write_file, write_html, write_json,get_driver_path
 from .local_storage import LocalStorage
 from .analytics import Analytics
@@ -157,7 +157,7 @@ class BaseTask():
             task.set_task_name(task_name)
 
             final_image = "final.png"
-            def end_task(driver:BoseDriver):
+            def end_task(driver:BotasaurusDriver):
                 task.end()
                 task.set_ip()
                 data = task.get_data()
@@ -205,7 +205,7 @@ class BaseTask():
 
             final_image_path = f'{self.task_path}/{final_image}'
             
-            def close_driver(driver:BoseDriver):
+            def close_driver(driver:BotasaurusDriver):
                 print("Closing Browser")                
                 # set tiny profile data
                 driver.close()
@@ -252,7 +252,7 @@ class BaseTask():
 
         return final
 
-    def run(self, driver: BoseDriver, data: any):
+    def run(self, driver: BotasaurusDriver, data: any):
         pass
 
     def is_new_user(self):

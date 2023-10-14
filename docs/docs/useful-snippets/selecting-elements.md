@@ -4,7 +4,7 @@ sidebar_position: 30
 
 # Selecting element
 
-The following example illustrates how to select elements using the Bose Driver methods:
+The following example illustrates how to select elements using the Botasaurus Driver methods:
 
 
 ```python 

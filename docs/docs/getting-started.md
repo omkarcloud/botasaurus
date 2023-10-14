@@ -1,34 +1,40 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 # 🚀 Getting Started
 
 :::info Prerequisites
 
-- Bose requires [Python](https://www.python.org/) (>=3.x)
+To use Botasaurus effectively, it is helpful to have a familiarity with Python and Selenium concepts.
 
 :::
+
+This section will guide you through the steps to create a new Botasaurus project using starter template, which is recommended for most Greenfield automation projects.
+
+---
 
 Clone Starter Template
 
 ```bash
-git clone https://github.com/omkarcloud/bose-starter my-bose-project
+git clone https://github.com/omkarcloud/botasaurus-starter my-botasaurus-project
 ```
 
-Then change into that directory, install dependencies, open vscode, and start the project:
+Then change into `my-botasaurus-project` directory, install dependencies, open vscode, and start the project:
 
 ```bash
-cd my-bose-project
+cd my-botasaurus-project
 python -m pip install -r requirements.txt
-code .
+code . # Optionally, open the project in VSCode
 python main.py
 ```
 
-<!-- Once started it will scrape google search for "bose web scraping framework" keyword and store the results in `output/finished.json` -->
-Once started it will scrape data and store the results in `output/finished.json`
+<!-- Once started it will scrape google search for "botasaurus web scraping framework" keyword and store the results in `output/finished.json` -->
+Once started it will scrape data and store the results in `output/finished.json`. 
 <!-- ![Result](./img/google-scraping.png) -->
+
+You can edit the `task.py` file based on your Project Needs. 
 
 ## Next Steps
 
-The best way to learn Bose is by going through the comprehensive [tutorial](tutorial.md).
+If you are new to Botasaurus, we encourage you to learn about Botasaurus [here](sign-up-tutorial.md).
