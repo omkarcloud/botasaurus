@@ -15,9 +15,9 @@ def convert_timestamp(timestamp):
 
 
 class Gender():
-    MEN = 'male'
+    MALE = 'male'
     BOTH = ''
-    WOMEN = 'female'
+    FEMALE = 'female'
 
 class Country():
     AU = 'AU'

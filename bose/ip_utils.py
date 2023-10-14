@@ -12,13 +12,13 @@ def find_ip_details(max_retries=5):
         return data
     except requests.exceptions.ReadTimeout:
         if max_retries > 0:
-            print('ReadTimeout occurred. Retrying...')
+            # print('ReadTimeout occurred. Retrying...')
             return find_ip_details(max_retries - 1)
         else:
-            print('Max retries exceeded. Unable to fetch IP details.')
+            # print('Max retries exceeded. Unable to fetch IP details.')
             return None
     except Exception as e:
-        traceback.print_exc()
+        # traceback.print_exc()
         return None
 
 def find_ip(attempts=5):

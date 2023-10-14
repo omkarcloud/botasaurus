@@ -74,6 +74,34 @@ class BaseTask():
         self.set_config_on_driver(driver)
         return driver
     
+    def divide_list(self, input_list, num_of_groups=8, skip_if_less_than=1):
+        if skip_if_less_than is not None and len(input_list) < skip_if_less_than:
+            return [input_list]
+
+        group_size = len(input_list) // num_of_groups
+        remainder = len(input_list) % num_of_groups
+
+        divided_list = []
+        for i in range(num_of_groups):
+            start_index = i * group_size
+            end_index = start_index + group_size
+            divided_list.append(input_list[start_index:end_index])
+
+        if remainder:
+            for i in range(remainder):
+                element = input_list[-i - 1]
+                idx = i % num_of_groups
+                print(idx, element)
+                divided_list[idx].append(element)
+
+        return divided_list
+
+    def merge_list(self, input_list):
+        flattened_list = []
+        for item in input_list:
+            flattened_list.extend(item)
+        return flattened_list
+
     # simple headless drivers no profile options
     def parallel(self, callable, data_list= [None], n = 2):
         def run(data):
@@ -83,8 +111,10 @@ class BaseTask():
             try:
                 result = callable(driver, data)
             except Exception as e:
+
               if not self._task_config.close_on_crash:
-                driver.prompt("Press Enter To Close Browser")
+                traceback.print_exc()
+                driver.prompt("We've paused the browser to help you debug. Press 'Enter' to close.")
               else:
                 raise e
             driver.close()
@@ -209,7 +239,7 @@ class BaseTask():
 
                 if not IS_PRODUCTION:
                     if not task_config.close_on_crash:
-                        driver.prompt("Press Enter To Close Browser")
+                        driver.prompt("We've paused the browser to help you debug. Press 'Enter' to close.")
                     
                 close_driver(driver)
 

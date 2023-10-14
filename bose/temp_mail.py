@@ -21,7 +21,7 @@ def is_errors_instance(instances, error):
             return True, i
     return False, -1
 
-def retry_if_is_error(func, instances=None, retries=2, wait_time=None):
+def retry_if_is_error(func, instances=None, retries=2, wait_time=None, log_error=True):
     tries = 0
     errors_only_instances = list(
         map(lambda el: el[0] if istuple(el) else el, instances))
@@ -38,15 +38,16 @@ def retry_if_is_error(func, instances=None, retries=2, wait_time=None):
             if not is_valid_error:
                 raise e
 
-            traceback.print_exc()
+            if log_error:
+                traceback.print_exc()
 
             if istuple(instances[index]):
                 instances[index][1]()
 
             if tries == retries:
                 raise e
-
-            print('Retrying')
+            if log_error:
+                print('Retrying')
 
             if wait_time is not None:
                 sleep(wait_time)
@@ -127,8 +128,7 @@ class TempMail():
             req = requests.get(reqLink).json()
 
             if len(req) == 0:
-                print('No messages')
-                assert False
+                assert False, "No Emails"
 
             id = extractids(req)[-1]
 
@@ -149,7 +149,36 @@ class TempMail():
             return links[0]
 
         retry_if_is_error(
-            run, NETWORK_ERRORS + [AssertionError], 5, 5)
+            run, NETWORK_ERRORS + [AssertionError], 5, 5, False)
+        link = run()
+        return link
+
+
+    def get_all_links(email):
+        def run():
+            login, domain = TempMail.extract(email)
+            reqLink = f'{API}?action=getMessages&login={login}&domain={domain}'
+            req = requests.get(reqLink).json()
+
+            if len(req) == 0:
+                assert False, "No Emails"
+
+            id = extractids(req)[-1]
+
+            msgRead = f'{API}?action=readMessage&login={login}&domain={domain}&id={id}'
+            req = requests.get(msgRead).json()
+
+            html = req['htmlBody']
+            
+            if html == '':
+                links = extract_links_from_text(req['textBody'])
+            else:
+                links = extract_links_from_html(html)
+
+            return links
+
+        retry_if_is_error(
+            run, NETWORK_ERRORS + [AssertionError], 5, 5, False)
         link = run()
         return link
 
@@ -160,8 +189,7 @@ class TempMail():
             req = requests.get(reqLink).json()
 
             if len(req) == 0:
-                print('No messages')
-                assert False
+                assert False, "No Emails"
 
             id = extractids(req)[-1]
 
@@ -179,7 +207,7 @@ class TempMail():
             run, NETWORK_ERRORS + [AssertionError], 
             # 1
             5
-            , 5)
+            , 5, False)
         data = run()
         return data
 

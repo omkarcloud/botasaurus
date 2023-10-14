@@ -10,12 +10,26 @@ import random
 from time import sleep
 from .beep_utils import beep_input
 from .local_storage_driver import LocalStorage
+from .wait import Wait
 from .opponent import Opponent
-from .utils import relative_path, sleep_for_n_seconds, sleep_forever
+from .utils import get_current_profile_path, read_file, relative_path, sleep_for_n_seconds, sleep_forever, write_json
 from datetime import datetime
+from selenium.common.exceptions import (NoSuchElementException)
 
+def save_cookies(driver, config):
+            current_profile_data = get_current_profile_path(config) + 'profile.json'
+            current_profile_data_path =  relative_path(current_profile_data, 0)
+
+            driver.execute_cdp_cmd('Network.enable', {})
+            cookies = (driver.execute_cdp_cmd('Network.getAllCookies', {}))
+            driver.execute_cdp_cmd('Network.disable', {})
+
+            if type(cookies) is not list:
+                cookies = cookies.get('cookies')
+            write_json(cookies, current_profile_data_path)
 
 class BoseUndetectedDriver(Chrome):
+    beep = True
 
     def get_by_current_page_referrer(self, link, wait=None):
 
@@ -60,7 +74,7 @@ class BoseUndetectedDriver(Chrome):
     def is_bot_detected(self):
         return self.get_bot_detected_by() is not None
 
-    def get_element_or_none(self, xpath, wait=None) -> WebElement:
+    def get_element_or_none(self, xpath, wait=Wait.SHORT) -> WebElement:
         try:
             if wait is None:
                 return self.find_element(By.XPATH, xpath)
@@ -70,7 +84,7 @@ class BoseUndetectedDriver(Chrome):
         except:
             return None
 
-    def get_element_or_none_by_selector(self: WebDriver, selector, wait=None) -> WebElement:
+    def get_element_or_none_by_selector(self: WebDriver, selector, wait=Wait.SHORT) -> WebElement:
         try:
             if wait is None:
                 return self.find_element(By.CSS_SELECTOR, selector)
@@ -80,15 +94,15 @@ class BoseUndetectedDriver(Chrome):
         except:
             return None
 
-    def get_element_by_id(self, id: str, wait=None):
+    def get_element_by_id(self, id: str, wait=Wait.SHORT):
         cleaned = id.lstrip('#')
         return self.get_element_or_none_by_selector(f'[id="{cleaned}"]', wait)
 
-    def get_element_or_none_by_text_contains(self, text, wait=None):
+    def get_element_or_none_by_text_contains(self, text, wait=Wait.SHORT):
         text = f'//*[contains(text(), "{text}")]'
         return self.get_element_or_none(text, wait)
 
-    def get_element_or_none_by_text(self, text, wait=None):
+    def get_element_or_none_by_text(self, text,wait=Wait.SHORT):
         text = f'//*[text()="{text}"]'
 
         return self.get_element_or_none(text, wait)
@@ -96,7 +110,7 @@ class BoseUndetectedDriver(Chrome):
     def get_element_parent(element):
         return element.find_element(By.XPATH, "./..")
 
-    def get_elements_or_none_by_selector(self: WebDriver, selector, wait=None):
+    def get_elements_or_none_by_selector(self: WebDriver, selector,wait=Wait.SHORT):
         try:
             if wait is None:
                 return self.find_elements(By.CSS_SELECTOR, selector)
@@ -108,13 +122,105 @@ class BoseUndetectedDriver(Chrome):
         except:
             return None
 
+
+    def text(self: WebDriver, selector: str,   wait=Wait.SHORT):
+        el = self.get_element_or_none_by_selector(
+                selector, wait)
+        if el is None:
+            # print(f'Element with selector: "{selector}" not found')
+            return None
+
+        return el.text
+
+    def text_xpath(self: WebDriver, xpath: str,   wait=Wait.SHORT):
+        el = self.get_element_or_none(
+                xpath, wait)
+        if el is None:
+            # print(f'Element with selector: "{selector}" not found')
+            return None
+
+        return el.text
+
+    def link(self: WebDriver, selector: str,   wait=Wait.SHORT):
+        el = self.get_element_or_none_by_selector(
+                selector, wait)
+
+        if el is None:
+            # print(f'Element with selector: "{selector}" not found')
+
+            return None
+
+        return el.get_attribute("href")
+
+
+    def exists(self: WebDriver, selector: str,   wait=Wait.SHORT):
+        el = self.get_element_or_none_by_selector(
+                selector, wait)
+
+        if el is None:
+            # print(f'Element with selector: "{selector}" not found')
+
+            return False
+
+        return True
+
+    def scroll(self, selector: str,   wait=Wait.SHORT):
+        element = self.get_element_or_none_by_selector(
+                selector, wait)
+
+        if (element) is None:
+            raise NoSuchElementException(f"Cannot locate element with selector: {selector}")
+
+        if self.can_element_be_scrolled(element):
+            self.execute_script("arguments[0].scrollBy(0, 10000)", element)
+            return True
+        else:
+            return False
+
+    def links(self: WebDriver, selector: str,   wait=Wait.SHORT):
+        els = self.get_elements_or_none_by_selector(
+                selector, wait)
+
+        if els is None:
+            # print(f'Element with selector: "{selector}" not found')
+            return []
+        
+        def extract_links(elements):
+                    def extract_link(el):
+                            return el.get_attribute("href")
+
+                    return list(map(extract_link, elements))
+
+        links = extract_links(els)
+
+        return links
+
+    def type(self: WebDriver, selector: str, text: str,  wait=Wait.SHORT):
+        input_el = self.get_element_or_none_by_selector(
+                selector, wait)
+        
+        if input_el is None:
+            raise NoSuchElementException(f"Cannot locate element with selector: {selector}")
+        
+        input_el.send_keys(text)
+
+    def click(self: WebDriver, selector, wait=Wait.SHORT):
+        el = self.get_element_or_none_by_selector(
+                selector, wait)
+        
+        if el is None:
+            raise NoSuchElementException(f"Cannot locate element with selector: {selector}")
+        
+        self.js_click(el)
+
+    
     def get_element_text(self, element):
         return element.get_attribute('innerText')
 
     def get_innerhtml(self, element):
         return element.get_attribute("innerHTML")
 
-    def get_element_or_none_by_name(self, selector, wait=None):
+    def get_element_or_none_by_name(self, selector, wait=Wait.SHORT):
         try:
             if wait is None:
                 return self.find_element(By.NAME, selector)
@@ -129,16 +235,19 @@ class BoseUndetectedDriver(Chrome):
 window.scrollBy(0, 10000);
 """)
 
+    def can_element_be_scrolled(self, element):
+        # <=3 is a fix to handle floating point numbers
+        result = not (self.execute_script(
+            "return Math.abs(arguments[0].scrollTop - (arguments[0].scrollHeight - arguments[0].offsetHeight)) <= 3", element))
+        return result
+
     def scroll_element(self, element):
-
-        did_element_scroll = self.execute_script(
-            "return Math.round(arguments[0].scrollTop) === Math.round(Math.round(arguments[0].scrollHeight) - Math.round(arguments[0].offsetHeight))", element)
-
-        if did_element_scroll:
-            return False
-        else:
+        if self.can_element_be_scrolled(element):
             self.execute_script("arguments[0].scrollBy(0, 10000)", element)
             return True
+        else:
+            return False
+
 
     def get_cookies_dict(self):
         all_cookies = self.get_cookies()
@@ -195,7 +304,7 @@ window.scrollBy(0, 10000);
     def local_storage(self):
         return LocalStorage(self)
 
-    def get_links(self, search=None, wait=None):
+    def get_links(self, search=None, wait=Wait.SHORT):
 
         def extract_links(elements):
             def extract_link(el):
@@ -217,7 +326,13 @@ window.scrollBy(0, 10000);
 
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
-    def get_images(self, search=None, wait=None):
+
+    def execute_file(self, filename):
+        if not filename.endswith(".js"):
+            filename = filename + ".js"
+        content = read_file(filename)
+        return self.execute_script(content)
+    def get_images(self, search=None, wait=Wait.SHORT):
 
         def extract_links(elements):
             def extract_link(el):
@@ -266,24 +381,29 @@ window.scrollBy(0, 10000);
             raise Exception(f"Page {target} not found")
         return False
 
-
     def save_screenshot(self, filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".png"):
         try:
+
+            if not filename.endswith(".png"):
+                filename = filename + ".png"
+
+            final_path = f'{self.task_path}/{filename}'
             saving_screenshot_at = relative_path(
-                f'{self.task_path}/{filename}', 0)
+                final_path, 0)
             self.get_screenshot_as_file(
                 saving_screenshot_at)
+            # print('Saved screenshot at {0}'.format(final_path))
         except:
             traceback.print_exc()
             print('Failed to save screenshot')
 
-    def prompt_to_solve_captcha(self, more_rules = []):
+    def prompt_to_solve_captcha(self, more_rules=[]):
         print('')
         print('   __ _ _ _    _                          _       _           ')
         print('  / _(_) | |  (_)                        | |     | |          ')
         print(' | |_ _| | |   _ _ __      ___ __ _ _ __ | |_ ___| |__   __ _ ')
-        print(' |  _| | | |  | | `_ \    / __/ _` | `_ \| __/ __| `_ \ / _` |') 
-        print(' | | | | | |  | | | | |  | (_| (_| | |_) | || (__| | | | (_| |')   # Tells user to solve captcha
+        print(' |  _| | | |  | | `_ \    / __/ _` | `_ \| __/ __| `_ \ / _` |')
+        print(' | | | | | |  | | | | |  | (_| (_| | |_) | || (__| | | | (_| |')
         print(' |_| |_|_|_|  |_|_| |_|   \___\__,_| .__/ \__\___|_| |_|\__,_|')
         print('                                   | |                        ')
         print('                                   |_|                        ')
@@ -300,3 +420,8 @@ window.scrollBy(0, 10000);
         return beep_input('Press fill in the captcha, the faster the less detectable, then press enter to continue ...', self.beep)
 
         # return beep_input('Press fill in the captcha and press enter to continue ...', self.beep)
+    def close(self) -> None:
+        if (self.browser_config.is_tiny_profile):
+            save_cookies(self, self.browser_config)
+
+        return super().close()

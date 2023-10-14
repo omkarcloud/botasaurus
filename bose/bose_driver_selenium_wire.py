@@ -12,6 +12,8 @@ from .beep_utils import beep_input
 from .local_storage_driver import LocalStorage
 from .opponent import Opponent
 from .utils import get_current_profile_path, read_file, relative_path, sleep_for_n_seconds, sleep_forever, write_json
+from selenium.common.exceptions import (NoSuchElementException)
+from .wait import Wait
 
     
 def save_cookies(driver, config):
@@ -73,7 +75,7 @@ class BoseDriverSeleniumWire(webdriver.Chrome):
     def is_bot_detected(self):
         return self.get_bot_detected_by() is not None
 
-    def get_element_or_none(self, xpath, wait=None) -> WebElement:
+    def get_element_or_none(self, xpath, wait=Wait.SHORT) -> WebElement:
         try:
             if wait is None:
                 return self.find_element(By.XPATH, xpath)
@@ -83,7 +85,7 @@ class BoseDriverSeleniumWire(webdriver.Chrome):
         except:
             return None
 
-    def get_element_or_none_by_selector(self: WebDriver, selector, wait=None) -> WebElement:
+    def get_element_or_none_by_selector(self: WebDriver, selector, wait=Wait.SHORT) -> WebElement:
         try:
             if wait is None:
                 return self.find_element(By.CSS_SELECTOR, selector)
@@ -93,15 +95,15 @@ class BoseDriverSeleniumWire(webdriver.Chrome):
         except:
             return None
 
-    def get_element_by_id(self, id: str, wait=None):
+    def get_element_by_id(self, id: str, wait=Wait.SHORT):
         cleaned = id.lstrip('#')
         return self.get_element_or_none_by_selector(f'[id="{cleaned}"]', wait)
 
-    def get_element_or_none_by_text_contains(self, text, wait=None):
+    def get_element_or_none_by_text_contains(self, text, wait=Wait.SHORT):
         text = f'//*[contains(text(), "{text}")]'
         return self.get_element_or_none(text, wait)
 
-    def get_element_or_none_by_text(self, text, wait=None):
+    def get_element_or_none_by_text(self, text,wait=Wait.SHORT):
         text = f'//*[text()="{text}"]'
 
         return self.get_element_or_none(text, wait)
@@ -109,7 +111,7 @@ class BoseDriverSeleniumWire(webdriver.Chrome):
     def get_element_parent(element):
         return element.find_element(By.XPATH, "./..")
 
-    def get_elements_or_none_by_selector(self: WebDriver, selector, wait=None):
+    def get_elements_or_none_by_selector(self: WebDriver, selector,wait=Wait.SHORT):
         try:
             if wait is None:
                 return self.find_elements(By.CSS_SELECTOR, selector)
@@ -121,13 +123,105 @@ class BoseDriverSeleniumWire(webdriver.Chrome):
         except:
             return None
 
+
+    def text(self: WebDriver, selector: str,   wait=Wait.SHORT):
+        el = self.get_element_or_none_by_selector(
+                selector, wait)
+        if el is None:
+            # print(f'Element with selector: "{selector}" not found')
+            return None
+
+        return el.text
+
+    def text_xpath(self: WebDriver, xpath: str,   wait=Wait.SHORT):
+        el = self.get_element_or_none(
+                xpath, wait)
+        if el is None:
+            # print(f'Element with selector: "{selector}" not found')
+            return None
+
+        return el.text
+
+    def link(self: WebDriver, selector: str,   wait=Wait.SHORT):
+        el = self.get_element_or_none_by_selector(
+                selector, wait)
+
+        if el is None:
+            # print(f'Element with selector: "{selector}" not found')
+
+            return None
+
+        return el.get_attribute("href")
+
+
+    def exists(self: WebDriver, selector: str,   wait=Wait.SHORT):
+        el = self.get_element_or_none_by_selector(
+                selector, wait)
+
+        if el is None:
+            # print(f'Element with selector: "{selector}" not found')
+
+            return False
+
+        return True
+
+    def scroll(self, selector: str,   wait=Wait.SHORT):
+        element = self.get_element_or_none_by_selector(
+                selector, wait)
+
+        if (element) is None:
+            raise NoSuchElementException(f"Cannot locate element with selector: {selector}")
+
+        if self.can_element_be_scrolled(element):
+            self.execute_script("arguments[0].scrollBy(0, 10000)", element)
+            return True
+        else:
+            return False
+
+    def links(self: WebDriver, selector: str,   wait=Wait.SHORT):
+        els = self.get_elements_or_none_by_selector(
+                selector, wait)
+
+        if els is None:
+            # print(f'Element with selector: "{selector}" not found')
+            return []
+        
+        def extract_links(elements):
+                    def extract_link(el):
+                            return el.get_attribute("href")
+
+                    return list(map(extract_link, elements))
+
+        links = extract_links(els)
+
+        return links
+
+    def type(self: WebDriver, selector: str, text: str,  wait=Wait.SHORT):
+        input_el = self.get_element_or_none_by_selector(
+                selector, wait)
+        
+        if input_el is None:
+            raise NoSuchElementException(f"Cannot locate element with selector: {selector}")
+        
+        input_el.send_keys(text)
+
+    def click(self: WebDriver, selector, wait=Wait.SHORT):
+        el = self.get_element_or_none_by_selector(
+                selector, wait)
+        
+        if el is None:
+            raise NoSuchElementException(f"Cannot locate element with selector: {selector}")
+        
+        self.js_click(el)
+
+    
     def get_element_text(self, element):
         return element.get_attribute('innerText')
 
     def get_innerhtml(self, element):
         return element.get_attribute("innerHTML")
 
-    def get_element_or_none_by_name(self, selector, wait=None):
+    def get_element_or_none_by_name(self, selector, wait=Wait.SHORT):
         try:
             if wait is None:
                 return self.find_element(By.NAME, selector)
@@ -154,6 +248,7 @@ window.scrollBy(0, 10000);
             return True
         else:
             return False
+
 
     def get_cookies_dict(self):
         all_cookies = self.get_cookies()
@@ -210,7 +305,7 @@ window.scrollBy(0, 10000);
     def local_storage(self):
         return LocalStorage(self)
 
-    def get_links(self, search=None, wait=None):
+    def get_links(self, search=None, wait=Wait.SHORT):
 
         def extract_links(elements):
             def extract_link(el):
@@ -233,14 +328,12 @@ window.scrollBy(0, 10000);
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
 
-
     def execute_file(self, filename):
         if not filename.endswith(".js"):
             filename = filename + ".js"
         content = read_file(filename)
         return self.execute_script(content)
-
-    def get_images(self, search=None, wait=None):
+    def get_images(self, search=None, wait=Wait.SHORT):
 
         def extract_links(elements):
             def extract_link(el):
