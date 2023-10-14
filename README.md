@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://www.omkar.cloud/images/favicon/prod/favicon-256x256.png" alt="omkar" />
+  <img src="https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/mascot.png" alt="botasaurus" />
 </p>
   <div align="center" style="margin-top: 0;">
   <h1>✨ Botasaurus Framework 🤖</h1>
