@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
 
-# 🌐 Google Maps Scraping Tutorial
+# Google Maps Scraping Tutorial
 
 ## 🏗️ What Are We Building?
 

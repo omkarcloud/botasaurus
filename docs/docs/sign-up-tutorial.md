@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# 🚀 Sign Up Tutorial
+# Sign Up Tutorial
 
 ## 🏗️ What Are We Building?
 

@@ -1,15 +1,18 @@
-Bot Development is Tough.
+================================
+Welcome to Botasaurus!
+================================
 
-Bot Detectors like Cloudflare are ready to defend websites from our
-Bots. Configuring Selenium with ChromeOptions to specify the driver
-path, profile, user agent, and window size is Cumbersome and a nightmare
-in windows. Debugging Bot Crashes via logs is hard. How do you solve
-these pain points without sacrificing speed and handy development?
 
-Enter Botasaurus. Botasaurus is the first bot development framework in the Developer
-Community that is specifically designed to provide the best developer
-experience for bot developers. Powered by Selenium, it offers a range of
-features and functionalities to simplify the process of bot development.
-As far as our knowledge goes, Botasaurus is the first bot development
-framework of its kind in the town.
+Thanks for checking out this repository! If you're interested in web scraping, you've come to the right place. Botasaurus is designed to simplify and enhance your web scraping and bot development tasks.
 
+
+Getting Started
+---------------
+
+To get started with Botasaurus, please visit our detailed documentation and usage guide at:
+
+`Botasaurus GitHub Repository <https://github.com/omkarcloud/botasaurus>`_
+
+Here, you'll find everything from installation instructions to comprehensive examples to help you get up and running.
+
+Thank you for your interest in Botasaurus! Happy Scraping!

@@ -3,7 +3,7 @@ sidebar_position: 1
 description: Botasaurus is a Swiss Army knife 🔪 for web scraping and browser automation 🤖 that helps you create bots fast. ⚡️
 ---
 
-# Botasaurus - Your Ultimate Selenium-Based Bot Development Framework
+# What is Botasaurus?
 
 🤖 Hi, I'm Botasaurus, a Selenium-based bot development framework designed to help you become a 10x Bot Developer!
 

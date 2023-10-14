@@ -73,7 +73,7 @@ const config = {
         title: "Botasaurus",
         logo: {
           alt: "Botasaurus Logo",
-          src: "img/logo.svg",
+          src: "https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/mascot-logo.png",
         },
         items: [
           {
