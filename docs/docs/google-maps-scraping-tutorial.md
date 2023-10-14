@@ -3,17 +3,21 @@ sidebar_position: 3
 ---
 
 # 🌐 Google Maps Scraping Tutorial
+
 ## 🏗️ What Are We Building?
 
-In this tutorial, we're going to build a scraper for Google Maps, designed to extract valuable data like phone numbers and websites of businesses, which can be used for selling B2B products.
+In this tutorial, we will be Scraping Google Maps for Leads.
+
+By scraping Google Maps, we can access the phone numbers and websites of businesses. This invaluable data allows us to reach out and promote our products effectively.
 
 ![Scraped Leads](/img/scraped-leads.png)
 
-Alongside developing a practical scraping tool, you'll gain hands-on experience in:
-- Running bots parallelly for fast scraping.
-- Getting a bird's-eye view of how a typical web scraping project is done with Botasaurus.
-- Storing the extracted data in CSV and JSON formats.
-- Implementing your scraper in a Docker environment for consistent and reproducible running of the scraper.
+In this tutorial, not only will you develop a practical scraping tool, but you will also gain hands-on experience in:
+
+- Running bots in parallel for faster scraping.
+- Understanding the overall process of a web scraping project with Botasaurus.
+- Saving the extracted data in both CSV and JSON formats.
+- Setting up your scraper in a Docker environment for consistent and reproducible execution.
 
 Now that you have an overview of what's in store, let's start building!
 
@@ -25,14 +29,15 @@ Let's break down the steps to build our Google Maps scraper with Botasaurus:
 
 - Create a new project using the `botasaurus-starter` template.
 - Then, we'll visit the search query page.
-[TODO: Link Image, Small image with only query Highlighted]
+![Gmaps Search](/img/gmaps-search.png)
 - Next, we'll scroll through the list of places until we've scrolled to the end of the list.
-[TODO: Scroll to end of list Image, Small image with message]
+![](/img/reached-end-of-list.png)
+
 - We will extract all links, then visit each place and extract the data.
-[TODO: Highlight in Red the Data, small Image Only]
+![](/img/data-highlighted.png)
 
 - To speed up the scraping of places, we'll run multiple bots in parallel.
-[TODO: Highlight in Red the Data like https://crawlee.dev/docs/introduction/real-world-project#choosing-the-data-you-need, Put Exact Same in README]
+![](/img/parallel-launch.png)
 - We'll block images to ensure the pages load faster.
 - Then, we will run the Bot using Python.
 - Lastly, we'll run the Scraper in Docker.
@@ -79,23 +84,23 @@ In this step, we'll walk you through implementing the search functionality on Go
 
 **1. Define Your Search Queries**
 
-Begin by specifying the search queries that will help you find the places you're interested in. In our example, we're looking for "restaurants in Delhi."
+Begin by specifying the search queries that will help you find the places you're interested in. In our example, we're looking for "restaurants in delhi."
 
 **2. Construct the Search Page URL**
 
-To initiate the search, you need to create the appropriate URL. In our case, it takes the form of `https://www.google.com/maps/search/restaurants+in+Delhi/`.
+To initiate the search, you need to create the appropriate URL. In our case, it takes the form of `https://www.google.com/maps/search/restaurants+in+delhi/`.
 
-![Google Maps Search URL](/img/insert_image_url_here)
+![Gmaps Search](/img/gmaps-search.png)
 
 **3. Visit the Search Page**
 
 Next, we'll visit the created search page URL.
 
-**4. Handle Consent Forms (For European Users)**
+**4. Accept Cookies For European Users**
 
-European users may encounter consent forms related to cookies. We've also added code to handle the consent form:
+European users may encounter a form to accept cookies. We've also added code to accept the cookies:
 
-![Consent Form Example](insert_image_url_here, British consent form) 
+![](/img/consent-form.png)
 
 Implementing this code is simple:
 
@@ -108,7 +113,7 @@ class GoogleMapsScraperTask(BaseTask):
 
     # Define the search queries (customize as needed)
     def get_data(self):
-        queries = ["restaurants in Delhi"]
+        queries = ["restaurants in delhi"]
         return queries
 
     def run(self, driver: BoseDriver, query):
@@ -119,7 +124,7 @@ class GoogleMapsScraperTask(BaseTask):
             url = f'https://www.google.com/maps/search/{encoded_query}'
             driver.get(url)
             
-            # Handle consent form for European users
+            # Accept Cookies for European users
             if driver.is_in_page("https://consent.google.com/"):
                 agree_button_selector = 'form:nth-child(2) > div > div > button'
                 driver.click(agree_button_selector)
@@ -131,7 +136,7 @@ class GoogleMapsScraperTask(BaseTask):
 
 With the provided code, we have successfully implemented the search functionality part of the project.
 
-![](TODO: Image of Restaurants in Delhi from Gmaps )
+![](/img/restaurants-in-delhi.png)
 
 ## 🔄 Scrolling to the End of the Places List
 
@@ -141,7 +146,7 @@ Therefore, to access all the places listed, our bot must scroll to the very end 
 
 To do this, we will keep scrolling until we reach the end of the list. When we reach the end of the list, Google Maps will display a message to indicate there are no more places to load. 
 
-![](TODO: Add Image for reached end of list)
+![](/img/reached-end-of-list.png)
 
 We can check the visibility of this message element to stop scrolling.
 
@@ -170,7 +175,7 @@ def scroll_to_end_of_places_list():
 
 Once you've scrolled to the end of the list, the next step is to extract the required data. The process comprises:
 
-1. Extracting all links pointing to individual places (e.g., "google.com/maps/place/Indian+Accent" or "google.com/maps/place/Rajasthan+in+Delhi-Restaurant").
+1. Extracting all links pointing to individual places (e.g., "google.com/maps/place/Indian+Accent" or "google.com/maps/place/Rajasthan+in+delhi-Restaurant").
 2. Visiting each place's link.
 3. Extracting the required data from each place.
 
@@ -195,7 +200,7 @@ For each extracted link, we will navigate to the page and scrape information abo
             def scrape_place_data(driver: BoseDriver, link):
                 driver.get(link)
                 
-                # Handle consent form for European users
+                # Accept Cookies for European users
                 if driver.is_in_page("https://consent.google.com/"):
                         agree_button_selector = 'form:nth-child(2) > div > div > button'
                         driver.click(agree_button_selector)
@@ -284,7 +289,7 @@ scraped_places_parts = self.parallel(extract_data, link_parts, len(link_parts))
 scraped_places = self.merge_list(scraped_places_parts)
 ```
 
-![Photo of Multiple Bots Running](TODO)
+![](/img/parallel-launch.png)
 
 ## 📤 Returning Data
 
@@ -333,6 +338,7 @@ from bose import *
 import urllib.parse
 
 # Define a custom task for scraping data from Google Maps
+
 class GoogleMapsScraperTask(BaseTask):
     # Configure the browser to block images for faster scraping
     browser_config = BrowserConfig(block_images_fonts_css=True)
@@ -343,14 +349,14 @@ class GoogleMapsScraperTask(BaseTask):
         return queries
 
     def run(self, driver: BoseDriver, query):
-        
+
         # Visit Google Maps
         def visit_google_maps():
             encoded_query = urllib.parse.quote_plus(query)
             url = f'https://www.google.com/maps/search/{encoded_query}'
             driver.get(url)
-            
-            # Handle consent form for European users
+
+            # Accept Cookies for European users
             if driver.is_in_page("https://consent.google.com/"):
                 agree_button_selector = 'form:nth-child(2) > div > div > button'
                 driver.click(agree_button_selector)
@@ -372,7 +378,7 @@ class GoogleMapsScraperTask(BaseTask):
                     end_of_list_detected = True
 
             print("Successfully scrolled to the end of the places list.")
-                        
+
         def extract_place_links():
             places_links_selector = '[role="feed"] > div > div > a'
             return driver.links(places_links_selector)
@@ -380,12 +386,12 @@ class GoogleMapsScraperTask(BaseTask):
         # Visit an individual place and extract data
         def scrape_place_data(driver: BoseDriver, link):
             driver.get(link)
-            
-            # Handle consent form for European users
+
+            # Accept Cookies for European users
             if driver.is_in_page("https://consent.google.com/"):
-                    agree_button_selector = 'form:nth-child(2) > div > div > button'
-                    driver.click(agree_button_selector)
-                    driver.get(link)
+                agree_button_selector = 'form:nth-child(2) > div > div > button'
+                driver.click(agree_button_selector)
+                driver.get(link)
 
             # Extract title
             title_selector = 'h1'
@@ -398,7 +404,8 @@ class GoogleMapsScraperTask(BaseTask):
             # Extract reviews count
             reviews_selector = "div.F7nice > span:last-child"
             reviews_text = driver.text(reviews_selector)
-            reviews = int(''.join(filter(str.isdigit, reviews_text))) if reviews_text else None
+            reviews = int(''.join(filter(str.isdigit, reviews_text))
+                          ) if reviews_text else None
 
             # Extract website link
             website_selector = "a[data-item-id='authority']"
@@ -407,7 +414,8 @@ class GoogleMapsScraperTask(BaseTask):
             # Extract phone number
             phone_xpath = "//button[starts-with(@data-item-id,'phone')]"
             phone_element = driver.get_element_or_none(phone_xpath)
-            phone = phone_element.get_attribute("data-item-id").replace("phone:tel:", "") if phone_element else None
+            phone = phone_element.get_attribute(
+                "data-item-id").replace("phone:tel:", "") if phone_element else None
 
             return {
                 "title": title,
@@ -420,7 +428,8 @@ class GoogleMapsScraperTask(BaseTask):
 
         # Main extraction process
         def extract_data(driver: BoseDriver, places_links):
-            places_data = [scrape_place_data(driver, link) for link in places_links]
+            places_data = [scrape_place_data(
+                driver, link) for link in places_links]
             return places_data
 
         # Start the scraping process
@@ -450,13 +459,13 @@ python main.py
 
 After you run the command, you'll see your bot visiting Google Maps, scrolling through the places list, visiting each place, and extracting the required data.
 
-![GIF PHOTO OF BOT RUNNING]
+![](/img/google-maps-scraper-running.gif)
 
 ### Checking the Output
 
 After the bot finishes running, the extracted data will be stored in the `output` folder. Specifically, look for the `finished.json` file.
 
-![Photo of Output in `output/finished.json`]
+![](/img/output.png)
 
 ## 🐳 Dockerization
 
@@ -484,15 +493,4 @@ We've developed an advanced, production-ready version of the scraper that's **4x
 
 Congrats! You've built a powerful Google Maps scraper and mastered Botasaurus. Now, it's time to unleash your bot-building skills in the real world!
 
-Before you go, explore our FAQs [here](./faqs) for valuable time-saving tips and handy references that can save you hours of debugging time. Sayonara and 
-
- _    _                           ____        _   _   _             
-| |  | |                         |  _ \      | | | | (_)            
-| |__| | __ _ _ __  _ __  _   _  | |_) | ___ | |_| |_ _ _ __   __ _ 
-|  __  |/ _` | '_ \| '_ \| | | | |  _ < / _ \| __| __| | '_ \ / _` |
-| |  | | (_| | |_) | |_) | |_| | | |_) | (_) | |_| |_| | | | | (_| |
-|_|  |_|\__,_| .__/| .__/ \__, | |____/ \___/ \__|\__|_|_| |_|\__, |
-             | |   | |     __/ |                               __/ |
-             |_|   |_|    |___/                               |___/  
-             
-
+Before you go, explore our FAQs [here](faqs.md) for valuable time-saving tips and handy references that can save you hours of debugging time.

@@ -9,6 +9,7 @@ bose\base_data.py
 bose\base_task.py
 bose\beep_utils.py
 bose\bose_driver.py
+bose\bose_driver_selenium_wire.py
 bose\bose_undetected_driver.py
 bose\create_driver.py
 bose\download_driver.py

@@ -1,6 +1,7 @@
 ---
 sidebar_position: 90
 ---
+
 # Roadmap
 
 Below is the roadmap we envision for the Bose Framework:

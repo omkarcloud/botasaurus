@@ -33,6 +33,7 @@ This is the screenshot captured before driver was closed.
 This is the html source captured before driver was closed. Very useful to know in case your selectors failed to select elements.
 
 
+
 ![Page](/img/page.png)
 
 
