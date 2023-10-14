@@ -17,8 +17,8 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/tutorial/">
-            Read Tutorial
+            to="/docs/what-is-botasaurus/">
+            What is Botasaurus 🤔?
           </Link>
           <iframe
             src="https://ghbtns.com/github-btn.html?user=omkarcloud&repo=botasaurus&type=star&count=true&size=large"
