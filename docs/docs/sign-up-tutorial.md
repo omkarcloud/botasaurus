@@ -30,7 +30,7 @@ So, are you ready to build your bot army?
 
 Let's get started :)
 
-## 💡 Understanding Botasaurus
+<!-- ## 💡 Understanding Botasaurus
 
 Before we dive into creating a Sign Up Bot, let's quickly grasp how Botasaurus works with a simple example.
 
@@ -136,8 +136,15 @@ After running, the script will:
 ![](/img/starter-bot-running.gif)
 
 Now that you've successfully created a simple scraper, let's move on to creating a more solid Sign Up Bot :)
+ -->
 
-### Generating Account Information
+## 🛠️ How Are We Gonna Build That?
+
+Our Bot is gonna take 3 simple Steps to create an Omkar Cloud Account:
+
+1. Visiting Sign Up Page .
+2. Filling and Submiting the Sign-Up Form.
+3. Verifying the Email.
 
 ## ✍️ Signing Up
 

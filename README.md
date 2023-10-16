@@ -111,13 +111,15 @@ So, if you're comfortable with Selenium and want to level up your bot developmen
 ## 🚀 Getting Started with Botasaurus
 
 
-Let's quickly grasp how Botasaurus works with a practical example in which we eill create a bot to scrape the heading text from [https://www.omkar.cloud/](https://www.omkar.cloud/).
+Let's quickly grasp how Botasaurus works with a simple example.
 
-![Gif of Visiting Omkar Cloud, then opening VSCode, with the output file and heading text highlighted]
+In this simple example, we'll walk through the process of scraping the heading text from [https://www.omkar.cloud/](https://www.omkar.cloud/).
+
+![](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-bot-running.gif)
 
 ### Step 1: Install Botasaurus
 
-Start by installing Botasaurus via pip with this command:
+Start by installing Botasaurus with the help of this command:
 
 ```shell
 python -m pip install botasaurus
@@ -125,7 +127,7 @@ python -m pip install botasaurus
 
 ### Step 2: Set Up Your Botasaurus Project
 
-1. Create a directory for your Botasaurus project and navigate to it:
+1. Create a directory for our Botasaurus project and navigate to it:
 
 ```shell
 mkdir my-botasaurus-project
@@ -135,7 +137,7 @@ code .  # Optionally, open the project in VSCode
 
 ### Step 3: Write the Scraping Code
 
-Within your project directory, create a Python script named `main.py` to scrape the heading text from Omkar Cloud. Paste the following code into `main.py`:
+Within your project directory, create a Python script named `main.py` and paste the following code into `main.py`:
 
 ```python
 from botasaurus.launch_tasks import launch_tasks
@@ -145,7 +147,7 @@ from botasaurus import *
 class ScrapeHeadingTask(BaseTask):
 
     def run(self, driver: BotasaurusDriver, data):
-        # Visit Omkar Cloud website
+        # Visit the Omkar Cloud website
         driver.get("https://www.omkar.cloud/")
 
         # Get the heading element text
@@ -173,7 +175,10 @@ class ScrapeHeadingTask(BaseTask):
     def run(self, driver: BotasaurusDriver, data):
 ```  
 
-- In the `run` method, we visit Omkar Cloud, extract the heading text, and return data to be saved in both JSON and CSV files automatically by Botasaurus.
+- In the `run` method:
+    - We visit Omkar Cloud
+    - Extract the heading text
+    - Finally, return data to be saved as JSON and CSV files.
 ```python
     driver.get("https://www.omkar.cloud/")
 
@@ -186,7 +191,7 @@ class ScrapeHeadingTask(BaseTask):
     }
 ```  
 
-- Finally, we launch the scraping task.
+- Lastly, we launch the scraping task.
 ```python
 if __name__ == "__main__":
     # Launch the web scraping task
@@ -195,16 +200,19 @@ if __name__ == "__main__":
 
 ### Step 4: Run the Scraping Task
 
-Now, lets run the Bot:
+Now, let's run the bot:
 
 ```shell
 python main.py
 ```
 
-After Running, the script will launch Google Chrome, visit [omkar.cloud](https://www.omkar.cloud/), extract the heading text, and automatically save it as `output/all.json`.
+After running, the script will:
+- Launch Google Chrome
+- Visit [omkar.cloud](https://www.omkar.cloud/)
+- Extract the heading text
+- Automatically save it as `output/finished.json`.
 
-
-![Gif of Visiting Omkar Cloud, then open VSCode, with output file and heading text highlighted]
+![](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-bot-running.gif)
 
 ## 🚀 Deep Dive into Botasaurus
 
