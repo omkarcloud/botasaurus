@@ -227,4 +227,17 @@ So, Ready to unlock the power of Bots?
 
 📚 **Read the Tutorial** [here](https://www.omkar.cloud/botasaurus/docs/sign-up-tutorial/) and embark on your journey of bot mastery! 🚀
 
+## Sponsors
+
+<p align="center">
+  <h3 align="center">Special Sponsor</h3>
+</p>
+
+<p align="center">
+  <a target="_blank" href="https://www.omkar.cloud/l/bright-data/">
+  <img alt="special sponsor Bright Data" src="https://www.omkar.cloud/images/bright-data-banner.png" width="250">
+  </a>
+</p>
+
+
 ## Love It? Star It! ⭐
