@@ -209,7 +209,7 @@ Accounts produced by the Account Generator Module are so humane that it's nearly
 The following code generates such accounts:
 
 ```python
-account = AccountGenerator.generate_account(country=Country.IN)
+account = bt.generate_user(country=bt.Country.IN)
         
 name = account['name']
 email = account['email']
@@ -283,7 +283,7 @@ TempMail module allows us to create a temporary email address and receive emails
 To easily get the verification link and, as a best practice, delete the email afterward, we can use the `get_email_link_and_delete_mailbox` method as follows:
 
 ```python
-link = TempMail.get_email_link_and_delete_mailbox(email)
+link = bt.TempMail.get_email_link_and_delete_mailbox(email)
 ```
 
 With the link in our hands, the final step is for our bot to visit it:
@@ -316,14 +316,12 @@ driver = webdriver.Chrome(executable_path=driver_path, options=options)
 
 ### Botasaurus Simplifies Chrome Profiles
 
-Botasaurus simplifies this process, making profile configuration straightforward. To use a profile, simply specify it in the `BrowserConfig`:
+Botasaurus simplifies this process, making profile configuration straightforward. To use a profile, simply specify it in the decorator:
 
 ```python
-class SignUpTask(BaseTask):
-    browser_config = BrowserConfig(
-        profile='my-profile',
-    )
-    # ... rest of the code 
+@browser(profile='my-profile',)
+def create_accounts(driver: AntiDetectDriver, account):
+    ...
 ```
 
 ### Reducing Profile Size with `tiny_profile`
@@ -334,13 +332,11 @@ Botasaurus offers a solution with its `tiny_profile` feature. It ensures only th
 
 ![](/img/tiny_profile.png)
 
-Using `tiny_profile` is straightforward. Just specify it in `BrowserConfig`:
+Using `tiny_profile` is straightforward. Just specify it decorator:
 
 ```python
-browser_config = BrowserConfig(
-    profile='my-profile',
-    is_tiny_profile=True,
-)
+@browser(profile='my-profile',tiny_profile=True,)
+def create_accounts(driver: AntiDetectDriver, account):
 ```
 
 ## 📈 Scaling Bots: From One to Many
@@ -351,41 +347,38 @@ While setting up an individual bot profile is simple, the real challenge arises 
 
 Manually adjusting each profile in the code isn't a practical option when dealing with large numbers of accounts.
 
-### Streamlined Account Generation with `get_data` 
+### Streamlined Account Generation with `data` 
 
-To address this scalability issue, we've introduced the `get_data` method. This function returns a `list of data items`. 
+To address this scalability issue, we've introduced the `data` argument. This function returns a `list of data items`. 
 
 Here's how it works:
 
 1. For every `data item` in the returned `data list`, a new browser instance is launched.
 2. The `data item` serves a dual purpose:
-   - It's passed to the `get_browser_config` method as the second argument, allowing the new browser's configuration to be tailored to the specific account, such as setting the profile based on the account's username.
+   - It's also passed to the `profile`, `user_agent`, `proxy` function as argument, allowing the new browser's configuration to be tailored to the specific account, such as setting the profile based on the account's username.
    
      ```python
-     class SignUpTask(BaseTask):
-         def get_data(self):
-             accounts = AccountGenerator.generate_accounts(3, country=Country.IN)
-             return accounts
-
-         def get_browser_config(self, account):
-             return BrowserConfig(
-                 profile=account['username'],
-                 is_tiny_profile=True,
-             )
+    @browser(
+        data = lambda: bt.generate_users(3, country=bt.Country.IN)
+        profile= lambda account: account['username'],
+        is_tiny_profile= True,
+    )
+    def create_accounts(driver: AntiDetectDriver, account):     
+        ...
      ```    
 
-   - It's also sent to the `run` method as its third argument, providing access to individual account details like the `name` and `email`.
+   - It's also sent to the function as its second argument, providing access to individual account details like the `name` and `email`.
 
      ```python
-     class SignUpTask(BaseTask):
-         def get_data(self):
-             accounts = AccountGenerator.generate_accounts(3, country=Country.IN)
-             return accounts
-
-         def run(self, driver: BotasaurusDriver, account):
-             name = account['name']
-             email = account['email']
-             ...
+    @browser(
+        data = lambda: bt.generate_users(3, country=bt.Country.IN)
+        profile= lambda account: account['username'],
+        is_tiny_profile= True,
+    )
+    def create_accounts(driver: AntiDetectDriver, account):     
+        name = account['name']
+        email = account['email']
+        ...
      ```
 
 ### Storing Profile Details for Future Use
@@ -399,12 +392,12 @@ Botasaurus introduces a `Profile` Module specifically designed for easy account 
 
 When an account is successfully created, it's essential to store its details using the Profile Module. This ensures that the information is available for profile management tasks like listing them.
 
-To store the account details after creation, you can use the `Profile.set_profile` method as follows:
+To store the account details after creation, you can use the `bt.Profile.set_profile` method as follows:
 
 ```python
-def run(self, driver: BotasaurusDriver, account):
+def create_accounts(driver: AntiDetectDriver, account):     
     ...  # Code to Sign Up 
-    Profile.set_profile(account)
+    bt.Profile.set_profile(account)
 ```
 
 ## 🎯 Using Profiles for Actions
@@ -430,29 +423,17 @@ While this seems basic, it provides a foundation for understanding how profiles 
 This code enables the capture of screenshots for each created account:
 
 ```python
-from botasaurus.account_generator import AccountGenerator, Country
-from botasaurus.temp_mail import TempMail
 from botasaurus import *
 
-# Define a custom task for taking screenshots
-class ScreenShotTask(BaseTask):
-
-    # Retrieve profiles for the task
-    def get_data(self):
-        return Profile.get_profiles()
-
-    # Configure the browser using the profile path for each account
-    def get_browser_config(self, account):
-        return BrowserConfig(
-            profile=account['username'],
-            is_tiny_profile=True,
-        )
-
-    # Define the action to perform: in this case, take a screenshot
-    def run(self, driver: BotasaurusDriver, account):
-        username = account['username']
-        driver.get("https://www.omkar.cloud/")
-        driver.save_screenshot(username)
+@browser(
+    data = lambda: bt.Profile.get_profiles()
+    profile= lambda account: account['username'],
+    is_tiny_profile= True,
+)
+def take_screenshots(driver: AntiDetectDriver, account):
+    username = account['username']
+    driver.get("https://www.omkar.cloud/")
+    driver.save_screenshot(username)
 
 if __name__ == "__main__":
     # Execute the task
@@ -465,30 +446,29 @@ Now, let's break this code down bit by bit:
 
 ```python
 
-class ScreenShotTask(BaseTask):
+def take_screenshots(driver: AntiDetectDriver, account):
 ```
 
-This code defines a custom task, `ScreenShotTask`, which will  capture screenshots from the "https://www.omkar.cloud/" webpage for each profile.
+This code defines a custom task, `take_screenshots`, which will  capture screenshots from the "https://www.omkar.cloud/" webpage for each profile.
 
 --- 
 
 ```python
-def get_data(self):
-    return Profile.get_profiles()
+@browser(
+    data = lambda: bt.Profile.get_profiles(),
+    ...)
 ```
 
-Above Code, return all the Accounts. For each Account is the list returned by the `get_data` function
+Above Code, return all the Accounts. For each Account is the list returned by the `data` function:
     - a new browser will launched
-    - will be passed to `get_browser_config` for browser configuration and the `run` method .
+    - will be passed to `profile` for browser configuration and to the wrapped function.
 
 --- 
 
 ```python
-def get_browser_config(self, account):
-    return BrowserConfig(
-        profile=account['username'],
-        is_tiny_profile=True,
-    )
+@browser(
+    profile= lambda account: account['username'],
+    ...)
 ```
 
 In above code, we define `get_browser_config()` which determines the profile path to use based on Account Username. 
@@ -496,21 +476,21 @@ In above code, we define `get_browser_config()` which determines the profile pat
 --- 
 
 ```python
-def run(self, driver: BotasaurusDriver, account):
+def take_screenshots(driver: AntiDetectDriver, account):
     username = account['username']
     driver.get("https://www.omkar.cloud/")
     driver.save_screenshot(username)
 ```
 
-The `run()` method performs the scraping task by visiting to the Omkar Cloud site, capturing a screenshot, and saving it with the username as the filename.
+The function performs the scraping task by visiting to the Omkar Cloud site, capturing a screenshot, and saving it with the username as the filename.
 
 --- 
 
 ```python
 if __name__ == "__main__":
-    launch_tasks(ScreenShotTask)
+    take_screenshots()
 ```
-Finally, we launch the task using the `launch_tasks` method.
+Finally, we launch the task calling the `take_screenshots` function.
 
 --- 
 
@@ -528,12 +508,12 @@ By blocking images from loading, we can achieve faster scraping and also a healt
 To configure the browser to block images, use the following code, setting the `block_images` parameter to `True`:
 
 ```python
-    def get_browser_config(self, account):
-        return BrowserConfig(
-            block_images=True, # <--- 
-            profile=account['username'],
-            is_tiny_profile=True,
-        )
+@browser(
+    block_images=True, # <-
+    profile= lambda account: account['username'],
+    is_tiny_profile= True,
+)
+def take_screenshots(driver: AntiDetectDriver, account):
 ```
 
 ## 🚀 Launch It
@@ -545,62 +525,49 @@ Finally, it's time to put all the pieces together. Follow these steps to create 
 1. Create a Python script named `main.py` and paste the following code into `main.py`:
 
 ```python
-from botasaurus.account_generator import AccountGenerator, Country
-from botasaurus.temp_mail import TempMail
 from botasaurus import *
 
-class SignUpTask(BaseTask):
+@browser(
+    data = lambda: bt.generate_users(3, country=bt.Country.IN)
+    block_images=True,
+    profile= lambda account: account['username'],
+    is_tiny_profile= True,
+)
+def create_accounts(driver: AntiDetectDriver, account):
+    name = account['name']
+    email = account['email']
+    password = account['password']
 
-    def get_browser_config(self, account):
-        return BrowserConfig(
-            profile=account['username'],
-            is_tiny_profile=True,
-            block_images=True
-        )
+    def sign_up():
+        driver.type('input[name="name"]', name)
+        driver.type('input[type="email"]', email)
+        driver.type('input[type="password"]', password)
+        driver.click('button[type="submit"]')
 
-    def get_data(self):
-        accounts = AccountGenerator.generate_accounts(3, country=Country.IN)
-        return accounts
+    def confirm_email():
+        link = TempMail.get_email_link_and_delete_mailbox(email)
+        driver.get(link)
 
-    def run(self, driver: BotasaurusDriver, account):
-        name = account['name']
-        email = account['email']
-        password = account['password']
+    driver.organic_get("https://www.omkar.cloud/auth/sign-up/")
+    sign_up()
+    confirm_email()
+    bt.Profile.set_profile(account)    
 
-        def sign_up():
-            driver.type('input[name="name"]', name)
-            driver.type('input[type="email"]', email)
-            driver.type('input[type="password"]', password)
-            driver.click('button[type="submit"]')
-
-        def confirm_email():
-            link = TempMail.get_email_link_and_delete_mailbox(email)
-            driver.get(link)
-
-        driver.organic_get("https://www.omkar.cloud/auth/sign-up/")
-        sign_up()
-        confirm_email()
-        Profile.set_profile(account)    
-
-class ScreenShotTask(BaseTask):
-    def get_browser_config(self, account):
-        return BrowserConfig(
-            profile=account['username'],
-            is_tiny_profile=True,
-            block_images=True
-        )
-
-    def get_data(self):
-        return Profile.get_profiles()
-
-    def run(self, driver: BotasaurusDriver, account):
-        username = account['username']
-        driver.get("https://www.omkar.cloud/")
-        driver.save_screenshot(username)
+@browser(
+    data = lambda: bt.Profile.get_profiles()
+    block_images=True,
+    profile= lambda account: account['username'],
+    is_tiny_profile= True,
+)
+def take_screenshots(driver: AntiDetectDriver, account):
+    username = account['username']
+    driver.get("https://www.omkar.cloud/")
+    driver.save_screenshot(username)
 
 if __name__ == "__main__":
-    launch_tasks(SignUpTask)
-    launch_tasks(ScreenShotTask)
+    create_accounts()
+    take_screenshots()
+
 ```
 
 2. Now, run the following command to see multiple accounts being created and screenshots taken:
@@ -650,62 +617,48 @@ Screenshots of each user's dashboard will be captured and placed in the respecti
 After inspecting the output, I encourage you to read the final code provided below to grasp the underlying logic and understand how the pieces fit together.
 
 ```python
-from botasaurus.account_generator import AccountGenerator, Country
-from botasaurus.temp_mail import TempMail
 from botasaurus import *
 
-class SignUpTask(BaseTask):
+@browser(
+    data = lambda: bt.generate_users(3, country=bt.Country.IN)
+    block_images=True,
+    profile= lambda account: account['username'],
+    is_tiny_profile= True,
+)
+def create_accounts(driver: AntiDetectDriver, account):
+    name = account['name']
+    email = account['email']
+    password = account['password']
 
-    def get_browser_config(self, account):
-        return BrowserConfig(
-            profile=account['username'],
-            is_tiny_profile=True,
-            block_images=True
-        )
+    def sign_up():
+        driver.type('input[name="name"]', name)
+        driver.type('input[type="email"]', email)
+        driver.type('input[type="password"]', password)
+        driver.click('button[type="submit"]')
 
-    def get_data(self):
-        accounts = AccountGenerator.generate_accounts(3, country=Country.IN)
-        return accounts
+    def confirm_email():
+        link = TempMail.get_email_link_and_delete_mailbox(email)
+        driver.get(link)
 
-    def run(self, driver: BotasaurusDriver, account):
-        name = account['name']
-        email = account['email']
-        password = account['password']
+    driver.organic_get("https://www.omkar.cloud/auth/sign-up/")
+    sign_up()
+    confirm_email()
+    bt.Profile.set_profile(account)    
 
-        def sign_up():
-            driver.type('input[name="name"]', name)
-            driver.type('input[type="email"]', email)
-            driver.type('input[type="password"]', password)
-            driver.click('button[type="submit"]')
-
-        def confirm_email():
-            link = TempMail.get_email_link_and_delete_mailbox(email)
-            driver.get(link)
-
-        driver.organic_get("https://www.omkar.cloud/auth/sign-up/")
-        sign_up()
-        confirm_email()
-        Profile.set_profile(account)    
-
-class ScreenShotTask(BaseTask):
-    def get_browser_config(self, account):
-        return BrowserConfig(
-            profile=account['username'],
-            is_tiny_profile=True,
-            block_images=True
-        )
-
-    def get_data(self):
-        return Profile.get_profiles()
-
-    def run(self, driver: BotasaurusDriver, account):
-        username = account['username']
-        driver.get("https://www.omkar.cloud/")
-        driver.save_screenshot(username)
+@browser(
+    data = lambda: bt.Profile.get_profiles()
+    block_images=True,
+    profile= lambda account: account['username'],
+    is_tiny_profile= True,
+)
+def take_screenshots(driver: AntiDetectDriver, account):
+    username = account['username']
+    driver.get("https://www.omkar.cloud/")
+    driver.save_screenshot(username)
 
 if __name__ == "__main__":
-    launch_tasks(SignUpTask)
-    launch_tasks(ScreenShotTask)
+    create_accounts()
+    take_screenshots()
 ```
 
 ## 🎉 What's Next?

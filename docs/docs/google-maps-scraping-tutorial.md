@@ -105,33 +105,24 @@ European users may encounter a form to accept cookies. We've also added code to 
 Implementing this code is simple:
 
 ```python
-from botasaurus import *
-import urllib.parse
+@browser(
+    data=["restaurants in delhi"]
+)
+def scrape_places_links(driver: AntiDetectDriver, query):
 
-# Define a custom task for scraping data from Google Maps
-class GoogleMapsScraperTask(BaseTask):
+    # Visit Google Maps
+    def visit_google_maps():
+        encoded_query = urllib.parse.quote_plus(query)
+        url = f'https://www.google.com/maps/search/{encoded_query}'
+        driver.get(url)
 
-    # Define the search queries (customize as needed)
-    def get_data(self):
-        queries = ["restaurants in delhi"]
-        return queries
+        # Accept Cookies for European users
+        if driver.is_in_page("https://consent.google.com/"):
+            agree_button_selector = 'form:nth-child(2) > div > div > button'
+            driver.click(agree_button_selector)
+            driver.organic_get(url)
 
-    def run(self, driver: BotasaurusDriver, query):
-        
-        # Visit Google Maps
-        def visit_google_maps():
-            encoded_query = urllib.parse.quote_plus(query)
-            url = f'https://www.google.com/maps/search/{encoded_query}'
-            driver.get(url)
-            
-            # Accept Cookies for European users
-            if driver.is_in_page("https://consent.google.com/"):
-                agree_button_selector = 'form:nth-child(2) > div > div > button'
-                driver.click(agree_button_selector)
-                driver.organic_get(url)
-
-        visit_google_maps()
-
+    visit_google_maps()
 ```
 
 With the provided code, we have successfully implemented the search functionality part of the project.
@@ -176,8 +167,7 @@ def scroll_to_end_of_places_list():
 Once you've scrolled to the end of the list, the next step is to extract the required data. The process comprises:
 
 1. Extracting all links pointing to individual places (e.g., "google.com/maps/place/Indian+Accent" or "google.com/maps/place/Rajasthan+in+delhi-Restaurant").
-2. Visiting each place's link.
-3. Extracting the required data from each place.
+2. Extracting the required data from each place.
 
 Let's walk through the process:
 
@@ -197,7 +187,7 @@ For each extracted link, we will navigate to the page and scrape information abo
 
 ```python
             # Visit an individual place and extract data
-            def scrape_place_data(driver: BotasaurusDriver, link):
+            def scrape_place_data():
                 driver.get(link)
                 
                 # Accept Cookies for European users
@@ -238,13 +228,6 @@ For each extracted link, we will navigate to the page and scrape information abo
                 }
 ```
 
-For each link in our `places_links` list, we'll call the `extract_place_details` function and gather the data:
-
-```python
-def extract_data(driver: BotasaurusDriver, places_links):
-    places_data = [scrape_place_data(driver, link) for link in places_links]
-    return places_data
-```
 
 With this, you've successfully extracted the required data for each place from Google Maps.
 
@@ -254,58 +237,34 @@ Don't worry, if terms like async, parallelism, and concurrency sound intimidatin
 
 To speed up our scraping process, we'll employ parallelism by running multiple bots simultaneously. 
 
-Here's a step-by-step guide:
-
-1. **Divide the Links**
-
-We'll break the list of place links into eight chunks using Botasaurus's `divide_list()` function:
-```python
-link_parts = self.divide_list(places_links, 8)
-```
-
-2. **Run Bots in Parallel**
-
-With our chunks ready, we can run our bots concurrently. 
-
-We use the `parallel()` function, passing in the scraping function `extract_data`, the list of chunks, and the number of bots to run simultaneously.
+Implementing parallelism in Botasaurus is as simple as 2 lines of code:
 
 ```python
-scraped_places_parts = self.parallel(extract_data, link_parts, len(link_parts))
-```
 
-3. **Merge Results**
+@browser(
+    parallel=bt.calc_max_parallel_browsers,
+    reuse_drivers=True, # Reuse the browsers for scraping links
+)
+def scrape_places(driver: AntiDetectDriver, link):
 
-After our bots have completed their tasks, we'll merge the scraped data:
-
-```python
-scraped_places = self.merge_list(scraped_places_parts)
-```
-
-Bringing it all together, implementing parallelism in Botasaurus is as simple as three lines of code:
-
-```python
-link_parts = self.divide_list(places_links, 8)
-scraped_places_parts = self.parallel(extract_data, link_parts, len(link_parts))
-scraped_places = self.merge_list(scraped_places_parts)
 ```
 
 ![](/img/parallel-launch.png)
-
+<!-- 
 ## 📤 Returning Data
 
-Botasaurus, by design, saves any data returned from the `run` method of a Task as both a CSV file and a JSON file.
+Botasaurus, by design, saves any data returned from the function as both a CSV file and a JSON file.
 
 So, simply return `scraped_places` to save them as a CSV and JSON File:
 
 ```python
-class GoogleMapsScraperTask(BaseTask):
-    def run(self, driver: BotasaurusDriver, query):
+def scrape_places(driver: AntiDetectDriver, link):
 
         # ... [rest of the scraping and extraction process]
 
         # Return data for automatic saving to CSV and JSON
         return scraped_places
-```
+``` -->
 
 ## 🚫 Blocking Images
 
@@ -318,13 +277,10 @@ Fortunately, we can enhance the cost efficiency and speed of our scraper by bloc
 In Botasaurus, you can easily configure the browser used by your bot to block images. Here's the simple code to do so:
 
 ```python
-from botasaurus import *
 
-class GoogleMapsScraperTask(BaseTask):
-
-    # Configure the browser to block images for faster scraping
-    browser_config = BrowserConfig(block_images=True)
-
+@browser(
+    block_images=True,
+)
 ```
 ## 🚀 Launch It
 
@@ -336,120 +292,111 @@ Now, it's time to launch the bot and see it in action!
 ```python
 from botasaurus import *
 import urllib.parse
-# Define a custom task for scraping data from Google Maps
 
-class GoogleMapsScraperTask(BaseTask):
-    # Configure the browser to block images for faster scraping
-    browser_config = BrowserConfig(block_images=True)
+@browser(
+    block_images=True,
+    parallel=bt.calc_max_parallel_browsers,
+    reuse_drivers=True,
+)
+def scrape_places(driver: AntiDetectDriver, link):
 
-    # Define the search queries (customize as needed)
-    def get_data(self):
-        queries = ["restaurants in delhi"]
-        return queries
+    # Visit an individual place and extract data
+    def scrape_place_data():
+        driver.get(link)
 
-    def run(self, driver: BotasaurusDriver, query):
-
-        # Visit Google Maps
-        def visit_google_maps():
-            encoded_query = urllib.parse.quote_plus(query)
-            url = f'https://www.google.com/maps/search/{encoded_query}'
-            driver.get(url)
-
-            # Accept Cookies for European users
-            if driver.is_in_page("https://consent.google.com/"):
-                agree_button_selector = 'form:nth-child(2) > div > div > button'
-                driver.click(agree_button_selector)
-                driver.organic_get(url)
-
-        # Scroll to the end of the places list to get all the places
-        def scroll_to_end_of_places_list():
-            end_of_list_detected = False
-
-            while not end_of_list_detected:
-                # Element that holds the list of places
-                places_list_element_selector = '[role="feed"]'
-                driver.scroll(places_list_element_selector)
-                print('Scrolling...')
-
-                # Check if we've reached the end of the list
-                end_of_list_indicator_selector = "p.fontBodyMedium > span > span"
-                if driver.exists(end_of_list_indicator_selector):
-                    end_of_list_detected = True
-
-            print("Successfully scrolled to the end of the places list.")
-
-        def extract_place_links():
-            places_links_selector = '[role="feed"] > div > div > a'
-            return driver.links(places_links_selector)
-
-        # Visit an individual place and extract data
-        def scrape_place_data(driver: BotasaurusDriver, link):
+        # Accept Cookies for European users
+        if driver.is_in_page("https://consent.google.com/"):
+            agree_button_selector = 'form:nth-child(2) > div > div > button'
+            driver.click(agree_button_selector)
             driver.get(link)
 
-            # Accept Cookies for European users
-            if driver.is_in_page("https://consent.google.com/"):
-                agree_button_selector = 'form:nth-child(2) > div > div > button'
-                driver.click(agree_button_selector)
-                driver.get(link)
+        # Extract title
+        title_selector = 'h1'
+        title = driver.text(title_selector)
 
-            # Extract title
-            title_selector = 'h1'
-            title = driver.text(title_selector)
+        # Extract rating
+        rating_selector = "div.F7nice > span"
+        rating = driver.text(rating_selector)
 
-            # Extract rating
-            rating_selector = "div.F7nice > span"
-            rating = driver.text(rating_selector)
+        # Extract reviews count
+        reviews_selector = "div.F7nice > span:last-child"
+        reviews_text = driver.text(reviews_selector)
+        reviews = int(''.join(filter(str.isdigit, reviews_text))
+                      ) if reviews_text else None
 
-            # Extract reviews count
-            reviews_selector = "div.F7nice > span:last-child"
-            reviews_text = driver.text(reviews_selector)
-            reviews = int(''.join(filter(str.isdigit, reviews_text))
-                          ) if reviews_text else None
+        # Extract website link
+        website_selector = "a[data-item-id='authority']"
+        website = driver.link(website_selector)
 
-            # Extract website link
-            website_selector = "a[data-item-id='authority']"
-            website = driver.link(website_selector)
+        # Extract phone number
+        phone_xpath = "//button[starts-with(@data-item-id,'phone')]"
+        phone_element = driver.get_element_or_none(phone_xpath)
+        phone = phone_element.get_attribute(
+            "data-item-id").replace("phone:tel:", "") if phone_element else None
 
-            # Extract phone number
-            phone_xpath = "//button[starts-with(@data-item-id,'phone')]"
-            phone_element = driver.get_element_or_none(phone_xpath)
-            phone = phone_element.get_attribute(
-                "data-item-id").replace("phone:tel:", "") if phone_element else None
+        return {
+            "title": title,
+            "phone": phone,
+            "website": website,
+            "reviews": reviews,
+            "rating": rating,
+            "link": link,
+        }
+    return scrape_place_data()
 
-            return {
-                "title": title,
-                "phone": phone,
-                "website": website,
-                "reviews": reviews,
-                "rating": rating,
-                "link": link,
-            }
 
-        # Main extraction process
-        def extract_data(driver: BotasaurusDriver, places_links):
-            places_data = [scrape_place_data(
-                driver, link) for link in places_links]
-            return places_data
+@browser(
+    data=["restaurants in delhi"]
+    block_images=True,
+)
+def scrape_places_links(driver: AntiDetectDriver, query):
 
-        # Start the scraping process
-        visit_google_maps()
-        scroll_to_end_of_places_list()
+    # Visit Google Maps
+    def visit_google_maps():
+        encoded_query = urllib.parse.quote_plus(query)
+        url = f'https://www.google.com/maps/search/{encoded_query}'
+        driver.get(url)
 
-        # Get all place links
-        places_links = extract_place_links()
+        # Accept Cookies for European users
+        if driver.is_in_page("https://consent.google.com/"):
+            agree_button_selector = 'form:nth-child(2) > div > div > button'
+            driver.click(agree_button_selector)
+            driver.organic_get(url)
 
-        # Divide the list of links into 8 parts for parallel processing
-        link_parts = self.divide_list(places_links, 8)
+    # Scroll to the end of the places list to get all the places
+    def scroll_to_end_of_places_list():
+        end_of_list_detected = False
 
-        # Execute scraping of places in parallel
-        scraped_places_parts = self.parallel(
-            extract_data, link_parts, len(link_parts))
+        while not end_of_list_detected:
+            # Element that holds the list of places
+            places_list_element_selector = '[role="feed"]'
+            driver.scroll(places_list_element_selector)
+            print('Scrolling...')
 
-        # Merge the scraped list
-        scraped_places = self.merge_list(scraped_places_parts)
+            # Check if we've reached the end of the list
+            end_of_list_indicator_selector = "p.fontBodyMedium > span > span"
+            if driver.exists(end_of_list_indicator_selector):
+                end_of_list_detected = True
 
-        # Return the places to be saved as a JSON and CSV file in the output folder
-        return scraped_places
+        print("Successfully scrolled to the end of the places list.")
+
+    def extract_place_links():
+        places_links_selector = '[role="feed"] > div > div > a'
+        return driver.links(places_links_selector)
+
+    visit_google_maps()
+    scroll_to_end_of_places_list()
+
+    # Get all place links
+    places_links = extract_place_links()
+
+    # Return the places links to be saved as a output/links file
+    filename = 'links'
+    return filename, places_links
+
+if __name__ == "__main__":
+    links = scrape_places_links()
+    scrape_places(links)
 ```
 2. Run your scraper, by executing the following command:
 ```
@@ -492,4 +439,3 @@ We've developed an advanced, production-ready version of the scraper that's **4x
 
 Congrats! You've built a powerful Google Maps scraper and mastered Botasaurus. Now, it's time to unleash your bot-building skills in the real world!
 
-Before you go, explore our FAQs [here](faqs.md) for valuable time-saving tips and handy references that can save you hours of debugging time.
