@@ -1,11 +1,10 @@
-from distutils.core import setup
-
+from setuptools import setup
 
 install_requires = [
     "requests",
+    "cloudscraper",
     "chromedriver-autoinstaller-fix",
     "selenium==4.5.0",
-    "undetected_chromedriver>=3.4.6",
     "beautifulsoup4>=4.11.2",
     "joblib==1.2.0",
     "selenium-wire",
@@ -25,7 +24,7 @@ def get_description():
 setup(
     name='botasaurus',
     packages=['botasaurus'],
-    version='2.0.19',
+    version='3.0.0',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",
@@ -33,7 +32,7 @@ setup(
         "Tracker": "https://github.com/omkarcloud/botasaurus/issues",
     },
 
-    description="The Ultimate Web Scraping Framework",
+    description="The All in One Web Scraping Framework",
     long_description=get_description(),
     # long_description_content_type="text/markdown",
     author='Chetan Jain',

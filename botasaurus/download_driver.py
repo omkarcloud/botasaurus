@@ -1,16 +1,18 @@
-import chromedriver_autoinstaller_fix
-
-from chromedriver_autoinstaller_fix import get_chrome_version
-from chromedriver_autoinstaller_fix.utils import get_major_version
 import os
 import shutil
+
+import chromedriver_autoinstaller_fix
+from chromedriver_autoinstaller_fix import get_chrome_version
+from chromedriver_autoinstaller_fix.utils import get_major_version
+
 
 def is_windows():
     return os.name == 'nt'
 
 def download_driver_in_path():
     path = chromedriver_autoinstaller_fix.install(path='build/')  
-    print(path)
+    # print(path)
+
 def recreate_build_dir():
     # Get the path of the current working directory
     current_dir = os.getcwd()
@@ -25,14 +27,18 @@ def recreate_build_dir():
     os.makedirs(build_dir)
 
 
+def get_filename(major_version):
+    return f"chromedriver-{major_version}.exe" if is_windows() else f"chromedriver-{major_version}"
+
 def move_driver():
     major_version = get_major_version(get_chrome_version())
 
-    executable_name = "chromedriver.exe" if is_windows() else "chromedriver"
+    executable_name = get_filename(major_version)
+    executable_name_src = "chromedriver.exe" if is_windows() else "chromedriver"
 
     def move_chromedriver():
         # Define the source and destination paths
-        src_path = f"build/{major_version}/{executable_name}"
+        src_path = f"build/{major_version}/{executable_name_src}"
         dest_path = f"build/{executable_name}"
 
         # Use the shutil.move() function to move the file

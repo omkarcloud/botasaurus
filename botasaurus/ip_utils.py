@@ -1,6 +1,7 @@
 import requests
 from requests.exceptions import ReadTimeout
 import traceback
+
 def find_ip_details(max_retries=5):
     url = 'https://www.omkar.cloud/backend/ipinfo/'
     try:

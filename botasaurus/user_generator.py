@@ -1,10 +1,9 @@
-import string
-import requests
 import random
-from .temp_mail import TempMail
-from .utils import merge_list_of_dicts, merge_dicts_in_one_dict
-
+import requests
+import string
 from datetime import datetime
+from .temp_mail import TempMail
+from .utils import merge_dicts_in_one_dict, merge_list_of_dicts
 
 def convert_timestamp(timestamp):
     dt = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -41,6 +40,7 @@ class Country():
     TR = 'TR'
     UA = 'UA'
     US = 'US'
+    
 class ProblemWithGetPersonData(Exception):
     """Problem with obtaining personal data"""
 
@@ -133,10 +133,8 @@ def generate_persons(count: int, gender: Gender = Gender.BOTH, country: Country 
     return datas
 
 
-
-class AccountGenerator:
-    def generate_account(gender: Gender = Gender.BOTH, country: Country = None):
+def generate_user(gender: Gender = Gender.BOTH, country: Country = None):
             return generate_persons(1, gender, country)[0]
 
-    def generate_accounts(n, gender: Gender = Gender.BOTH, country: Country = None):
+def generate_users(n, gender: Gender = Gender.BOTH, country: Country = None):
             return generate_persons(n, gender, country)

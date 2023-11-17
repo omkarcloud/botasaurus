@@ -2,8 +2,6 @@
 sidebar_position: 1
 description: Botasaurus is a Swiss Army knife 🔪 for web scraping and browser automation 🤖 that helps you create bots fast. ⚡️
 ---
-# What is Botasaurus?
-
 ## In a nutshell
 
 Botasaurus is an all in 1 web scraping framework built for the modern web. We
@@ -119,15 +117,15 @@ After executing the script, it will:
 
 ![Botasaurus in action](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-bot-running.gif)
 
-Now, let’s explore another way to scrape the heading using the `requests` module. Replace the previous code in `main.py` with the following:
+Now, let’s explore another way to scrape the heading using the `request` module. Replace the previous code in `main.py` with the following:
 
 ```python
 from botasaurus import *
 
-@requests
-def scrape_heading_task(requests: AntiDetectRequests, data):
+@request
+def scrape_heading_task(request: AntiDetectRequests, data):
     # Navigate to the Omkar Cloud website
-    soup = requests.bs4("https://www.omkar.cloud/")
+    soup = request.bs4("https://www.omkar.cloud/")
     
     # Retrieve the heading element's text
     heading = soup.find('h1').get_text()
@@ -145,7 +143,7 @@ if __name__ == "__main__":
 In this code:
 
 - We are using the BeautifulSoup (bs4) module to parse and scrape the heading.
-- The `requests` object provided is not a standard Python requests object but an Anti Detect requests object, which also preserves cookies.
+- The `request` object provided is not a standard Python request object but an Anti Detect request object, which also preserves cookies.
 
 ### Step 5: Run the Scraping Task (Using Anti Detect Requests)
 
@@ -155,7 +153,7 @@ Finally, run the bot again:
 python main.py
 ```
 
-This time, you will observe the same result as before, but instead of using Anti Detect Selenium, we are utilizing the Anti Detect requests module.
+This time, you will observe the same result as before, but instead of using Anti Detect Selenium, we are utilizing the Anti Detect request module.
 
 ## 💡 Understanding Botasaurus
 
@@ -177,10 +175,9 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
   # ...
 ```
 
-Botasaurus will launch a new browser instance for each item in the list and merge the results into a single file at the end of the scraping task (all.csv/all.json).
+Botasaurus will launch a new browser instance for each item in the list and merge and store the results in `scrape_heading_task.json` at the end of the scraping.
 
-
-![TODO:all.csv/all.json Side by Side](/img/.png)
+![scraped data](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/scraped-data.png)
 
 Please note that the `data` parameter can also handle items such as dictionaries.
 
@@ -188,11 +185,11 @@ For instance, if you're automating the sign-up process for bot accounts on a web
 
 ```python
 @browser(data=[{"name": "Mahendra Singh Dhoni", ...}, {"name": "Virender Sehwag", ...}])
-def scrape_heading_task(driver: AntiDetectDriver, data):
+def scrape_heading_task(driver: AntiDetectDriver, data: dict):
     # ...
 ```
 
-In this example, the `data` parameter is supplied with a lambda function that returns a list of dictionaries. Each dictionary contains details for a different bot account that you wish to sign up.
+<!-- In this example, the `data` parameter is supplied with a list of dictionaries. Each dictionary contains details for a different bot account that you wish to sign up. -->
 
 ### How to Scrape in Parallel?
 
@@ -225,6 +222,7 @@ To cache web scraping results and avoid re-scraping the same data, set `cache=Tr
 def scrape_heading_task(driver: AntiDetectDriver, data):
   # ...  
 ```
+
 
 ### How Botasaurus helps me in debugging?
 
@@ -279,10 +277,10 @@ def scrape_article_links(driver: AntiDetectDriver, data):
 
 ### I want to Scrape a large number of Links, a new selenium driver is getting created for each new link, this increases the time to scrape data. How can I reuse Drivers?
 
-Utilize the `reuse_drivers` option to reuse drivers, reducing the time required for data scraping:
+Utilize the `reuse_driver` option to reuse drivers, reducing the time required for data scraping:
 
 ```python
-@browser(reuse_drivers=True)
+@browser(reuse_driver=True)
 def scrape_heading_task(driver: AntiDetectDriver, data):
   # ...
 ```
@@ -295,7 +293,7 @@ Below is a practical example of how Botasaurus features come together in a typic
 @browser(block_images=True,
          cache=True, 
          parallel=bt.calc_max_parallel_browsers, 
-         reuse_drivers=True)
+         reuse_driver=True)
 def scrape_articles(driver: AntiDetectDriver, link):
     driver.get(link)
 
@@ -341,21 +339,21 @@ data = [
 bt.write_json(data, "data.json")
 
 # Read the contents of the file "data.json"
-data = bt.read_json("data.json")
+print(bt.read_json("data.json"))
 
 # Write the data to the file "data.csv"
 bt.write_csv(data, "data.csv")
 
 # Read the contents of the file "data.csv"
-bt.read_csv("data.csv")
+print(bt.read_csv("data.csv"))
 ```
 
 ### How Can I Pause the Scraper to Inspect Things While Developing?
 
-To pause the scraper and wait for user input before proceeding, use `driver.prompt()`:
+To pause the scraper and wait for user input before proceeding, use `bt.prompt()`:
 
 ```python
-driver.prompt()
+bt.prompt()
 ```
 
 ### How Does AntiDetectDriver Facilitate Easier Web Scraping?
@@ -366,9 +364,9 @@ It also includes a variety of helper functions that make web scraping tasks easi
 
 You can learn about these methods [here](https://github.com/omkarcloud/botasaurus/blob/master/anti-detect-driver.md).
 
-### What Features Does @requests Support, Similar to @browser?
+### What Features Does @request Support, Similar to @browser?
 
-Similar to @browser, @requests supports features like 
+Similar to @browser, @request supports features like 
  - asynchronous execution [Will Learn Later]
  - parallel processing
  - caching
@@ -379,9 +377,9 @@ Below is an example that showcases these features:
 
 
 ```python
-@requests(parallel=40, cache=True, proxy="http://your_proxy_address:your_proxy_port", data=["https://www.omkar.cloud/", ...])
-def scrape_heading_task(requests: AntiDetectDriver, link):
-  soup = requests.bs4(link)
+@request(parallel=40, cache=True, proxy="http://your_proxy_address:your_proxy_port", data=["https://www.omkar.cloud/", ...])
+def scrape_heading_task(request: AntiDetectDriver, link):
+  soup = request.bs4(link)
   heading = soup.find('h1').get_text()
   return {"heading": heading}
 ```
@@ -397,8 +395,8 @@ driver.quit()
 
 You can create an instance of `AntiDetectRequests` as follows:
 ```python
-anti_detect_requests = bt.create_requests()
-soup = anti_detect_requests.bs4("https://www.omkar.cloud/")
+anti_detect_request = bt.create_request()
+soup = anti_detect_request.bs4("https://www.omkar.cloud/")
 # ... Additional code
 ```
 
@@ -482,15 +480,19 @@ def sign_up_task(driver: AntiDetectDriver, data):
 You can dynamically select a profile by passing a function to the `profile` option, which will receive the data item:
 
 ```python
+
+def get_profile(data):
+    return data["username"]
+
 @browser(
     data=[{"username": "mahendra-singh-dhoni", ...}, {"username": "virender-sehwag", ...}],
-    profile=lambda data: data["username"],
+    profile=get_profile,
 )
 def sign_up_task(driver: AntiDetectDriver, data):
     # Your sign-up code here
 ```
 
-user_agent, proxy, and other options can also be passed functions.
+user_agent, proxy, and other options can also be passed as functions.
 
 ### Is there a Tutorial that integrates tiny_profile, temp mail, user generator, profile to sign up on a Website and Perform Actions on Website. So I can get a Complete Picture?
 
@@ -535,6 +537,44 @@ Please understand:
 
 *Advanced Features*
 
+
+### How Do I Configure the Output of My Scraping Function in Botasaurus?
+To configure the output of your scraping function in Botasaurus, you can customize the behavior in several ways:
+
+1. **Change Output Filename**: Use the `output` parameter in the decorator to specify a custom filename for the output. 
+   ```python
+   @browser(output="my-output")
+   def scrape_heading_task(driver: AntiDetectDriver, data): 
+       # Your scraping logic here
+   ```
+
+2. **Disable Output**: If you don't want any output to be saved, set `output` to `None`.
+   ```python
+   @browser(output=None)
+   def scrape_heading_task(driver: AntiDetectDriver, data): 
+       # Your scraping logic here
+   ```
+
+3. **Dynamically Write Output**: To dynamically write output based on data and result, pass a function to the `output` parameter:
+   ```python
+   def write_output(data, result):
+       bt.write_json(result, 'data')
+       bt.write_csv(result, 'data')
+
+   @browser(output=write_output)  
+   def scrape_heading_task(driver: AntiDetectDriver, data): 
+       # Your scraping logic here
+   ```
+
+4. **Save Outputs in Multiple Formats**: Use the `output_formats` parameter to save outputs in different formats like CSV and JSON.
+   ```python
+   @browser(output_formats=[bt.Formats.CSV, bt.Formats.JSON])  
+   def scrape_heading_task(driver: AntiDetectDriver, data): 
+       # Your scraping logic here
+   ```
+
+These options provide flexibility in how you handle the output of your scraping tasks with Botasaurus.
+
 ### How to Run Drivers Asynchronously from the Main Process?
 
 To execute drivers asynchronously, enable the `async` option and use `.get()` when you're ready to collect the results:
@@ -543,7 +583,7 @@ To execute drivers asynchronously, enable the `async` option and use `.get()` wh
 from time import sleep
 
 @browser(
-    async=True,  # Specify the Async option here
+    run_async=True,  # Specify the Async option here
 )
 def scrape_heading(driver: AntiDetectDriver, data):
     print("Sleeping for 5 seconds.")
@@ -562,15 +602,76 @@ if __name__ == "__main__":
 
 With this method, function calls run concurrently. The output will indicate that both function calls are executing in parallel.
 
+### How to Asynchronously Add Multiple Items and Get Results?
+
+The `async_queue` feature allows you to perform web scraping tasks in asyncronously in a queue, without waiting for each task to complete before starting the next one. To gather your results, simply use the `.get()` method when all tasks are in the queue.
+
+#### Basic Example:
+
+```python
+from time import sleep
+from your_scraping_library import browser, AntiDetectDriver  # Replace with your actual scraping library
+
+@browser(async_queue=True)
+def scrape_data(driver: AntiDetectDriver, data):
+    print("Starting a task.")
+    sleep(1)  # Simulate a delay, e.g., waiting for a page to load
+    print("Task completed.")
+    return data
+
+if __name__ == "__main__":
+    # Start scraping tasks without waiting for each to finish
+    async_queue = scrape_data()  # Initializes the queue
+
+    # Add tasks to the queue
+    async_queue.put([1, 2, 3])
+    async_queue.put(4)
+    async_queue.put([5, 6])
+
+    # Retrieve results when ready
+    results = async_queue.get()  # Expects to receive: [1, 2, 3, 4, 5, 6]
+```
+
+#### Practical Application for Web Scraping:
+
+Here's how you could use `async_queue` to scrape webpage titles while scrolling through a list of links:
+
+```python
+from your_scraping_library import browser, AntiDetectDriver  # Replace with your actual scraping library
+
+@browser(async_queue=True)
+def scrape_title(driver: AntiDetectDriver, link):
+    driver.get(link)  # Navigate to the link
+    return driver.title  # Scrape the title of the webpage
+
+@browser()
+def scrape_all_titles(driver: AntiDetectDriver):
+    # ... Your code to visit the initial page ...
+
+    title_queue = scrape_title()  # Initialize the asynchronous queue
+    
+    while not end_of_page_detected(driver):  # Replace with your end-of-list condition
+        title_queue.put(driver.links('a'))  # Add each link to the queue
+        driver.scroll(".scrollable-element")
+        
+
+    return title_queue.get()  # Get all the scraped titles at once
+
+if __name__ == "__main__":
+    all_titles = scrape_all_titles()  # Call the function to start the scraping process
+```
+
+**Note:** The `async_queue` will only invoke the scraping function for unique links, avoiding redundant operations and keeping the main function (`scrape_all_titles`) cleaner.
+
 ### I want to repeatedly call the scraping function without creating new Selenium drivers each time. How can I achieve this?
 
-Utilize the `keep_drivers_alive` option to maintain active driver sessions. Remember to call `.done()` when you're finished to release resources:
+Utilize the `keep_drivers_alive` option to maintain active driver sessions. Remember to call `.close()` when you're finished to release resources:
 
 ```python
 @browser(
     keep_drivers_alive=True, 
     parallel=bt.calc_max_parallel_browsers,  # Typically used with `keep_drivers_alive`
-    reuse_drivers=True,  # Also commonly paired with `keep_drivers_alive`
+    reuse_driver=True,  # Also commonly paired with `keep_drivers_alive`
 )
 def scrape_data(driver: AntiDetectDriver, data):
     # ... (Your scraping logic here)
@@ -578,11 +679,61 @@ def scrape_data(driver: AntiDetectDriver, data):
 if __name__ == "__main__":
     for i in range(3):
         scrape_data()
-    # After completing all scraping tasks, call .done() to close the drivers.
-    scrape_data.done()
+    # After completing all scraping tasks, call .close() to close the drivers.
+    scrape_data.close()
 ```
 
+
+### How do I manage the Cache in Botasaurus?
+
+You can use The Cache Module in Botasaurus to easily manage cached data. Here's a simple example explaining its usage:
+
+```python
+from botasaurus import *
+from botasaurus.cache import Cache
+
+# Example scraping function
+@request
+def scrape_data(data):
+    # Your scraping logic here
+    return {"processed": data}
+
+# Sample data for scraping
+input_data = {"key": "value"}
+
+# Adding data to the cache
+Cache.put(scrape_data, input_data, scrape_data(input_data))
+# Checking if data is in the cache
+if Cache.has(scrape_data, input_data):
+    # Retrieving data from the cache
+    cached_data = Cache.get(scrape_data, input_data)
+# Removing specific data from the cache
+Cache.remove(scrape_data, input_data)
+# Clearing the complete cache for the scrape_data function
+Cache.clear(scrape_data)
+```
+<!-- 
+### How Do I Close All Running Chrome Instances When Developing with Botasaurus?
+
+While developing a scraper, you might need to interrupt the scraping process, often done by pressing `Ctrl + C`. However, this action does not automatically close the Chrome browsers, which can cause your computer to hang due to resource overuse.
+
+![Many Chrome processes running in Task Manager](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/chrome-running.png)
+
+To prevent your PC from hanging, you need to close all running Chrome instances. Here’s a simple method to do it using a Python shell:
+
+1. Open a new Python shell. You can do this by typing `python` in your command line or terminal.
+2. In the Python shell, enter the following commands:
+
+```python
+from botasaurus.close_chrome import close_all_chrome_browsers
+close_all_chrome_browsers() 
+```
+
+3. Executing these commands will close all Chrome instances, thereby helping to prevent your PC from hanging.
+ -->
 ---
+
+
 
 ### Conclusion
 

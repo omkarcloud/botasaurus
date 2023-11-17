@@ -1,5 +1,5 @@
 from .base_data import BaseData
-from .utils import is_windows, is_mac, write_json
+from .utils import is_windows, is_mac
 
 def get_correct_agent(windows, mac, linux):
     if is_windows():

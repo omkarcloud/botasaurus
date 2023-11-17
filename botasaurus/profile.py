@@ -1,7 +1,8 @@
-import random as random_module
 from datetime import datetime
-import os
 import json
+import os
+import random as random_module
+
 from .utils import datetime_to_str, relative_path, str_to_datetime
 
 class ProfilePyStorageException(Exception):

@@ -1,12 +1,11 @@
-from time import sleep
-import traceback
-import random
-from bs4 import BeautifulSoup
-import requests
-import re
-from urllib.error import ContentTooShortError
 from http.client import RemoteDisconnected
+import random
+import re
+import requests
+from bs4 import BeautifulSoup
+from time import sleep
 from urllib.error import ContentTooShortError, URLError
+import traceback
 
 NETWORK_ERRORS = [RemoteDisconnected, URLError,
                   ConnectionAbortedError, ContentTooShortError,  BlockingIOError]

@@ -1,6 +1,10 @@
+from copy import deepcopy
 from itertools import cycle
-import random
-import copy
+from random import choice, shuffle
+
+
+
+
 
 def copy_list(original_list):
     """
@@ -12,7 +16,7 @@ def copy_list(original_list):
     Returns:
     list: A deep copy of the original list.
     """
-    return copy.deepcopy(original_list)
+    return deepcopy(original_list)
 
 
 def delete_from_list(list_of_dicts, dict_item):
@@ -46,7 +50,7 @@ class BaseData():
     def set_data(self, data):
         self.data = data
         copied_list = copy_list(self.data)
-        random.shuffle(copied_list)
+        shuffle(copied_list)
         self.cycled_data = cycle(copied_list)
 
     def get_random_cycled(self):
@@ -54,7 +58,7 @@ class BaseData():
             return next(self.cycled_data)
 
     def get_random(self):
-        return random.choice(self.data)
+        return choice(self.data)
 
     def remove_data(self, item):
         self.set_data(delete_from_list(self.data, item))

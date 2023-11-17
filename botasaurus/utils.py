@@ -1,14 +1,12 @@
-from datetime import datetime
 import errno
 import json
-import sys
-from time import sleep
-import traceback
-from urllib.error import ContentTooShortError
-from http.client import RemoteDisconnected
-from urllib.error import ContentTooShortError, URLError
-from sys import platform
 import os
+import traceback
+from datetime import datetime
+from http.client import RemoteDisconnected
+from time import sleep
+from urllib.error import ContentTooShortError, URLError
+from sys import platform, exit
 
 def is_mac():
     return platform == "darwin"
@@ -22,8 +20,6 @@ def is_windows():
 def relative_path(path, goback=0):
     levels = [".."] * (goback + -1)
     return os.path.abspath(os.path.join(os.getcwd(), *levels, path))
-
-
 
 def retry(func, retry_wait=None, retries=5):
     tries = 0
@@ -141,7 +137,7 @@ def remove_nones(list):
 
 def exit_with_failed_status():
     print('Exiting with status 1')
-    sys.exit(1)
+    exit(1)
 
 
 
@@ -250,11 +246,11 @@ def write_file( data, path,):
 
 def read_json(path):
     with open(path, 'r') as fp:
-        users = json.load(fp)
-        return users
+        data = json.load(fp)
+        return data
 
 def read_file(path):
-    with open(path, 'r') as fp:
+    with open(path, 'r', encoding="utf-8") as fp:
         content = fp.read()
         return content
         

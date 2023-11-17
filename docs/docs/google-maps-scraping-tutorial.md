@@ -243,7 +243,7 @@ Implementing parallelism in Botasaurus is as simple as 2 lines of code:
 
 @browser(
     parallel=bt.calc_max_parallel_browsers,
-    reuse_drivers=True, # Reuse the browsers for scraping links
+    reuse_driver=True, # Reuse the browsers for scraping links
 )
 def scrape_places(driver: AntiDetectDriver, link):
 
@@ -296,7 +296,7 @@ import urllib.parse
 @browser(
     block_images=True,
     parallel=bt.calc_max_parallel_browsers,
-    reuse_drivers=True,
+    reuse_driver=True,
 )
 def scrape_places(driver: AntiDetectDriver, link):
 

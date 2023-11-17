@@ -1,36 +1,35 @@
-import traceback
 from datetime import datetime
+from random import uniform
+from time import sleep
+from traceback import print_exc
+
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-import random
-from time import sleep
+
+
+from .decorators_utils import  create_directory_if_not_exists
+
 from .beep_utils import beep_input
 from .local_storage_driver import LocalStorage
 from .opponent import Opponent
-from .utils import get_current_profile_path, read_file, relative_path, sleep_for_n_seconds, sleep_forever, write_json
+from .utils import read_file, relative_path, sleep_for_n_seconds, sleep_forever
 from .wait import Wait
-from selenium.common.exceptions import (NoSuchElementException)
+from .driver_about import AboutBrowser
 
     
-def save_cookies(driver, config):
-            current_profile_data = get_current_profile_path(config) + 'profile.json'
-            current_profile_data_path =  relative_path(current_profile_data, 0)
-
-            driver.execute_cdp_cmd('Network.enable', {})
-            cookies = (driver.execute_cdp_cmd('Network.getAllCookies', {}))
-            driver.execute_cdp_cmd('Network.disable', {})
-
-            if type(cookies) is not list:
-                cookies = cookies.get('cookies')
-            write_json(cookies, current_profile_data_path)
 
 
-class BotasaurusDriver(webdriver.Chrome):
-    beep = True
+class AntiDetectDriver(webdriver.Chrome):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.about: AboutBrowser = None
 
     def get_by_current_page_referrer(self, link, wait=None):
 
@@ -43,18 +42,31 @@ class BotasaurusDriver(webdriver.Chrome):
 
     def js_click(self, element):
         self.execute_script("arguments[0].click();",  element)
+    def get_elements_or_none_by_xpath(self: WebDriver, xpath,wait=Wait.SHORT):
+        try:
+            if wait is None:
+                return self.find_elements(By.XPATH, xpath)
+            else:
+                WebDriverWait(self, wait).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, xpath)))
+
+                return self.find_elements(By.XPATH, xpath)
+        except:
+            return None
+
+
 
     def sleep(self, n):
         sleep_for_n_seconds(n)
 
     def prompt(self, text="Press Enter To Continue..."):
-        return beep_input(text, self.beep)
+        return beep_input(text, self.about.beep)
 
     def short_random_sleep(self):
-        sleep_for_n_seconds(random.uniform(2, 4))
+        sleep_for_n_seconds(uniform(2, 4))
 
     def long_random_sleep(self):
-        sleep_for_n_seconds(random.uniform(6, 9))
+        sleep_for_n_seconds(uniform(6, 9))
 
     def sleep_forever(self):
         sleep_forever()
@@ -387,15 +399,16 @@ window.scrollBy(0, 10000);
 
             if not filename.endswith(".png"):
                 filename = filename + ".png"
+            create_directory_if_not_exists("output/screenshots/")
 
-            final_path = f'{self.task_path}/{filename}'
+            final_path = f'output/screenshots/{filename}'
             saving_screenshot_at = relative_path(
                 final_path, 0)
             self.get_screenshot_as_file(
                 saving_screenshot_at)
             # print('Saved screenshot at {0}'.format(final_path))
         except:
-            traceback.print_exc()
+            print_exc()
             print('Failed to save screenshot')
 
     def prompt_to_solve_captcha(self, more_rules=[]):
@@ -418,11 +431,8 @@ window.scrollBy(0, 10000);
         # print('- Solve it Fast')
         # print('1. If')
 
-        return beep_input('Press fill in the captcha, the faster the less detectable, then press enter to continue ...', self.beep)
+        return beep_input('Press fill in the captcha, the faster the less detectable, then press enter to continue ...', self.about.beep)
 
-        # return beep_input('Press fill in the captcha and press enter to continue ...', self.beep)
-    def close(self) -> None:
-        if (self.browser_config.is_tiny_profile):
-            save_cookies(self, self.browser_config)
-
-        return super().close()
+        # return beep_input('Press fill in the captcha and press enter to continue ...', self.about.beep)
+    def quit(self) -> None:
+        return super().quit()
