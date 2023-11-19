@@ -75,7 +75,7 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
     # Retrieve the heading element's text
     heading = driver.text("h1")
 
-    # Save the data as a JSON file in output/all.json
+    # Save the data as a JSON file in output/scrape_heading_task.json
     return {
         "heading": heading
     }
@@ -101,7 +101,7 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
 - Inside the function, we:
     - Navigate to Omkar Cloud
     - Extract the heading text
-    - Prepare the data to be automatically saved as JSON and CSV files by Botasaurus:
+    - Return the data to be automatically saved as `scrape_heading_task.json` by Botasaurus:
 ```python
     driver.get("https://www.omkar.cloud/")
     heading = driver.text("h1")
@@ -126,7 +126,7 @@ After executing the script, it will:
 - Launch Google Chrome
 - Navigate to [omkar.cloud](https://www.omkar.cloud/)
 - Extract the heading text
-- Save it automatically as `output/finished.json`.
+- Save it automatically as `output/scrape_heading_task.json`.
 
 ![Botasaurus in action](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-bot-running.gif)
 
@@ -143,7 +143,7 @@ def scrape_heading_task(request: AntiDetectRequests, data):
     # Retrieve the heading element's text
     heading = soup.find('h1').get_text()
 
-    # Save the data as a JSON file in output/all.json
+    # Save the data as a JSON file in output/scrape_heading_task.json
     return {
         "heading": heading
     }
@@ -272,7 +272,7 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
   # ...
 ```
 
-### How Can I Save Data With a Different Name Instead of 'all.json'?
+<!-- ### How Can I Save Data With a Different Name Instead of 'all.json'?
 
 To save the data with a different filename, pass the desired filename along with the data in a tuple as shown below:
 
@@ -287,7 +287,7 @@ def scrape_article_links(driver: AntiDetectDriver, data):
     filename = "links"
     return filename, links
 ```
-
+ -->
 ### I want to Scrape a large number of Links, a new selenium driver is getting created for each new link, this increases the time to scrape data. How can I reuse Drivers?
 
 Utilize the `reuse_driver` option to reuse drivers, reducing the time required for data scraping:
@@ -303,6 +303,8 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
 Below is a practical example of how Botasaurus features come together in a typical web scraping project to scrape a list of links from a blog, and then visit each link to retrieve the article's heading and date:
 
 ```python
+from botasaurus import *
+
 @browser(block_images=True,
          cache=True, 
          parallel=bt.calc_max_parallel_browsers, 
@@ -326,8 +328,7 @@ def scrape_article_links(driver: AntiDetectDriver, data):
     
     links = driver.links("h3 a")
 
-    filename = "links"
-    return filename, links
+    return links
 
 if __name__ == "__main__":
     # Launch the web scraping task
@@ -415,7 +416,8 @@ soup = anti_detect_request.bs4("https://www.omkar.cloud/")
 
 --- 
 
-*Sign Up Bots*
+## Sign Up Bots
+
 Sometimes, when scraping the web, data is hidden behind an authentication wall, requiring you to sign up via email or Google to access it.
 
 Now, let's explore how to use Botasaurus utilities that empower us to create hundreds of accounts on a website. With hundreds of bots at your command:
@@ -548,7 +550,7 @@ Please understand:
    - When Scraping, You need to interact with Gitpod, such as clicking within the environment, every 30 minutes to prevent the machine from automatically closing.
 
 
-*Advanced Features*
+## Advanced Features
 
 
 ### How Do I Configure the Output of My Scraping Function in Botasaurus?
@@ -745,7 +747,6 @@ close_all_chrome_browsers()
 3. Executing these commands will close all Chrome instances, thereby helping to prevent your PC from hanging.
  -->
 ---
-
 
 
 ### Conclusion

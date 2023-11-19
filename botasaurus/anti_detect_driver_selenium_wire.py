@@ -18,8 +18,9 @@ from .utils import read_file, relative_path, sleep_for_n_seconds, sleep_forever
 from .wait import Wait
 from .driver_about import AboutBrowser
 from .decorators_utils import  create_directory_if_not_exists
+from .accept_google_cookies import accept_google_cookies
 
-    
+                  
 
 class AntiDetectDriverSeleniumWire(webdriver.Chrome):
 
@@ -302,12 +303,16 @@ window.scrollBy(0, 10000);
         self.delete_cookies_dict()
         self.delete_local_storage_dict()
 
-    def organic_get(self, link, wait=None):
+    def organic_get(self, link,  wait=None, accept_cookies=False):
         self.get("https://www.google.com/")
+        if accept_cookies:
+            accept_google_cookies(self)
         self.get_by_current_page_referrer(link, wait)
 
-    def get_google(self):
+    def get_google(self, accept_cookies=False):
         self.get("https://www.google.com/")
+        if accept_cookies:
+            accept_google_cookies(self)
         # self.get_element_or_none_by_selector('input[role="combobox"]', Wait.VERY_LONG)
 
     @property

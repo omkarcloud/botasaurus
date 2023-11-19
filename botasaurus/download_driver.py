@@ -50,8 +50,7 @@ def move_driver():
 def download_driver():
     
     recreate_build_dir()
-    major_version = get_major_version(get_chrome_version())
-    print(f'[INFO] Downloading Driver for Chrome Version {major_version} in build/ directory. This is a one-time process. Download in progress...')
+    print(f'[INFO] Downloading Chrome Driver. This is a one-time process. Download in progress...')
 
     download_driver_in_path()
     move_driver()

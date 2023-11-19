@@ -201,6 +201,9 @@ def browser(
     def decorator_browser(func: Callable) -> Callable:
         url = None
 
+
+
+
         def close_driver(driver:AntiDetectDriver):
             if tiny_profile:
               save_cookies(driver, profile)
@@ -219,6 +222,16 @@ def browser(
                     pass
                 else:
                     raise
+                
+        def close_driver_pool(pool:list):
+                if len(pool) == 1:
+                    close_driver(pool[0])
+                    while pool:
+                        pool.pop()
+                elif len(pool) > 0:
+                    Parallel(n_jobs=len(pool), backend="threading")(delayed(close_driver)(l) for l in pool)
+                    while pool:
+                        pool.pop()
 
 
         @wraps(func)
@@ -288,6 +301,7 @@ def browser(
                     return result
                 except Exception as error:
                     if isinstance(error, KeyboardInterrupt):
+                        close_driver_pool(_driver_pool)
                         raise  # Re-raise the KeyboardInterrupt to stop execution
 
                     if max_retry is not None and (max_retry) > (retry_attempt):
@@ -314,8 +328,6 @@ def browser(
             
             if number_of_workers is not None and not isinstance(number_of_workers, int):
                 raise ValueError("parallel Option must be a number or None")
-            if callable(parallel):
-                print(f"Running {number_of_workers} Browsers in Parallel")
 
             used_data =  passed_data if passed_data is not None else data
             used_data = used_data() if callable(used_data) else used_data
@@ -349,18 +361,13 @@ def browser(
                                   
                     return current_result
 
+                if callable(parallel):
+                    print(f"Running {n} Browsers in Parallel")
 
                 result = (Parallel(n_jobs=n, backend="threading")(delayed(run)(l) for l in used_data))
             
             if not keep_drivers_alive:
-                if len(_driver_pool) == 1:
-                    _driver_pool[0].close()
-                    while _driver_pool:
-                        _driver_pool.pop()
-                elif len(_driver_pool) > 0:
-                    Parallel(n_jobs=len(_driver_pool), backend="threading")(delayed(close_driver)(l) for l in _driver_pool)
-                    while _driver_pool:
-                        _driver_pool.pop()
+                close_driver_pool(_driver_pool)
 
             # result = flatten(result)
             Usage.put(fn_name, url)
@@ -379,14 +386,7 @@ def browser(
         wrapper_browser._driver_pool = []
         
         def close_drivers():
-                if len(wrapper_browser._driver_pool) == 1:
-                    wrapper_browser._driver_pool[0].close()
-                    while wrapper_browser._driver_pool:
-                        wrapper_browser._driver_pool.pop()
-                elif len(wrapper_browser._driver_pool) > 0:
-                    Parallel(n_jobs=len(wrapper_browser._driver_pool), backend="threading")(delayed(close_driver)(l) for l in wrapper_browser._driver_pool)
-                    while wrapper_browser._driver_pool:
-                        wrapper_browser._driver_pool.pop()
+                close_driver_pool(wrapper_browser._driver_pool)
             
         wrapper_browser.close = close_drivers
 
@@ -528,8 +528,6 @@ def request(
             if number_of_workers is not None and not isinstance(number_of_workers, int):
                 raise ValueError("parallel Option must be a number or None")
 
-            if callable(parallel):
-                print(f"Running {number_of_workers} Requests in Parallel")
 
             used_data =  passed_data if passed_data is not None else data
             used_data = used_data() if callable(used_data) else used_data
@@ -563,6 +561,8 @@ def request(
                                   
                     return current_result
                 
+                if callable(parallel):
+                    print(f"Running {n} Requests in Parallel")
 
                 result = (Parallel(n_jobs=n, backend="threading")(delayed(run)(l) for l in used_data))
             
