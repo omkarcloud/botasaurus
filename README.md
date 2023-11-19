@@ -755,6 +755,12 @@ Botasaurus is a powerful, flexible tool for web scraping.
 
 Its various settings allow you to tailor the scraping process to your specific needs, improving both efficiency and convenience. Whether you're dealing with multiple data points, requiring parallel processing, or need to cache results, Botasaurus provides the features to streamline your scraping tasks.
 
+### ❓ Need More Help or Have Additional Questions?
+
+If you need guidane on your web scraping Project or have some questions, message us on WhatsApp and we'll be happy to help you out.
+
+[![Contact Us on WhatsApp](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/mwa.png)](https://wa.me/message/3WED4FYQRDPNE1)
+
 ## Sponsors
 
 <p align="center">
@@ -766,6 +772,7 @@ Its various settings allow you to tailor the scraping process to your specific n
   <img alt="special sponsor Bright Data" src="https://www.omkar.cloud/images/bright-data-banner.png" width="250">
   </a>
 </p>
+
 
 
 ## Love It? [Star It! ⭐](https://github.com/omkarcloud/botasaurus)
