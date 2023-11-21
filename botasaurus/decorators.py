@@ -2,13 +2,15 @@ from selenium.common.exceptions import WebDriverException
 from functools import wraps
 from queue import Queue
 from threading import Thread
-from traceback import print_exc
+from traceback import print_exc, format_exc
 from typing import Any, Callable, Optional, Union, List
 import os
+from datetime import datetime
 
 from joblib import Parallel, delayed
 
 from botasaurus.check_and_download_driver import check_and_download_driver
+from .utils import write_file
 
 from .formats import Formats
 
@@ -19,7 +21,7 @@ from .create_driver_utils import save_cookies
 from .creators import create_driver, create_requests
 from .anti_detect_driver import AntiDetectDriver
 from .beep_utils import beep_input
-from .decorators_utils import create_directories_if_not_exists
+from .decorators_utils import create_directories_if_not_exists, create_directory_if_not_exists
 from .local_storage import LocalStorage
 from .profile import Profile
 from .usage import Usage
@@ -37,8 +39,10 @@ def get_driver_url_safe(driver):
 def get_page_source_safe(driver):
     try:
         return driver.page_source
-    except:
-        return "Failed to get page_source"
+    except Exception as e:
+        print(f"Error getting page source: {e}")
+        return "<html><body><p>Error in getting page source.</p></body></html>"
+
 
 IS_PRODUCTION = os.environ.get("ENV") == "production"
 create_directories_if_not_exists()
@@ -167,6 +171,31 @@ def write_output(output,output_formats, data, result, fn_name):
 
             print_filenames(written_filenames)
 
+def save_error_logs(exception_log, driver):
+    main_error_directory = "error_logs"
+    create_directory_if_not_exists(main_error_directory  + "/")
+
+    timestamp =  datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    error_directory = f"{main_error_directory}/{timestamp}"
+    create_directory_if_not_exists(error_directory + "/")
+
+    error_filename = f"{error_directory}/error.log"
+    screenshot_filename = f"{error_directory}/screenshot.png"
+    page_filename = f"{error_directory}/page.html"
+
+    write_file(exception_log, error_filename)
+
+    if driver is not None:
+        source = get_page_source_safe(driver)
+        write_file(source, page_filename)
+
+        try:
+            driver.save_screenshot(screenshot_filename)
+        except Exception as e:
+            print(f"Error saving screenshot: {e}")
+
+
+
 def browser(
     _func: Optional[Callable] = None, *,
     parallel: Optional[Union[Callable[[Any], int], int]] = None,
@@ -199,7 +228,6 @@ def browser(
         first_run = False  # Set the flag to False so it doesn't run again
 
     def decorator_browser(func: Callable) -> Callable:
-        url = None
 
 
 
@@ -208,9 +236,9 @@ def browser(
             if tiny_profile:
               save_cookies(driver, profile)
             # Maybe Fixes the Chrome Processes Hanging Issue. Not Sure
-            nonlocal url
-            if url is None:
-                url = get_driver_url_safe(driver)
+            # nonlocal url
+            # if url is None:
+            #     url = get_driver_url_safe(driver)
             
             try:
                 driver.close() 
@@ -234,6 +262,21 @@ def browser(
                         pool.pop()
 
 
+        url = None
+
+        def can_put_url():
+            nonlocal url
+            return url is None
+
+        def set_url(s):
+            nonlocal url
+            if s is not None:
+                url = s
+
+        def get_url():
+            nonlocal url
+            return url
+            
         @wraps(func)
         def wrapper_browser(passed_data: Optional[Any] = None) -> Any:
 
@@ -249,11 +292,8 @@ def browser(
             # # Pool to hold reusable drivers
             _driver_pool =  wrapper_browser._driver_pool if keep_drivers_alive  else []
 
-            nonlocal url
-            url = None
 
             def run_task(data, is_retry, retry_attempt, retry_driver = None) -> Any:
-                    
                 if cache:
                     path = _get_cache_path(func, data)
                     if _has(path):
@@ -283,6 +323,8 @@ def browser(
 
                     result = func(driver, data)
 
+                    if can_put_url():
+                        set_url(get_driver_url_safe(driver))
                     if reuse_driver:
                         driver.about.is_new = False
                         _driver_pool.append(driver)  # Add back to the pool for reuse
@@ -306,8 +348,10 @@ def browser(
 
                     if max_retry is not None and (max_retry) > (retry_attempt):
                             return run_task(data, True, retry_attempt + 1)
-                        
+
+                    exception_log = format_exc()
                     print_exc()
+                    save_error_logs(exception_log, driver)
                     
                     if not headless:
                         if not IS_PRODUCTION:
@@ -370,8 +414,8 @@ def browser(
                 close_driver_pool(_driver_pool)
 
             # result = flatten(result)
-            Usage.put(fn_name, url)
-            
+            if not async_queue:
+                Usage.put(fn_name, url)
             if return_first:
                 if not async_queue:
                     write_output(output,output_formats, orginal_data, result[0], fn_name)
@@ -420,6 +464,8 @@ def browser(
                         task = task_queue.get()
                         
                         if task is None:
+                            Usage.put(func.__name__, get_url())
+
                             write_output(output,output_formats, orginal_data, flatten(result_list), func.__name__)
                             break
 
@@ -474,7 +520,6 @@ def request(
     def decorator_requests(func: Callable) -> Callable:
         @wraps(func)
         def wrapper_requests(passed_data: Optional[Any] = None) -> Any:
-
             fn_name = func.__name__
             _create_cache_directory_if_not_exists(func)
             
@@ -513,7 +558,9 @@ def request(
                     if max_retry is not None and (max_retry)> (retry_attempt):
                             return run_task(data, True, retry_attempt + 1)
 
+                    exception_log = format_exc()
                     print_exc()
+                    save_error_logs(exception_log, None)
                     
                     if not IS_PRODUCTION:
                         if not close_on_crash:
@@ -568,7 +615,10 @@ def request(
             
 
             # result = flatten(result)
-            Usage.put(fn_name, None)
+            if not async_queue:
+                Usage.put(fn_name, None)
+
+            
 
             if return_first:
                 if not async_queue:
@@ -614,7 +664,7 @@ def request(
                         task = task_queue.get()
                         
                         if task is None:
-
+                            Usage.put(func.__name__, None)
                             # Thread Finished
                             write_output(output,output_formats, orginal_data, flatten(result_list), func.__name__)
                             break

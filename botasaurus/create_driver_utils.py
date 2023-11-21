@@ -290,9 +290,10 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
         options.add_argument("--disable-extensions")
 
         # Captch Options
-        options.add_argument("--disable-web-security")
-        options.add_argument("--disable-site-isolation-trials")
-        options.add_argument("--disable-application-cache")
+        if proxy:
+            options.add_argument("--disable-web-security")
+            options.add_argument("--disable-site-isolation-trials")
+            options.add_argument("--disable-application-cache")
 
         desired_capabilities = get_eager_strategy() if is_eager  else None
 

@@ -727,6 +727,22 @@ Cache.remove(scrape_data, input_data)
 # Clearing the complete cache for the scrape_data function
 Cache.clear(scrape_data)
 ```
+
+
+### What feautres are Coming in Botasaurus 4?
+Botasaurus 4, which is currently in its beta phase, allows you to:
+  - A sms API to receive OTPs.
+  - Run bots in the cloud using a website UI and control their schedules, starting/stopping times, and view bot outputs in a web UI. 
+  - Use Kubernetes to run thousands of bots in parallel.
+  - Schedule Scraping Tasks at specific times or intervals
+  - Whatsapp/Email Alerts
+  - An API to interface with Gmail and Outlook accounts.
+  - MySQL/PostgreSQL Integration
+  - Integrated Captcha Solving
+  - And Many More :)
+  
+ Developers are actively using Botasaurus 4 in production environments and saving hours of Development Time. To get access to Botasaurus 4, please [reach out to us](mailto:chetan@omkar.cloud?subject=Access%20Botasaurus%204&body=I%20want%20to%20use%20Botasaurus%204%20and%20gain%20access%20to%20feature%3A%20%5BTELL%20YOUR%20FEATURE%5D) and let us know which feature you would like to access.
+ 
 <!-- 
 ### How Do I Close All Running Chrome Instances When Developing with Botasaurus?
 

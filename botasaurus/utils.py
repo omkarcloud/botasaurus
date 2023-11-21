@@ -66,7 +66,7 @@ def ignore_errors(func, instances=None):
         traceback.print_exc()
 
 
-def retry_if_is_error(func, instances=None, retries=2, wait_time=None):
+def retry_if_is_error(func, instances=None, retries=2, wait_time=None, raise_exception=True, on_failed_after_retry_exhausted=None):
     tries = 0
     errors_only_instances = list(
         map(lambda el: el[0] if istuple(el) else el, instances))
@@ -82,14 +82,17 @@ def retry_if_is_error(func, instances=None, retries=2, wait_time=None):
 
             if not is_valid_error:
                 raise e
-
-            traceback.print_exc()
+            if raise_exception:
+                traceback.print_exc()
 
             if istuple(instances[index]):
                 instances[index][1]()
 
             if tries == retries:
-                raise e
+                if on_failed_after_retry_exhausted is not None:
+                    on_failed_after_retry_exhausted(e)
+                if raise_exception:
+                    raise e
 
             print('Retrying')
 

@@ -11,6 +11,8 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from botasaurus.output import is_slash_not_in_filename
+
 
 from .decorators_utils import  create_directory_if_not_exists
 from .beep_utils import beep_input
@@ -402,13 +404,14 @@ window.scrollBy(0, 10000);
 
             if not filename.endswith(".png"):
                 filename = filename + ".png"
-            create_directory_if_not_exists("output/screenshots/")
 
-            final_path = f'output/screenshots/{filename}'
-            saving_screenshot_at = relative_path(
-                final_path, 0)
+            if is_slash_not_in_filename(filename):
+                create_directory_if_not_exists("output/screenshots/")
+                filename = f'output/screenshots/{filename}'
+            filename = relative_path(
+                    filename, 0)
             self.get_screenshot_as_file(
-                saving_screenshot_at)
+                filename)
             # print('Saved screenshot at {0}'.format(final_path))
         except:
             print_exc()

@@ -3,9 +3,13 @@ import csv
 from .utils import  read_file as _read_file, relative_path, write_json as _write_json, read_json as _read_json, write_html as _write_html, write_file as _write_file
 from .beep_utils import prompt
 
+
+def is_slash_not_in_filename(filename):
+    return '/' not in filename and '\\' not in filename
+
 def append_output_if_needed(filename):
     filename = str(filename).strip()
-    if '/' not in filename and '\\' not in filename:
+    if is_slash_not_in_filename(filename):
         return "output/" +  filename
     return filename
 
