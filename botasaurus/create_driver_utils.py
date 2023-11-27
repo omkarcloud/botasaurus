@@ -217,7 +217,7 @@ def create_selenium_driver(proxy, options, desired_capabilities, path, attempt_d
     
     try:
         if proxy is not None:
-            from .anti_detect_driver_selenium_wire import AntiDetectDriverSeleniumWire
+            from .drivers import AntiDetectDriverSeleniumWire
 
             selwireOptions = {'proxy': {'http': proxy, 'https': proxy}}
 
@@ -228,7 +228,6 @@ def create_selenium_driver(proxy, options, desired_capabilities, path, attempt_d
                 executable_path=path,
             )  
         else:
-
             driver = AntiDetectDriver(
                 desired_capabilities=desired_capabilities,
                 chrome_options=options,
@@ -248,6 +247,11 @@ def create_selenium_driver(proxy, options, desired_capabilities, path, attempt_d
             raise
 
 
+def add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver):
+    about = AboutBrowser(window_size=driver_attributes.get('window_size'), user_agent=driver_attributes.get('user_agent'), profile=driver_attributes.get('profile'),proxy=proxy, lang=lang, beep=beep, is_new=True)
+    driver.about = about
+    if tiny_profile:
+        load_cookies(driver, about.profile)
 
 def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_images, beep):
 
@@ -281,13 +285,13 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
 
         driver_attributes = add_essential_options(
             options, None if tiny_profile else profile, window_size, user_agent)
-
+        
         hide_automation_bar(options)
 
         # Necessary Options
         options.add_argument("--ignore-certificate-errors")
         options.add_argument('--no-sandbox')
-        options.add_argument("--disable-extensions")
+        # options.add_argument("--disable-extensions")
 
         # Captch Options
         if proxy:
@@ -300,12 +304,10 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
         path = relative_path(get_driver_path(), 0)
 
         driver = create_selenium_driver(proxy, options, desired_capabilities, path)
+        driver_attributes['profile'] = profile
+        # print(driver_attributes)
+        # add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver)
+        return driver, driver_attributes
 
-        about = AboutBrowser(window_size=driver_attributes['window_size'], user_agent=driver_attributes['user_agent'], profile=driver_attributes['profile'],proxy=proxy, lang=lang, beep=beep, is_new=True)
-        driver.about = about
 
-        if tiny_profile:
-            load_cookies(driver, about.profile)
-
-        return driver
 

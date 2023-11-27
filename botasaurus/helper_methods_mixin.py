@@ -9,20 +9,20 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from seleniumwire import webdriver
 
+from botasaurus.output import is_slash_not_in_filename
+
+
+from .decorators_utils import  create_directory_if_not_exists
 from .beep_utils import beep_input
 from .local_storage_driver import LocalStorage
 from .opponent import Opponent
 from .utils import read_file, relative_path, sleep_for_n_seconds, sleep_forever
 from .wait import Wait
 from .driver_about import AboutBrowser
-from .decorators_utils import  create_directory_if_not_exists
 from .accept_google_cookies import accept_google_cookies
 
-                  
-
-class AntiDetectDriverSeleniumWire(webdriver.Chrome):
+class HelperMethodMixin():
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,9 +32,19 @@ class AntiDetectDriverSeleniumWire(webdriver.Chrome):
     def get_by_current_page_referrer(self, link, wait=None):
 
         # selenium.common.exceptions.WebDriverException
+        
+        currenturl = self.current_url
         self.execute_script(f"""
                 window.location.href = "{link}";
             """)
+        
+        # cleaned = link.replace("https://", "").replace("http://", "")
+        changed = False
+        while not changed:
+            if currenturl != self.current_url:
+                changed = True
+            sleep(0.1)
+
         if wait is not None and wait != 0:
             sleep(wait)
 
@@ -342,11 +352,11 @@ window.scrollBy(0, 10000);
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
 
-    def execute_file(self, filename):
+    def execute_file(self, filename, *args):
         if not filename.endswith(".js"):
             filename = filename + ".js"
         content = read_file(filename)
-        return self.execute_script(content)
+        return self.execute_script(content, *args)
     def get_images(self, search=None, wait=Wait.SHORT):
 
         def extract_links(elements):
@@ -401,13 +411,14 @@ window.scrollBy(0, 10000);
 
             if not filename.endswith(".png"):
                 filename = filename + ".png"
-            create_directory_if_not_exists("output/screenshots/")
 
-            final_path = f'output/screenshots/{filename}'
-            saving_screenshot_at = relative_path(
-                final_path, 0)
+            if is_slash_not_in_filename(filename):
+                create_directory_if_not_exists("output/screenshots/")
+                filename = f'output/screenshots/{filename}'
+            filename = relative_path(
+                    filename, 0)
             self.get_screenshot_as_file(
-                saving_screenshot_at)
+                filename)
             # print('Saved screenshot at {0}'.format(final_path))
         except:
             print_exc()
@@ -425,11 +436,11 @@ window.scrollBy(0, 10000);
         print('                                   |_|                        ')
         print('')
 
-        print('General Rules of Captcha Solving')
-        print(' - Solve it Fast')
+        # print('General Rules of Captcha Solving')
+        # print(' - Solve it Fast')
 
-        for t in more_rules:
-            print(t)
+        # for t in more_rules:
+        #     print(t)
         # print('- Solve it Fast')
         # print('1. If')
 

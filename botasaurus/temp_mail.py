@@ -222,4 +222,4 @@ if __name__ == '__main__':
 
     # email = TempMail.generate_email('temp')
     # print(email)
-    # print(TempMail.get_email_link_and_delete_mailbox(email))
+    # print(bt.TempMail.get_email_link_and_delete_mailbox(email))

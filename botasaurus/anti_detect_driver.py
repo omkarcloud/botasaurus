@@ -35,9 +35,19 @@ class AntiDetectDriver(webdriver.Chrome):
     def get_by_current_page_referrer(self, link, wait=None):
 
         # selenium.common.exceptions.WebDriverException
+        
+        currenturl = self.current_url
         self.execute_script(f"""
                 window.location.href = "{link}";
             """)
+        
+        # cleaned = link.replace("https://", "").replace("http://", "")
+        changed = False
+        while not changed:
+            if currenturl != self.current_url:
+                changed = True
+            sleep(0.1)
+
         if wait is not None and wait != 0:
             sleep(wait)
 
@@ -345,11 +355,11 @@ window.scrollBy(0, 10000);
         return list(filter(is_starts_with, filter(is_not_none, links)))
 
 
-    def execute_file(self, filename):
+    def execute_file(self, filename, *args):
         if not filename.endswith(".js"):
             filename = filename + ".js"
         content = read_file(filename)
-        return self.execute_script(content)
+        return self.execute_script(content, *args)
     def get_images(self, search=None, wait=Wait.SHORT):
 
         def extract_links(elements):
@@ -429,11 +439,11 @@ window.scrollBy(0, 10000);
         print('                                   |_|                        ')
         print('')
 
-        print('General Rules of Captcha Solving')
-        print(' - Solve it Fast')
+        # print('General Rules of Captcha Solving')
+        # print(' - Solve it Fast')
 
-        for t in more_rules:
-            print(t)
+        # for t in more_rules:
+        #     print(t)
         # print('- Solve it Fast')
         # print('1. If')
 

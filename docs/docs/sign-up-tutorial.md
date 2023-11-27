@@ -545,7 +545,7 @@ def create_accounts(driver: AntiDetectDriver, account):
         driver.click('button[type="submit"]')
 
     def confirm_email():
-        link = TempMail.get_email_link_and_delete_mailbox(email)
+        link = bt.TempMail.get_email_link_and_delete_mailbox(email)
         driver.get(link)
 
     driver.organic_get("https://www.omkar.cloud/auth/sign-up/")
@@ -637,7 +637,7 @@ def create_accounts(driver: AntiDetectDriver, account):
         driver.click('button[type="submit"]')
 
     def confirm_email():
-        link = TempMail.get_email_link_and_delete_mailbox(email)
+        link = bt.TempMail.get_email_link_and_delete_mailbox(email)
         driver.get(link)
 
     driver.organic_get("https://www.omkar.cloud/auth/sign-up/")

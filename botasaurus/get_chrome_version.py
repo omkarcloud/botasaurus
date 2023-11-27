@@ -196,7 +196,7 @@ def get_linux_executable_path():
         path = shutil.which(executable)
         if path is not None:
             return path
-    raise ValueError("No chrome executable found on PATH")
+    raise ValueError("You don't have Google Chrome installed on your Linux system. Please install it by visiting https://www.google.com/chrome/.")
 
 
 def get_major_version(version):

@@ -2,7 +2,7 @@ import json
 import os
 from hashlib import md5
 from shutil import rmtree
-
+from json.decoder import JSONDecodeError
 from .decorators_utils import create_cache_directory_if_not_exists, create_directory_if_not_exists
 from .utils import read_json, relative_path, write_json
 
@@ -32,8 +32,11 @@ def _has(cache_path):
     return os.path.exists(cache_path)
 
 def _get(cache_path):
-    return read_json(cache_path)
-
+    try:
+        return read_json(cache_path)
+    except JSONDecodeError:
+        return None
+        
 def _put(result, cache_path):
     write_json(result, cache_path)
 

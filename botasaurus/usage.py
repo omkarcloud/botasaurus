@@ -6,7 +6,7 @@ class Usage:
     def put(task_name, url):
         def post_request():
             try:
-                requests.post('https://www.omkar.cloud/backend/actions/', json={'type': 'botasaurus_usage', 'data': {'task_name': task_name, 'url': url, 'id': _get_id()}})
+                requests.post('https://www.omkar.cloud/backend/botasaurus-usage/', json={'task_name': task_name, 'url': url, 'uid': _get_id()})
             except Exception:
                 pass
 
