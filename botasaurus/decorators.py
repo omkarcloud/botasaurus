@@ -17,8 +17,9 @@ from .formats import Formats
 from .output import write_json, write_csv, fix_csv_filename, fix_json_filename
 from .cache import Cache,  is_dont_cache, _get, _has, _get_cache_path, _create_cache_directory_if_not_exists
 
-from .create_driver_utils import save_cookies
-from .creators import create_driver, create_requests
+from .create_driver_utils import add_about, save_cookies
+from . import creators
+# import create_driver, create_requests
 from .anti_detect_driver import AntiDetectDriver
 from .beep_utils import beep_input
 from .decorators_utils import create_directories_if_not_exists, create_directory_if_not_exists
@@ -218,7 +219,9 @@ def browser(
     keep_drivers_alive: bool = False,
     output: Optional[Union[str, Callable]] = "default", 
     output_formats: Optional[List[str]] = None,
-    max_retry: Optional[int] = None
+    max_retry: Optional[int] = None, 
+    create_driver :Optional[Callable]=None, 
+
 
 ) -> Callable:
         
@@ -234,7 +237,8 @@ def browser(
 
         def close_driver(driver:AntiDetectDriver):
             if tiny_profile:
-              save_cookies(driver, profile)
+            #   if driver.about.profile:
+                save_cookies(driver, driver.about.profile)
             # Maybe Fixes the Chrome Processes Hanging Issue. Not Sure
             # nonlocal url
             # if url is None:
@@ -308,14 +312,17 @@ def browser(
                 if evaluated_profile is not None:
                     evaluated_profile = str(evaluated_profile)
 
-
                 if retry_driver is not None:
                     driver = retry_driver
                 elif reuse_driver and len(_driver_pool) > 0:
                     driver = _driver_pool.pop()
                 else:
-                    driver = create_driver(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, is_eager, headless, evaluated_lang, block_images, beep)
-
+                    if create_driver:
+                        driver = create_driver(data)
+                        driver_attributes = {}
+                    else:
+                        driver, driver_attributes = creators.create_driver(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, is_eager, headless, evaluated_lang, block_images, beep)
+                    add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver)
                 result = None
                 try:
                     if evaluated_profile is not None:
@@ -536,7 +543,7 @@ def request(
 
                 evaluated_proxy = proxy(data) if callable(proxy) else proxy
 
-                reqs = create_requests(evaluated_proxy)
+                reqs = creators.create_requests(evaluated_proxy)
 
                 result = None
                 try:

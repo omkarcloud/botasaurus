@@ -6,8 +6,9 @@ install_requires = [
     "chromedriver-autoinstaller-fix",
     "selenium==4.5.0",
     "beautifulsoup4>=4.11.2",
-    "joblib==1.2.0",
+    "joblib>=1.3.2",
     "selenium-wire",
+    'psutil',
 ]
 extras_require = {}
 cpython_dependencies = [

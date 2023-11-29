@@ -166,12 +166,15 @@ def get_chrome_version():
                 dirs = [f.name for f in os.scandir("C:\\Program Files (x86)\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
                 version = max(dirs) if dirs else ''
         except:
-            dirs = [f.name for f in os.scandir("C:\\Program Files (x86)\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
-            if dirs:
-                version = max(dirs)
-            else:
-                dirs = [f.name for f in os.scandir("C:\\Program Files\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
-                version = max(dirs) if dirs else ''
+            try:
+                dirs = [f.name for f in os.scandir("C:\\Program Files (x86)\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
+                if dirs:
+                    version = max(dirs)
+                else:
+                    dirs = [f.name for f in os.scandir("C:\\Program Files\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
+                    version = max(dirs) if dirs else ''
+            except:
+                raise ValueError("You don't have Google Chrome installed on your Windows system. Please install it by visiting https://www.google.com/chrome/.")
     else:
         return
     return version
