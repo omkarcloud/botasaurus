@@ -262,6 +262,9 @@ window.scrollBy(0, 10000);
             "return Math.abs(arguments[0].scrollTop - (arguments[0].scrollHeight - arguments[0].offsetHeight)) <= 3", element))
         return result
 
+    def scroll_into_view(self, element):
+        return self.execute_script("arguments[0].scrollIntoView()", element)
+
     def scroll_element(self, element):
         if self.can_element_be_scrolled(element):
             self.execute_script("arguments[0].scrollBy(0, 10000)", element)

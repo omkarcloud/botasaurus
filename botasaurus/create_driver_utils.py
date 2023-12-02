@@ -306,8 +306,8 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
         driver = create_selenium_driver(proxy, options, desired_capabilities, path)
         driver_attributes['profile'] = profile
         # print(driver_attributes)
-        # add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver)
-        return driver, driver_attributes
+        add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver)
+        return driver
 
 
 

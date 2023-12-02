@@ -743,25 +743,23 @@ Botasaurus 4, which is currently in its beta phase, allows you to:
   
  Developers are actively using Botasaurus 4 in production environments and saving hours of Development Time. To get access to Botasaurus 4, please [reach out to us](mailto:chetan@omkar.cloud?subject=Access%20Botasaurus%204&body=I%20want%20to%20use%20Botasaurus%204%20and%20gain%20access%20to%20feature%3A%20%5BTELL%20YOUR%20FEATURE%5D) and let us know which feature you would like to access.
  
-<!-- 
+
 ### How Do I Close All Running Chrome Instances When Developing with Botasaurus?
 
 While developing a scraper, you might need to interrupt the scraping process, often done by pressing `Ctrl + C`. However, this action does not automatically close the Chrome browsers, which can cause your computer to hang due to resource overuse.
 
 ![Many Chrome processes running in Task Manager](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/chrome-running.png)
 
-To prevent your PC from hanging, you need to close all running Chrome instances. Here’s a simple method to do it using a Python shell:
+To prevent your PC from hanging, you need to close all running Chrome instances. 
 
-1. Open a new Python shell. You can do this by typing `python` in your command line or terminal.
-2. In the Python shell, enter the following commands:
+You can run following command to close all chromes
 
-```python
-from botasaurus.close_chrome import close_all_chrome_browsers
-close_all_chrome_browsers() 
+```shell
+python -m botasaurus.close
 ```
 
-3. Executing these commands will close all Chrome instances, thereby helping to prevent your PC from hanging.
- -->
+Executing above command will close all Chrome instances, thereby helping to prevent your PC from hanging.
+ 
 ---
 
 

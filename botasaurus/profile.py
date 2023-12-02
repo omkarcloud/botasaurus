@@ -114,6 +114,16 @@ class _Profile:
         profile = self.storage_backend_instance.get_item(self.profile, {})
         return profile
 
+    def get_profile(self, profile = None):
+        if profile is None:
+            profile = self.profile
+    
+        if profile is None:
+            raise Exception('No Profile Passed.')
+    
+        return self.storage_backend_instance.get_item(profile)
+    
+    
     def get_profiles(self, random = False):
         data = list(self.storage_backend_instance.items().values())
         

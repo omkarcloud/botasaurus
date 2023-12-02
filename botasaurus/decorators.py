@@ -207,7 +207,7 @@ def browser(
     tiny_profile: bool = False,
     is_eager: bool = False,
     lang: Optional[Union[Callable[[Any], str], str]] = None,
-    headless: bool = False,
+    headless: Optional[Union[Callable[[Any], bool], bool]] = False,
     beep: bool = False,
     close_on_crash: bool = False,
     async_queue: bool = False,
@@ -308,6 +308,8 @@ def browser(
                 evaluated_proxy = proxy(data) if callable(proxy) else proxy
                 evaluated_profile = profile(data) if callable(profile) else profile
                 evaluated_lang = lang(data) if callable(lang) else lang
+                evaluated_headless = headless(data) if callable(headless) else headless
+
 
                 if evaluated_profile is not None:
                     evaluated_profile = str(evaluated_profile)
@@ -319,14 +321,13 @@ def browser(
                 else:
                     if create_driver:
                         driver = create_driver(data)
-                        driver_attributes = {}
+                        add_about(tiny_profile, proxy, lang, beep, {}, driver)
                     else:
-                        driver, driver_attributes = creators.create_driver(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, is_eager, headless, evaluated_lang, block_images, beep)
-                    add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver)
+                        driver = creators.create_driver(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, is_eager, evaluated_headless, evaluated_lang, block_images, beep)
                 result = None
                 try:
-                    if evaluated_profile is not None:
-                        Profile.profile = evaluated_profile
+                    # if evaluated_profile is not None:
+                    Profile.profile = evaluated_profile
 
                     result = func(driver, data)
 
@@ -397,17 +398,17 @@ def browser(
             else:
                 n = min(len(used_data), int(number_of_workers))
 
-
+            prevprofile = Profile.profile
             if n <= 1:
                 for index in range(len(used_data)):
                     data_item = used_data[index]
                     current_result = run_task(data_item, False, 0)
-                    Profile.profile = None
+                    Profile.profile = prevprofile
                     result.append(current_result)
             else:
                 def run(data_item):
                     current_result = run_task(data_item, False, 0)
-                    Profile.profile = None
+                    Profile.profile = prevprofile
                     result.append(current_result)
                                   
                     return current_result

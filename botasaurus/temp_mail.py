@@ -50,6 +50,10 @@ def retry_if_is_error(func, instances=None, retries=2, wait_time=None, log_error
 
             if wait_time is not None:
                 sleep(wait_time)
+
+def sort_links(links):
+    return sorted(links, key=lambda l: any(token in l for token in ['token', 'verify', 'pass', 'reset']), reverse=True)
+
 def extract_links_from_html(html):
     soup = BeautifulSoup(html, features="html.parser")
     xs = []
@@ -58,12 +62,12 @@ def extract_links_from_html(html):
         if 'http' in href:
             xs.append(href)
 
-    return xs
+    return sort_links(xs)
 
 
-def extract_links_from_text(text):
-    result = re.search("(?P<url>https?://[^\s]+)", text).group("url")
-    return [result]
+def extract_links_from_text(email_body):
+    rst =  re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', email_body)
+    return sort_links(rst)
 
 
 API = 'https://www.1secmail.com/api/v1/'
