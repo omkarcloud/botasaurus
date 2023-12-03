@@ -281,7 +281,37 @@ def browser(
             return url
             
         @wraps(func)
-        def wrapper_browser(passed_data: Optional[Any] = None) -> Any:
+        def wrapper_browser(*args, **kwargs) -> Any:
+
+            nonlocal parallel, data, cache, block_images, window_size
+            nonlocal tiny_profile, is_eager, lang, headless, beep
+            nonlocal close_on_crash, async_queue, run_async, profile
+            nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive
+            nonlocal output, output_formats, max_retry, create_driver
+
+            parallel = kwargs.get('parallel', parallel)
+            data = kwargs.get('data', data)
+            cache = kwargs.get('cache', cache)
+            block_images = kwargs.get('block_images', block_images)
+            window_size = kwargs.get('window_size', window_size)
+            tiny_profile = kwargs.get('tiny_profile', tiny_profile)
+            is_eager = kwargs.get('is_eager', is_eager)
+            lang = kwargs.get('lang', lang)
+            headless = kwargs.get('headless', headless)
+            beep = kwargs.get('beep', beep)
+            close_on_crash = kwargs.get('close_on_crash', close_on_crash)
+            async_queue = kwargs.get('async_queue', async_queue)
+            run_async = kwargs.get('run_async', run_async)
+            profile = kwargs.get('profile', profile)
+            proxy = kwargs.get('proxy', proxy)
+            user_agent = kwargs.get('user_agent', user_agent)
+            reuse_driver = kwargs.get('reuse_driver', reuse_driver)
+            keep_drivers_alive = kwargs.get('keep_drivers_alive', keep_drivers_alive)
+            output = kwargs.get('output', output)
+            output_formats = kwargs.get('output_formats', output_formats)
+            max_retry = kwargs.get('max_retry', max_retry)
+            create_driver = kwargs.get('create_driver', create_driver)
+
 
             fn_name = func.__name__
             
@@ -380,7 +410,7 @@ def browser(
             if number_of_workers is not None and not isinstance(number_of_workers, int):
                 raise ValueError("parallel Option must be a number or None")
 
-            used_data =  passed_data if passed_data is not None else data
+            used_data =  args[0] if len(args) > 0 else data
             used_data = used_data() if callable(used_data) else used_data
             orginal_data = used_data
             
@@ -526,7 +556,22 @@ def request(
 
     def decorator_requests(func: Callable) -> Callable:
         @wraps(func)
-        def wrapper_requests(passed_data: Optional[Any] = None) -> Any:
+        def wrapper_requests(*args, **kwargs) -> Any:
+            nonlocal parallel, data, cache, beep, run_async, async_queue
+            nonlocal proxy, close_on_crash, output, output_formats, max_retry
+
+            parallel = kwargs.get('parallel', parallel)
+            data = kwargs.get('data', data)
+            cache = kwargs.get('cache', cache)
+            beep = kwargs.get('beep', beep)
+            run_async = kwargs.get('run_async', run_async)
+            async_queue = kwargs.get('async_queue', async_queue)
+            proxy = kwargs.get('proxy', proxy)
+            close_on_crash = kwargs.get('close_on_crash', close_on_crash)
+            output = kwargs.get('output', output)
+            output_formats = kwargs.get('output_formats', output_formats)
+            max_retry = kwargs.get('max_retry', max_retry)
+
             fn_name = func.__name__
             _create_cache_directory_if_not_exists(func)
             
@@ -583,7 +628,7 @@ def request(
                 raise ValueError("parallel Option must be a number or None")
 
 
-            used_data =  passed_data if passed_data is not None else data
+            used_data =  args[0] if len(args) > 0 else data
             used_data = used_data() if callable(used_data) else used_data
             orginal_data = used_data
 

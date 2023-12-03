@@ -5,7 +5,7 @@ class BrowserResourceConfig:
     STATIC_SIMPLE_SITE = 0.3  # 0.3 GB like stackoverflow.com
     VIDEO_SITE = 0.8  # 0.8 GB like youtube.com, udemy.com
 
-def calc_max_parallel_browsers(average_ram_per_instance = BrowserResourceConfig.AVERAGE_RICH_MEDIA_SITE):
+def calc_max_parallel_browsers(average_ram_per_instance = BrowserResourceConfig.AVERAGE_RICH_MEDIA_SITE, min=1, max=None):
         """
         Calculate the maximum number of browser instances that can be run simultaneously on a PC.
 
@@ -35,9 +35,14 @@ def calc_max_parallel_browsers(average_ram_per_instance = BrowserResourceConfig.
         # The limiting factor is determined by the available RAM
         max_instances = int(max_instances_ram)
 
-        if max_instances <= 0 :
-            raise Exception("Out of RAM.")
+        if min:
+            if max_instances <= min:
+                return min
 
+        if max:
+            if max_instances >= max:
+                return max
+        
         return max_instances
 
 if __name__ == "__main__":
