@@ -9,7 +9,6 @@ from datetime import datetime
 
 from joblib import Parallel, delayed
 
-from botasaurus.check_and_download_driver import check_and_download_driver
 from .utils import write_file
 
 from .formats import Formats
@@ -287,7 +286,7 @@ def browser(
             fn_name = func.__name__
             
             _create_cache_directory_if_not_exists(func)
-            check_and_download_driver()
+            
             
             count = LocalStorage.get_item('count', 0) + 1
             LocalStorage.set_item('count', count)
