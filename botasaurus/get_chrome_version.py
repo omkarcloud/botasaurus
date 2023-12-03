@@ -158,26 +158,35 @@ def get_chrome_version():
     elif platform == "win":
         # check both of Program Files and Program Files (x86).
         # if the version isn't found on both of them, version is an empty string.
-
-        paths = [
-            "C:\\Program Files\\Google\\Chrome\\Application",
-            "C:\\Program Files (x86)\\Google\\Chrome\\Application",
-            f"{os.path.expanduser('~')}\\AppData\\Local\\Google\\Chrome\\Application"
-        ]
-
-        for p in paths:
+        try:
+            dirs = [f.name for f in os.scandir("C:\\Program Files\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
+            if dirs:
+                version = max(dirs)
+            else:
+                dirs = [f.name for f in os.scandir("C:\\Program Files (x86)\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
+                version = max(dirs) if dirs else ''
+        except:
             try:
-                dirs = [f.name for f in os.scandir(p) if
-                        f.is_dir() and re.match("^[0-9.]+$", f.name)]
+                dirs = [f.name for f in os.scandir("C:\\Program Files (x86)\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
                 if dirs:
                     version = max(dirs)
-                    break
+                else:
+                    dirs = [f.name for f in os.scandir("C:\\Program Files\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
+                    version = max(dirs) if dirs else ''
             except:
-                pass
-        else:
-            print(
-                "You don't have Google Chrome installed on your Windows system. Please install it by visiting https://www.google.com/chrome/.")
-
+                try:
+                    dirs = [f.name for f in os.scandir(f"{os.path.expanduser('~')}\\AppData\\Local\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
+                    if dirs:
+                        version = max(dirs)
+                    else:
+                        dirs = [f.name for f in os.scandir("C:\\Program Files\\Google\\Chrome\\Application") if f.is_dir() and re.match("^[0-9.]+$", f.name)]
+                        version = max(dirs) if dirs else ''
+                except:
+                    raise ValueError("You don't have Google Chrome installed on your Windows system. Please install it by visiting https://www.google.com/chrome/.")
+                if not version:
+                    raise ValueError("You don't have Google Chrome installed on your Windows system. Please install it by visiting https://www.google.com/chrome/.")
+    else:
+        return
     return version
 
 
