@@ -59,6 +59,24 @@ def write_json(data, filename, log = True):
             prompt(f"{filename} is currently open in another application. Please close the the Application and press 'Enter' to save.")
             write_json(data, filename, log)
 
+def write_temp_json(data, log = True):
+        filename = 'temp'
+        
+        try:
+
+            filename = append_output_if_needed(filename)
+
+            if not filename.endswith(".json"):
+                filename = filename + ".json"
+
+            _write_json(data, filename)
+
+            if log:
+                print(f"View written JSON file at {filename}")        
+        except PermissionError:
+            prompt(f"{filename} is currently open in another application. Please close the the Application and press 'Enter' to save.")
+            write_json(data, filename, log)
+
 
 def fix_csv_filename(filename):
     filename = append_output_if_needed(filename)

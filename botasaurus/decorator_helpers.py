@@ -66,3 +66,22 @@ def retry_on_stale_element(_func: Optional[Callable] = None, *, retries=3, wait_
         return decorator
     else:
         return decorator(_func)
+
+def ignore(_func: Optional[Callable] = None, on_exception_return_Value = None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:  # Catching a generic exception, can be replaced with specific exceptions
+                print(f"Exception in {func.__name__}: {e}")  # Printing the exception
+                result = on_exception_return_Value() if callable(on_exception_return_Value) else on_exception_return_Value
+                return result
+
+        return wrapper
+
+    if _func is None:
+        return decorator
+    else:
+        return decorator(_func)
+

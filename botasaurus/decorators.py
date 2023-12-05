@@ -490,7 +490,7 @@ def browser(
             return async_wrapper
         elif async_queue:
             @wraps(func)
-            def async_wrapper():
+            def async_wrapper(**wrapper_kwargs):
                 task_queue = Queue()
                 result_list = []
                 orginal_data = []
@@ -499,19 +499,17 @@ def browser(
                 def _worker():
                     while True:
                         task = task_queue.get()
-                        
+                                    
                         if task is None:
                             Usage.put(func.__name__, get_url())
-
                             write_output(output,output_formats, orginal_data, flatten(result_list), func.__name__)
                             break
 
-                        args = task[0]
-                        kwargs = task[1]
-                        # print(args)
+                        args, kwargs = task
+                        merged_kwargs = {**wrapper_kwargs, **kwargs}  # Merge wrapper_kwargs with kwargs
                         orginal_data.append(args[0])
-                        
-                        result = wrapper_browser(*args, **kwargs)
+
+                        result = wrapper_browser(*args, **merged_kwargs)
                         result_list.extend(result)
                         task_queue.task_done()
                 
@@ -706,7 +704,7 @@ def request(
         
         elif async_queue:
             @wraps(func)
-            def async_wrapper():
+            def async_wrapper(**wrapper_kwargs):
                 task_queue = Queue()
                 result_list = []
                 orginal_data = []
@@ -721,12 +719,11 @@ def request(
                             write_output(output,output_formats, orginal_data, flatten(result_list), func.__name__)
                             break
 
-                        args = task[0]
-                        kwargs = task[1]
-                        
+                        args, kwargs = task
+                        merged_kwargs = {**wrapper_kwargs, **kwargs}  # Merge wrapper_kwargs with kwargs
                         orginal_data.append(args[0])
 
-                        result = wrapper_requests(*args, **kwargs)
+                        result = wrapper_requests(*args, **merged_kwargs)
                         result_list.append(result)
                         task_queue.task_done()
                 
