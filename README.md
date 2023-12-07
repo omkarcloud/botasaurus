@@ -168,6 +168,8 @@ python main.py
 
 This time, you will observe the same result as before, but instead of using Anti Detect Selenium, we are utilizing the Anti Detect request module.
 
+*Note: If you don't have Python installed, then you can run Botasaurus in Gitpod, a browser-based development environment, by folllowing [this section](https://github.com/omkarcloud/botasaurus#how-to-run-botasaurus-in-gitpod).*
+
 ## 💡 Understanding Botasaurus
 
 Power of Bots is Immense, A Bot
