@@ -20,7 +20,7 @@ def verify_cookies(driver):
         raise Exception(f"Unable to consent Cookies")
 
 def accept_google_cookies(driver):
-                input_el = driver.get_element_or_none_by_selector('[role="combobox"]', 16)
+                input_el = driver.get_element_or_none_by_selector('[role="combobox"], [role="search"]', 16)
                 if input_el is None:
                     raise Exception("Unabe to load Google")
                 else:

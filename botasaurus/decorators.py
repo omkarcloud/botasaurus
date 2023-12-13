@@ -200,6 +200,7 @@ def browser(
     _func: Optional[Callable] = None, *,
     parallel: Optional[Union[Callable[[Any], int], int]] = None,
     data: Optional[Union[Callable[[], Any], Any]] = None,
+    metadata: Optional[Any] = None, 
     cache: bool = False,
     block_images: bool = False,
     window_size: Optional[Union[Callable[[Any], str], str]] = None,
@@ -283,7 +284,7 @@ def browser(
         @wraps(func)
         def wrapper_browser(*args, **kwargs) -> Any:
 
-            nonlocal parallel, data, cache, block_images, window_size
+            nonlocal parallel, data, cache, block_images, window_size, metadata
             nonlocal tiny_profile, is_eager, lang, headless, beep
             nonlocal close_on_crash, async_queue, run_async, profile
             nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive
@@ -294,6 +295,7 @@ def browser(
             cache = kwargs.get('cache', cache)
             block_images = kwargs.get('block_images', block_images)
             window_size = kwargs.get('window_size', window_size)
+            metadata = kwargs.get('metadata', metadata)
             tiny_profile = kwargs.get('tiny_profile', tiny_profile)
             is_eager = kwargs.get('is_eager', is_eager)
             lang = kwargs.get('lang', lang)
@@ -315,7 +317,8 @@ def browser(
 
             fn_name = func.__name__
             
-            _create_cache_directory_if_not_exists(func)
+            if cache:
+                _create_cache_directory_if_not_exists(func)
             
             
             count = LocalStorage.get_item('count', 0) + 1
@@ -357,8 +360,10 @@ def browser(
                 try:
                     # if evaluated_profile is not None:
                     Profile.profile = evaluated_profile
-
-                    result = func(driver, data)
+                    if 'metadata' in kwargs:
+                        result = func(driver, data, metadata)
+                    else:
+                        result = func(driver, data)
 
                     if can_put_url():
                         set_url(get_driver_url_safe(driver))
@@ -537,11 +542,13 @@ def request(
     _func: Optional[Callable] = None, *,
     parallel: Optional[Union[Callable[[Any], int], int]] = None,
     data: Optional[Union[Callable[[], Any], Any]] = None,
+    metadata: Optional[Any] = None, 
     cache: bool = False,
     beep: bool = False,
     run_async: bool = False,
     async_queue: bool = False,
     proxy: Optional[Union[Callable[[Any], str], str]] = None,
+    user_agent: Optional[Union[Callable[[Any], str], str]] = None,
     close_on_crash: bool = False,      
     output: Optional[Union[str, Callable]] = "default", 
     output_formats: Optional[List[str]] = None, 
@@ -555,7 +562,7 @@ def request(
     def decorator_requests(func: Callable) -> Callable:
         @wraps(func)
         def wrapper_requests(*args, **kwargs) -> Any:
-            nonlocal parallel, data, cache, beep, run_async, async_queue
+            nonlocal parallel, data, cache, beep, run_async, async_queue, metadata
             nonlocal proxy, close_on_crash, output, output_formats, max_retry
 
             parallel = kwargs.get('parallel', parallel)
@@ -563,6 +570,7 @@ def request(
             cache = kwargs.get('cache', cache)
             beep = kwargs.get('beep', beep)
             run_async = kwargs.get('run_async', run_async)
+            metadata = kwargs.get('metadata', metadata)
             async_queue = kwargs.get('async_queue', async_queue)
             proxy = kwargs.get('proxy', proxy)
             close_on_crash = kwargs.get('close_on_crash', close_on_crash)
@@ -571,7 +579,8 @@ def request(
             max_retry = kwargs.get('max_retry', max_retry)
 
             fn_name = func.__name__
-            _create_cache_directory_if_not_exists(func)
+            if cache:
+                _create_cache_directory_if_not_exists(func)
             
             count = LocalStorage.get_item('count', 0) + 1
             LocalStorage.set_item('count', count)
@@ -585,12 +594,15 @@ def request(
 
 
                 evaluated_proxy = proxy(data) if callable(proxy) else proxy
-
-                reqs = creators.create_requests(evaluated_proxy)
+                evaluated_user_agent = user_agent(data) if callable(user_agent) else user_agent
+                reqs = creators.create_requests(evaluated_proxy, evaluated_user_agent)
 
                 result = None
                 try:
-                    result = func(reqs, data)
+                    if 'metadata' in kwargs:
+                        result = func(reqs, data, metadata)
+                    else:
+                        result = func(reqs, data)
                     if cache:
                         if is_dont_cache(result):
                             pass

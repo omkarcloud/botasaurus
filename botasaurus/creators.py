@@ -14,15 +14,23 @@ def create_driver(tiny_profile=False, profile=None, window_size=None, user_agent
         5
     )
 
-def create_requests(proxy):
+def create_requests(proxy=None, user_agent=None):
     # Use windows, chrome (most common) and mixing other platforms and browsers causes bot detection
-    reqs = AntiDetectRequests.create_scraper(
-        browser={
-            'platform': 'windows',
-            'browser': 'chrome',
-            'mobile': False
-        }
-    )
+    
+    if user_agent:
+        reqs = AntiDetectRequests.create_scraper(
+            browser={
+                'custom': user_agent,
+            }
+        )
+    else:
+        reqs = AntiDetectRequests.create_scraper(
+            browser={
+                'platform': 'windows',
+                'browser': 'chrome',
+                'mobile': False
+            }
+        )
                 
     if proxy is not None:
         reqs.proxies = {

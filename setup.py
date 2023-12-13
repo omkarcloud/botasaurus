@@ -25,7 +25,7 @@ def get_description():
 setup(
     name='botasaurus',
     packages=['botasaurus'],
-    version='3.0.9',
+    version='3.0.12',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",
