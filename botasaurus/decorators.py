@@ -360,7 +360,7 @@ def browser(
                 try:
                     # if evaluated_profile is not None:
                     Profile.profile = evaluated_profile
-                    if 'metadata' in kwargs:
+                    if 'metadata' in kwargs or metadata is not None:
                         result = func(driver, data, metadata)
                     else:
                         result = func(driver, data)
@@ -512,10 +512,18 @@ def browser(
 
                         args, kwargs = task
                         merged_kwargs = {**wrapper_kwargs, **kwargs}  # Merge wrapper_kwargs with kwargs
-                        orginal_data.append(args[0])
+                        if isinstance(args[0], list):
+                          orginal_data.extend(args[0])
+                        else:
+                          orginal_data.append(args[0])
 
                         result = wrapper_browser(*args, **merged_kwargs)
-                        result_list.extend(result)
+
+                        if isinstance(args[0], list):
+                          result_list.extend(result)
+                        else:
+                          result_list.append(result)
+                        
                         task_queue.task_done()
                 
                 worker_thread = Thread(target=_worker, daemon = True )
@@ -599,7 +607,7 @@ def request(
 
                 result = None
                 try:
-                    if 'metadata' in kwargs:
+                    if 'metadata' in kwargs or metadata is not None:
                         result = func(reqs, data, metadata)
                     else:
                         result = func(reqs, data)
@@ -733,10 +741,21 @@ def request(
 
                         args, kwargs = task
                         merged_kwargs = {**wrapper_kwargs, **kwargs}  # Merge wrapper_kwargs with kwargs
-                        orginal_data.append(args[0])
+
+                        if isinstance(args[0], list):
+                          orginal_data.extend(args[0])
+                        else:
+                          orginal_data.append(args[0])
 
                         result = wrapper_requests(*args, **merged_kwargs)
-                        result_list.append(result)
+
+                        if isinstance(args[0], list):
+                          result_list.extend(result)
+                        else:
+                          result_list.append(result)
+                        
+
+                        
                         task_queue.task_done()
                 
                 worker_thread = Thread(target=_worker, daemon = True )

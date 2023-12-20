@@ -17,3 +17,7 @@ class AntiDetectRequests(CloudScraper):
         else:
             # Raise an HTTPError for bad requests
             response.raise_for_status()
+
+    # Method to get bs4 object by passing a URL
+    def response_to_bs4(self, response):
+            return BeautifulSoup(response.text, 'html.parser')

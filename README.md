@@ -641,12 +641,12 @@ if __name__ == "__main__":
     async_queue = scrape_data()  # Initializes the queue
 
     # Add tasks to the queue
-    async_queue.put([1, 2, 3])
-    async_queue.put(4)
-    async_queue.put([5, 6])
+    async_queue.put([1])
+    async_queue.put(2)
+    async_queue.put([3, 4])
 
     # Retrieve results when ready
-    results = async_queue.get()  # Expects to receive: [1, 2, 3, 4, 5, 6]
+    results = async_queue.get()  # Expects to receive: [1, 2, 3, 4]
 ```
 
 #### Practical Application for Web Scraping:
@@ -775,7 +775,7 @@ Its various settings allow you to tailor the scraping process to your specific n
 
 If you need guidane on your web scraping Project or have some questions, message us on WhatsApp and we'll be happy to help you out.
 
-[![Contact Us on WhatsApp](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/mwa.png)](https://wa.me/message/3WED4FYQRDPNE1)
+[![Contact Us on WhatsApp](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/mwa.png)](https://api.whatsapp.com/send?phone=918295042963&text=Hi,%20I%20would%20like%20to%20learn%20more%20about%20your%20products.)
 
 ## Sponsors
 

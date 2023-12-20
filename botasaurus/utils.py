@@ -248,7 +248,7 @@ def write_file( data, path,):
 
 
 def read_json(path):
-    with open(path, 'r') as fp:
+    with open(path, 'r', encoding="utf-8") as fp:
         data = json.load(fp)
         return data
 
@@ -258,7 +258,7 @@ def read_file(path):
         return content
         
 def write_json(data, path,  indent=4):
-    with open(path, 'w') as fp:
+    with open(path, 'w', encoding="utf-8") as fp:
         json.dump(data, fp, indent=indent)
 
 

@@ -11,13 +11,17 @@ def is_errors_instance(instances, error):
             return True, i
     return False, -1
 
-
-def retry_if_is_error(instances=None, retries=3, wait_time=None, raise_exception=True, on_failed_after_retry_exhausted=None):
+ANY = 'any'
+def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=True, on_failed_after_retry_exhausted=None):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             tries = 0
-            errors_only_instances = list(map(lambda el: el[0] if isinstance(el, tuple) else el, instances)) if instances else []
+            
+            if instances != ANY:
+              errors_only_instances = list(map(lambda el: el[0] if isinstance(el, tuple) else el, instances)) if instances else []
+            
+            
 
             while tries < retries:
                 tries += 1
@@ -25,15 +29,18 @@ def retry_if_is_error(instances=None, retries=3, wait_time=None, raise_exception
                     created_result = func(*args, **kwargs)
                     return created_result
                 except Exception as e:
-                    is_valid_error, index = is_errors_instance(errors_only_instances, e)
+                    if instances != ANY:
+                        is_valid_error, index = is_errors_instance(errors_only_instances, e)
 
-                    if not is_valid_error:
-                        raise e
+                        if not is_valid_error:
+                            raise e
+                        
                     if raise_exception:
                         traceback.print_exc()
 
-                    if instances and isinstance(instances[index], tuple):
-                        instances[index][1]()
+                    if instances != ANY:
+                        if instances and isinstance(instances[index], tuple):
+                            instances[index][1]()
 
                     if tries == retries:
                         if on_failed_after_retry_exhausted is not None:
