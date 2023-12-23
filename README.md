@@ -183,7 +183,7 @@ Let's learn feautres of Botasaurus that helps you unlock these super powers?
 
 ### Could you show me an example where you defeat Cloudflare?
 
-Of course, G2.com is a Cloudflare Protected Website, Let's scrape it up. 
+Sure, Run the following Python code to scrape G2.com, a website protected by Cloudflare:
 
 ```python
 from botasaurus import *
@@ -195,6 +195,10 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
     print(heading)
     return heading
 ```
+
+After running this script, you'll notice that the G2 page opens successfully, and the code prints the page's heading.
+
+![not blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/botasurussuccesspage.png)
 
 ### How to Scrape Multiple Data Points/Links?
 
