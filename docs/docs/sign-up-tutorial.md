@@ -160,10 +160,10 @@ To mimic human behavior, instead of directly visiting the Sign-Up Page via its l
 
 This makes it appear to the website that the user has arrived from a Google Search and *not by pasting a link*.
 
-To achieve this organic navigation, we use the `organic_get` method as follows:
+To achieve this organic navigation, we use the `google_get` method as follows:
 
 ```python 
-driver.organic_get("https://www.omkar.cloud/auth/sign-up/")
+driver.google_get("https://www.omkar.cloud/auth/sign-up/")
 ```
 
 ![](/img/organic-get.gif)
@@ -548,7 +548,7 @@ def create_accounts(driver: AntiDetectDriver, account):
         link = bt.TempMail.get_email_link_and_delete_mailbox(email)
         driver.get(link)
 
-    driver.organic_get("https://www.omkar.cloud/auth/sign-up/")
+    driver.google_get("https://www.omkar.cloud/auth/sign-up/")
     sign_up()
     confirm_email()
     bt.Profile.set_profile(account)    
@@ -640,7 +640,7 @@ def create_accounts(driver: AntiDetectDriver, account):
         link = bt.TempMail.get_email_link_and_delete_mailbox(email)
         driver.get(link)
 
-    driver.organic_get("https://www.omkar.cloud/auth/sign-up/")
+    driver.google_get("https://www.omkar.cloud/auth/sign-up/")
     sign_up()
     confirm_email()
     bt.Profile.set_profile(account)    

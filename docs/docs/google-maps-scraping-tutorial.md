@@ -120,7 +120,7 @@ def scrape_places_links(driver: AntiDetectDriver, query):
         if driver.is_in_page("https://consent.google.com/"):
             agree_button_selector = 'form:nth-child(2) > div > div > button'
             driver.click(agree_button_selector)
-            driver.organic_get(url)
+            driver.google_get(url)
 
     visit_google_maps()
 ```
@@ -361,7 +361,7 @@ def scrape_places_links(driver: AntiDetectDriver, query):
         if driver.is_in_page("https://consent.google.com/"):
             agree_button_selector = 'form:nth-child(2) > div > div > button'
             driver.click(agree_button_selector)
-            driver.organic_get(url)
+            driver.google_get(url)
 
     # Scroll to the end of the places list to get all the places
     def scroll_to_end_of_places_list():

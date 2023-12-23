@@ -257,18 +257,18 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
             raise Exception('Profile must be given when using tiny profile')
 
         options = Options()
-        is_gitpod = is_gitpod_environment()
 
-        if is_gitpod:
+        if is_gitpod_environment():
             # todo: Maybe need to add check to see running in ec2/gcp then I need to also add this or we can make this an error based option add on
             options.add_argument('--disable-dev-shm-usage')
-
-        # todo: use xvgf that supports headful mode and remove headless argument 
-        if headless or is_gitpod:
             options.add_argument('--headless=new')
-
-        if is_docker():
-            options.add_argument('--disable-setuid-sandbox')
+        elif is_docker():
+            options.add_argument('--no-sandbox')
+            options.add_argument('--headless=new')
+            # options.add_argument('--disable-setuid-sandbox')
+        else:
+            if headless:
+                options.add_argument('--headless=new')
 
         if lang is not None:
             options.add_argument(f'--lang={lang}')
@@ -278,9 +278,11 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
         
         hide_automation_bar(options)
 
+        
+
+
         # Necessary Options
         # options.add_argument("--ignore-certificate-errors")
-        # options.add_argument('--no-sandbox')
         # options.add_argument("--disable-extensions")
 
         # Captch Options

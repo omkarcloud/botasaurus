@@ -8,6 +8,7 @@ install_requires = [
     "beautifulsoup4>=4.11.2",
     "joblib>=1.3.2",
     "selenium-wire",
+    "botasaurus-proxy-authentication",
     'psutil',
 ]
 extras_require = {}
@@ -17,7 +18,9 @@ cpython_dependencies = [
 
 def get_description():
     try:
-      return open("README.rst", encoding="utf-8").read()
+        with open("README.md", encoding="utf-8") as readme_file:
+            long_description = readme_file.read()
+        return long_description
     except:
       return None
     
@@ -25,7 +28,7 @@ def get_description():
 setup(
     name='botasaurus',
     packages=['botasaurus'],
-    version='3.0.13',
+    version='3.1.7',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",
@@ -34,8 +37,8 @@ setup(
     },
 
     description="The All in One Web Scraping Framework",
+    long_description_content_type="text/markdown",
     long_description=get_description(),
-    # long_description_content_type="text/markdown",
     author='Chetan Jain',
     author_email='chetan@omkar.cloud',
     maintainer="Chetan Jain",

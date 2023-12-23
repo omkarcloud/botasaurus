@@ -101,9 +101,9 @@ AntiDetectDriver is a modified version of Selenium designed to evade detection b
 
 **Organic Page Loading**
 
-- `.organic_get` simulates a search engine referral, opening the Google homepage before navigating to the target URL.
+- `.google_get` simulates a search engine referral, opening the Google homepage before navigating to the target URL.
   ```python
-  driver.organic_get("https://www.omkar.cloud/auth/sign-up/")
+  driver.google_get("https://www.omkar.cloud/auth/sign-up/")
   ```
 
 **Referral-Based Navigation**

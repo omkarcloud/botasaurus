@@ -322,6 +322,9 @@ window.scrollBy(0, 10000);
         self.delete_local_storage_dict()
 
     def organic_get(self, link,  wait=None, accept_cookies=False):
+        self.google_get(link, wait, accept_cookies)
+
+    def google_get(self, link,  wait=None, accept_cookies=False):
         self.get("https://www.google.com/")
         if accept_cookies:
             accept_google_cookies(self)
@@ -463,7 +466,7 @@ window.scrollBy(0, 10000);
             self.execute_cdp_cmd('Network.enable', {})
 
     def quit(self) -> None:
-        if self.close_proxy:
+        if hasattr(self, 'close_proxy') and callable(self.close_proxy):
           self.close_proxy()
 
         return super().quit()

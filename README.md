@@ -27,6 +27,7 @@ Our aim it to make web scraping extremely easy and save you hours of Development
 Botasaurus comes fully baked, with batteries included. Here is a list of things it can do that no other web scraping framework can:
 
 - **Anti Detect:** Make Anti Detect Requests and Selenium Visits.
+- **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework to offer SSL support for authenticated proxies. No other web scraping libraries be it cloudscraper, seleniumwire, playwright provides this unique feature, enabling you to easily bypass Cloudflare detection when using authenticated proxies.
 - **Debuggability:** When a crash occurs due to an incorrect selector, etc., Botasaurus pauses the browser instead of closing it, facilitating painless on-the-spot debugging.
 - **Caching:** Botasaurus allows you to cache web scraping results, ensuring lightning-fast performance on subsequent scrapes.
 - **Easy Configuration:** Easily save time with parallelization, profile, and proxy configuration.
@@ -180,6 +181,21 @@ Power of Bots is Immense, A Bot
 
 Let's learn feautres of Botasaurus that helps you unlock these super powers? 
 
+### Could you show me an example where you defeat Cloudflare?
+
+Of course, G2.com is a Cloudflare Protected Website, Let's scrape it up. 
+
+```python
+from botasaurus import *
+
+@browser()
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.google_get("https://www.g2.com/products/github/reviews")
+    heading = driver.text('h1')
+    print(heading)
+    return heading
+```
+
 ### How to Scrape Multiple Data Points/Links?
 
 To scrape multiple data points or links, define the `data` variable and provide a list of items to be scraped:
@@ -260,6 +276,8 @@ To block images, simply use the `block_resources` parameter. For example:
 def scrape_heading_task(driver: AntiDetectDriver, data):
     driver.get("https://www.omkar.cloud/")
     driver.prompt()
+    
+scrape_heading_task()    
 ```
 
 If you wish to block only images and fonts, while allowing CSS files, you can set `block_images` like this:
@@ -269,6 +287,8 @@ If you wish to block only images and fonts, while allowing CSS files, you can se
 def scrape_heading_task(driver: AntiDetectDriver, data):
     driver.get("https://www.omkar.cloud/")
     driver.prompt()
+
+scrape_heading_task()        
 ```
 
 To block a specific set of resources, such as only JavaScript, CSS, fonts, etc., specify them in the following manner:
@@ -278,6 +298,8 @@ To block a specific set of resources, such as only JavaScript, CSS, fonts, etc.,
 def scrape_heading_task(driver: AntiDetectDriver, data):
     driver.get("https://www.omkar.cloud/")
     driver.prompt()
+
+scrape_heading_task()        
 ```
 
 ### How to Configure UserAgent, Proxy, Chrome Profile, Headless, etc.?
@@ -311,6 +333,70 @@ def scrape_article_links(driver: AntiDetectDriver, data):
     return filename, links
 ```
  -->
+
+
+### Do you support SSL for Authenticated Proxies?
+
+Yes, we are the first Python Library to support SSL for authenticated proxies. Proxy providers like BrightData, IPRoyal, and others typically provide authenticated proxies in the format "http://username:password@proxy-provider-domain:port". For example, "http://greyninja:awesomepassword@geo.iproyal.com:12321".
+
+However, if you use an authenticated proxy with a library like seleniumwire to scrape a Cloudflare protected website like G2.com, you will surely be blocked because you are using a non-SSL connection. 
+
+To verify this, run the following code:
+
+First, install the necessary packages:
+```bash 
+python -m pip install selenium_wire chromedriver_autoinstaller
+```
+
+Then, execute this Python script:
+```python
+from seleniumwire import webdriver
+from chromedriver_autoinstaller import install
+
+# Define the proxy
+proxy_options = {
+    'proxy': {
+        'http': 'http://username:password@proxy-provider-domain:port', # TODO: Replace with your own proxy
+        'https': 'http://username:password@proxy-provider-domain:port', # TODO: Replace with your own proxy
+    }
+}
+
+# Install and set up the driver
+driver_path = install()
+driver = webdriver.Chrome(driver_path, seleniumwire_options=proxy_options)
+
+# Navigate to the desired URL
+link = 'https://www.g2.com/products/github/reviews'
+driver.get("https://www.google.com/")
+driver.execute_script(f'window.location.href = "{link}"')
+
+# Prompt for user input
+input("Press Enter to exit...")
+
+# Clean up
+driver.quit()
+```
+
+You will definetely encounter a block by Cloudflare:
+
+![blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/seleniumwireblocked.png)
+
+However, using proxies with Botasaurus prevents this issue. See the difference by running the following code:
+```python
+from botasaurus import *
+
+@browser(proxy="http://username:password@proxy-provider-domain:port") # TODO: Replace with your own proxy 
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.google_get("https://www.g2.com/products/github/reviews")
+    driver.prompt()
+scrape_heading_task()    
+```  
+
+Result: 
+![not blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/botasurussuccesspage.png)
+
+NOTE: To run the code above, you will need Node.js installed.
+
 ### I want to Scrape a large number of Links, a new selenium driver is getting created for each new link, this increases the time to scrape data. How can I reuse Drivers?
 
 Utilize the `reuse_driver` option to reuse drivers, reducing the time required for data scraping:
@@ -751,6 +837,26 @@ Cache.remove(scrape_data, input_data)
 Cache.clear(scrape_data)
 ```
 
+### Any Tips for Scraping Cloudflare-Protected Websites?
+- To scrape Cloudflare-protected sites, you need to use a browser; the request module won't work, as it gets detected and results in a 403 error.
+- Use the `google_get` method to scrape the target website.
+- For large-scale scraping, opt for Data Center Proxies over Residential as Residential Proxies are really expensive. Sometimes you will get blocked; so, use retries as demonstrated in the code below:
+```python
+  from botasaurus import *
+
+  @browser(
+          proxy="http://username:password@datacenter-proxy-domain:12321", 
+          max_retry=5, # A reliable default for most situations
+          block_resources=True, # Enhances efficiency and cost-effectiveness
+          )
+  def scrape_heading_task(driver: AntiDetectDriver, data):
+      driver.google_get("https://www.g2.com/products/github/reviews")
+      if driver.is_bot_detected():
+          raise Exception("Bot detected")
+      heading = driver.text('h1')
+      print(heading)
+      return heading
+```
 
 ### What feautres are Coming in Botasaurus 4?
 Botasaurus 4, which is currently in its beta phase, allows you to:
@@ -766,6 +872,8 @@ Botasaurus 4, which is currently in its beta phase, allows you to:
   
  Developers are actively using Botasaurus 4 in production environments and saving hours of Development Time. To get access to Botasaurus 4, please [reach out to us](mailto:chetan@omkar.cloud?subject=Access%20Botasaurus%204&body=I%20want%20to%20use%20Botasaurus%204%20and%20gain%20access%20to%20feature%3A%20%5BTELL%20YOUR%20FEATURE%5D) and let us know which feature you would like to access.
  
+
+
 
 ### How Do I Close All Running Chrome Instances When Developing with Botasaurus?
 
@@ -810,8 +918,13 @@ If you need guidane on your web scraping Project or have some questions, message
   </a>
 </p>
 
+## Thanks
 
-
+- Kudos to the Apify Team for creating `proxy-chain` library. The implementation of SSL-based Proxy Authentication wouldn't be possible without their groundbreaking work on `proxy-chain`.
+- A special thanks to the Selenium team for creating Selenium, an invaluable tool in our toolkit.
+- Thanks to the creators of the cloudscraper library, which serves as the backbone behind our request Module.
+- Finally, a big thank you to you for choosing Botasaurus.
+ 
 ## Love It? [Star It! ⭐](https://github.com/omkarcloud/botasaurus)
 
 Become one of our amazing stargazers by giving us a star ⭐ on GitHub!
