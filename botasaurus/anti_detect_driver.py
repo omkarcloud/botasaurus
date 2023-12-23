@@ -32,6 +32,7 @@ class AntiDetectDriver(webdriver.Chrome):
 
         self.about: AboutBrowser = None
         self.is_network_enabled = False
+        self.close_proxy = False
 
     def get_by_current_page_referrer(self, link, wait=None):
 
@@ -462,4 +463,7 @@ window.scrollBy(0, 10000);
             self.execute_cdp_cmd('Network.enable', {})
 
     def quit(self) -> None:
+        if self.close_proxy:
+          self.close_proxy()
+
         return super().quit()

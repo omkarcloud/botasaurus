@@ -28,6 +28,8 @@ class HelperMethodMixin():
         super().__init__(*args, **kwargs)
 
         self.about: AboutBrowser = None
+        self.is_network_enabled = False
+        self.close_proxy = False
 
     def get_by_current_page_referrer(self, link, wait=None):
 
@@ -450,5 +452,15 @@ window.scrollBy(0, 10000);
         return beep_input('Press fill in the captcha, the faster the less detectable, then press enter to continue ...', self.about.beep)
 
         # return beep_input('Press fill in the captcha and press enter to continue ...', self.about.beep)
+
+    
+    def _enable_network(self) -> None:
+        if not self.is_network_enabled:
+            self.is_network_enabled = True
+            self.execute_cdp_cmd('Network.enable', {})
+
     def quit(self) -> None:
+        if self.close_proxy:
+          self.close_proxy()
+
         return super().quit()

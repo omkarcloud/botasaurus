@@ -221,23 +221,18 @@ def create_selenium_driver(proxy, options, desired_capabilities, path, attempt_d
     
     try:
         if proxy is not None:
-            from .drivers import AntiDetectDriverSeleniumWire
+            from botasaurus_proxy_authentication import add_proxy_options
+            options = add_proxy_options(options, proxy)
 
-            selwireOptions = {'proxy': {'http': proxy, 'https': proxy}}
+        driver = AntiDetectDriver(
+            desired_capabilities=desired_capabilities,
+            chrome_options=options,
+            executable_path=path,
+        )
 
-            driver = AntiDetectDriverSeleniumWire(
-                desired_capabilities=desired_capabilities,
-                seleniumwire_options=selwireOptions,
-                chrome_options=options,
-                executable_path=path,
-            )  
-        else:
-            driver = AntiDetectDriver(
-                desired_capabilities=desired_capabilities,
-                chrome_options=options,
-                executable_path=path,
-            )
-            
+        if proxy is not None:
+            driver.close_proxy = options.close_proxy
+
         return driver
 
     except SessionNotCreatedException as e:
@@ -249,7 +244,6 @@ def create_selenium_driver(proxy, options, desired_capabilities, path, attempt_d
         else:
             # If the exception message is different, or we already attempted to download, re-raise the exception
             raise
-
 
 def add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver):
     about = AboutBrowser(window_size=driver_attributes.get('window_size'), user_agent=driver_attributes.get('user_agent'), profile=driver_attributes.get('profile'),proxy=proxy, lang=lang, beep=beep, is_new=True)
