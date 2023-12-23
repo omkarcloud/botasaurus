@@ -247,16 +247,37 @@ Botasaurus also plays a beep sound to alert you when an error occurs.
 
 ![](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/error-prompt.png)
 
-### How to Block Images?
+### How to Block Resources like CSS, Images, and Fonts to Save Bandwidth?
 
-Blocking images can significantly speed up your web scraping tasks. For example, a page that originally takes 4 seconds to load might only take one second to load after images have been blocked.
+Blocking resources such as CSS, images, and fonts can significantly speed up your web scraping tasks, reduce bandwidth usage, and save money spent on proxies.
 
-To block images, simply set `block_images=True` in the decorator:
+For example, a page that originally takes 4 seconds and 12 MB's to load might only take one second and 100 KB to load after css, images, etc have been blocked.
+
+To block images, simply use the `block_resources` parameter. For example:
 
 ```python
-@browser(block_images=True)
+@browser(block_resources=True) # Blocks ['.css', '.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip']
 def scrape_heading_task(driver: AntiDetectDriver, data):
-  # ...
+    driver.get("https://www.omkar.cloud/")
+    driver.prompt()
+```
+
+If you wish to block only images and fonts, while allowing CSS files, you can set `block_images` like this:
+
+```python
+@browser(block_images=True) # Blocks ['.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip']
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.get("https://www.omkar.cloud/")
+    driver.prompt()
+```
+
+To block a specific set of resources, such as only JavaScript, CSS, fonts, etc., specify them in the following manner:
+
+```python
+@browser(block_resources=['.js', '.css', '.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip'])
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.get("https://www.omkar.cloud/")
+    driver.prompt()
 ```
 
 ### How to Configure UserAgent, Proxy, Chrome Profile, Headless, etc.?
@@ -279,7 +300,7 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
 To save the data with a different filename, pass the desired filename along with the data in a tuple as shown below:
 
 ```python
-@browser(block_images=True, cache=True)
+@browser(block_resources=True, cache=True)
 def scrape_article_links(driver: AntiDetectDriver, data):
     # Visit the Omkar Cloud website
     driver.get("https://www.omkar.cloud/blog/")
@@ -307,7 +328,7 @@ Below is a practical example of how Botasaurus features come together in a typic
 ```python
 from botasaurus import *
 
-@browser(block_images=True,
+@browser(block_resources=True,
          cache=True, 
          parallel=bt.calc_max_parallel_browsers, 
          reuse_driver=True)
@@ -323,7 +344,7 @@ def scrape_articles(driver: AntiDetectDriver, link):
         "link": link, 
     }
 
-@browser(block_images=True, cache=True)
+@browser(block_resources=True, cache=True)
 def scrape_article_links(driver: AntiDetectDriver, data):
     # Visit the Omkar Cloud website
     driver.get("https://www.omkar.cloud/blog/")

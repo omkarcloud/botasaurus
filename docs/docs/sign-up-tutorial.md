@@ -359,9 +359,9 @@ Here's how it works:
    
      ```python
     @browser(
-        data = lambda: bt.generate_users(3, country=bt.Country.IN)
+        data = lambda: bt.generate_users(3, country=bt.Country.IN),
         profile= lambda account: account['username'],
-        is_tiny_profile= True,
+        tiny_profile= True,
     )
     def create_accounts(driver: AntiDetectDriver, account):     
         ...
@@ -371,9 +371,9 @@ Here's how it works:
 
      ```python
     @browser(
-        data = lambda: bt.generate_users(3, country=bt.Country.IN)
+        data = lambda: bt.generate_users(3, country=bt.Country.IN),
         profile= lambda account: account['username'],
-        is_tiny_profile= True,
+        tiny_profile= True,
     )
     def create_accounts(driver: AntiDetectDriver, account):     
         name = account['name']
@@ -426,9 +426,9 @@ This code enables the capture of screenshots for each created account:
 from botasaurus import *
 
 @browser(
-    data = lambda: bt.Profile.get_profiles()
+    data = lambda: bt.Profile.get_profiles(),
     profile= lambda account: account['username'],
-    is_tiny_profile= True,
+    tiny_profile= True,
 )
 def take_screenshots(driver: AntiDetectDriver, account):
     username = account['username']
@@ -494,24 +494,24 @@ Finally, we launch the task calling the `take_screenshots` function.
 
 --- 
 
-## 🚫 Speed up by Blocking Images
+## 🚫 Speed up by Blocking CSS, Images
 
-Loading image resources can have a couple of significant downsides like:
+Loading css, image resources can have a couple of significant downsides like:
 
 - Being heavy on the wallet, especially if you're using residential proxies, which can be very expensive, costing around $15/GB.
 - Wasting your time by slowing down the scraping process due to image loading.
 
 ### The Solution with Botasaurus
 
-By blocking images from loading, we can achieve faster scraping and also a healthier wallet.
+By blocking css, images etc from loading, we can achieve faster scraping and also a healthier wallet.
 
-To configure the browser to block images, use the following code, setting the `block_images` parameter to `True`:
+To configure the browser to block css, images, use the following code, setting the `block_resources` parameter to `True`:
 
 ```python
 @browser(
-    block_images=True, # <-
+    block_resources=True, # <-
     profile= lambda account: account['username'],
-    is_tiny_profile= True,
+    tiny_profile= True,
 )
 def take_screenshots(driver: AntiDetectDriver, account):
 ```
@@ -528,10 +528,10 @@ Finally, it's time to put all the pieces together. Follow these steps to create 
 from botasaurus import *
 
 @browser(
-    data = lambda: bt.generate_users(3, country=bt.Country.IN)
-    block_images=True,
+    data = lambda: bt.generate_users(3, country=bt.Country.IN),
+    block_resources=True,
     profile= lambda account: account['username'],
-    is_tiny_profile= True,
+    tiny_profile= True,
 )
 def create_accounts(driver: AntiDetectDriver, account):
     name = account['name']
@@ -554,10 +554,10 @@ def create_accounts(driver: AntiDetectDriver, account):
     bt.Profile.set_profile(account)    
 
 @browser(
-    data = lambda: bt.Profile.get_profiles()
-    block_images=True,
+    data = lambda: bt.Profile.get_profiles(),
+    block_resources=True,
     profile= lambda account: account['username'],
-    is_tiny_profile= True,
+    tiny_profile= True,
 )
 def take_screenshots(driver: AntiDetectDriver, account):
     username = account['username']
@@ -620,10 +620,10 @@ After inspecting the output, I encourage you to read the final code provided bel
 from botasaurus import *
 
 @browser(
-    data = lambda: bt.generate_users(3, country=bt.Country.IN)
-    block_images=True,
+    data = lambda: bt.generate_users(3, country=bt.Country.IN),
+    block_resources=True,
     profile= lambda account: account['username'],
-    is_tiny_profile= True,
+    tiny_profile= True,
 )
 def create_accounts(driver: AntiDetectDriver, account):
     name = account['name']
@@ -646,10 +646,10 @@ def create_accounts(driver: AntiDetectDriver, account):
     bt.Profile.set_profile(account)    
 
 @browser(
-    data = lambda: bt.Profile.get_profiles()
-    block_images=True,
+    data = lambda: bt.Profile.get_profiles(),
+    block_resources=True,
     profile= lambda account: account['username'],
-    is_tiny_profile= True,
+    tiny_profile= True,
 )
 def take_screenshots(driver: AntiDetectDriver, account):
     username = account['username']

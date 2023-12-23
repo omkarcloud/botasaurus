@@ -203,6 +203,7 @@ def browser(
     metadata: Optional[Any] = None, 
     cache: bool = False,
     block_images: bool = False,
+    block_resources: bool = False,
     window_size: Optional[Union[Callable[[Any], str], str]] = None,
     tiny_profile: bool = False,
     is_eager: bool = False,
@@ -284,7 +285,7 @@ def browser(
         @wraps(func)
         def wrapper_browser(*args, **kwargs) -> Any:
 
-            nonlocal parallel, data, cache, block_images, window_size, metadata
+            nonlocal parallel, data, cache, block_resources, block_images, window_size, metadata
             nonlocal tiny_profile, is_eager, lang, headless, beep
             nonlocal close_on_crash, async_queue, run_async, profile
             nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive
@@ -294,6 +295,8 @@ def browser(
             data = kwargs.get('data', data)
             cache = kwargs.get('cache', cache)
             block_images = kwargs.get('block_images', block_images)
+            block_resources = kwargs.get('block_resources', block_resources)
+            
             window_size = kwargs.get('window_size', window_size)
             metadata = kwargs.get('metadata', metadata)
             tiny_profile = kwargs.get('tiny_profile', tiny_profile)
@@ -355,7 +358,7 @@ def browser(
                         driver = create_driver(data)
                         add_about(tiny_profile, proxy, lang, beep, {}, driver)
                     else:
-                        driver = creators.create_driver(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, is_eager, evaluated_headless, evaluated_lang, block_images, beep)
+                        driver = creators.create_driver(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, is_eager, evaluated_headless, evaluated_lang, block_resources, block_images, beep)
                 result = None
                 try:
                     # if evaluated_profile is not None:
@@ -395,6 +398,7 @@ def browser(
                     print_exc()
                     save_error_logs(exception_log, driver)
                     
+                    print(f"Failed for input: {data}")
                     if not headless:
                         if not IS_PRODUCTION:
                             if not close_on_crash:
@@ -632,6 +636,7 @@ def request(
                     print_exc()
                     save_error_logs(exception_log, None)
                     
+                    print(f"Failed for input: {data}")
                     if not IS_PRODUCTION:
                         if not close_on_crash:
                             beep_input("We've paused the browser to help you debug. Press 'Enter' to close.", beep)

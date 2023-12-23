@@ -13,6 +13,8 @@ from .user_agent import UserAgent, UserAgentInstance
 from .utils import get_current_profile_path, read_json, relative_path, silentremove, write_json
 from .window_size import WindowSize, WindowSizeInstance
 
+DEFAULT_BLOCKED_RESOURCES = ['.css', '.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip']
+DEFAULT_BLOCKED_RESOURCES_EXCEPT_CSS = ['.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip']
 
 def get_eager_strategy():
     caps = DesiredCapabilities().CHROME
@@ -107,7 +109,7 @@ def add_essential_options(options, profile, window_size, user_agent):
 
 def hide_automation_bar(options):
     options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_argument("--disable-blink-features")
+    # options.add_argument("--disable-blink-features")
 
     options.add_experimental_option(
         "excludeSwitches", ["enable-automation"])
@@ -172,9 +174,10 @@ def save_cookies(driver, profile):
             current_profile_data = get_current_profile_path(profile) + 'profile.json'
             current_profile_data_path =  relative_path(current_profile_data, 0)
 
-            driver.execute_cdp_cmd('Network.enable', {})
+            driver._enable_network()
+            # execute_cdp_cmd('Network.enable', {})
             cookies = (driver.execute_cdp_cmd('Network.getAllCookies', {}))
-            driver.execute_cdp_cmd('Network.disable', {})
+            # driver.execute_cdp_cmd('Network.disable', {})
 
             if type(cookies) is not list:
                 cookies = cookies.get('cookies')
@@ -196,7 +199,8 @@ def load_cookies(driver: AntiDetectDriver, profile):
 
     cookies = read_json(current_profile_data_path)
     # Enables network tracking so we may use Network.setCookie method
-    driver.execute_cdp_cmd('Network.enable', {})
+    # driver.execute_cdp_cmd('Network.enable', {})
+    driver._enable_network()
     # Iterate through pickle dict and add all the cookies
     for cookie in cookies:
         # Fix issue Chrome exports 'expiry' key but expects 'expire' on import
@@ -253,7 +257,7 @@ def add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver):
     if tiny_profile:
         load_cookies(driver, about.profile)
 
-def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_images, beep):
+def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_resources, block_images, beep):
 
         if tiny_profile and profile is None:
             raise Exception('Profile must be given when using tiny profile')
@@ -265,6 +269,7 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
             # todo: Maybe need to add check to see running in ec2/gcp then I need to also add this or we can make this an error based option add on
             options.add_argument('--disable-dev-shm-usage')
 
+        # todo: use xvgf that supports headful mode and remove headless argument 
         if headless or is_gitpod:
             options.add_argument('--headless=new')
 
@@ -274,31 +279,25 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
         if lang is not None:
             options.add_argument(f'--lang={lang}')
 
-        if block_images:
-            options.add_experimental_option(
-                "prefs", {
-                    "profile.managed_default_content_settings.images": 2,
-                    "profile.managed_default_content_settings.stylesheet": 2,
-                    "profile.managed_default_content_settings.fonts": 2,
-                }
-            )
-
         driver_attributes = add_essential_options(
             options, None if tiny_profile else profile, window_size, user_agent)
         
         hide_automation_bar(options)
 
         # Necessary Options
-        options.add_argument("--ignore-certificate-errors")
-        options.add_argument('--no-sandbox')
+        # options.add_argument("--ignore-certificate-errors")
+        # options.add_argument('--no-sandbox')
         # options.add_argument("--disable-extensions")
 
         # Captch Options
-        if proxy:
-            options.add_argument("--disable-web-security")
-            options.add_argument("--disable-site-isolation-trials")
-            options.add_argument("--disable-application-cache")
+        # if proxy:
+        #     options.add_argument("--disable-web-security")
+        #     options.add_argument("--disable-application-cache")
 
+        # GOOD option
+        options.add_argument("--disable-site-isolation-trials")
+        
+        
         desired_capabilities = get_eager_strategy() if is_eager  else None
 
         path = relative_path(get_driver_path(), 0)
@@ -306,6 +305,27 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
         driver = create_selenium_driver(proxy, options, desired_capabilities, path)
         driver_attributes['profile'] = profile
         # print(driver_attributes)
+
+
+        default_patterns = []
+
+        if block_resources is True:
+            default_patterns.extend(DEFAULT_BLOCKED_RESOURCES)
+        elif isinstance(block_resources, list):
+            default_patterns.extend(block_resources)
+
+        if block_images:
+            # Adding only unique elements from DEFAULT_BLOCKED_RESOURCES_EXCEPT_CSS
+            for resource in DEFAULT_BLOCKED_RESOURCES_EXCEPT_CSS:
+                if resource not in default_patterns:
+                    default_patterns.append(resource)
+
+        if default_patterns:
+            default_patterns = list(dict.fromkeys(default_patterns))
+            driver._enable_network()  # Assuming this method is correctly defined in the driver
+            driver.execute_cdp_cmd('Network.setBlockedURLs', {"urls": default_patterns})
+
+
         add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver)
         return driver
 
