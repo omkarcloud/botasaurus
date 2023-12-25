@@ -2,7 +2,7 @@ from typing import Callable, Optional
 from selenium.common.exceptions import  StaleElementReferenceException
 from functools import wraps
 import traceback
-from time import sleep
+from time import sleep, time
 
 def is_errors_instance(instances, error):
     for i in range(len(instances)):
@@ -86,6 +86,24 @@ def retry_on_request_failure(_func: Optional[Callable] = None, *, retries=5, wai
         @wraps(func)  # Use functools.wraps
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
+        return wrapper
+
+    if _func is None:
+        return decorator
+    else:
+        return decorator(_func)
+
+
+def measure_time(_func: Optional[Callable] = None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time()
+            result = func(*args, **kwargs)
+            end_time = time()
+            print(f"Execution time of {func.__name__}: {end_time - start_time} seconds")
+            return result
+
         return wrapper
 
     if _func is None:

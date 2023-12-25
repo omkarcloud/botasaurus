@@ -221,6 +221,7 @@ def browser(
     output: Optional[Union[str, Callable]] = "default", 
     output_formats: Optional[List[str]] = None,
     max_retry: Optional[int] = None, 
+    raise_exception: bool = False,
     create_driver :Optional[Callable]=None, 
 
 
@@ -288,7 +289,7 @@ def browser(
             nonlocal parallel, data, cache, block_resources, block_images, window_size, metadata
             nonlocal tiny_profile, is_eager, lang, headless, beep
             nonlocal close_on_crash, async_queue, run_async, profile
-            nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive
+            nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive, raise_exception
             nonlocal output, output_formats, max_retry, create_driver
 
             parallel = kwargs.get('parallel', parallel)
@@ -315,6 +316,7 @@ def browser(
             output = kwargs.get('output', output)
             output_formats = kwargs.get('output_formats', output_formats)
             max_retry = kwargs.get('max_retry', max_retry)
+            raise_exception = kwargs.get('raise_exception', raise_exception)
             create_driver = kwargs.get('create_driver', create_driver)
 
 
@@ -412,6 +414,10 @@ def browser(
                         close_driver(driver)
 
                     print('Task failed with data:', data)
+                    
+                    if raise_exception:
+                        raise error
+                    
                     return result
 
             
@@ -565,7 +571,8 @@ def request(
     close_on_crash: bool = False,      
     output: Optional[Union[str, Callable]] = "default", 
     output_formats: Optional[List[str]] = None, 
-    max_retry: Optional[int] = None
+    max_retry: Optional[int] = None,
+    raise_exception: bool = False,
 )-> Callable:
 
     def decorator_requests(func: Callable) -> Callable:
@@ -578,7 +585,7 @@ def request(
                 first_run = False  # Set the flag to False so it doesn't run again
 
             nonlocal parallel, data, cache, beep, run_async, async_queue, metadata
-            nonlocal proxy, close_on_crash, output, output_formats, max_retry
+            nonlocal proxy, close_on_crash, output, output_formats, max_retry, raise_exception
 
             parallel = kwargs.get('parallel', parallel)
             data = kwargs.get('data', data)
@@ -592,6 +599,7 @@ def request(
             output = kwargs.get('output', output)
             output_formats = kwargs.get('output_formats', output_formats)
             max_retry = kwargs.get('max_retry', max_retry)
+            raise_exception = kwargs.get('raise_exception', raise_exception)
 
             fn_name = func.__name__
             if cache:
@@ -646,6 +654,9 @@ def request(
                             beep_input("We've paused the browser to help you debug. Press 'Enter' to close.", beep)
 
                     print(f'Task Failed!')
+
+                    if raise_exception:
+                        raise error
                     return result
 
 
