@@ -213,7 +213,7 @@ def load_cookies(driver: AntiDetectDriver, profile):
         # Set the actual cookie
         driver.execute_cdp_cmd('Network.setCookie', cookie)
 
-    driver.execute_cdp_cmd('Network.disable', {})
+    # driver.execute_cdp_cmd('Network.disable', {})
 
 
 

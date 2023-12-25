@@ -226,10 +226,6 @@ def browser(
 
 ) -> Callable:
         
-    global first_run  # Declare the global variable to modify it
-    if first_run:  # Check if it's the first run
-        print("Running")  # If so, print "Running"
-        first_run = False  # Set the flag to False so it doesn't run again
 
     def decorator_browser(func: Callable) -> Callable:
 
@@ -284,6 +280,10 @@ def browser(
             
         @wraps(func)
         def wrapper_browser(*args, **kwargs) -> Any:
+            global first_run  # Declare the global variable to modify it
+            if first_run:  # Check if it's the first run
+                print("Running")  # If so, print "Running"
+                first_run = False  # Set the flag to False so it doesn't run again
 
             nonlocal parallel, data, cache, block_resources, block_images, window_size, metadata
             nonlocal tiny_profile, is_eager, lang, headless, beep
@@ -392,6 +392,7 @@ def browser(
                         raise  # Re-raise the KeyboardInterrupt to stop execution
 
                     if max_retry is not None and (max_retry) > (retry_attempt):
+                            print_exc()
                             return run_task(data, True, retry_attempt + 1)
 
                     exception_log = format_exc()
@@ -566,14 +567,16 @@ def request(
     output_formats: Optional[List[str]] = None, 
     max_retry: Optional[int] = None
 )-> Callable:
-    global first_run  # Declare the global variable to modify it
-    if first_run:  # Check if it's the first run
-        print("Running")  # If so, print "Running"
-        first_run = False  # Set the flag to False so it doesn't run again
 
     def decorator_requests(func: Callable) -> Callable:
+
         @wraps(func)
         def wrapper_requests(*args, **kwargs) -> Any:
+            global first_run  # Declare the global variable to modify it
+            if first_run:  # Check if it's the first run
+                print("Running")  # If so, print "Running"
+                first_run = False  # Set the flag to False so it doesn't run again
+
             nonlocal parallel, data, cache, beep, run_async, async_queue, metadata
             nonlocal proxy, close_on_crash, output, output_formats, max_retry
 
@@ -630,6 +633,7 @@ def request(
                         raise  # Re-raise the KeyboardInterrupt to stop execution
                     
                     if max_retry is not None and (max_retry)> (retry_attempt):
+                            print_exc()
                             return run_task(data, True, retry_attempt + 1)
 
                     exception_log = format_exc()

@@ -10,10 +10,20 @@
 </h3>
 
 <p align="center">
-  <b>All in 1 Web Scraping Framework</b>
+  <b>The All in 1 Web Scraping Framework</b>
 </p>
 
-<img style="display:none" src="https://views.whatilearened.today/views/github/omkarcloud/botasaurus.svg" alt="View" />
+
+<p align="center">
+  <img src="https://views.whatilearened.today/views/github/omkarcloud/botasaurus.svg" width="80px" height="28px" alt="View" />
+</p>
+
+
+<p align="center">
+  <a href="https://gitpod.io/#https://github.com/omkarcloud/botasaurus-starter">
+    <img alt="Run in Gitpod" src="https://gitpod.io/button/open-in-gitpod.svg" />
+  </a>
+</p>
 
 ## In a nutshell
 
@@ -28,6 +38,7 @@ Botasaurus comes fully baked, with batteries included. Here is a list of things 
 
 - **Anti Detect:** Make Anti Detect Requests and Selenium Visits.
 - **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework to offer SSL support for authenticated proxies. No other web scraping libraries be it cloudscraper, seleniumwire, playwright provides this unique feature, enabling you to easily bypass Cloudflare detection when using authenticated proxies.
+- **Data Cleaners:** Clean data scraped from the website with ease.
 - **Debuggability:** When a crash occurs due to an incorrect selector, etc., Botasaurus pauses the browser instead of closing it, facilitating painless on-the-spot debugging.
 - **Caching:** Botasaurus allows you to cache web scraping results, ensuring lightning-fast performance on subsequent scrapes.
 - **Easy Configuration:** Easily save time with parallelization, profile, and proxy configuration.
@@ -321,6 +332,51 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
   # ...
 ```
 
+
+You can also pass additional parameters when calling the scraping function, as demonstrated below:
+
+```python
+@browser()
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    # ...
+
+data = "https://www.omkar.cloud/"
+scrape_heading_task(
+  data, 
+  headless=True, 
+  profile='my-profile', 
+  proxy="http://your_proxy_address:your_proxy_port",
+  user_agent=bt.UserAgents.user_agent_106
+)
+```
+
+Furthermore, it's possible to define functions that dynamically set these parameters based on the data item. For instance, to set the profile dynamically according to the data item, you can use the following approach:
+
+```python
+@browser(profile=lambda data: data["profile"], headless=True, proxy="http://your_proxy_address:your_proxy_port", user_agent=bt.UserAgents.user_agent_106)
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    # ...
+
+data = {"link": "https://www.omkar.cloud/", "profile": "my-profile"}
+scrape_heading_task(data)
+```
+
+Additionally, if you need to pass metadata that is common across all data items, such as an API Key, you can do so by adding it as a `metadata` parameter. For example:
+
+```python
+@browser()
+def scrape_heading_task(driver: AntiDetectDriver, data, metadata):
+    print("metadata:", metadata)
+    print("data:", data)
+
+data = {"link": "https://www.omkar.cloud/", "profile": "my-profile"}
+scrape_heading_task(
+  data, 
+  metadata={"api_key": "BDEC26..."}
+)
+```
+
+
 <!-- ### How Can I Save Data With a Different Name Instead of 'all.json'?
 
 To save the data with a different filename, pass the desired filename along with the data in a tuple as shown below:
@@ -337,7 +393,6 @@ def scrape_article_links(driver: AntiDetectDriver, data):
     return filename, links
 ```
  -->
-
 
 ### Do you support SSL for Authenticated Proxies?
 
@@ -449,7 +504,104 @@ if __name__ == "__main__":
     scrape_articles(links)
 ```
 
+### How to Clean Data?
+Botasaurus provides a module named `cl` that includes commonly used cleaning functions to save development time. Here are some of the most important ones:
 
+1. **`cl.select`**  
+   What `document.querySelector` is to js, is what `cl.select` is to json. This is the most used function in Botasaurus and is incredibly useful.
+
+   This powerful function is popular for safely selecting data from nested JSON.
+
+   Instead of using flaky code like this:
+   ```python
+   from botasaurus import cl
+
+   data = {
+     "person": {
+       "data": {
+         "name": "Omkar",
+         "age": 21
+       }
+     },
+     "data": {
+       "friends": [
+         {"name": "John", "age": 21},
+         {"name": "Jane", "age": 21},
+         {"name": "Bob", "age": 21}
+       ]
+     }
+   }
+
+   name = data.get('person', {}).get('data', {}).get('name', None)
+   if name:
+       name = name.upper()
+   else:
+       name = None
+   print(name)
+   ```
+
+   You can write it as:
+   ```python
+   from botasaurus import cl
+
+   data = {
+     "person": {
+       "data": {
+         "name": "Omkar",
+         "age": 21
+       }
+     },
+     "data": {
+       "friends": [
+         {"name": "John", "age": 21},
+         {"name": "Jane", "age": 21},
+         {"name": "Bob", "age": 21}
+       ]
+     }
+   }
+   print(cl.select(data, 'name', map_data=lambda x: x.upper()))
+   ```
+
+   `cl.select` returns `None` if the key is not found, instead of throwing an error.
+   ```python
+   from botasaurus import cl
+
+   print(cl.select(data, 'name'))  # Omkar
+   print(cl.select(data, 'friends', 0, 'name'))  # John
+   print(cl.select(data, 'friends', 0, 'non_existing_key'))  # None
+   ```
+
+   You can also use `map_data` like this:
+   ```python
+   from botasaurus import cl
+
+   cl.select(data, 'name', map_data=lambda x: x.upper())  # OMKAR
+   ```
+
+   And use default values like this:
+   ```python
+   from botasaurus import cl
+
+   cl.select(None, 'name', default="OMKAR")  # OMKAR
+   ```
+
+2. **`cl.extract_numbers`**
+   ```python
+   from botasaurus import cl
+
+   print(cl.extract_numbers("I can extract numbers with decimal like 4.5, or with comma like 1,000."))  # [4.5, 1000]
+   ```
+
+3. **More Functions**
+   ```python
+   from botasaurus import cl
+
+   print(cl.extract_links("I can extract links like https://www.omkar.cloud/ or https://www.omkar.cloud/blog/"))  # ['https://www.omkar.cloud/', 'https://www.omkar.cloud/blog/']
+   print(cl.rename_keys({"name": "Omkar", "age": 21}, {"name": "full_name"}))  # {"full_name": "Omkar", "age": 21}
+   print(cl.sort_object_by_keys({"age": 21, "name": "Omkar"}, "name"))  # {"name": "Omkar", "age": 21}
+   print(cl.extract_from_dict([{"name": "John", "age": 21}, {"name": "Jane", "age": 21}, {"name": "Bob", "age": 21}], "name"))  # ["John", "Jane", "Bob"]
+   # ... And many more
+   ```
 ### How to Read/Write JSON and CSV Files?
 
 Botasaurus provides convenient methods for reading and writing data:
@@ -646,21 +798,21 @@ Botasaurus Starter Template comes with the necessary `.gitpod.yml` to easily run
    
    ![Screenshot (148)](https://github.com/omkarcloud/google-maps-scraper/assets/53407137/f498dda8-5352-4f7a-9d70-c717859670d4.png)
   
-2. To speed up scraping, select the Large 8 Core, 16 GB Ram Machine and click the `Continue` button.   
+<!-- 2. To speed up scraping, select the Large 8 Core, 16 GB Ram Machine and click the `Continue` button.   
 
-   ![16gb select](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/16gb-select.png)
+   ![16gb select](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/16gb-select.png) -->
 
-3. In the terminal, run the following command to start scraping:
-   ```bash
-   python main.py
-   ```
+2. In the terminal, run the following command to start scraping:
+```bash
+python main.py
+```
 
-Please understand:
+<!-- Please understand:
    - The internet speed in Gitpod is extremely fast at around 180 Mbps.
 
       ![speedtest](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/speedtest.png)
 
-   - When Scraping, You need to interact with Gitpod, such as clicking within the environment, every 30 minutes to prevent the machine from automatically closing.
+   - When Scraping, You need to interact with Gitpod, such as clicking within the environment, every 30 minutes to prevent the machine from automatically closing. -->
 
 
 ## Advanced Features
@@ -862,21 +1014,6 @@ Cache.clear(scrape_data)
       return heading
 ```
 
-### What feautres are Coming in Botasaurus 4?
-Botasaurus 4, which is currently in its beta phase, allows you to:
-  - A sms API to receive OTPs.
-  - Run bots in the cloud using a website UI and control their schedules, starting/stopping times, and view bot outputs in a web UI. 
-  - Use Kubernetes to run thousands of bots in parallel.
-  - Schedule Scraping Tasks at specific times or intervals
-  - Whatsapp/Email Alerts
-  - An API to interface with Gmail and Outlook accounts.
-  - MySQL/PostgreSQL Integration
-  - Integrated Captcha Solving
-  - And Many More :)
-  
- Developers are actively using Botasaurus 4 in production environments and saving hours of Development Time. To get access to Botasaurus 4, please [reach out to us](mailto:chetan@omkar.cloud?subject=Access%20Botasaurus%204&body=I%20want%20to%20use%20Botasaurus%204%20and%20gain%20access%20to%20feature%3A%20%5BTELL%20YOUR%20FEATURE%5D) and let us know which feature you would like to access.
- 
-
 
 
 ### How Do I Close All Running Chrome Instances When Developing with Botasaurus?
@@ -896,6 +1033,22 @@ python -m botasaurus.close
 Executing above command will close all Chrome instances, thereby helping to prevent your PC from hanging.
  
 ---
+
+
+### What feautres are Coming in Botasaurus 4?
+Botasaurus 4, which is currently in its beta phase, allows you to:
+  - A sms API to receive OTPs.
+  - Run bots in the cloud using a website UI and control their schedules, starting/stopping times, and view bot outputs in a web UI. 
+  - Use Kubernetes to run thousands of bots in parallel.
+  - Schedule Scraping Tasks at specific times or intervals
+  - Whatsapp/Email Alerts
+  - An API to interface with Gmail and Outlook accounts.
+  - MySQL/PostgreSQL Integration
+  - Integrated Captcha Solving
+  - And Many More :)
+  
+Developers are actively using Botasaurus 4 in production environments and saving hours of Development Time. To get access to Botasaurus 4, please [reach out to us](mailto:chetan@omkar.cloud?subject=Access%20Botasaurus%204&body=I%20want%20to%20use%20Botasaurus%204%20and%20gain%20access%20to%20feature%3A%20%5BTELL%20YOUR%20FEATURE%5D) and let us know which feature you would like to access.
+ 
 
 
 ### Conclusion

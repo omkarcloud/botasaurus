@@ -74,6 +74,26 @@ def retry_on_stale_element(_func: Optional[Callable] = None, *, retries=3, wait_
     else:
         return decorator(_func)
 
+
+def retry_on_request_failure(_func: Optional[Callable] = None, *, retries=5, wait_time=1, raise_exception=True):
+    def decorator(func):
+        @retry_if_is_error(
+            instances=ANY,
+            retries=retries,
+            wait_time=wait_time,
+            raise_exception=raise_exception
+        )
+        @wraps(func)  # Use functools.wraps
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+
+    if _func is None:
+        return decorator
+    else:
+        return decorator(_func)
+
+
 def ignore(_func: Optional[Callable] = None, on_exception_return_Value = None):
     def decorator(func):
         @wraps(func)

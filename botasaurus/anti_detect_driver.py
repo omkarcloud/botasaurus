@@ -322,13 +322,13 @@ window.scrollBy(0, 10000);
         self.delete_local_storage_dict()
 
     def organic_get(self, link,  wait=None, accept_cookies=False):
-        self.google_get(link, wait, accept_cookies)
+        return self.google_get(link, wait, accept_cookies)
 
     def google_get(self, link,  wait=None, accept_cookies=False):
         self.get("https://www.google.com/")
         if accept_cookies:
             accept_google_cookies(self)
-        self.get_by_current_page_referrer(link, wait)
+        return self.get_by_current_page_referrer(link, wait)
 
     def get_google(self, accept_cookies=False):
         self.get("https://www.google.com/")

@@ -21,3 +21,7 @@ class AntiDetectRequests(CloudScraper):
     # Method to get bs4 object by passing a URL
     def response_to_bs4(self, response):
             return BeautifulSoup(response.text, 'html.parser')
+
+    def google_get(self, url, **kwargs):
+            kwargs['headers'] = {**kwargs.get('headers', {}), 'Referer':"https://www.google.com/"}
+            return self.get(url, **kwargs)
