@@ -106,7 +106,7 @@ Implementing this code is simple:
 
 ```python
 @browser(
-    data=["restaurants in delhi"]
+    data=["restaurants in delhi"],
 )
 def scrape_places_links(driver: AntiDetectDriver, query):
 
@@ -346,7 +346,7 @@ def scrape_places(driver: AntiDetectDriver, link):
 
 
 @browser(
-    data=["restaurants in delhi"]
+    data=["restaurants in delhi"],
     block_images=True,
 )
 def scrape_places_links(driver: AntiDetectDriver, query):

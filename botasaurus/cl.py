@@ -147,6 +147,10 @@ def extract_numbers(s):
         numbers = re.findall(r"\b\d+(?:\.\d+)?\b", remove_commas(s))
         # Convert the extracted strings to floats or integers
         return [float(num) if "." in num else int(num) for num in numbers]
+
+    if isinstance(s, int) or isinstance(s, float):
+        return [s]
+
     return []
 
 
@@ -159,6 +163,8 @@ def extract_number(s):
             [float(num) if "." in num else int(num) for num in numbers], 0, max_depth=1
         )
 
+    if isinstance(s, int) or isinstance(s, float):
+        return s
 
 def extract_links(s):
     if isinstance(s, str):
