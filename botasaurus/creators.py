@@ -14,24 +14,30 @@ def create_driver(tiny_profile=False, profile=None, window_size=None, user_agent
         5
     )
 
-def create_requests(proxy=None, user_agent=None):
+def create_requests(proxy=None,  user_agent=None, use_stealth=False,):
+
     # Use windows, chrome (most common) and mixing other platforms and browsers causes bot detection
     
+    if use_stealth:
+      if user_agent:
+        raise ValueError("user_agent can not be used in stealth")
+    
     if user_agent:
-        reqs = AntiDetectRequests.create_scraper(
+        reqs = AntiDetectRequests(
+            use_stealth=use_stealth,
             browser={
                 'custom': user_agent,
             }
         )
     else:
-        reqs = AntiDetectRequests.create_scraper(
+        reqs = AntiDetectRequests(
+            use_stealth=use_stealth,
             browser={
                 'platform': 'windows',
                 'browser': 'chrome',
                 'mobile': False
             }
         )
-                
     if proxy is not None:
         reqs.proxies = {
             'http': proxy,

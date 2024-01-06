@@ -37,6 +37,7 @@ Our aim it to make web scraping extremely easy and save you hours of Development
 Botasaurus comes fully baked, with batteries included. Here is a list of things it can do that no other web scraping framework can:
 
 - **Anti Detect:** Make Anti Detect Requests and Selenium Visits.
+- **Defeat Cloudflare with HTTP Requests:** No HTTP library, be it `httpx`, `hrequests`, or `cloudscraper`, can defeat Cloudflare, but we can! [Read on to learn how.]()
 - **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework to offer SSL support for authenticated proxies. No other web scraping libraries be it cloudscraper, seleniumwire, playwright provides this unique feature, enabling you to easily bypass Cloudflare detection when using authenticated proxies.
 - **Data Cleaners:** Clean data scraped from the website with ease.
 - **Debuggability:** When a crash occurs due to an incorrect selector, etc., Botasaurus pauses the browser instead of closing it, facilitating painless on-the-spot debugging.
@@ -394,6 +395,9 @@ def scrape_article_links(driver: AntiDetectDriver, data):
 ```
  -->
 
+
+
+
 ### Do you support SSL for Authenticated Proxies?
 
 Yes, we are the first Python Library to support SSL for authenticated proxies. Proxy providers like BrightData, IPRoyal, and others typically provide authenticated proxies in the format "http://username:password@proxy-provider-domain:port". For example, "http://greyninja:awesomepassword@geo.iproyal.com:12321".
@@ -455,6 +459,26 @@ Result:
 ![not blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/botasurussuccesspage.png)
 
 NOTE: To run the code above, you will need Node.js installed.
+
+### How to Scrape Cloudflare-Protected Websites with Simple HTTP Requests?
+
+No HTTP library, whether it's `httpx`, `hrequests`, or `cloudscraper`, can defeat Cloudflare. But, we can all thanks to `got-scraping` library. 
+
+All you need to do is specify the `use_stealth` option.
+
+Sounds too good to be true? Run the following code to see it in action:
+
+```python
+from botasaurus import *
+
+@request(use_stealth=True)
+def scrape_heading_task(request: AntiDetectRequests, data):
+    response = request.get('https://www.g2.com/products/github/reviews')
+    print(response.status_code)
+    return response.text
+
+scrape_heading_task()
+```
 
 ### I want to Scrape a large number of Links, a new selenium driver is getting created for each new link, this increases the time to scrape data. How can I reuse Drivers?
 

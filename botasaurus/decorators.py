@@ -564,6 +564,7 @@ def request(
     metadata: Optional[Any] = None, 
     cache: bool = False,
     beep: bool = False,
+    use_stealth: bool=False,
     run_async: bool = False,
     async_queue: bool = False,
     proxy: Optional[Union[Callable[[Any], str], str]] = None,
@@ -618,7 +619,7 @@ def request(
 
                 evaluated_proxy = proxy(data) if callable(proxy) else proxy
                 evaluated_user_agent = user_agent(data) if callable(user_agent) else user_agent
-                reqs = creators.create_requests(evaluated_proxy, evaluated_user_agent)
+                reqs = creators.create_requests(evaluated_proxy, evaluated_user_agent, use_stealth)
 
                 result = None
                 try:
