@@ -58,7 +58,7 @@ class HelperMethodMixin():
                 return self.find_elements(By.XPATH, xpath)
             else:
                 WebDriverWait(self, wait).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, xpath)))
+                    EC.presence_of_element_located((By.XPATH, xpath)))
 
                 return self.find_elements(By.XPATH, xpath)
         except:

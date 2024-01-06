@@ -1,4 +1,7 @@
 from setuptools import setup
+from setuptools.command.install import install
+import subprocess
+import sys
 
 install_requires = [
     "requests",
@@ -24,18 +27,42 @@ def get_description():
     except:
       return None
     
-            
+class PostInstallCommand(install):
+    """Post-installation for installation mode."""
+    
+    def install_npm_package(self, package_name):
+        """Install an npm package using a Python module, suppressing the output and handling errors."""
+        try:
+            subprocess.run([sys.executable, "-m", "javascript", "--install", package_name], 
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                           )
+        except Exception as e:
+            # Log the error if needed
+            pass
+            # print(f"An error occurred while installing {package_name}: {e}")
+
+    def run(self):
+        # Run the standard install
+        super().run()
+
+        print("Installing needed npm packages")
+        # Install each npm package
+        self.install_npm_package("proxy-chain")
+        self.install_npm_package("got-scraping-export")    
+                
 setup(
     name='botasaurus',
     packages=['botasaurus'],
-    version='3.1.12',
+    version='3.1.16',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",
         "Source": "https://github.com/omkarcloud/botasaurus",
         "Tracker": "https://github.com/omkarcloud/botasaurus/issues",
     },
-
+    cmdclass={
+            'install': PostInstallCommand
+        },
     description="The All in One Web Scraping Framework",
     long_description_content_type="text/markdown",
     long_description=get_description(),

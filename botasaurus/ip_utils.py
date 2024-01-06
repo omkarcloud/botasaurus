@@ -57,7 +57,12 @@ def find_ip_details(max_retries=5, proxy=None):
 
         if "readme" in data:
             del data["readme"]
-
+        
+        try:
+          data['latitude'], data['longitude'] = data['loc'].split(',')
+        except:
+          pass
+        
         # Cache the data
         cache[current_ip] = data
         save_cache(cache)
