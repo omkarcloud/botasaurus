@@ -37,7 +37,7 @@ Our aim it to make web scraping extremely easy and save you hours of Development
 Botasaurus comes fully baked, with batteries included. Here is a list of things it can do that no other web scraping framework can:
 
 - **Anti Detect:** Make Anti Detect Requests and Selenium Visits.
-- **Defeat Cloudflare with HTTP Requests:** No HTTP library, be it `httpx`, `hrequests`, or `cloudscraper`, can defeat Cloudflare, but we can! [Read on to learn how.]()
+- **Defeat Cloudflare with HTTP Requests:** No HTTP library, be it `httpx`, `hrequests`, or `cloudscraper`, can defeat Cloudflare, but we can 😤! [Read on to learn how.](https://github.com/omkarcloud/botasaurus/tree/master#how-to-scrape-cloudflare-protected-websites-with-simple-http-requests)
 - **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework to offer SSL support for authenticated proxies. No other web scraping libraries be it cloudscraper, seleniumwire, playwright provides this unique feature, enabling you to easily bypass Cloudflare detection when using authenticated proxies.
 - **Data Cleaners:** Clean data scraped from the website with ease.
 - **Debuggability:** When a crash occurs due to an incorrect selector, etc., Botasaurus pauses the browser instead of closing it, facilitating painless on-the-spot debugging.
@@ -462,7 +462,7 @@ NOTE: To run the code above, you will need Node.js installed.
 
 ### How to Scrape Cloudflare-Protected Websites with Simple HTTP Requests?
 
-No HTTP library, whether it's `httpx`, `hrequests`, or `cloudscraper`, can defeat Cloudflare. But, we can all thanks to `got-scraping` library. 
+No HTTP library, be it `httpx`, `hrequests`, or `cloudscraper`, can defeat Cloudflare. But, we can thanks to `got-scraping` library. 
 
 All you need to do is specify the `use_stealth` option.
 
