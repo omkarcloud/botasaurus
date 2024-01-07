@@ -7,3 +7,6 @@ class AboutBrowser:
         self.lang = lang
         self.beep = beep
         self.is_new = is_new
+        
+        self.retry_attempt = 0
+        self.is_last_retry = False

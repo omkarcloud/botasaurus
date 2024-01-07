@@ -363,6 +363,10 @@ def browser(
                         driver = creators.create_driver(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, is_eager, evaluated_headless, evaluated_lang, block_resources, block_images, beep)
                 result = None
                 try:
+                    if max_retry is not None:
+                        if hasattr(driver, 'about'):
+                            driver.about.is_last_retry = not(( max_retry) > (retry_attempt))
+                            driver.about.retry_attempt = retry_attempt
                     # if evaluated_profile is not None:
                     Profile.profile = evaluated_profile
                     if 'metadata' in kwargs or metadata is not None:

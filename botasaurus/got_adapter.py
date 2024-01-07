@@ -9,13 +9,13 @@ from requests.utils import (
 )
 from requests.structures import CaseInsensitiveDict
 
-got = require('got-scraping-export')
 
-os.environ['timeout'] = '1000'
-os.environ['TIMEOUT'] = '1000'
+os.environ["timeout"] = "1000"
+os.environ["TIMEOUT"] = "1000"
+got = require("got-scraping-export")
+
 
 class GotAdapter:
-
     @staticmethod
     def _create_requests_cookie_jar_from_headers(response_headers):
         """
@@ -25,8 +25,8 @@ class GotAdapter:
         :return: A RequestsCookieJar object containing the cookies.
         """
         cookie_jar = RequestsCookieJar()
-        set_cookie_headers = response_headers.get('set-cookie')
-        
+        set_cookie_headers = response_headers.get("set-cookie")
+
         if set_cookie_headers:
             if isinstance(set_cookie_headers, str):
                 set_cookie_headers = [set_cookie_headers]
@@ -44,95 +44,96 @@ class GotAdapter:
                     #     cookie = SimpleCookie()
                     #     cookie.load(cookie_str)
 
-                        # Add each cookie to the RequestsCookieJar
+                    # Add each cookie to the RequestsCookieJar
                     for key, morsel in cookie.items():
-                        cookie_jar.set(key, morsel.value, domain=morsel['domain'], path=morsel['path'])
+                        cookie_jar.set(
+                            key,
+                            morsel.value,
+                            domain=morsel["domain"],
+                            path=morsel["path"],
+                        )
 
         return cookie_jar
-    
+
     @staticmethod
     def _convert_to_got_request(url, kwargs):
-        
         headerGeneratorOptions = {
-    "browsers": [{"name": "firefox", "minVersion": 114}],
-    "devices": ["desktop"],
-    "locales": ["en-US"],
-    "operatingSystems": ["windows"],
-}
-        # Map 'requests' arguments to 'got-scraping' arguments
-        got_kwargs = {
-            "url": url,
-            "headerGeneratorOptions":headerGeneratorOptions
+            "browsers": [{"name": "firefox", "minVersion": 114}],
+            "devices": ["desktop"],
+            "locales": ["en-US"],
+            "operatingSystems": ["windows"],
         }
-        
+        # Map 'requests' arguments to 'got-scraping' arguments
+        got_kwargs = {"url": url, "headerGeneratorOptions": headerGeneratorOptions}
+
         for key, value in kwargs.items():
-            if key == 'data':
-                got_kwargs['body'] = value
-            elif key == 'json':
-                got_kwargs['json'] = value
-            elif key == 'headers':
-                got_kwargs['headers'] = value
-            elif key == 'params':
-                got_kwargs['searchParams'] = value
-            elif key == 'auth':
+            if key == "data":
+                got_kwargs["body"] = value
+            elif key == "json":
+                got_kwargs["json"] = value
+            elif key == "headers":
+                got_kwargs["headers"] = value
+            elif key == "params":
+                got_kwargs["searchParams"] = value
+            elif key == "auth":
                 if isinstance(value, tuple):
                     username, password = value
-                elif isinstance(value, AuthBase) or isinstance(value, HTTPBasicAuth) :
+                elif isinstance(value, AuthBase) or isinstance(value, HTTPBasicAuth):
                     username, password = value.username, value.password
                 else:
                     raise ValueError("Unsupported authentication type")
 
-                got_kwargs['username'] = username 
-                got_kwargs['password'] = password 
-            elif key == 'cookies':
+                got_kwargs["username"] = username
+                got_kwargs["password"] = password
+            elif key == "cookies":
+                got_kwargs["headers"] = got_kwargs.get("headers", {})
 
-                got_kwargs['headers'] = got_kwargs.get('headers', {})
-                
-                if 'cookie' in got_kwargs['headers']:
-                    got_kwargs['headers']['Cookie'] = got_kwargs['headers']['cookie']
-                    del got_kwargs['headers']['cookie']
+                if "cookie" in got_kwargs["headers"]:
+                    got_kwargs["headers"]["Cookie"] = got_kwargs["headers"]["cookie"]
+                    del got_kwargs["headers"]["cookie"]
 
-                cookie_header = "; ".join([str(x)+"="+str(y) for x,y in value.items()])
-                
+                cookie_header = "; ".join(
+                    [str(x) + "=" + str(y) for x, y in value.items()]
+                )
+
                 if cookie_header:
-                    if got_kwargs['headers']['Cookie']: 
-                        got_kwargs['headers']['Cookie'] = got_kwargs['headers']['Cookie']  + "; "  + cookie_header
-                    else: 
-                        got_kwargs['headers']['Cookie'] = cookie_header
+                    if got_kwargs["headers"].get("Cookie"):
+                        got_kwargs["headers"]["Cookie"] = (
+                            got_kwargs["headers"]["Cookie"] + "; " + cookie_header
+                        )
+                    else:
+                        got_kwargs["headers"]["Cookie"] = cookie_header
 
-                    
                     # or got_kwargs['headers']['cookie']:
-                  
-                
+
                 # if got_kwargs['headers']['cookie']:
                 #     del got_kwargs['headers']['cookie']
             # elif key == 'files':
             #     got_kwargs['files'] = value  # May need special handling
-            elif key == 'timeout':
-                got_kwargs['timeout'] = value * 1000
-            elif key == 'proxies':
-
+            elif key == "timeout":
+                got_kwargs["timeout"] = value * 1000
+            elif key == "proxies":
                 if isinstance(value, dict):
-                    value = value.get('http', value.get('https'))
-                
+                    value = value.get("http", value.get("https"))
+
                 if value:
-                    got_kwargs['proxyUrl'] = value
-            elif key == 'allow_redirects':
-                got_kwargs['followRedirect'] = value
-            elif key == 'stream':
+                    got_kwargs["proxyUrl"] = value
+            elif key == "allow_redirects":
+                got_kwargs["followRedirect"] = value
+            elif key == "stream":
                 raise ValueError("stream is not Supported")
                 # got_kwargs['stream'] = value  # May need adjustment
-            elif key == 'verify':
-                got_kwargs['https'] = {'rejectUnauthorized': value}
-            elif key == 'cert':
+            elif key == "verify":
+                got_kwargs["https"] = {"rejectUnauthorized": value}
+            elif key == "cert":
                 raise ValueError("cert is not Supported")
-            elif key == 'files':
+            elif key == "files":
                 raise ValueError("files is not Supported")
-            elif key == 'hooks':
+            elif key == "hooks":
                 raise ValueError("hooks is not Supported")
             else:
                 raise ValueError(f"{key} is not Supported")
-            # 
+            #
             # Add more conversions for other arguments as needed
         return got_kwargs
 
@@ -149,25 +150,26 @@ class GotAdapter:
         hd = {}
         for item in gr.headers:
             hd[item] = gr.headers[item]
-        
+
         encoding = get_encoding_from_headers(hd)
         response.encoding = encoding
         response.headers = CaseInsensitiveDict(hd)
         response.reason = gr.statusMessage
-        response.cookies = GotAdapter._create_requests_cookie_jar_from_headers(response.headers)
-
+        response.cookies = GotAdapter._create_requests_cookie_jar_from_headers(
+            response.headers
+        )
 
         if gr.body is not None:
             if encoding:
                 response._content = gr.body.encode(encoding)
-            else: 
+            else:
                 response._content = gr.body.encode()
 
         return response
 
     @staticmethod
     def get(url, **kwargs):
-        got_response = got.get(GotAdapter._convert_to_got_request(url, kwargs))
+        got_response = got.get(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
@@ -177,22 +179,22 @@ class GotAdapter:
 
     @staticmethod
     def put(url, **kwargs):
-        got_response = got.put(GotAdapter._convert_to_got_request(url, kwargs))
+        got_response = got.put(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def patch(url, **kwargs):
-        got_response = got.patch(GotAdapter._convert_to_got_request(url, kwargs))
+        got_response = got.patch(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def head(url, **kwargs):
-        got_response = got.head(GotAdapter._convert_to_got_request(url, kwargs))
+        got_response = got.head(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def delete(url, **kwargs):
-        got_response = got.delete(GotAdapter._convert_to_got_request(url, kwargs))
+        got_response = got.delete(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
         return GotAdapter._convert_to_requests_response(got_response)
 
 
@@ -200,10 +202,12 @@ if __name__ == "__main__":
     # Initiate the web scraping task
 
     # gethttpbin()
-    response = GotAdapter.get("https://www.google.com/", headers = {
-                    # "Referer": "https://www.google.com/",
-
-    })
+    response = GotAdapter.get(
+        "https://www.google.com/",
+        headers={
+            # "Referer": "https://www.google.com/",
+        },
+    )
     # print(response.json()['region'])
     # print(response._original_response.msg)
     # resp = requests.get('https://www.google.com/',  proxies=)

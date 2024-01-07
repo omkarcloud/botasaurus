@@ -12,7 +12,7 @@ class AntiDetectRequests(CloudScraper):
         if self.use_stealth:
             # Dynamically import GotAdapter
             global GotAdapter
-            from got_adapter import GotAdapter
+            from .got_adapter import GotAdapter
 
     def request(self, method, url, *args, **kwargs):
         if self.use_stealth:

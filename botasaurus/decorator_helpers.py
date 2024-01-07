@@ -101,7 +101,8 @@ def measure_time(_func: Optional[Callable] = None):
             start_time = time()
             result = func(*args, **kwargs)
             end_time = time()
-            print(f"Execution time of {func.__name__}: {end_time - start_time} seconds")
+            tm  = end_time - start_time
+            print(f"Execution time of {func.__name__}: {tm:.2f} seconds")
             return result
 
         return wrapper
