@@ -10,7 +10,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from botasaurus.output import is_slash_not_in_filename
+from .output import is_slash_not_in_filename
 
 
 from .decorators_utils import  create_directory_if_not_exists

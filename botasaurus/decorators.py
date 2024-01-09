@@ -9,6 +9,8 @@ from datetime import datetime
 
 from joblib import Parallel, delayed
 
+from .check_and_download_driver import check_and_download_driver
+
 from .utils import write_file
 
 from .formats import Formats
@@ -359,7 +361,7 @@ def browser(
                     options, driver_attributes, close_proxy = create_options_and_driver_attributes_and_close_proxy(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, evaluated_headless, evaluated_lang,)
                     desired_capabilities  = create_capabilities(is_eager)
                     about = create_about(evaluated_proxy, evaluated_lang, beep, driver_attributes,  )
-                    
+                    check_and_download_driver()
                     if create_driver:
                         driver = create_driver(data, options, desired_capabilities)
 

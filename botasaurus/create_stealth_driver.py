@@ -1,5 +1,5 @@
 from typing import Callable, Any, Optional
-from botasaurus.opponent import Opponent
+from .opponent import Opponent
 from .anti_detect_driver import AntiDetectDriver
 from time import sleep, time
 from .chrome_launcher_adapter import ChromeLauncherAdapter

@@ -48,13 +48,13 @@ class PostInstallCommand(install):
         print("Installing needed npm packages")
         # Install each npm package
         self.install_npm_package("proxy-chain")
-        self.install_npm_package("chrome-launcher")    
         self.install_npm_package("got-scraping-export")    
+        self.install_npm_package("chrome-launcher")    
                 
 setup(
     name='botasaurus',
     packages=['botasaurus'],
-    version='3.1.19',
+    version='3.1.23',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",
