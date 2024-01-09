@@ -4,6 +4,7 @@ import os
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from shutil import rmtree
+from botasaurus.check_and_download_driver import check_and_download_driver
 from botasaurus.get_chrome_version import get_driver_path
 
 from .driver_about import AboutBrowser
@@ -216,6 +217,7 @@ def load_cookies(driver: AntiDetectDriver, profile):
 
 def create_selenium_driver(options, desired_capabilities, attempt_download=True):
     try:
+        check_and_download_driver()
         path = relative_path(get_driver_path(), 0)
         driver = AntiDetectDriver(
             desired_capabilities=desired_capabilities,
