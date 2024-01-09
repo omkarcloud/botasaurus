@@ -10,7 +10,6 @@ install_requires = [
     "selenium==4.5.0",
     "beautifulsoup4>=4.11.2",
     "joblib>=1.3.2",
-    "selenium-wire",
     "botasaurus-proxy-authentication",
     'psutil',
 ]
@@ -54,7 +53,7 @@ class PostInstallCommand(install):
 setup(
     name='botasaurus',
     packages=['botasaurus'],
-    version='3.1.24',
+    version='3.1.26',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",
