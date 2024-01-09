@@ -329,5 +329,24 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
 
         return driver
 
+def do_create_driver_with_custom_driver_creator(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_resources, block_images, beep, create_driver):
+
+        options, driver_attributes, close_proxy = create_options_and_driver_attributes_and_close_proxy(tiny_profile, profile, window_size, user_agent, proxy, headless, lang,)
+        desired_capabilities  = create_capabilities(is_eager)
+
+        driver = create_driver(options, desired_capabilities)
+        # create_selenium_driver(options, desired_capabilities)
+
+        driver.about = create_about(proxy, lang, beep, driver_attributes,  )
+
+        if tiny_profile:
+            load_cookies(driver, driver.about.profile)
+
+        block_resources_if_should(driver, block_resources, block_images)
+
+        if close_proxy:
+            driver.close_proxy = close_proxy
+
+        return driver
 
 

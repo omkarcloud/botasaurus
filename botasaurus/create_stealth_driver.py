@@ -3,7 +3,7 @@ from .opponent import Opponent
 from .anti_detect_driver import AntiDetectDriver
 from time import sleep, time
 from .chrome_launcher_adapter import ChromeLauncherAdapter
-from .create_driver_utils import create_selenium_driver
+from .create_driver_utils import create_selenium_driver, do_create_driver_with_custom_driver_creator
 from selenium.webdriver.chrome.options import Options
 
 
@@ -154,9 +154,11 @@ def do_create_stealth_driver(data, options, desired_capabilities, start_url, wai
     chrome = launch_chrome(start_url, options._arguments)
     debug_port = chrome.port
 
-    if wait:
-        print(f"Waiting {wait} seconds before connecting to Chrome...")
-        sleep(wait)
+
+    if start_url:
+        if wait:
+            print(f"Waiting {wait} seconds before connecting to Chrome...")
+            sleep(wait)
 
     remote_driver_options = Options()
 
@@ -167,7 +169,8 @@ def do_create_stealth_driver(data, options, desired_capabilities, start_url, wai
     remote_driver = create_selenium_driver(remote_driver_options, desired_capabilities)
 
     # input('after create')
-    bypass_detection(remote_driver)
+    if start_url:
+        bypass_detection(remote_driver)
     return remote_driver
 
 
@@ -185,7 +188,11 @@ create_driver = create_stealth_driver(start_url=None)
     )
 
 
-# python -m botasaurus.create_stealth_driver
+def create_stealth_driver_instance(start_url="NONE", wait=8, add_arguments: Optional[Callable[[Options], None]] = None):
+    def create_driver(options, desired_capabilities):
+        return create_stealth_driver(start_url=start_url, wait=wait, add_arguments=add_arguments)({}, options, desired_capabilities)
+    return do_create_driver_with_custom_driver_creator(None, None, None, None, None, False, False, None, False, False, True,  create_driver)
+
 if __name__ == "__main__":
     chrome = launch_chrome("https://www.000webhost.com/cpanel-login", [])
     create_stealth_driver()

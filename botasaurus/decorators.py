@@ -364,7 +364,6 @@ def browser(
                     check_and_download_driver()
                     if create_driver:
                         driver = create_driver(data, options, desired_capabilities)
-
                         if not driver:
                           driver = create_selenium_driver(options, desired_capabilities)
                         
