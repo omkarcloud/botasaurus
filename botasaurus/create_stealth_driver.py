@@ -1,3 +1,4 @@
+from .check_and_download_driver import check_and_download_driver
 from typing import Callable, Any, Optional
 from .opponent import Opponent
 from .anti_detect_driver import AntiDetectDriver
@@ -189,6 +190,7 @@ create_driver = create_stealth_driver(start_url=None)
 
 
 def create_stealth_driver_instance(start_url="NONE", wait=8, add_arguments: Optional[Callable[[Options], None]] = None):
+    check_and_download_driver()
     def create_driver(options, desired_capabilities):
         return create_stealth_driver(start_url=start_url, wait=wait, add_arguments=add_arguments)({}, options, desired_capabilities)
     return do_create_driver_with_custom_driver_creator(None, None, None, None, None, False, False, None, False, False, True,  create_driver)
