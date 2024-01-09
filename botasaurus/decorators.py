@@ -16,7 +16,7 @@ from .formats import Formats
 from .output import write_json, write_csv, fix_csv_filename, fix_json_filename
 from .cache import Cache,  is_dont_cache, _get, _has, _get_cache_path, _create_cache_directory_if_not_exists
 
-from .create_driver_utils import add_about, save_cookies
+from .create_driver_utils import  block_resources_if_should, create_about, create_capabilities, create_options_and_driver_attributes_and_close_proxy, load_cookies, save_cookies, create_selenium_driver
 from . import creators
 # import create_driver, create_requests
 from .anti_detect_driver import AntiDetectDriver
@@ -356,11 +356,29 @@ def browser(
                 elif reuse_driver and len(_driver_pool) > 0:
                     driver = _driver_pool.pop()
                 else:
+                    options, driver_attributes, close_proxy = create_options_and_driver_attributes_and_close_proxy(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, evaluated_headless, evaluated_lang,)
+                    desired_capabilities  = create_capabilities(is_eager)
+                    about = create_about(evaluated_proxy, evaluated_lang, beep, driver_attributes,  )
+                    
                     if create_driver:
-                        driver = create_driver(data)
-                        add_about(tiny_profile, proxy, lang, beep, {}, driver)
+                        driver = create_driver(data, options, desired_capabilities)
+
+                        if not driver:
+                          driver = create_selenium_driver(options, desired_capabilities)
+                        
                     else:
-                        driver = creators.create_driver(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, is_eager, evaluated_headless, evaluated_lang, block_resources, block_images, beep)
+                        driver = create_selenium_driver(options, desired_capabilities)
+
+                    driver.about = about
+                    
+                    if tiny_profile:
+                        load_cookies(driver, driver.about.profile)
+
+                    block_resources_if_should(driver, block_resources, block_images)
+
+                    if close_proxy:
+                        driver.close_proxy = close_proxy
+
                 result = None
                 try:
                     if max_retry is not None:

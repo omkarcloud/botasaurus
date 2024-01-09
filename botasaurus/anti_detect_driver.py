@@ -87,11 +87,12 @@ class AntiDetectDriver(webdriver.Chrome):
     def get_bot_detected_by(self):
 
         pmx = self.get_element_or_none(
-            "//*[text()='Please verify you are a human']")
+            "//*[text()='Please verify you are a human']", None)
+
         if pmx is not None:
             return Opponent.PERIMETER_X
 
-        clf = self.get_element_or_none_by_selector("#challenge-running")
+        clf = self.get_element_or_none_by_selector("#challenge-running", None)
         if clf is not None:
             return Opponent.CLOUDFLARE
 

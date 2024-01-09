@@ -1,7 +1,6 @@
 from time import sleep
 import os
 
-from selenium.common.exceptions import SessionNotCreatedException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from shutil import rmtree
@@ -215,44 +214,31 @@ def load_cookies(driver: AntiDetectDriver, profile):
 
     # driver.execute_cdp_cmd('Network.disable', {})
 
-
-
-def create_selenium_driver(proxy, options, desired_capabilities, path, attempt_download=True):
-    
+def create_selenium_driver(options, desired_capabilities, attempt_download=True):
     try:
-        if proxy is not None:
-            from botasaurus_proxy_authentication import add_proxy_options
-            options = add_proxy_options(options, proxy)
-
+        path = relative_path(get_driver_path(), 0)
         driver = AntiDetectDriver(
             desired_capabilities=desired_capabilities,
             chrome_options=options,
             executable_path=path,
         )
-
-        if proxy is not None:
-            driver.close_proxy = options.close_proxy
-
         return driver
-
     except SessionNotCreatedException as e:
         if "This version of ChromeDriver only supports Chrome version" in str(e) and attempt_download:
             # Handle the specific case where ChromeDriver version is not compatible
             do_download_driver()
             # Retry creating the Selenium driver once more
-            return create_selenium_driver(proxy, options, desired_capabilities, path, attempt_download=False)
+            return create_selenium_driver( options, desired_capabilities, attempt_download=False)
         else:
             # If the exception message is different, or we already attempted to download, re-raise the exception
             raise
 
-def add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver):
+
+def create_about(proxy, lang, beep, driver_attributes,):
     about = AboutBrowser(window_size=driver_attributes.get('window_size'), user_agent=driver_attributes.get('user_agent'), profile=driver_attributes.get('profile'),proxy=proxy, lang=lang, beep=beep, is_new=True)
-    driver.about = about
-    if tiny_profile:
-        load_cookies(driver, about.profile)
+    return about
 
-def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_resources, block_images, beep):
-
+def create_options_and_driver_attributes_and_close_proxy(tiny_profile, profile, window_size, user_agent, proxy,  headless, lang):
         if tiny_profile and profile is None:
             raise Exception('Profile must be given when using tiny profile')
 
@@ -278,9 +264,6 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
         
         hide_automation_bar(options)
 
-        
-
-
         # Necessary Options
         # options.add_argument("--ignore-certificate-errors")
         # options.add_argument("--disable-extensions")
@@ -290,19 +273,24 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
         #     options.add_argument("--disable-web-security")
         #     options.add_argument("--disable-application-cache")
 
-        # GOOD option
         options.add_argument("--disable-site-isolation-trials")
         
-        
-        desired_capabilities = get_eager_strategy() if is_eager  else None
-
-        path = relative_path(get_driver_path(), 0)
-
-        driver = create_selenium_driver(proxy, options, desired_capabilities, path)
         driver_attributes['profile'] = profile
-        # print(driver_attributes)
 
+        if proxy is not None:
+            from botasaurus_proxy_authentication import add_proxy_options
+            options = add_proxy_options(options, proxy)
+        
+            return options, driver_attributes, options.close_proxy
+        else:
 
+            return options, driver_attributes, None
+
+def create_capabilities(is_eager):
+    desired_capabilities = get_eager_strategy() if is_eager  else None
+    return desired_capabilities
+
+def block_resources_if_should(driver, block_resources, block_images):
         default_patterns = []
 
         if block_resources is True:
@@ -322,7 +310,23 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
             driver.execute_cdp_cmd('Network.setBlockedURLs', {"urls": default_patterns})
 
 
-        add_about(tiny_profile, proxy, lang, beep, driver_attributes, driver)
+def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_resources, block_images, beep):
+
+        options, driver_attributes, close_proxy = create_options_and_driver_attributes_and_close_proxy(tiny_profile, profile, window_size, user_agent, proxy, headless, lang,)
+        desired_capabilities  = create_capabilities(is_eager)
+
+        driver = create_selenium_driver(options, desired_capabilities)
+
+        driver.about = create_about(proxy, lang, beep, driver_attributes,  )
+
+        if tiny_profile:
+            load_cookies(driver, driver.about.profile)
+
+        block_resources_if_should(driver, block_resources, block_images)
+
+        if close_proxy:
+            driver.close_proxy = close_proxy
+
         return driver
 
 
