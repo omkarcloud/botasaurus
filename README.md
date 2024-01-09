@@ -36,7 +36,7 @@ Our aim it to make web scraping extremely easy and save you hours of Development
 
 Botasaurus comes fully baked, with batteries included. Here is a list of things it can do that no other web scraping framework can:
 
-- **Anti Detect:** Make Anti Detect Requests and Selenium Visits.
+- **Most Stealthiest Framework LITERALLY**: In the entire JS and Python Universe, we are the most stealthiest framework literally, even more stealthy than `undetected-chromedriver` and `puppeteer-stealth`. Our framework can easily bypasses Cloudflare JS and Captcha Challenges and your bots can easily visit websites like `https://nowsecure.nl/`. For more details, [see this FAQ.]()
 - **Defeat Cloudflare with HTTP Requests:** No HTTP library, be it `httpx`, `hrequests`, or `cloudscraper`, can defeat Cloudflare, but we can 😤! [Read on to learn how.](https://github.com/omkarcloud/botasaurus/tree/master#how-to-scrape-cloudflare-protected-websites-with-simple-http-requests)
 - **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework to offer SSL support for authenticated proxies. No other web scraping libraries be it cloudscraper, seleniumwire, playwright provides this unique feature, enabling you to easily bypass Cloudflare detection when using authenticated proxies.
 - **Data Cleaners:** Clean data scraped from the website with ease.
@@ -206,6 +206,8 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
     heading = driver.text('h1')
     print(heading)
     return heading
+
+scrape_heading_task()
 ```
 
 After running this script, you'll notice that the G2 page opens successfully, and the code prints the page's heading.
@@ -479,6 +481,156 @@ def scrape_heading_task(request: AntiDetectRequests, data):
 
 scrape_heading_task()
 ```
+
+### Can you bypass Cloudflare/Imperva Challenges?
+
+Yes, we can. Let's learn about various challenges and the best ways to bypass them.
+
+*Connection Challenge*
+
+This is the most popular challenge and requires making a browser-like connection with appropriate headers to the target website. It's commonly used to protect:
+- Product Pages
+- Blog Pages
+- Search Result Pages
+
+Example Page: https://www.g2.com/products/github/reviews
+
+#### What Does Not Work?
+
+Using `httpx`, `hrequests`, or `cloudscraper` fails because, while they send browser-like user agents and headers, they don't establish a browser-like connection, leading to detection.
+
+#### What Works?
+
+- Use the stealth request mode and visit via Google (default behavior). [Recommended]
+```python
+from botasaurus import *
+
+@request(use_stealth=True)
+def scrape_heading_task(request: AntiDetectRequests, data):
+    response = request.get('https://www.g2.com/products/github/reviews')
+    print(response.status_code)
+    return response.text
+
+scrape_heading_task()
+```
+
+- Use a real Chrome browser with Selenium and visit via Google. Example Code:
+```python
+from botasaurus import *
+
+@browser()
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.google_get("https://www.g2.com/products/github/reviews")
+    driver.prompt()
+    heading = driver.text('h1')
+    return heading
+
+scrape_heading_task()
+```
+
+*JS Challenge*
+
+This challenge requires performing JS computations that differentiates a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. 
+
+It's commonly used to protect:
+- Login/Sign Up pages
+- Sign Up Flows
+
+Example Pages: https://nowsecure.nl/, https://www.000webhost.com/cpanel-login, https://signup.live.com/
+
+#### What Does Not Work?
+
+Bare `selenium` and `puppeteer` definitely do not work due to a lot of automation noise. `undetected-chromedriver` and `puppeteer-stealth` also fail to access sites protected by JS Challenge like https://nowsecure.nl/. 
+
+#### What Works?
+
+The Stealth Browser can easily bypass JS Challenges. See the truth for yourself by running this code:
+
+```python
+from botasaurus import *
+from botasaurus.create_stealth_driver import create_stealth_driver
+
+@browser(
+    create_driver=create_stealth_driver(
+        start_url="https://nowsecure.nl/",
+    ),
+)
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.prompt()
+    heading = driver.text('h1')
+    return heading
+
+scrape_heading_task()    
+```
+
+*JS Challenge with Captchas*
+
+This challenge involves JS computations plus solving a Captcha. It's used to protect pages which are rarely but sometimes visited by humans, like:
+- 5th Page of G2 Reviews
+- 8th Page of Google Search Results
+
+Example Page: https://www.g2.com/products/github/reviews.html?page=5&product_id=github
+
+#### What Does Not Work?
+
+Again, tools like `selenium`, `puppeteer`, `undetected-chromedriver`, and `puppeteer-stealth` fail.
+
+#### What Works?
+
+The Stealth Browser can easily bypass these challenges. See it in action by running this code:
+
+```python
+from botasaurus import *
+from botasaurus.create_stealth_driver import create_stealth_driver
+
+@browser(
+    create_driver=create_stealth_driver(
+        start_url="https://www.g2.com/products/github/reviews.html?page=5&product_id=github",
+    ),
+)
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.prompt()
+    heading = driver.text('h1')
+    return heading
+
+scrape_heading_task()
+```
+
+*Notes:*
+1. In stealth browser mode, we default to an 8-second wait before connecting to the browser via Selenium because connecting too early gets us detected. You can customize the wait time by using the `wait` argument. 
+```python
+from botasaurus import *
+from botasaurus.create_stealth_driver import create_stealth_driver
+
+@browser(
+    create_driver=create_stealth_driver(
+        start_url="https://nowsecure.nl/",
+        wait=4, # Waits for 4 seconds before connecting to browser
+    ),
+)
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.prompt()
+    heading = driver.text('h1')
+    return heading
+
+scrape_heading_task()
+```
+
+Here are some recommendations for wait times:
+
+- For active development with fast internet, set the wait time to **4 seconds**. You most likely have a fast internet connection, so set the wait time to **4 seconds** when developing your Bot.
+- If during development you have a slow internet connection, then stick with the default **8 seconds**.
+- When running your bot in the cloud via proxies, increase the wait time to **20 seconds** due to longer data download times.
+- For slow proxies, set the wait time to **28 seconds**.
+
+2. If you get detected, try changing your IP. Let me share with you  The **fastest**, **simplest**, and best of all, the **free** way to change your IP:
+
+- **Connect your PC to the Internet via a Mobile Hotspot.**
+- **Toggle airplane mode off and on on your mobile device.** This will assign you a new IP address.
+- **Turn the hotspot back on.**
+- **Voila, you have a new, high-quality mobile IP for free!**
+
+3. If you are running the bot in Docker on a server and experiencing detection issues, it's suggested to use residential proxies."
 
 ### I want to Scrape a large number of Links, a new selenium driver is getting created for each new link, this increases the time to scrape data. How can I reuse Drivers?
 
@@ -1101,11 +1253,12 @@ If you need guidane on your web scraping Project or have some questions, message
 
 ## Thanks
 
-- Kudos to the Apify Team for creating `proxy-chain` library. The implementation of SSL-based Proxy Authentication wouldn't be possible without their groundbreaking work on `proxy-chain`.
+- Kudos to the Apify Team for creating the `got-scraping` and `proxy-chain` libraries. The implementation of stealth Anti Detect Requests and SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `got-scraping` and `proxy-chain`.
+- Shout out to zfcsoftware for developing `puppeteer-real-browser`; it helped us in creating Botasaurus Anti Detected. Show your appreciation by subscribing to their [YouTube channel](https://www.youtube.com/@zfcsoftware/videos) ⚡.
 - A special thanks to the Selenium team for creating Selenium, an invaluable tool in our toolkit.
-- Thanks to the creators of the cloudscraper library, which serves as the backbone behind our request Module.
-- Finally, a big thank you to you for choosing Botasaurus.
- 
+- Thanks to Cloudflare, DataDome, Imperva, and all bot detectors. Had you not been there, we wouldn't be either 😅.
+- Finally, a humungous thank you for choosing Botasaurus.
+
 ## Love It? [Star It! ⭐](https://github.com/omkarcloud/botasaurus)
 
 Become one of our amazing stargazers by giving us a star ⭐ on GitHub!
