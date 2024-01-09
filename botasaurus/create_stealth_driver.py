@@ -149,7 +149,7 @@ def bypass_detection(driver: AntiDetectDriver):
 def do_create_stealth_driver(data, options, desired_capabilities, start_url, wait, add_arguments):
     options = clean_options(options)
     if add_arguments:
-      add_arguments(options)
+      add_arguments(data, options)
     
     chrome = launch_chrome(start_url, options._arguments)
     debug_port = chrome.port

@@ -78,15 +78,18 @@ def process_password(word):
 
     return word
 
-def __get_person(user_data: dict):
+def __get_person(user_data: dict, use_temp_email):
     email = user_data["email"]
     
     dob = convert_timestamp(user_data["dob"]["date"])
 
     username = user_data["email"].replace("@example.com" , "").replace(".", "") + str(dob['year'])
     
-    email = TempMail.generate_email(username)
-
+    if use_temp_email:
+      email = TempMail.generate_email(username)
+    else:
+      email = f'{username}@gmail.com'
+         
     address = str(user_data["location"]["street"]["number"]) + ", " + user_data["location"]["street"]["name"] + ", " + user_data["location"]["city"] + ", " +user_data["location"]["state"] +  ", " + user_data["location"]["country"] 
 
     
@@ -109,7 +112,7 @@ def __get_person(user_data: dict):
 
 
 
-def generate_persons(count: int, gender: Gender = Gender.BOTH, country: Country = None):
+def generate_persons(count: int, gender: Gender = Gender.BOTH, country: Country = None, use_temp_email=True):
 
     if not isinstance(count, int) or count < 1:
         count = 1
@@ -124,7 +127,7 @@ def generate_persons(count: int, gender: Gender = Gender.BOTH, country: Country 
 
     results = r.json()['results']
 
-    final = [__get_person(data) for data in results]
+    final = [__get_person(data, use_temp_email) for data in results]
 
     ids =  [{"id":  1 + i } for i in range(len(results))]
     
@@ -133,8 +136,8 @@ def generate_persons(count: int, gender: Gender = Gender.BOTH, country: Country 
     return datas
 
 
-def generate_user(gender: Gender = Gender.BOTH, country: Country = None):
-            return generate_persons(1, gender, country)[0]
+def generate_user(gender: Gender = Gender.BOTH, country: Country = None, use_temp_email=True):
+            return generate_persons(1, gender, country, use_temp_email)[0]
 
-def generate_users(n, gender: Gender = Gender.BOTH, country: Country = None):
-            return generate_persons(n, gender, country)
+def generate_users(n, gender: Gender = Gender.BOTH, country: Country = None, use_temp_email=True):
+            return generate_persons(n, gender, country, use_temp_email)
