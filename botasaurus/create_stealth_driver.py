@@ -1,5 +1,6 @@
+from .exceptions import CloudflareDetection
 from .check_and_download_driver import check_and_download_driver
-from typing import Callable, Any, Optional
+from typing import Callable, Any, Optional, Union
 from .opponent import Opponent
 from .anti_detect_driver import AntiDetectDriver
 from time import sleep, time
@@ -86,68 +87,127 @@ def launch_chrome(start_url, additional_args):
     return instance
 
 
-def wait_till_cloudflare_leaves(driver):
-    WAIT_TIME = 6
+def get_rayid(driver:AntiDetectDriver):
+    ray = driver.text(".ray-id code")
+    if ray:
+      return ray
 
+
+def get_iframe(driver:AntiDetectDriver):
+      driver.prompt()
+      return driver.get_element_or_none_by_selector(
+                        '#turnstile-wrapper iframe', None
+                    )
+
+def wait_till_cloudflare_leaves(driver:AntiDetectDriver, previous_ray_id, raise_exception):
+
+    WAIT_TIME = 30
+    start_time = time()
     while True:
         opponent = driver.get_bot_detected_by()
         if opponent != Opponent.CLOUDFLARE:
             return 
+        current_ray_id = get_rayid(driver)
+        if current_ray_id:
+          
+          israychanged = current_ray_id != previous_ray_id
+          
+          if israychanged:
 
-        start_time = time()
+            WAIT_TIME = 12
+            start_time = time()
+
+            while True:
+                # if iframe:
+                #     print(iframe)
+                    
+                    iframe = get_iframe(driver)
+                    driver.switch_to.frame(iframe)
+                    # 
+                    
+                    checkbox = driver.get_element_or_none_by_selector(
+                        '[type="checkbox"]', None
+                    )
+                    takinglong = driver.get_element_or_none_by_text_contains("is taking longer than expected", None)
+                    if takinglong or checkbox:
+                        driver.switch_to.default_content()
+
+                        # new captcha given 
+                        print("Cloudflare has detected us. Exiting ...")
+                        if raise_exception:
+                            raise CloudflareDetection()
+                        return
+
+                    elapsed_time = time() - start_time
+                    if elapsed_time > WAIT_TIME:
+                        driver.switch_to.default_content()
+
+                        print("Cloudflare has not given us a captcha. Exiting ...")
+                        
+                        if raise_exception:
+                            raise CloudflareDetection()
+
+                        return
+                    
+                    driver.switch_to.default_content()
+                    
+                    opponent = driver.get_bot_detected_by()
+                    if opponent != Opponent.CLOUDFLARE:
+                        return 
+
+                    sleep(1.79)
+                    
+
         elapsed_time = time() - start_time
         if elapsed_time > WAIT_TIME:
+            print("Cloudflare is taking too long to verify Captcha Submission. Exiting ...")
+            if raise_exception:
+              raise CloudflareDetection()
+            
             return
 
         sleep(0.83)
 
-def bypass_detection(driver: AntiDetectDriver):
+def bypass_detection(driver: AntiDetectDriver, raise_exception):
     opponent = driver.get_bot_detected_by()
     if opponent == Opponent.CLOUDFLARE:
-        iframe = driver.get_element_or_none_by_selector("iframe")
-        if iframe:
+            iframe = get_iframe(driver)
+            while not iframe:
+              opponent = driver.get_bot_detected_by()
+              if opponent != Opponent.CLOUDFLARE:
+                return 
+              sleep(1)
+              iframe = get_iframe(driver)
+
+            previous_ray_id = get_rayid(driver)
             driver.switch_to.frame(iframe)
-            start_time = time()
 
             WAIT_TIME = 8
+            start_time = time()
 
             while True:
                 checkbox = driver.get_element_or_none_by_selector(
                     '[type="checkbox"]', None
                 )
                 if checkbox:
-                    # sleep(1.7)
                     checkbox.click()
                     driver.switch_to.default_content()
-                    wait_till_cloudflare_leaves(driver)
-
+                    wait_till_cloudflare_leaves(driver, previous_ray_id, raise_exception)
                     return
 
                 elapsed_time = time() - start_time
                 if elapsed_time > WAIT_TIME:
-                    print("Failed to solve Cloudflare Captcha")
                     driver.switch_to.default_content()
+
+                    print("Cloudflare has not given us a captcha. Exiting ...")
+                    
+                    if raise_exception:
+                        raise CloudflareDetection()
+
                     return
                 sleep(1.79)
 
-            # get bot detected
-            # if is cloudflare
-            # switch to frame
-            # while True
-    # if checkbox (2 second wait)
-    # then click
-    # switch to default
-    # return
-    # find checkbox
-
-    # then while True
-    #  If get to
-    #
-
-    #
-
-
-def do_create_stealth_driver(data, options, desired_capabilities, start_url, wait, add_arguments):
+def do_create_stealth_driver(data, options, desired_capabilities, start_url, wait,  raise_exception,add_arguments):
     options = clean_options(options)
     if add_arguments:
       add_arguments(data, options)
@@ -155,9 +215,8 @@ def do_create_stealth_driver(data, options, desired_capabilities, start_url, wai
     chrome = launch_chrome(start_url, options._arguments)
     debug_port = chrome.port
 
-
-    if start_url:
-        if wait:
+    should_wait = start_url and wait
+    if should_wait:
             print(f"Waiting {wait} seconds before connecting to Chrome...")
             sleep(wait)
 
@@ -166,33 +225,56 @@ def do_create_stealth_driver(data, options, desired_capabilities, start_url, wai
     remote_driver_options.add_experimental_option(
         "debuggerAddress", f"127.0.0.1:{debug_port}"
     )
-
     remote_driver = create_selenium_driver(remote_driver_options, desired_capabilities)
 
+    if not should_wait:
+            sleep(1) # Still do some wait to prevent exceptions
+
     # input('after create')
-    if start_url:
-        bypass_detection(remote_driver)
+    try:
+        if start_url:
+            bypass_detection(remote_driver, raise_exception)
+    except CloudflareDetection as e:
+        
+        try:
+            remote_driver.close()
+            remote_driver.quit()
+        except:
+            pass
+
+        raise e
+
+
     return remote_driver
 
 
-def create_stealth_driver(start_url="NONE", wait=8, add_arguments: Optional[Callable[[Options], None]] = None):
-    if start_url == "NONE":
-        message = """To best stealthiness against Cloudflare and other bot detectors, it is recommended to provide a "start_url" to create_stealth_driver. 
-However, if you wish not to start Chrome with a URL, you can pass 'None' as the argument. For example: 
+def create_stealth_driver(start_url:Optional[Union[Callable[[Any], str], str]]="NONE", wait=8, 
+                          
+                          raise_exception=False, 
+                          add_arguments: Optional[Callable[[Any, Options], None]] = None, ):
+    
+    def run(data, options, desired_capabilities):
+        evaluated_start_url = start_url(data) if callable(start_url) else start_url
+        if evaluated_start_url == "NONE":
+            message = """To best stealthiness against Cloudflare and other bot detectors, it is recommended to provide a "start_url" to create_stealth_driver. 
+    However, if you wish not to start Chrome with a URL, you can pass 'None' as the argument. For example: 
 
-create_driver = create_stealth_driver(start_url=None)
-"""
-        raise ValueError(message)
-
-    return lambda data, options, desired_capabilities: do_create_stealth_driver(
-        data, options, desired_capabilities, start_url, wait, add_arguments
+    create_driver = create_stealth_driver(start_url=None)
+    """
+            raise ValueError(message)
+        return do_create_stealth_driver(
+        data, options, desired_capabilities, evaluated_start_url, wait,  raise_exception, add_arguments,
     )
 
+    return run
 
-def create_stealth_driver_instance(start_url="NONE", wait=8, add_arguments: Optional[Callable[[Options], None]] = None):
+
+def create_stealth_driver_instance(start_url:Optional[Union[Callable[[Any], str], str]]="NONE", wait=8, 
+                                   raise_exception=False, 
+                                   add_arguments: Optional[Callable[[Any, Options], None]] = None):
     check_and_download_driver()
     def create_driver(options, desired_capabilities):
-        return create_stealth_driver(start_url=start_url, wait=wait, add_arguments=add_arguments)({}, options, desired_capabilities)
+        return create_stealth_driver(start_url=start_url, wait=wait,raise_exception=raise_exception, add_arguments=add_arguments)({}, options, desired_capabilities)
     return do_create_driver_with_custom_driver_creator(None, None, None, None, None, False, False, None, False, False, True,  create_driver)
 
 if __name__ == "__main__":

@@ -563,7 +563,7 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
 scrape_heading_task()    
 ```
 
-*JS Challenge with Captchas*
+*JS with Captcha Challenge*
 
 This challenge involves JS computations plus solving a Captcha. It's used to protect pages which are rarely but sometimes visited by humans, like:
 - 5th Page of G2 Reviews
@@ -620,8 +620,8 @@ Here are some recommendations for wait times:
 
 - For active development with fast internet, set the wait time to **4 seconds**. You most likely have a fast internet connection, so set the wait time to **4 seconds** when developing your Bot.
 - If during development you have a slow internet connection, then stick with the default **8 seconds**.
-- When running your bot in the cloud via proxies, increase the wait time to **20 seconds** due to longer data download times.
-- For slow proxies, set the wait time to **28 seconds**.
+<!-- - When running your bot in the cloud via proxies, increase the wait time to **20 seconds** due to longer data download times.
+- For slow proxies, set the wait time to **28 seconds**. -->
 
 2. If you get detected, try changing your IP. Let me share with you  The **fastest**, **simplest**, and best of all, the **free** way to change your IP:
 
@@ -630,7 +630,56 @@ Here are some recommendations for wait times:
 - **Turn the hotspot back on.**
 - **Voila, you have a new, high-quality mobile IP for free!**
 
-3. If you are running the bot in Docker on a server and experiencing detection issues, it's suggested to use residential proxies."
+<!-- 3. If you are running the bot in Docker on a server and experiencing detection issues, it's suggested to use residential proxies. -->
+3. Anti Detection Systems can detect fake randomly generated user agents. So, if you are getting detected, especially on Ubuntu with Cloudflare JS with Captcha Challenge, we recommend using your real user agent and window size, not a randomly generated one. Here's how you can do it:
+```python
+from botasaurus import *
+from botasaurus.create_stealth_driver import create_stealth_driver
+
+@browser(
+    user_agent=bt.UserAgent.REAL, 
+    window_size=bt.WindowSize.REAL,
+    create_driver=create_stealth_driver(
+        start_url="https://nowsecure.nl/",
+    ),
+)
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.prompt()
+    heading = driver.text('h1')
+    return heading
+
+scrape_heading_task()
+```
+
+If you are doing web scraping of publicly available data, then the above code is good and recommended to be used. However, if you are creating multiple accounts, then we don't recommend using the above code because the website may use tools like [fingerprint](https://fingerprint.com/) to capture fingerprints and uniquely identify that bots are creating multiple accounts.
+
+4. We expect to bypass Cloudflare 9 out of 10 times. However, in some cases, they do detect us for reasons like IP blacklisting. In such cases, you can use the following code snippet to make your scraper more robust:
+```python
+from botasaurus import *
+from botasaurus.create_stealth_driver import create_stealth_driver
+
+def get_start_url(data):
+    return data
+
+@browser(
+    # proxy="http://username:password@proxy-domain:12321" # optionally use proxy
+    # user_agent=bt.UserAgent.REAL, # Optionally use REAL User Agent
+    # window_size=bt.WindowSize.REAL, # Optionally use REAL Window Size
+    max_retry=5,
+    create_driver=create_stealth_driver(
+        start_url=get_start_url,
+        raise_exception=True, 
+    ),
+)
+def scrape_heading_task(driver: AntiDetectDriver, data):
+    driver.prompt()
+    heading = driver.text('h1')
+    return heading
+
+scrape_heading_task(["https://nowsecure.nl/", "https://steamdb.info/sub/363669/apps"])
+``` 
+
+The above code makes the scraper more robust by raising an exception when detected and retrying up to 5 times to visit the website.
 
 ### I want to Scrape a large number of Links, a new selenium driver is getting created for each new link, this increases the time to scrape data. How can I reuse Drivers?
 
@@ -1239,17 +1288,6 @@ If you need guidane on your web scraping Project or have some questions, message
 
 [![Contact Us on WhatsApp](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/mwa.png)](https://api.whatsapp.com/send?phone=918295042963&text=Hi,%20I%20would%20like%20to%20learn%20more%20about%20your%20products.)
 
-## Sponsors
-
-<p align="center">
-  <h3 align="center">Special Sponsor</h3>
-</p>
-
-<p align="center">
-  <a target="_blank" href="https://www.omkar.cloud/l/bright-data/">
-  <img alt="special sponsor Bright Data" src="https://www.omkar.cloud/images/bright-data-banner.png" width="250">
-  </a>
-</p>
 
 ## Thanks
 

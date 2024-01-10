@@ -1,3 +1,5 @@
+from selenium.common.exceptions import  StaleElementReferenceException
+from bs4 import BeautifulSoup
 from datetime import datetime
 from random import uniform
 from time import sleep
@@ -73,7 +75,12 @@ class AntiDetectDriver(webdriver.Chrome):
         sleep_for_n_seconds(n)
 
     def prompt(self, text="Press Enter To Continue..."):
-        return beep_input(text, self.about.beep)
+        if self.about:
+            bp = self.about.beep
+        else:
+            bp = True
+
+            return beep_input(text, bp)
 
     def short_random_sleep(self):
         sleep_for_n_seconds(uniform(2, 4))
@@ -83,6 +90,9 @@ class AntiDetectDriver(webdriver.Chrome):
 
     def sleep_forever(self):
         sleep_forever()
+
+    def bs4(self) -> BeautifulSoup:
+        return BeautifulSoup(self.page_source, 'html.parser')
 
     def get_bot_detected_by(self):
 
@@ -150,14 +160,18 @@ class AntiDetectDriver(webdriver.Chrome):
             return None
 
 
+    
     def text(self: WebDriver, selector: str,   wait=Wait.SHORT):
-        el = self.get_element_or_none_by_selector(
-                selector, wait)
-        if el is None:
-            # print(f'Element with selector: "{selector}" not found')
-            return None
+        
+        try:
+            el = self.get_element_or_none_by_selector(
+                    selector, wait)
+            if el is None:
+                return None
 
-        return el.text
+            return el.text
+        except StaleElementReferenceException:
+            return self.text(selector,wait)
 
     def text_xpath(self: WebDriver, xpath: str,   wait=Wait.SHORT):
         el = self.get_element_or_none(

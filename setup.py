@@ -4,14 +4,15 @@ import subprocess
 import sys
 
 install_requires = [
-    "requests",
-    "cloudscraper",
-    "chromedriver-autoinstaller-fix",
-    "selenium==4.5.0",
-    "beautifulsoup4>=4.11.2",
-    "joblib>=1.3.2",
-    "botasaurus-proxy-authentication",
     'psutil',
+    "requests",
+    "javascript",
+    "joblib>=1.3.2",
+    "beautifulsoup4>=4.11.2",
+    "chromedriver-autoinstaller-fix",
+    "cloudscraper",
+    "selenium==4.5.0",
+    "botasaurus-proxy-authentication",
 ]
 extras_require = {}
 cpython_dependencies = [
@@ -26,6 +27,8 @@ def get_description():
     except:
       return None
     
+
+
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
     
@@ -40,6 +43,13 @@ class PostInstallCommand(install):
             pass
             # print(f"An error occurred while installing {package_name}: {e}")
 
+        # This really loads it up.
+        try:
+          from javascript import require
+          pkg = require(package_name)
+        except Exception as e:
+          pass
+            
     def run(self):
         # Run the standard install
         super().run()
@@ -53,7 +63,7 @@ class PostInstallCommand(install):
 setup(
     name='botasaurus',
     packages=['botasaurus'],
-    version='3.1.27',
+    version='3.1.29',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",

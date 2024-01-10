@@ -310,7 +310,7 @@ def block_resources_if_should(driver, block_resources, block_images):
             driver.execute_cdp_cmd('Network.setBlockedURLs', {"urls": default_patterns})
 
 
-def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_resources, block_images, beep):
+def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_resources, block_images, beep) -> AntiDetectDriver:
 
         options, driver_attributes, close_proxy = create_options_and_driver_attributes_and_close_proxy(tiny_profile, profile, window_size, user_agent, proxy, headless, lang,)
         desired_capabilities  = create_capabilities(is_eager)
@@ -329,7 +329,7 @@ def do_create_driver(tiny_profile, profile, window_size, user_agent, proxy, is_e
 
         return driver
 
-def do_create_driver_with_custom_driver_creator(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_resources, block_images, beep, create_driver):
+def do_create_driver_with_custom_driver_creator(tiny_profile, profile, window_size, user_agent, proxy, is_eager, headless, lang, block_resources, block_images, beep, create_driver) -> AntiDetectDriver:
 
         options, driver_attributes, close_proxy = create_options_and_driver_attributes_and_close_proxy(tiny_profile, profile, window_size, user_agent, proxy, headless, lang,)
         desired_capabilities  = create_capabilities(is_eager)

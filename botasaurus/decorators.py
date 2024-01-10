@@ -1,3 +1,4 @@
+from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import WebDriverException
 from functools import wraps
 from queue import Queue
@@ -8,6 +9,8 @@ import os
 from datetime import datetime
 
 from joblib import Parallel, delayed
+
+from .exceptions import CloudflareDetection
 
 from .check_and_download_driver import check_and_download_driver
 
@@ -209,6 +212,7 @@ def browser(
     window_size: Optional[Union[Callable[[Any], str], str]] = None,
     tiny_profile: bool = False,
     is_eager: bool = False,
+    add_arguments: Optional[Callable[[Any, Options], None]] = None,
     lang: Optional[Union[Callable[[Any], str], str]] = None,
     headless: Optional[Union[Callable[[Any], bool], bool]] = False,
     beep: bool = False,
@@ -288,7 +292,7 @@ def browser(
                 print("Running")  # If so, print "Running"
                 first_run = False  # Set the flag to False so it doesn't run again
 
-            nonlocal parallel, data, cache, block_resources, block_images, window_size, metadata
+            nonlocal parallel, data, cache, block_resources, block_images, window_size, metadata, add_arguments
             nonlocal tiny_profile, is_eager, lang, headless, beep
             nonlocal close_on_crash, async_queue, run_async, profile
             nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive, raise_exception
@@ -299,8 +303,9 @@ def browser(
             cache = kwargs.get('cache', cache)
             block_images = kwargs.get('block_images', block_images)
             block_resources = kwargs.get('block_resources', block_resources)
-            
+            add_arguments =  kwargs.get('add_arguments', add_arguments)
             window_size = kwargs.get('window_size', window_size)
+
             metadata = kwargs.get('metadata', metadata)
             tiny_profile = kwargs.get('tiny_profile', tiny_profile)
             is_eager = kwargs.get('is_eager', is_eager)
@@ -358,15 +363,39 @@ def browser(
                 elif reuse_driver and len(_driver_pool) > 0:
                     driver = _driver_pool.pop()
                 else:
+                    check_and_download_driver()
+
                     options, driver_attributes, close_proxy = create_options_and_driver_attributes_and_close_proxy(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, evaluated_headless, evaluated_lang,)
+                    if add_arguments:
+                          add_arguments(data, options)
                     desired_capabilities  = create_capabilities(is_eager)
                     about = create_about(evaluated_proxy, evaluated_lang, beep, driver_attributes,  )
-                    check_and_download_driver()
                     if create_driver:
-                        driver = create_driver(data, options, desired_capabilities)
-                        if not driver:
-                          driver = create_selenium_driver(options, desired_capabilities)
-                        
+
+                        if max_retry is None:
+                          driver = create_driver(data, options, desired_capabilities)
+                        else:
+                            attempt = 0
+
+                            while attempt < max_retry:
+                                try:
+                                    driver = create_driver(data, options, desired_capabilities)
+                                    # If successful, break out of the loop
+                                    break
+                                except CloudflareDetection:
+                                    print_exc()
+                                    print(f"Cloudflare detected, attempt {attempt + 1} of {max_retry}")
+
+                                    attempt += 1
+                                    if attempt >= max_retry:
+                                        print("Maximum attempts reached.")
+                                        raise
+
+                                options, driver_attributes, close_proxy = create_options_and_driver_attributes_and_close_proxy(tiny_profile, evaluated_profile, evaluated_window_size, evaluated_user_agent, evaluated_proxy, evaluated_headless, evaluated_lang,)
+                                if add_arguments:
+                                    add_arguments(data, options)
+                                desired_capabilities  = create_capabilities(is_eager)
+                                about = create_about(evaluated_proxy, evaluated_lang, beep, driver_attributes,  )
                     else:
                         driver = create_selenium_driver(options, desired_capabilities)
 
