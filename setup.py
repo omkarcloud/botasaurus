@@ -63,7 +63,7 @@ class PostInstallCommand(install):
 setup(
     name='botasaurus',
     packages=['botasaurus'],
-    version='3.1.29',
+    version='3.2.2',
     license='MIT',
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",

@@ -94,7 +94,6 @@ def get_rayid(driver:AntiDetectDriver):
 
 
 def get_iframe(driver:AntiDetectDriver):
-      driver.prompt()
       return driver.get_element_or_none_by_selector(
                         '#turnstile-wrapper iframe', None
                     )
@@ -178,7 +177,6 @@ def bypass_detection(driver: AntiDetectDriver, raise_exception):
                 return 
               sleep(1)
               iframe = get_iframe(driver)
-
             previous_ray_id = get_rayid(driver)
             driver.switch_to.frame(iframe)
 

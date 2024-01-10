@@ -80,7 +80,7 @@ class AntiDetectDriver(webdriver.Chrome):
         else:
             bp = True
 
-            return beep_input(text, bp)
+        return beep_input(text, bp)
 
     def short_random_sleep(self):
         sleep_for_n_seconds(uniform(2, 4))

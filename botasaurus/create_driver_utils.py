@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from shutil import rmtree
 from .get_chrome_version import get_driver_path
+from selenium.common.exceptions import SessionNotCreatedException
 
 from .driver_about import AboutBrowser
 from .anti_detect_driver import AntiDetectDriver
