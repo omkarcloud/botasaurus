@@ -181,17 +181,17 @@ python main.py
 
 This time, you will observe the same result as before, but instead of using Anti Detect Selenium, we are utilizing the Anti Detect request module.
 
-*Note: If you don't have Python installed, then you can run Botasaurus in Gitpod, a browser-based development environment, by folllowing [this section](https://github.com/omkarcloud/botasaurus#how-to-run-botasaurus-in-gitpod).*
+*Note: If you don't have Python installed, then you can run Botasaurus in Gitpod, a browser-based development environment, by following [this section](https://github.com/omkarcloud/botasaurus#how-to-run-botasaurus-in-gitpod).*
 
 ## 💡 Understanding Botasaurus
 
 Power of Bots is Immense, A Bot
    - Can apply on your behalf to Linkedin Jobs 24 Hours
-   - Scrape Phone Number of Thousands of Buisnesses from Google Maps to sell your Products to.
+   - Scrape Phone Number of Thousands of Businesses from Google Maps to sell your Products to.
    - Mass Message People on Twitter/LinkedIn/Reddit for selling your Product
    - Sign Up 100's of Accounts on MailChimp to send 50,000 (500 emails * 100) Emails all for free
 
-Let's learn feautres of Botasaurus that helps you unlock these super powers? 
+Let's learn features of Botasaurus that help you unlock these super powers? 
 
 ### Could you show me an example where you defeat Cloudflare?
 
@@ -442,7 +442,7 @@ input("Press Enter to exit...")
 driver.quit()
 ```
 
-You will definetely encounter a block by Cloudflare:
+You will definitely encounter a block by Cloudflare:
 
 ![blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/seleniumwireblocked.png)
 
@@ -1295,7 +1295,7 @@ If you need guidane on your web scraping Project or have some questions, message
 - Shout out to zfcsoftware for developing `puppeteer-real-browser`; it helped us in creating Botasaurus Anti Detected. Show your appreciation by subscribing to their [YouTube channel](https://www.youtube.com/@zfcsoftware/videos) ⚡.
 - A special thanks to the Selenium team for creating Selenium, an invaluable tool in our toolkit.
 - Thanks to Cloudflare, DataDome, Imperva, and all bot detectors. Had you not been there, we wouldn't be either 😅.
-- Finally, a humungous thank you for choosing Botasaurus.
+- Finally, a humongous thank you for choosing Botasaurus.
 
 ## Love It? [Star It! ⭐](https://github.com/omkarcloud/botasaurus)
 
