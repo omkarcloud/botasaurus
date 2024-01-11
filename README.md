@@ -631,7 +631,34 @@ Here are some recommendations for wait times:
 - **Voila, you have a new, high-quality mobile IP for free!**
 
 <!-- 3. If you are running the bot in Docker on a server and experiencing detection issues, it's suggested to use residential proxies. -->
-3. Anti Detection Systems can detect fake randomly generated user agents. So, if you are getting detected, especially on Ubuntu with Cloudflare JS with Captcha Challenge, we recommend using your real user agent and window size, not a randomly generated one. Here's how you can do it:
+
+3. If you are automating Cloudflare Websites with JS Challenges like https://nowsecure.nl/, then you must pass start_url to bypass them like this:
+```python
+from botasaurus import *
+from botasaurus.create_stealth_driver import create_stealth_driver
+
+@browser(
+    create_driver=create_stealth_driver(
+        start_url="https://nowsecure.nl/", # Must for Websites Protected by Cloudflare JS Challenge
+    ),
+)
+```
+
+However, if you are automating websites not protected by Cloudflare or protected by Cloudflare Connection Challenge like Microsoft's [Outlook](https://signup.live.com/) Website, then you may pass `None` to start_url. With this, we will also not perform a wait before connecting to Chrome, saving you time.
+
+```python
+from botasaurus import *
+from botasaurus.create_stealth_driver import create_stealth_driver
+
+@browser(
+    create_driver=create_stealth_driver(
+        start_url=None, # Recommended for Websites not protected by Cloudflare or protected by Cloudflare Connection Challenge
+    ),
+)
+```
+
+
+4. Anti Detection Systems can detect fake randomly generated user agents. So, if you are getting detected, especially on Ubuntu with Cloudflare JS with Captcha Challenge, we recommend using your real user agent and window size, not a randomly generated one. Here's how you can do it:
 ```python
 from botasaurus import *
 from botasaurus.create_stealth_driver import create_stealth_driver
@@ -653,7 +680,7 @@ scrape_heading_task()
 
 If you are doing web scraping of publicly available data, then the above code is good and recommended to be used. However, if you are creating multiple accounts, then we don't recommend using the above code because the website may use tools like [fingerprint](https://fingerprint.com/) to capture fingerprints and uniquely identify that bots are creating multiple accounts.
 
-4. We expect to bypass Cloudflare 9 out of 10 times. However, in some cases, they do detect us for reasons like IP blacklisting. In such cases, you can use the following code snippet to make your scraper more robust:
+5. We expect to bypass Cloudflare 9 out of 10 times. However, in some cases, they do detect us for reasons like IP blacklisting. In such cases, you can use the following code snippet to make your scraper more robust:
 ```python
 from botasaurus import *
 from botasaurus.create_stealth_driver import create_stealth_driver
@@ -1284,10 +1311,9 @@ Its various settings allow you to tailor the scraping process to your specific n
 
 ### ❓ Need More Help or Have Additional Questions?
 
-If you need guidane on your web scraping Project or have some questions, message us on WhatsApp and we'll be happy to help you out.
+For further help, ask your question in GitHub Discussions. We'll be happy to help you out.
 
-[![Contact Us on WhatsApp](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/mwa.png)](https://api.whatsapp.com/send?phone=918295042963&text=Hi,%20I%20would%20like%20to%20learn%20more%20about%20your%20products.)
-
+[![ask github](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/ask-on-github.png)](https://github.com/omkarcloud/botasaurus/discussions)
 
 ## Thanks
 
