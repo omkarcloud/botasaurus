@@ -371,10 +371,7 @@ def browser(
                     desired_capabilities  = create_capabilities(is_eager)
                     about = create_about(evaluated_proxy, evaluated_lang, beep, driver_attributes,  )
                     if create_driver:
-
-                        if max_retry is None:
-                          driver = create_driver(data, options, desired_capabilities)
-                        else:
+                        if max_retry:
                             attempt = 0
 
                             while attempt < max_retry:
@@ -396,6 +393,8 @@ def browser(
                                     add_arguments(data, options)
                                 desired_capabilities  = create_capabilities(is_eager)
                                 about = create_about(evaluated_proxy, evaluated_lang, beep, driver_attributes,  )
+                        else:
+                            driver = create_driver(data, options, desired_capabilities)
                     else:
                         driver = create_selenium_driver(options, desired_capabilities)
 
