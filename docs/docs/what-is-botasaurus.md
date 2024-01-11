@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+title: What is Botasaurus?
 description: Botasaurus is a Swiss Army knife 🔪 for web scraping and browser automation 🤖 that helps you create bots fast. ⚡️
 ---
 ## In a nutshell
