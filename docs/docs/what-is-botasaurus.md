@@ -158,13 +158,7 @@ This time, you will observe the same result as before, but instead of using Anti
 
 ## 💡 Understanding Botasaurus
 
-Power of Bots is Immense, A Bot
-   - Can apply on your behalf to Linkedin Jobs 24 Hours
-   - Scrape Phone Number of Thousands of Buisnesses from Google Maps to sell your Products to.
-   - Mass Message People on Twitter/LinkedIn/Reddit for selling your Product
-   - Sign Up 100's of Accounts on MailChimp to send 50,000 (500 emails * 100) Emails all for free
-
-Let's learn feautres of Botasaurus that helps you unlock these super powers? 
+Let's learn about the features of Botasaurus that assist you in web scraping and automation.
 
 ### How to Scrape Multiple Data Points/Links?
 
@@ -404,13 +398,9 @@ soup = anti_detect_request.bs4("https://www.omkar.cloud/")
 --- 
 
 *Sign Up Bots*
-Sometimes, when scraping the web, data is hidden behind an authentication wall, requiring you to sign up via email or Google to access it.
+Sometimes, data is hidden behind an authentication wall, requiring you to sign up via email or Google to access it. Sign-up automation is designed for this use case; it assists in downloading reports, scraping account usage history, and more.
 
-Now, let's explore how to use Botasaurus utilities that empower us to create hundreds of accounts on a website. With hundreds of bots at your command:
-
-  - You can mass message thousands of people on platforms like Twitter, LinkedIn, or Reddit to promote your product.
-
-  - Platforms like MailChimp offer free plans with limited usage. With bots, you can maximize the benefits of these plans. For instance, if MailChimp allows you to send 500 emails per month for free, with 100 bots, you can send 50,000 emails monthly.
+Please note that it is important to use this functionality ethically and only for legitimate purposes. 
 
 ---
 

@@ -14,11 +14,7 @@ However, this time, we're using bots. This empowers us, as developers, to create
 
 ## 🤔 Why are we building it?
 
-The power of bots is immense. With hundreds of bots at your command:
-
-- You can mass message thousands of people on platforms like Twitter, LinkedIn, or Reddit to promote your product.
-
-- Platforms like MailChimp offer free plans with limited usage. With bots, you can maximize the benefits of these plans. For instance, if MailChimp allows you to send 500 emails per month for free, with 100 bots, you can send 50,000 emails monthly.
+Sometimes, data is hidden behind an authentication wall, requiring you to sign up via email or Google to access it. Sign-up automation is designed for this use case; it assists in downloading reports, scraping account usage history, and more.
 
 This tutorial will guide you through creating multiple accounts on the Omkar Cloud website with email verification.
 
@@ -29,6 +25,8 @@ So, are you ready to build your bot army?
 ![](/img/robo-army.jpg)
 
 Let's get started :)
+
+**Note: Please note that it is important to use this functionality ethically and only for legitimate purposes.** 
 
 <!-- ## 💡 Understanding Botasaurus
 

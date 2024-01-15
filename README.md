@@ -98,7 +98,7 @@ if __name__ == "__main__":
     scrape_heading_task()
 ```
 
-Let’s dissect this code:
+Let’s understand this code:
 
 - We define a custom scraping task, `scrape_heading_task`, decorated with `@browser`:
 ```python
@@ -185,13 +185,7 @@ This time, you will observe the same result as before, but instead of using Anti
 
 ## 💡 Understanding Botasaurus
 
-Power of Bots is Immense, A Bot
-   - Can apply on your behalf to Linkedin Jobs 24 Hours
-   - Scrape Phone Number of Thousands of Businesses from Google Maps to sell your Products to.
-   - Mass Message People on Twitter/LinkedIn/Reddit for selling your Product
-   - Sign Up 100's of Accounts on MailChimp to send 50,000 (500 emails * 100) Emails all for free
-
-Let's learn features of Botasaurus that help you unlock these super powers? 
+Let's learn about the features of Botasaurus that assist you in web scraping and automation.
 
 ### Could you show me an example where you defeat Cloudflare?
 
@@ -536,7 +530,7 @@ It's commonly used to protect:
 - Login/Sign Up pages
 - Sign Up Flows
 
-Example Pages: https://nowsecure.nl/, https://www.000webhost.com/cpanel-login, https://signup.live.com/
+Example Pages: https://nowsecure.nl/
 
 #### What Does Not Work?
 
@@ -644,7 +638,7 @@ from botasaurus.create_stealth_driver import create_stealth_driver
 )
 ```
 
-However, if you are automating websites not protected by Cloudflare or protected by Cloudflare Connection Challenge like Microsoft's [Outlook](https://signup.live.com/) Website, then you may pass `None` to start_url. With this, we will also not perform a wait before connecting to Chrome, saving you time.
+However, if you are automating websites not protected by Cloudflare or protected by Cloudflare Connection Challenge, then you may pass `None` to start_url. With this, we will also not perform a wait before connecting to Chrome, saving you time.
 
 ```python
 from botasaurus import *
@@ -935,13 +929,9 @@ soup = anti_detect_request.bs4("https://www.omkar.cloud/")
 
 ## Sign Up Bots
 
-Sometimes, when scraping the web, data is hidden behind an authentication wall, requiring you to sign up via email or Google to access it.
+Sometimes, data is hidden behind an authentication wall, requiring you to sign up via email or Google to access it. Sign-up automation is designed for this use case; it assists in downloading reports, scraping account usage history, and more.
 
-Now, let's explore how to use Botasaurus utilities that empower us to create hundreds of accounts on a website. With hundreds of bots at your command:
-
-  - You can mass message thousands of people on platforms like Twitter, LinkedIn, or Reddit to promote your product.
-
-  - Platforms like MailChimp offer free plans with limited usage. With bots, you can maximize the benefits of these plans. For instance, if MailChimp allows you to send 500 emails per month for free, with 100 bots, you can send 50,000 emails monthly.
+Please note that it is important to use this functionality ethically and only for legitimate purposes. 
 
 ---
 
@@ -1058,13 +1048,6 @@ Botasaurus Starter Template comes with the necessary `.gitpod.yml` to easily run
 ```bash
 python main.py
 ```
-
-<!-- Please understand:
-   - The internet speed in Gitpod is extremely fast at around 180 Mbps.
-
-      ![speedtest](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/speedtest.png)
-
-   - When Scraping, You need to interact with Gitpod, such as clicking within the environment, every 30 minutes to prevent the machine from automatically closing. -->
 
 
 ## Advanced Features
