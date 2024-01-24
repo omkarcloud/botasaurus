@@ -25,10 +25,16 @@
   </a>
 </p>
 
+
+## Disclaimer for Botasaurus Project
+
+> By using Botasaurus, you agree to comply with all applicable local and international laws related to data scraping, copyright, and privacy. The developers of Botasaurus are not responsible for any misuse of this software. It is the sole responsibility of the user to ensure adherence to all relevant laws regarding data scraping, copyright, and privacy, and to use Botasaurus in an ethical and legal manner.
+
+We take the concerns of the Botasaurus Project very seriously. For any inquiries or issues, please contact Chetan Jain at [chetan@omkar.cloud](mailto:chetan@omkar.cloud). We will take prompt and necessary action in response to your emails.
+
 ## In a nutshell
 
-Botasaurus is an all in 1 web scraping framework built for the modern web. We
-address the key pain points web scrapers face when scraping the web.
+Botasaurus is an all in 1 web scraping framework built for the modern web. We address the key pain points web scrapers face when scraping the web.
 
 Our aim it to make web scraping extremely easy and save you hours of Development Time.
 
@@ -36,9 +42,9 @@ Our aim it to make web scraping extremely easy and save you hours of Development
 
 Botasaurus comes fully baked, with batteries included. Here is a list of things it can do that no other web scraping framework can:
 
-- **Most Stealthiest Framework LITERALLY**: In the entire JS and Python Universe, we are literally the most stealthy framework, even more stealthy than `undetected-chromedriver` and `puppeteer-stealth`. Our framework can easily bypass Cloudflare JS and Captcha Challenges, and your bots can easily visit websites like `https://nowsecure.nl/`. For more details, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#can-you-bypass-cloudflareimperva-challenges)
-- **Defeat Cloudflare with HTTP Requests:** No HTTP library, be it `httpx`, `hrequests`, or `cloudscraper`, can defeat Cloudflare, but we can 😤! [Read on to learn how.](https://github.com/omkarcloud/botasaurus/tree/master#how-to-scrape-cloudflare-protected-websites-with-simple-http-requests)
-- **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework to offer SSL support for authenticated proxies. No other web scraping libraries be it cloudscraper, seleniumwire, playwright provides this unique feature, enabling you to easily bypass Cloudflare detection when using authenticated proxies.
+- **Most Stealthiest Framework LITERALLY**: Based on our benchmarks, which we encourage you to read [here](https://github.com/omkarcloud/botasaurus-vs-undetected-chromedriver-vs-puppeteer-stealth-benchmarks), our framework stands as the most stealthy in both the JS and Python universes. It is more stealthy than the popular Python library `undetected-chromedriver` and the well-known JavaScript library `puppeteer-stealth` in terms of stealth capabilities. Botasaurus can easily visit websites like `https://nowsecure.nl/`. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#can-you-bypass-cloudflareimperva-challenges)
+- **Access Cloudflare Websites with Simple HTTP Requests:** We can access Cloudflare-protected pages using simple HTTP requests. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#how-to-scrape-cloudflare-protected-websites-with-simple-http-requests)
+- **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework as of writing to offer SSL support for authenticated proxies. No other browser automatio libraries be it seleniumwire, puppeteer, playwright offers this important web scraping feature, enabling you to easily access Cloudflare detection when using authenticated proxies.
 - **Data Cleaners:** Clean data scraped from the website with ease.
 - **Debuggability:** When a crash occurs due to an incorrect selector, etc., Botasaurus pauses the browser instead of closing it, facilitating painless on-the-spot debugging.
 - **Caching:** Botasaurus allows you to cache web scraping results, ensuring lightning-fast performance on subsequent scrapes.
@@ -187,9 +193,9 @@ This time, you will observe the same result as before, but instead of using Anti
 
 Let's learn about the features of Botasaurus that assist you in web scraping and automation.
 
-### Could you show me an example where you defeat Cloudflare?
+### Could you show me an example where you access Cloudflare Protected Website?
 
-Sure, Run the following Python code to scrape G2.com, a website protected by Cloudflare:
+Sure, Run the following Python code to access G2.com, a website protected by Cloudflare:
 
 ```python
 from botasaurus import *
@@ -456,9 +462,9 @@ Result:
 
 NOTE: To run the code above, you will need Node.js installed.
 
-### How to Scrape Cloudflare-Protected Websites with Simple HTTP Requests?
+### How to Access Cloudflare-Protected Websites Using Simple HTTP Requests?
 
-No HTTP library, be it `httpx`, `hrequests`, or `cloudscraper`, can defeat Cloudflare. But, we can thanks to `got-scraping` library. 
+We can access Cloudflare-protected pages using simple HTTP requests.
 
 All you need to do is specify the `use_stealth` option.
 
@@ -476,9 +482,9 @@ def scrape_heading_task(request: AntiDetectRequests, data):
 scrape_heading_task()
 ```
 
-### Can you bypass Cloudflare/Imperva Challenges?
+### Can you access websites protected by Cloudflare JS Challenge?
 
-Yes, we can. Let's learn about various challenges and the best ways to bypass them.
+Yes, we can. Let's learn about various challenges and the best ways to solve them.
 
 *Connection Challenge*
 
@@ -491,7 +497,7 @@ Example Page: https://www.g2.com/products/github/reviews
 
 #### What Does Not Work?
 
-Using `httpx`, `hrequests`, or `cloudscraper` fails because, while they send browser-like user agents and headers, they don't establish a browser-like connection, leading to detection.
+Using `cloudscraper` library fails because, while it sends browser-like user agents and headers, it does not establish a browser-like connection, leading to detection.
 
 #### What Works?
 
@@ -538,7 +544,7 @@ Bare `selenium` and `puppeteer` definitely do not work due to a lot of automatio
 
 #### What Works?
 
-The Stealth Browser can easily bypass JS Challenges. See the truth for yourself by running this code:
+The Stealth Browser can easily solve JS Challenges. See the truth for yourself by running this code:
 
 ```python
 from botasaurus import *
@@ -571,7 +577,7 @@ Again, tools like `selenium`, `puppeteer`, `undetected-chromedriver`, and `puppe
 
 #### What Works?
 
-The Stealth Browser can easily bypass these challenges. See it in action by running this code:
+The Stealth Browser can easily solve these challenges. See it in action by running this code:
 
 ```python
 from botasaurus import *
@@ -626,7 +632,7 @@ Here are some recommendations for wait times:
 
 <!-- 3. If you are running the bot in Docker on a server and experiencing detection issues, it's suggested to use residential proxies. -->
 
-3. If you are automating Cloudflare Websites with JS Challenges like https://nowsecure.nl/, then you must pass start_url to bypass them like this:
+3. If you are automating Cloudflare Websites with JS Challenges like https://nowsecure.nl/, then you must pass start_url to solve them like this:
 ```python
 from botasaurus import *
 from botasaurus.create_stealth_driver import create_stealth_driver
@@ -674,7 +680,7 @@ scrape_heading_task()
 
 If you are doing web scraping of publicly available data, then the above code is good and recommended to be used. However, if you are creating multiple accounts, then we don't recommend using the above code because the website may use tools like [fingerprint](https://fingerprint.com/) to capture fingerprints and uniquely identify that bots are creating multiple accounts.
 
-5. We expect to bypass Cloudflare 9 out of 10 times. However, in some cases, they do detect us for reasons like IP blacklisting. In such cases, you can use the following code snippet to make your scraper more robust:
+5. We expect to access Cloudflare websites 9 out of 10 times. However, in some cases, they do detect us for reasons like IP blacklisting. In such cases, you can use the following code snippet to make your scraper more robust:
 ```python
 from botasaurus import *
 from botasaurus.create_stealth_driver import create_stealth_driver
@@ -931,96 +937,9 @@ soup = anti_detect_request.bs4("https://www.omkar.cloud/")
 
 Sometimes, data is hidden behind an authentication wall, requiring you to sign up via email or Google to access it. Sign-up automation is designed for this use case; it assists in downloading reports, scraping account usage history, and more.
 
-Please note that it is important to use this functionality ethically and only for legitimate purposes. 
+Please note that it is important to use this functionality ethically and only for legitimate purposes. You can learn about it [here](https://www.omkar.cloud/botasaurus/docs/sign-up-features/)
 
 ---
-
-### How to Generate Human-Like User Data?
-
-To create human-like user data, use the `generate_user` function:
-
-```python
-user = bt.generate_user(country=bt.Country.IN)
-```
-
-This will generate user profiles similar to the one shown below:
-
-![Account](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/generated-account.png)
-
-The data generated is very realistic, reducing the likelihood of being flagged as a bot.
-
-### The Target Website Has Sent a Verification Email: How to Get the Link and Verify It?
-
-To get the verification link from an email and then delete the mailbox, use `bt.TempMail.get_email_link_and_delete_mailbox` as shown below:
-
-```python
-user = bt.generate_user(country=bt.Country.IN)
-email = user["email"]  # Example: madhumitachavare@1974.icznn.com
-
-link = bt.TempMail.get_email_link_and_delete_mailbox(email)  # Retrieves the Verification Link and Deletes the Mailbox
-
-driver.get(link)
-```
-
-### I have automated the Creation of User Account's. Now I want to store the User Account Credentials like Email and Password. How to store it?
-
-To store user-related data, such as account credentials, use the `ProfileManager` module:
-
-```python
-bt.Profile.set_profile(user)
-```
-
-In cases where you want to store metadata related to a user, such as API keys:
-
-```python
-bt.Profile.set_item("api_key", "BDEC26...")
-```
-
-To retrieve a list of all users, use `bt.Profile.get_all_profiles()`:
-
-```python
-profiles = bt.Profile.get_all_profiles()
-```
-
-### The Chrome Profiles of User's are getting very large like 100MBs, is there a way to Compress them? 
-
-You can use tiny_profile feautre of Botasaurus which are a replacement for Chrome Profiles.
-
-Each Tiny Profile only stores cookies from visited websites, making them extremely lightweight—around 1KB. Here's how to use them:
-
-```python
-@browser(
-    tiny_profile=True, 
-    profile='my-profile',
-)
-def sign_up_task(driver: AntiDetectDriver, data):
-    # Your sign-up code here
-```
-
-### How to Dynamically Specify the Profile Based on a Data Item?
-
-You can dynamically select a profile by passing a function to the `profile` option, which will receive the data item:
-
-```python
-
-def get_profile(data):
-    return data["username"]
-
-@browser(
-    data=[{"username": "mahendra-singh-dhoni", ...}, {"username": "virender-sehwag", ...}],
-    profile=get_profile,
-)
-def sign_up_task(driver: AntiDetectDriver, data):
-    # Your sign-up code here
-```
-
-user_agent, proxy, and other options can also be passed as functions.
-
-### Is there a Tutorial that integrates tiny_profile, temp mail, user generator, profile to sign up on a Website and Perform Actions on Website. So I can get a Complete Picture?
-
-For a comprehensive guide on using Botasaurus features such as `tiny_profile`, `temp_mail`, `user_generator`, and `profile` to sign up on a website and perform actions, read the Sign-Up Tutorial [Here](https://www.omkar.cloud/botasaurus/docs/sign-up-tutorial/). 
-
-This tutorial will walk you through signing up for 3 accounts on Omkar Cloud and give you a complete understanding of the process.
 
 ### How to Run Botasaurus in Docker?
 
@@ -1095,6 +1014,7 @@ These options provide flexibility in how you handle the output of your scraping 
 To execute drivers asynchronously, enable the `async` option and use `.get()` when you're ready to collect the results:
 
 ```python
+from botasaurus import * 
 from time import sleep
 
 @browser(
@@ -1124,8 +1044,8 @@ The `async_queue` feature allows you to perform web scraping tasks in asyncronou
 #### Basic Example:
 
 ```python
+from botasaurus import * 
 from time import sleep
-from your_scraping_library import browser, AntiDetectDriver  # Replace with your actual scraping library
 
 @browser(async_queue=True)
 def scrape_data(driver: AntiDetectDriver, data):
@@ -1152,7 +1072,7 @@ if __name__ == "__main__":
 Here's how you could use `async_queue` to scrape webpage titles while scrolling through a list of links:
 
 ```python
-from your_scraping_library import browser, AntiDetectDriver  # Replace with your actual scraping library
+from botasaurus import * 
 
 @browser(async_queue=True)
 def scrape_title(driver: AntiDetectDriver, link):
@@ -1229,26 +1149,25 @@ Cache.clear(scrape_data)
 ```
 
 ### Any Tips for Scraping Cloudflare-Protected Websites?
-- To scrape Cloudflare-protected sites, you need to use a browser; the request module won't work, as it gets detected and results in a 403 error.
-- Use the `google_get` method to scrape the target website.
+- Use stealth driver
 - For large-scale scraping, opt for Data Center Proxies over Residential as Residential Proxies are really expensive. Sometimes you will get blocked; so, use retries as demonstrated in the code below:
 ```python
   from botasaurus import *
+from botasaurus.create_stealth_driver import create_stealth_driver
 
   @browser(
-          proxy="http://username:password@datacenter-proxy-domain:12321", 
-          max_retry=5, # A reliable default for most situations
-          block_resources=True, # Enhances efficiency and cost-effectiveness
-          )
+        create_driver=create_stealth_driver(
+            start_url="https://nowsecure.nl/",
+        ),
+        proxy="http://username:password@datacenter-proxy-domain:12321", 
+        max_retry=5, # A reliable default for most situations, will retry creating driver if detected.
+        block_resources=True, # Enhances efficiency and cost-effectiveness
+        )
   def scrape_heading_task(driver: AntiDetectDriver, data):
-      driver.google_get("https://www.g2.com/products/github/reviews")
-      if driver.is_bot_detected():
-          raise Exception("Bot detected")
       heading = driver.text('h1')
       print(heading)
       return heading
 ```
-
 
 
 ### How Do I Close All Running Chrome Instances When Developing with Botasaurus?
