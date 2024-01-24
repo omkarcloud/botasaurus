@@ -32,3 +32,8 @@ steps.md
 
 developing/
 scripts/
+
+/gpt
+local_storage.json
+
+profiles.json
