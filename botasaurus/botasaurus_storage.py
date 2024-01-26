@@ -1,15 +1,13 @@
 import os
 import json
-from pathlib import Path
 
-from .utils import relative_path
+def relative_path(path, goback=0):
+    levels = [".."] * (goback + -1)
+    return os.path.abspath(os.path.join(os.getcwd(), *levels, path.strip()))
 
 def get_cache_file_path() -> str:
-    """Returns the path to the cache file, stored in a hidden directory within the user's home directory."""
-    home_dir = Path.home()
-    cache_dir = home_dir / ".botasaurus"  # Replace 'your_package_name' with the actual name of your package
-    cache_dir.mkdir(exist_ok=True, parents=True)
-    return str(cache_dir / "local_storage.json")
+    dr = os.path.abspath(os.path.join(os.path.dirname(__file__),  'botasaurus_storage.json'))
+    return dr
 
 class localStoragePyStorageException(Exception):
     pass
@@ -68,18 +66,6 @@ class JSONStorageBackend(BasicStorageBackend):
             self.commit_to_disk()
 
 
-    # def get_new_number(self):
-    #     seen = self.get_item('seen', [])
-        
-    #     if len(seen) == 0:
-    #         max_seen = 0
-    #     else:
-    #         max_seen = max(seen)
-        
-    #     new =  max_seen + 1
-    #     self.set_item('seen', seen + [new])
-    #     return new
-
     def clear(self) -> None:
         if os.path.isfile(self.json_path):
             os.remove(self.json_path)
@@ -113,10 +99,3 @@ class _LocalStorage:
     #     return self.storage_backend_instance.get_new_number()
 
 BotasaurusStorage = _LocalStorage()
-
-if __name__ == "__main__":
-    t = _LocalStorage()
-    
-    print(t.get_item("a"))
-    print(t.set_item("a" ,"ss"))
-    print(t.remove_item("a"))

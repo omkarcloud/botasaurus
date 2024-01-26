@@ -45,6 +45,7 @@ Botasaurus comes fully baked, with batteries included. Here is a list of things 
 - **Most Stealthiest Framework LITERALLY**: Based on our benchmarks, which we encourage you to read [here](https://github.com/omkarcloud/botasaurus-vs-undetected-chromedriver-vs-puppeteer-stealth-benchmarks), our framework stands as the most stealthy in both the JS and Python universes. It is more stealthy than the popular Python library `undetected-chromedriver` and the well-known JavaScript library `puppeteer-stealth` in terms of stealth capabilities. Botasaurus can easily visit websites like `https://nowsecure.nl/`. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#can-you-bypass-cloudflareimperva-challenges)
 - **Access Cloudflare Websites with Simple HTTP Requests:** We can access Cloudflare-protected pages using simple HTTP requests. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#how-to-scrape-cloudflare-protected-websites-with-simple-http-requests)
 - **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework as of writing to offer SSL support for authenticated proxies. No other browser automatio libraries be it seleniumwire, puppeteer, playwright offers this important web scraping feature, enabling you to easily access Cloudflare protected websites when using authenticated proxies.
+**Use Any Chrome Extension with Just 1 Line of Code:** Easily integrate any Chrome extension, be it a Captcha Solving Extension, Adblocker, or any other from the Chrome Web Store, with just [one line of code.](TODO)
 - **Data Cleaners:** Clean data scraped from the website with ease.
 - **Debuggability:** When a crash occurs due to an incorrect selector, etc., Botasaurus pauses the browser instead of closing it, facilitating painless on-the-spot debugging.
 - **Caching:** Botasaurus allows you to cache web scraping results, ensuring lightning-fast performance on subsequent scrapes.
@@ -707,6 +708,48 @@ scrape_heading_task(["https://nowsecure.nl/", "https://steamdb.info/sub/363669/a
 ``` 
 
 The above code makes the scraper more robust by raising an exception when detected and retrying up to 5 times to visit the website.
+
+### How to Use Chrome Extensions?
+
+Botasaurus allows the use of ANY Chrome Extension with just 1 Line of Code. Below is an example that uses the AdBlocker Chrome Extension:
+
+```python
+from botasaurus import *
+from chrome_extension_python import Extension
+
+@browser(
+    extensions=[Extension("https://chromewebstore.google.com/detail/adblock-%E2%80%94-best-ad-blocker/gighmmpiobklfepjocnamgkkbiglidom")], # Simply pass the Extension Link
+)  
+def open_chrome(driver: AntiDetectDriver, data):
+    driver.prompt()
+
+open_chrome()
+```
+
+#### Solving Captchas in Web Scraping
+
+Captcha solving is a common requirement in web scraping. Botasaurus includes built-in integration for extensions like CapSolver to solve this:
+
+```python
+from botasaurus import *
+from capsolver_extension_python import Capsolver
+
+@browser(
+    extensions=[Capsolver(api_key="CAP-MY_KEY")], # Replace with your own CapSolver Key
+)  
+def solve_captcha(driver: AntiDetectDriver, data):
+    driver.get("https://recaptcha-demo.appspot.com/recaptcha-v2-checkbox.php")
+    driver.prompt()
+
+solve_captcha()
+```
+
+Other captcha solving tools like [2captcha](https://github.com/omkarcloud/twocaptcha-extension-python) are also supported.
+
+#### Configuring Extensions with Additional Settings
+
+In some cases an extension requires additional configuration like API keys or credentials, for that you can create a Custom Extension. Learn how to create and configure Custom Extension [here](https://github.com/omkarcloud/chrome-extension-python).
+
 
 ### I want to Scrape a large number of Links, a new selenium driver is getting created for each new link, this increases the time to scrape data. How can I reuse Drivers?
 

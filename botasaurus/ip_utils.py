@@ -78,7 +78,6 @@ def find_ip_details(max_retries=5, proxy=None):
 
 
 
-
 def get_valid_ip():
     ip = find_ip()
     while ip is None:

@@ -250,7 +250,7 @@ def extract_path_from_link(link):
         parsed = urlparse(link)
         return str(
             urlunparse(
-                ("", "", parsed.path, parsed.params, parsed.query, parsed.fragment)
+                ("", "", parsed.path, "", "", "")
             )
         )
 

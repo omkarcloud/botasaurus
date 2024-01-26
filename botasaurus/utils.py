@@ -19,7 +19,7 @@ def is_windows():
 
 def relative_path(path, goback=0):
     levels = [".."] * (goback + -1)
-    return os.path.abspath(os.path.join(os.getcwd(), *levels, path))
+    return os.path.abspath(os.path.join(os.getcwd(), *levels, path.strip()))
 
 def retry(func, retry_wait=None, retries=5):
     tries = 0

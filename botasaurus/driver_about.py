@@ -9,4 +9,5 @@ class AboutBrowser:
         self.is_new = is_new
         
         self.retry_attempt = 0
+        self.is_retry = False
         self.is_last_retry = False
