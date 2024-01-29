@@ -728,7 +728,7 @@ open_chrome()
 
 #### Solving Captchas in Web Scraping
 
-Captcha solving is a common requirement in web scraping. Botasaurus includes built-in integration for extensions like CapSolver to solve this:
+Captcha solving is a common requirement in web scraping. Botasaurus includes built-in integration for CapSolver. Here is how to use it.
 
 ```python
 from botasaurus import *

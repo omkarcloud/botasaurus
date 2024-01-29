@@ -3,18 +3,19 @@ import os
 from setuptools import setup
 import subprocess
 import sys
-from importlib.metadata import distribution, PackageNotFoundError
+from setuptools.command.install import install
 
 install_requires = [
     "packaging",
     "psutil",
+    "javascript",
     "requests",
     "beautifulsoup4>=4.11.2",
     "chromedriver-autoinstaller",
     "cloudscraper",
     "selenium==4.5.0",
     "botasaurus-proxy-authentication",
-    "capsolver_extension_python"
+    "capsolver_extension_python",
 ]
 extras_require = {}
 cpython_dependencies = [
@@ -30,12 +31,17 @@ def get_description():
     except:
         return None
 
+
 def install_npm_package(package_name):
     """Install an npm package using a Python module, suppressing the output and handling errors."""
 
-    subprocess.check_call(
-            [sys.executable, "-m", "javascript", "--install", package_name]
-        )
+    try:
+        subprocess.run([sys.executable, "-m", "javascript", "--install", package_name], 
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                           )
+
+    except Exception as e:
+        pass
 
     # This really loads it up.
     try:
@@ -45,57 +51,78 @@ def install_npm_package(package_name):
     except Exception as e:
         pass
 
+
 def extract_number(s):
     if isinstance(s, str):
         # Use regular expression to find all numbers in the text
         numbers = re.findall(r"\b\d+(?:\.\d+)?\b", s)
         # Convert the extracted strings to floats or integers
         ls = [float(num) if "." in num else int(num) for num in numbers]
-        
+
         return ls[0] if ls else None
 
     if isinstance(s, int) or isinstance(s, float):
         return s
 
+
 def check_node():
-   try:
-       NODE_BIN = os.environ.get('NODE_BIN') or (getattr(os.environ, "NODE_BIN") if hasattr(os.environ, "NODE_BIN") else "node")
-       node_version = subprocess.check_output([NODE_BIN, "-v"], universal_newlines=True).replace("v", "")
-       major_version = int(extract_number(node_version))
-
-       MIN_VER = 16
-       if major_version < MIN_VER:
-           print(f"Your Node.js version is {major_version}, which is less than {MIN_VER}. To use the stealth and auth proxy features of Botasaurus, you need Node.js 18, Kindly install it by visiting https://nodejs.org/")
-           sys.exit(1)
-   except Exception as e:
-       print("You do not have node installed on your system, Kindly install it by visiting https://nodejs.org/")
-       sys.exit(1)
-
-def install_javascript_package():
     try:
-        # Check if 'javascript' is installed
-        distribution("javascript")
-    except PackageNotFoundError:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "javascript"])
+        NODE_BIN = os.environ.get("NODE_BIN") or (
+            getattr(os.environ, "NODE_BIN")
+            if hasattr(os.environ, "NODE_BIN")
+            else "node"
+        )
+        node_version = subprocess.check_output(
+            [NODE_BIN, "-v"], universal_newlines=True
+        ).replace("v", "")
+        major_version = int(extract_number(node_version))
+
+        MIN_VER = 16
+        if major_version < MIN_VER:
+            print(
+                f"Your Node.js version is {major_version}, which is less than {MIN_VER}. To use the stealth and auth proxy features of Botasaurus, you need Node.js 18, Kindly install it by visiting https://nodejs.org/"
+            )
+            sys.exit(1)
+    except Exception as e:
+        print(
+            "You do not have node installed on your system, Kindly install it by visiting https://nodejs.org/"
+        )
+        sys.exit(1)
+
 
 def pre_install():
     check_node()
-    install_javascript_package()
+
+
+def post_install():
     install_npm_package("got-scraping-export")
     install_npm_package("chrome-launcher")
+
+
+class PostInstallCommand(install):
+    """Post-installation for installation mode."""
+
+    def run(self):
+        # Run the standard install
+        super().run()
+
+        print("Installing needed npm packages")
+        post_install()
+
 
 pre_install()
 
 setup(
     name="botasaurus",
     packages=["botasaurus"],
-    version="3.2.4",
+    version="3.2.7",
     license="MIT",
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",
         "Source": "https://github.com/omkarcloud/botasaurus",
         "Tracker": "https://github.com/omkarcloud/botasaurus/issues",
     },
+    cmdclass={"install": PostInstallCommand},
     description="The All in One Web Scraping Framework",
     long_description_content_type="text/markdown",
     long_description=get_description(),
