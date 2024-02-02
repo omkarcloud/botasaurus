@@ -1,6 +1,6 @@
 from time import sleep
 import os
-
+from sys import argv
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from shutil import rmtree
@@ -10,7 +10,7 @@ from selenium.common.exceptions import SessionNotCreatedException
 from .driver_about import AboutBrowser
 from .anti_detect_driver import AntiDetectDriver
 from .user_agent import UserAgent, UserAgentInstance
-from .utils import get_current_profile_path, read_json, relative_path, silentremove, write_json
+from .utils import get_current_profile_path,  read_json, relative_path, silentremove, write_json
 from .window_size import WindowSize, WindowSizeInstance
 
 DEFAULT_BLOCKED_RESOURCES = ['.css', '.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip']
@@ -215,7 +215,22 @@ def load_cookies(driver: AntiDetectDriver, profile):
 
     # driver.execute_cdp_cmd('Network.disable', {})
 
+def add_server_args(options:Options):
+    if '--disable-dev-shm-usage' not in options._arguments:
+        options.add_argument('--disable-dev-shm-usage')
+    if '--no-sandbox' not in options._arguments:
+        options.add_argument('--no-sandbox')
+    if '--headless=new' not in options._arguments:
+        options.add_argument('--headless=new')
+
+def is_server_mode():
+    # Check if '--server' is in the list of command-line arguments
+    return '--server' in argv
+
 def create_selenium_driver(options, desired_capabilities, attempt_download=True):
+    if is_server_mode():
+        add_server_args(options)
+
     try:
         path = relative_path(get_driver_path(), 0)
         driver = AntiDetectDriver(
@@ -228,6 +243,12 @@ def create_selenium_driver(options, desired_capabilities, attempt_download=True)
         if "This version of ChromeDriver only supports Chrome version" in str(e) and attempt_download:
             # Handle the specific case where ChromeDriver version is not compatible
             do_download_driver()
+            # Retry creating the Selenium driver once more
+            return create_selenium_driver( options, desired_capabilities, attempt_download=False)
+        elif "session not created: Chrome failed to start: exited normally" in str(e) and attempt_download:
+            add_server_args(options)
+                #  To automate process 
+            print("Chrome failed to launch. Retrying with additional server options. To add server options by default, include '--server' in your launch command.")
             # Retry creating the Selenium driver once more
             return create_selenium_driver( options, desired_capabilities, attempt_download=False)
         else:

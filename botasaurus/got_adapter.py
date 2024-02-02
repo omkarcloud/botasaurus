@@ -67,12 +67,15 @@ class GotAdapter:
         got_kwargs = {"url": url, "headerGeneratorOptions": headerGeneratorOptions}
 
         for key, value in kwargs.items():
-            if key == "data":
-                got_kwargs["body"] = value
-            elif key == "json":
-                got_kwargs["json"] = value
+            if key == "data" :
+                if value is not None:
+                    got_kwargs["body"] = value
+            elif key == "json" and value is not None:
+                if value is not None:
+                    got_kwargs["json"] = value
             elif key == "headers":
-                got_kwargs["headers"] = value
+                dt = value or {}
+                got_kwargs["headers"] =  {**dt, **got_kwargs.get("headers", {})}
             elif key == "params":
                 got_kwargs["searchParams"] = value
             elif key == "auth":
