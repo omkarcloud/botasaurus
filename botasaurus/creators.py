@@ -39,6 +39,7 @@ def create_requests(proxy=None,  user_agent=None, use_stealth=False,):
             }
         )
     if proxy is not None:
+        reqs.proxy =  proxy
         reqs.proxies = {
             'http': proxy,
             'https': proxy,

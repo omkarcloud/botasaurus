@@ -8,7 +8,7 @@ from typing import Any, Callable, Optional, Union, List
 import os
 import sys
 from datetime import datetime
-
+from time import sleep
 from .exceptions import CloudflareDetection
 
 from .check_and_download_driver import check_and_download_driver
@@ -136,11 +136,19 @@ class ThreadWithResult(Thread):
         self, group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None
     ):
         self.result = None
-
+        self._exception = None
         def function():
-            self.result = target(*args, **kwargs)
+            # try:
+                self.result = target(*args, **kwargs)
+            # except Exception as e:
+            #     self._exception = e
 
         super().__init__(group=group, target=function, name=name, daemon=daemon)
+
+    def join(self, timeout=None) -> Any:
+        super().join(timeout)
+        if self._exception:
+            raise self._exception
 
 
 def execute_threads(run, ls, n_workers):
@@ -320,6 +328,7 @@ def browser(
     output: Optional[Union[str, Callable]] = "default",
     output_formats: Optional[List[str]] = None,
     max_retry: Optional[int] = None,
+    retry_wait: Optional[int] = None,
     raise_exception: bool = False,
     create_driver: Optional[Callable] = None,
 ) -> Callable:
@@ -382,7 +391,7 @@ def browser(
             nonlocal tiny_profile, is_eager, lang, headless, beep
             nonlocal close_on_crash, async_queue, run_async, profile
             nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive, raise_exception
-            nonlocal output, output_formats, max_retry, create_driver
+            nonlocal output, output_formats, max_retry, retry_wait, create_driver
 
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
@@ -410,6 +419,7 @@ def browser(
             output = kwargs.get("output", output)
             output_formats = kwargs.get("output_formats", output_formats)
             max_retry = kwargs.get("max_retry", max_retry)
+            retry_wait = kwargs.get("retry_wait", retry_wait)
             raise_exception = kwargs.get("raise_exception", raise_exception)
             create_driver = kwargs.get("create_driver", create_driver)
 
@@ -575,13 +585,15 @@ def browser(
                     if max_retry is not None and (max_retry) > (retry_attempt):
                         print_exc()
                         close_driver(driver)
+                        if retry_wait:
+                            print("Waiting for " + str(retry_wait))
+                            sleep(retry_wait)
                         return run_task(data, True, retry_attempt + 1)
 
                     exception_log = format_exc()
                     print_exc()
                     save_error_logs(exception_log, driver)
 
-                    print(f"Failed for input: {data}")
                     if not headless:
                         if not IS_PRODUCTION:
                             if not close_on_crash:
@@ -595,10 +607,12 @@ def browser(
                     else:
                         close_driver(driver)
 
-                    print("Task failed with data:", data)
+                    print("Task failed for input:", data)
 
                     if raise_exception:
                         raise error
+                    else: 
+                        print_exc()
 
                     return result
 
@@ -769,7 +783,10 @@ def request(
     close_on_crash: bool = False,
     output: Optional[Union[str, Callable]] = "default",
     output_formats: Optional[List[str]] = None,
+    
     max_retry: Optional[int] = None,
+    retry_wait: Optional[int] = None,
+    must_raise_exceptions: Optional[List[Any]] = None,
     raise_exception: bool = False,
 ) -> Callable:
     def decorator_requests(func: Callable) -> Callable:
@@ -783,7 +800,7 @@ def request(
                 first_run = False  # Set the flag to False so it doesn't run again
 
             nonlocal parallel, data, cache, beep, run_async, async_queue, metadata
-            nonlocal proxy, close_on_crash, output, output_formats, max_retry, raise_exception
+            nonlocal proxy, close_on_crash, output, output_formats, max_retry, retry_wait,must_raise_exceptions , raise_exception
 
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
@@ -797,6 +814,9 @@ def request(
             output = kwargs.get("output", output)
             output_formats = kwargs.get("output_formats", output_formats)
             max_retry = kwargs.get("max_retry", max_retry)
+            retry_wait = kwargs.get("retry_wait", retry_wait)
+            must_raise_exceptions = kwargs.get("must_raise_exceptions", must_raise_exceptions)
+            
             raise_exception = kwargs.get("raise_exception", raise_exception)
 
             fn_name = func.__name__
@@ -815,7 +835,6 @@ def request(
                     path = _get_cache_path(func, data)
                     if _has(path):
                         return _get(path)
-
                 evaluated_proxy = proxy(data) if callable(proxy) else proxy
                 evaluated_user_agent = (
                     user_agent(data) if callable(user_agent) else user_agent
@@ -838,21 +857,24 @@ def request(
 
                     if is_dont_cache(result):
                         result = result.data
-
                     return result
                 except Exception as error:
                     if isinstance(error, KeyboardInterrupt):
                         raise  # Re-raise the KeyboardInterrupt to stop execution
+                    
+
 
                     if max_retry is not None and (max_retry) > (retry_attempt):
                         print_exc()
+                        if retry_wait:
+                            print("Waiting for " + str(retry_wait) + " seconds")
+                            sleep(retry_wait)
                         return run_task(data, True, retry_attempt + 1)
 
                     exception_log = format_exc()
-                    print_exc()
+ 
                     save_error_logs(exception_log, None)
 
-                    print(f"Failed for input: {data}")
                     if not IS_PRODUCTION:
                         if not close_on_crash:
                             beep_input(
@@ -860,10 +882,13 @@ def request(
                                 beep,
                             )
 
-                    print(f"Task Failed!")
+                    print("Task failed for input:", data)
 
                     if raise_exception:
                         raise error
+                    else: 
+                        print_exc()
+
                     return result
 
             number_of_workers = parallel() if callable(parallel) else parallel
