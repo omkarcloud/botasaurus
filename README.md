@@ -6,11 +6,11 @@
   </div>
 
 <h3 align="center">
-  The web has evolved. Finally, web scraping has too.
+  The All in One Framework to build Awesome Scrapers.
 </h3>
 
 <p align="center">
-  <b>The All in 1 Web Scraping Framework</b>
+  <b>The web has evolved. Finally, web scraping has too.</b>
 </p>
 
 
@@ -26,31 +26,28 @@
 </p>
 
 
-## Disclaimer for Botasaurus Project
-
-> By using Botasaurus, you agree to comply with all applicable local and international laws related to data scraping, copyright, and privacy. The developers of Botasaurus are not responsible for any misuse of this software. It is the sole responsibility of the user to ensure adherence to all relevant laws regarding data scraping, copyright, and privacy, and to use Botasaurus in an ethical and legal manner.
-
-We take the concerns of the Botasaurus Project very seriously. For any inquiries or issues, please contact Chetan Jain at [chetan@omkar.cloud](mailto:chetan@omkar.cloud). We will take prompt and necessary action in response to your emails.
 
 ## In a nutshell
 
-Botasaurus is an all in 1 web scraping framework built for the modern web. We address the key pain points web scrapers face when scraping the web.
+Botasaurus is an all-in-one web scraping framework that enables you to build awesome scrapers in less time. It solves the key pain points that we, as developers, face when scraping the modern web.
 
-Our aim it to make web scraping extremely easy and save you hours of Development Time.
+Our mission is to make creating awesome scrapers easy for everyone.
 
 ## Features
 
-Botasaurus comes fully baked, with batteries included. Here is a list of things it can do that no other web scraping framework can:
+Botasaurus is built for creating awesome scrapers. It comes fully baked, with batteries included. Here is a list of things it can do that no other web scraping framework can:
 
-- **Most Stealthiest Framework LITERALLY**: Based on our benchmarks, which we encourage you to read [here](https://github.com/omkarcloud/botasaurus-vs-undetected-chromedriver-vs-puppeteer-stealth-benchmarks), our framework stands as the most stealthy in both the JS and Python universes. It is more stealthy than the popular Python library `undetected-chromedriver` and the well-known JavaScript library `puppeteer-stealth` in terms of stealth capabilities. Botasaurus can easily visit websites like `https://nowsecure.nl/`. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#can-you-bypass-cloudflareimperva-challenges)
-- **Access Cloudflare Websites with Simple HTTP Requests:** We can access Cloudflare-protected pages using simple HTTP requests. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#how-to-scrape-cloudflare-protected-websites-with-simple-http-requests)
-- **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework as of writing to offer SSL support for authenticated proxies. No other browser automatio libraries be it seleniumwire, puppeteer, playwright offers this important web scraping feature, enabling you to easily access Cloudflare protected websites when using authenticated proxies.
-**Use Any Chrome Extension with Just 1 Line of Code:** Easily integrate any Chrome extension, be it a Captcha Solving Extension, Adblocker, or any other from the Chrome Web Store, with just [one line of code.](https://github.com/omkarcloud/botasaurus#how-to-use-chrome-extensions)
-- **Data Cleaners:** Clean data scraped from the website with ease.
+- **Most Stealthiest Framework LITERALLY**: Based on the benchmarks, which we encourage you to read [here](https://github.com/omkarcloud/botasaurus-vs-undetected-chromedriver-vs-puppeteer-stealth-benchmarks), our framework stands as the most stealthy in both the JS and Python universes. It is more stealthy than the popular Python library `undetected-chromedriver` and the well-known JavaScript library `puppeteer-stealth`. Botasaurus can easily visit websites like `https://nowsecure.nl/`. With Botasaurus, you don't need to waste time finding ways to unblock a website. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#can-you-bypass-cloudflareimperva-challenges)
+- **Access Cloudflare Websites with Simple HTTP Requests:** We can access Cloudflare-protected pages using simple HTTP requests. Saving you both time and money spent on proxies. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#how-to-scrape-cloudflare-protected-websites-with-simple-http-requests)
+- **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework as of writing to offer SSL support for authenticated proxies. No other browser automation libraries be it seleniumwire, puppeteer, playwright offers this important web scraping feature, this feautre enables you to easily access Cloudflare protected websites when using authenticated proxies, which would otherwise be blocked if you used only the bare authenticated proxy.
+**Use Any Chrome Extension with Just 1 Line of Code:** Easily integrate any Chrome extension, be it a Captcha Solving Extension, Adblocker, or any other from the Chrome Web Store, with just [one line of code.](https://github.com/omkarcloud/botasaurus#how-to-use-chrome-extensions). Say Sayonara, to the manual process of downloading, unzipping, configuring, and loading extensions. 
+- **Data Cleaners:** Make your scrapers robust by cleaning data with expert created data cleaners.
 - **Debuggability:** When a crash occurs due to an incorrect selector, etc., Botasaurus pauses the browser instead of closing it, facilitating painless on-the-spot debugging.
 - **Caching:** Botasaurus allows you to cache web scraping results, ensuring lightning-fast performance on subsequent scrapes.
-- **Easy Configuration:** Easily save time with parallelization, profile, and proxy configuration.
+- **Easy Configuration:** Easily save hours of Development Time with easy parallelization, profile, and proxy configuration. We make asynchronous, parallel scraping a child's play.
+- **Build Robust Scrapers:** Easily configure retry on exceptions to ensure no errors comes in between you and the data
 - **Time-Saving Selenium Shortcuts:** Botasaurus comes with numerous Selenium shortcuts to make web scraping incredibly easy.
+
 
 ## 🚀 Getting Started with Botasaurus
 
@@ -1279,5 +1276,11 @@ Become one of our amazing stargazers by giving us a star ⭐ on GitHub!
 It's just one click, but it means the world to me.
 
 [![Stargazers for @omkarcloud/botasaurus](https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus)](https://github.com/omkarcloud/botasaurus/stargazers)
+
+## Disclaimer for Botasaurus Project
+
+> By using Botasaurus, you agree to comply with all applicable local and international laws related to data scraping, copyright, and privacy. The developers of Botasaurus are not responsible for any misuse of this software. It is the sole responsibility of the user to ensure adherence to all relevant laws regarding data scraping, copyright, and privacy, and to use Botasaurus in an ethical and legal manner.
+
+We take the concerns of the Botasaurus Project very seriously. For any inquiries or issues, please contact Chetan Jain at [chetan@omkar.cloud](mailto:chetan@omkar.cloud). We will take prompt and necessary action in response to your emails.
 
 ## Made with ❤️ in Bharat 🇮🇳 - Vande Mataram
