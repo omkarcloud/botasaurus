@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "upload": "rm -rf dist/ botasaurus.egg-info botasaurus/botasaurus_storage.json  MANIFEST && python setup.py sdist && pip install -e . && python -m twine upload dist/* --verbose && pip install  -e .",
+    "upload": "python increment_version.py && rm -rf dist/ botasaurus.egg-info botasaurus/botasaurus_storage.json  MANIFEST  && python setup.py sdist && pip install -e . && python -m twine upload dist/* --verbose && pip install  -e .",
     "install": "rm -rf dist/ botasaurus.egg-info botasaurus/botasaurus_storage.json MANIFEST && python setup.py sdist && pip install -e .",
     "local-install": "pip install ."
   }

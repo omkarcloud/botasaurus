@@ -115,7 +115,7 @@ pre_install()
 setup(
     name="botasaurus",
     packages=["botasaurus"],
-    version="3.2.9",
+    version='3.2.13',
     license="MIT",
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",
