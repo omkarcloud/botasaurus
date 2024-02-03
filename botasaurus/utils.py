@@ -8,6 +8,15 @@ from time import sleep
 from urllib.error import ContentTooShortError, URLError
 from sys import platform, exit
 
+
+def is_errors_instance(instances, error):
+    for i in range(len(instances)):
+        ins = instances[i]
+        if isinstance(error, ins):
+            return True, i
+    return False, -1
+
+
 def is_mac():
     return platform == "darwin"
 

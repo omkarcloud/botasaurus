@@ -36,7 +36,7 @@ def save_cache(cache: dict):
     """Saves the IP details cache to a file."""
     return BotasaurusStorage.set_item("ip_details_cache", cache)
 
-def find_ip_details(max_retries=5, proxy=None):
+def find_ip_details( proxy=None, max_retries=5,):
     """Finds details about the current public IP address."""
     cache = load_cache()
 

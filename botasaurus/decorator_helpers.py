@@ -4,12 +4,8 @@ from functools import wraps
 import traceback
 from time import sleep, time
 
-def is_errors_instance(instances, error):
-    for i in range(len(instances)):
-        ins = instances[i]
-        if isinstance(error, ins):
-            return True, i
-    return False, -1
+from .utils import is_errors_instance
+
 
 ANY = 'any'
 def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=True, on_failed_after_retry_exhausted=None):

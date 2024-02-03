@@ -13,7 +13,7 @@ from .exceptions import CloudflareDetection
 
 from .check_and_download_driver import check_and_download_driver
 
-from .utils import write_file
+from .utils import is_errors_instance, write_file
 
 from .formats import Formats
 
@@ -327,9 +327,10 @@ def browser(
     keep_drivers_alive: bool = False,
     output: Optional[Union[str, Callable]] = "default",
     output_formats: Optional[List[str]] = None,
+    raise_exception: bool = False,
+    must_raise_exceptions: Optional[List[Any]] = None,
     max_retry: Optional[int] = None,
     retry_wait: Optional[int] = None,
-    raise_exception: bool = False,
     create_driver: Optional[Callable] = None,
 ) -> Callable:
     def decorator_browser(func: Callable) -> Callable:
@@ -390,7 +391,8 @@ def browser(
             nonlocal parallel, data, cache, block_resources, block_images, window_size, metadata, add_arguments, extensions
             nonlocal tiny_profile, is_eager, lang, headless, beep
             nonlocal close_on_crash, async_queue, run_async, profile
-            nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive, raise_exception
+            nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive, raise_exception,must_raise_exceptions
+
             nonlocal output, output_formats, max_retry, retry_wait, create_driver
 
             parallel = kwargs.get("parallel", parallel)
@@ -582,6 +584,10 @@ def browser(
                         close_driver_pool(_driver_pool)
                         raise  # Re-raise the KeyboardInterrupt to stop execution
 
+                    if must_raise_exceptions and is_errors_instance(must_raise_exceptions, error)[0]:
+                        save_error_logs(format_exc(), driver)
+                        raise
+
                     if max_retry is not None and (max_retry) > (retry_attempt):
                         print_exc()
                         close_driver(driver)
@@ -590,9 +596,8 @@ def browser(
                             sleep(retry_wait)
                         return run_task(data, True, retry_attempt + 1)
 
-                    exception_log = format_exc()
                     print_exc()
-                    save_error_logs(exception_log, driver)
+                    save_error_logs(format_exc(), driver)
 
                     if not headless:
                         if not IS_PRODUCTION:
@@ -784,10 +789,10 @@ def request(
     output: Optional[Union[str, Callable]] = "default",
     output_formats: Optional[List[str]] = None,
     
+    raise_exception: bool = False,
+    must_raise_exceptions: Optional[List[Any]] = None,
     max_retry: Optional[int] = None,
     retry_wait: Optional[int] = None,
-    must_raise_exceptions: Optional[List[Any]] = None,
-    raise_exception: bool = False,
 ) -> Callable:
     def decorator_requests(func: Callable) -> Callable:
         func._scraper_type = "request"
@@ -861,8 +866,10 @@ def request(
                 except Exception as error:
                     if isinstance(error, KeyboardInterrupt):
                         raise  # Re-raise the KeyboardInterrupt to stop execution
-                    
 
+                    if must_raise_exceptions and is_errors_instance(must_raise_exceptions, error)[0]:
+                        save_error_logs(format_exc(), None)
+                        raise
 
                     if max_retry is not None and (max_retry) > (retry_attempt):
                         print_exc()
@@ -871,9 +878,7 @@ def request(
                             sleep(retry_wait)
                         return run_task(data, True, retry_attempt + 1)
 
-                    exception_log = format_exc()
- 
-                    save_error_logs(exception_log, None)
+                    save_error_logs(format_exc(), None)
 
                     if not IS_PRODUCTION:
                         if not close_on_crash:
