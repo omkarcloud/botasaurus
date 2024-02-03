@@ -326,14 +326,19 @@ scrape_heading_task()
 To configure various settings such as UserAgent, Proxy, Chrome Profile, and headless mode, you can specify them in the decorator as shown below:
 
 ```python
+from botasaurus import *
+
 @browser(
   headless=True, 
   profile='my-profile', 
-  proxy="http://your_proxy_address:your_proxy_port",
-  user_agent=bt.UserAgents.user_agent_106
+#   proxy="http://your_proxy_address:your_proxy_port", TODO: Replace with your own proxy
+  user_agent=bt.UserAgent.user_agent_106
 )
 def scrape_heading_task(driver: AntiDetectDriver, data):
-  # ...
+    driver.get("https://www.omkar.cloud/")
+    driver.prompt()
+
+scrape_heading_task()
 ```
 
 
@@ -350,14 +355,14 @@ scrape_heading_task(
   headless=True, 
   profile='my-profile', 
   proxy="http://your_proxy_address:your_proxy_port",
-  user_agent=bt.UserAgents.user_agent_106
+  user_agent=bt.UserAgent.user_agent_106
 )
 ```
 
 Furthermore, it's possible to define functions that dynamically set these parameters based on the data item. For instance, to set the profile dynamically according to the data item, you can use the following approach:
 
 ```python
-@browser(profile=lambda data: data["profile"], headless=True, proxy="http://your_proxy_address:your_proxy_port", user_agent=bt.UserAgents.user_agent_106)
+@browser(profile=lambda data: data["profile"], headless=True, proxy="http://your_proxy_address:your_proxy_port", user_agent=bt.UserAgent.user_agent_106)
 def scrape_heading_task(driver: AntiDetectDriver, data):
     # ...
 
