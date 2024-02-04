@@ -49,14 +49,14 @@ class AntiDetectDriver(webdriver.Chrome):
         return beep_input(text, self.about.beep if self.about else True)
 
     @staticmethod
-    def sleep(n):
+    def sleep(n, print_cmd: bool = False):
         """Pauses the execution for 'n' seconds."""
-        sleep_for_n_seconds(n)
+        sleep_for_n_seconds(n, print_cmd)
 
     @staticmethod
-    def random_sleep(a: float, b: float):
+    def random_sleep(a: float, b: float, print_cmd: bool = False):
         """Pauses the execution for a random duration between 'a' and 'b' seconds."""
-        sleep_for_n_seconds(uniform(a, b))
+        sleep_for_n_seconds(uniform(a, b), print_cmd)
 
     def save_screenshot(self, filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".png"):
         """Takes a screenshot and saves it with the provided or default filename."""
@@ -526,7 +526,7 @@ class AntiDetectDriver(webdriver.Chrome):
         Returns:
             None
         """
-        self.execute_script("arguments[0].click();", element)
+        return self.execute_script("arguments[0].click();", element)
 
     def click(self, selector, wait=Wait.SHORT):
         """
@@ -543,7 +543,7 @@ class AntiDetectDriver(webdriver.Chrome):
         if el is None:
             raise NoSuchElementException(f"Cannot locate element with selector: {selector}")
 
-        self.js_click(el)
+        return self.js_click(el)
 
     def click_by_xpath(self, xpath, wait=Wait.SHORT):
         """
@@ -560,7 +560,7 @@ class AntiDetectDriver(webdriver.Chrome):
         if el is None:
             raise NoSuchElementException(f"Cannot locate element with xpath: {xpath}")
 
-        self.js_click(el)
+        return self.js_click(el)
 
     def type(self, selector: str, text: str, wait=Wait.SHORT):
         """
