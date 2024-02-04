@@ -52,7 +52,7 @@ AntiDetectDriver is a modified version of Selenium designed to evade detection b
 
 - `.links` collects all hyperlinks that match the provided selector.
   ```python
-  links = driver.links('a.post-link')
+  links = driver.get_links_by_selector('a.post-link')
   ```
 
 **Element Existence Check**
@@ -103,7 +103,7 @@ AntiDetectDriver is a modified version of Selenium designed to evade detection b
 
 - `.google_get` simulates a search engine referral, opening the Google homepage before navigating to the target URL.
   ```python
-  driver.google_get("https://www.omkar.cloud/auth/sign-up/")
+  driver.get_by_google_referrer("https://www.omkar.cloud/auth/sign-up/")
   ```
 
 **Referral-Based Navigation**

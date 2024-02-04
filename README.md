@@ -198,12 +198,14 @@ Sure, Run the following Python code to access G2.com, a website protected by Clo
 ```python
 from botasaurus import *
 
+
 @browser()
 def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.google_get("https://www.g2.com/products/github/reviews")
-    heading = driver.text('h1')
-    print(heading)
-    return heading
+   driver.get_by_google_referrer("https://www.g2.com/products/github/reviews")
+   heading = driver.text('h1')
+   print(heading)
+   return heading
+
 
 scrape_heading_task()
 ```
@@ -450,13 +452,17 @@ You will definitely encounter a block by Cloudflare:
 ![blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/seleniumwireblocked.png)
 
 However, using proxies with Botasaurus prevents this issue. See the difference by running the following code:
+
 ```python
 from botasaurus import *
 
-@browser(proxy="http://username:password@proxy-provider-domain:port") # TODO: Replace with your own proxy 
+
+@browser(proxy="http://username:password@proxy-provider-domain:port")  # TODO: Replace with your own proxy 
 def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.google_get("https://www.g2.com/products/github/reviews")
-    driver.prompt()
+   driver.get_by_google_referrer("https://www.g2.com/products/github/reviews")
+   driver.prompt()
+
+
 scrape_heading_task()    
 ```  
 
@@ -518,15 +524,18 @@ scrape_heading_task()
 ```
 
 - Use a real Chrome browser with Selenium and visit via Google. Example Code:
+
 ```python
 from botasaurus import *
 
+
 @browser()
 def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.google_get("https://www.g2.com/products/github/reviews")
-    driver.prompt()
-    heading = driver.text('h1')
-    return heading
+   driver.get_by_google_referrer("https://www.g2.com/products/github/reviews")
+   driver.prompt()
+   heading = driver.text('h1')
+   return heading
+
 
 scrape_heading_task()
 ```
@@ -770,35 +779,38 @@ Below is a practical example of how Botasaurus features come together in a typic
 ```python
 from botasaurus import *
 
+
 @browser(block_resources=True,
-         cache=True, 
-         parallel=bt.calc_max_parallel_browsers, 
+         cache=True,
+         parallel=bt.calc_max_parallel_browsers,
          reuse_driver=True)
 def scrape_articles(driver: AntiDetectDriver, link):
-    driver.get(link)
+   driver.get(link)
 
-    heading = driver.text("h1")
-    date = driver.text("time")
+   heading = driver.text("h1")
+   date = driver.text("time")
 
-    return {
-        "heading": heading, 
-        "date": date, 
-        "link": link, 
-    }
+   return {
+      "heading": heading,
+      "date": date,
+      "link": link,
+   }
+
 
 @browser(block_resources=True, cache=True)
 def scrape_article_links(driver: AntiDetectDriver, data):
-    # Visit the Omkar Cloud website
-    driver.get("https://www.omkar.cloud/blog/")
-    
-    links = driver.links("h3 a")
+   # Visit the Omkar Cloud website
+   driver.get("https://www.omkar.cloud/blog/")
 
-    return links
+   links = driver.get_links_by_selector("h3 a")
+
+   return links
+
 
 if __name__ == "__main__":
-    # Launch the web scraping task
-    links = scrape_article_links()
-    scrape_articles(links)
+   # Launch the web scraping task
+   links = scrape_article_links()
+   scrape_articles(links)
 ```
 
 ### How to Clean Data?
@@ -1117,28 +1129,30 @@ if __name__ == "__main__":
 Here's how you could use `async_queue` to scrape webpage titles while scrolling through a list of links:
 
 ```python
-from botasaurus import * 
+from botasaurus import *
+
 
 @browser(async_queue=True)
 def scrape_title(driver: AntiDetectDriver, link):
-    driver.get(link)  # Navigate to the link
-    return driver.title  # Scrape the title of the webpage
+   driver.get(link)  # Navigate to the link
+   return driver.title  # Scrape the title of the webpage
+
 
 @browser()
 def scrape_all_titles(driver: AntiDetectDriver):
-    # ... Your code to visit the initial page ...
+   # ... Your code to visit the initial page ...
 
-    title_queue = scrape_title()  # Initialize the asynchronous queue
-    
-    while not end_of_page_detected(driver):  # Replace with your end-of-list condition
-        title_queue.put(driver.links('a'))  # Add each link to the queue
-        driver.scroll(".scrollable-element")
-        
+   title_queue = scrape_title()  # Initialize the asynchronous queue
 
-    return title_queue.get()  # Get all the scraped titles at once
+   while not end_of_page_detected(driver):  # Replace with your end-of-list condition
+      title_queue.put(driver.get_links_by_selector('a'))  # Add each link to the queue
+      driver.scroll(".scrollable-element")
+
+   return title_queue.get()  # Get all the scraped titles at once
+
 
 if __name__ == "__main__":
-    all_titles = scrape_all_titles()  # Call the function to start the scraping process
+   all_titles = scrape_all_titles()  # Call the function to start the scraping process
 ```
 
 **Note:** The `async_queue` will only invoke the scraping function for unique links, avoiding redundant operations and keeping the main function (`scrape_all_titles`) cleaner.

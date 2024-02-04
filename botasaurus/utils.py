@@ -9,26 +9,22 @@ from urllib.error import ContentTooShortError, URLError
 from sys import platform, exit
 
 
-def is_errors_instance(instances, error):
-    for i in range(len(instances)):
-        ins = instances[i]
-        if isinstance(error, ins):
-            return True, i
-    return False, -1
-
-
 def is_mac():
     return platform == "darwin"
+
 
 def is_linux():
     return platform == "linux" or platform == "linux2"
 
+
 def is_windows():
     return os.name == 'nt'
+
 
 def relative_path(path, goback=0):
     levels = [".."] * (goback + -1)
     return os.path.abspath(os.path.join(os.getcwd(), *levels, path.strip()))
+
 
 def retry(func, retry_wait=None, retries=5):
     tries = 0
@@ -75,7 +71,8 @@ def ignore_errors(func, instances=None):
         traceback.print_exc()
 
 
-def retry_if_is_error(func, instances=None, retries=3, wait_time=None, raise_exception=True, on_failed_after_retry_exhausted=None):
+def retry_if_is_error(func, instances=None, retries=3, wait_time=None, raise_exception=True,
+                      on_failed_after_retry_exhausted=None):
     tries = 0
     errors_only_instances = list(
         map(lambda el: el[0] if istuple(el) else el, instances))
@@ -125,33 +122,29 @@ def silentremove(filename):
         else:
             return False
 
+
 def get_range(_from, _to):
     return ",".join(map(str, list(range(_from, _to))))
 
 
-def find_by_key(ls,  key, value):
+def find_by_key(ls, key, value):
     for index in range(len(ls)):
         user = ls[index]
         if user[key] == value:
             return user
 
 
-def find_by_id(ls, id):
-    return find_by_key(ls, 'id', id)
+def find_by_id(ls, _id):
+    return find_by_key(ls, 'id', _id)
 
 
-def remove_nones(list):
-    return [element for element in list if element is not None]
-
-
-
+def remove_nones(items):
+    return [item for item in items if item is not None]
 
 
 def exit_with_failed_status():
     print('Exiting with status 1')
     exit(1)
-
-
 
 
 def sleep_for_n_seconds(n):
@@ -187,6 +180,7 @@ def merge_dicts_in_one_dict(*dicts):
 def wrap_with_dict(ls, key):
     def wrap(i):
         return {f'{key}': i}
+
     return list(map(wrap, ls))
 
 
@@ -198,7 +192,6 @@ def delete_from_dicts(ls, key):
 
 def extract_from_dict(ls, key):
     return list(map(lambda i: i[key], ls))
-
 
 
 def get_boolean_variable(name: str, default_value: bool = None):
@@ -234,24 +227,26 @@ def is_error(errs):
     def fn(e):
         result, index = is_errors_instance(errs, e)
         return result
+
     return fn
 
+
 NETWORK_ERRORS = [RemoteDisconnected, URLError,
-                  ConnectionAbortedError, ContentTooShortError,  BlockingIOError]
+                  ConnectionAbortedError, ContentTooShortError, BlockingIOError]
 
 is_network_error = is_error(NETWORK_ERRORS)
 
+
 def pretty_format_time(time):
-   return time.strftime("%H:%M:%S, %d %B %Y").replace(" 0", " ").lstrip("0")
+    return time.strftime("%H:%M:%S, %d %B %Y").replace(" 0", " ").lstrip("0")
 
 
-
-def write_html( data, path,):
+def write_html(data, path, ):
     with open(path, 'w', encoding="utf-8") as fp:
         fp.write(data)
 
 
-def write_file( data, path,):
+def write_file(data, path, ):
     with open(path, 'w', encoding="utf-8") as fp:
         fp.write(data)
 
@@ -261,12 +256,14 @@ def read_json(path):
         data = json.load(fp)
         return data
 
+
 def read_file(path):
     with open(path, 'r', encoding="utf-8") as fp:
         content = fp.read()
         return content
-        
-def write_json(data, path,  indent=4):
+
+
+def write_json(data, path, indent=4):
     with open(path, 'w', encoding="utf-8") as fp:
         json.dump(data, fp, indent=indent)
 
@@ -279,6 +276,7 @@ def get_driver_path():
 
 datetime_format = '%Y-%m-%d %H:%M:%S'
 
+
 def str_to_datetime(when):
     return datetime.strptime(
         when, datetime_format)
@@ -288,7 +286,7 @@ def datetime_to_str(when):
     return when.strftime(datetime_format)
 
 
-def get_current_profile_path(config): 
+def get_current_profile_path(config):
     profiles_path = f'profiles/{config.profile}/'
     # profiles_path =  relative_path(path, 0)
     return profiles_path

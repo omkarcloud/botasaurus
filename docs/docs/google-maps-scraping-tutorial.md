@@ -109,7 +109,6 @@ Implementing this code is simple:
     data=["restaurants in delhi"],
 )
 def scrape_places_links(driver: AntiDetectDriver, query):
-
     # Visit Google Maps
     def visit_google_maps():
         encoded_query = urllib.parse.quote_plus(query)
@@ -120,7 +119,7 @@ def scrape_places_links(driver: AntiDetectDriver, query):
         if driver.is_in_page("https://consent.google.com/"):
             agree_button_selector = 'form:nth-child(2) > div > div > button'
             driver.click(agree_button_selector)
-            driver.google_get(url)
+            driver.get_by_google_referrer(url)
 
     visit_google_maps()
 ```
@@ -178,54 +177,54 @@ First, we will gather all the links pointing to the details of individual places
 ```python
 def extract_place_links():
     places_links_selector = '[role="feed"] > div > div > a'
-    return driver.links(places_links_selector)
+    return driver.get_links_by_selector(places_links_selector)
 ```
 
 ### Visit Each Link and Extract Data
 
-For each extracted link, we will navigate to the page and scrape information about the place. 
+For each extracted link, we will navigate to the page and scrape information about the place.
 
 ```python
             # Visit an individual place and extract data
-            def scrape_place_data():
-                driver.get(link)
-                
-                # Accept Cookies for European users
-                if driver.is_in_page("https://consent.google.com/"):
-                        agree_button_selector = 'form:nth-child(2) > div > div > button'
-                        driver.click(agree_button_selector)
-                        driver.get(link)
+def scrape_place_data():
+    driver.get(link)
 
-                # Extract title
-                title_selector = 'h1'
-                title = driver.text(title_selector)
+    # Accept Cookies for European users
+    if driver.is_in_page("https://consent.google.com/"):
+        agree_button_selector = 'form:nth-child(2) > div > div > button'
+        driver.click(agree_button_selector)
+        driver.get(link)
 
-                # Extract rating
-                rating_selector = "div.F7nice > span"
-                rating = driver.text(rating_selector)
+    # Extract title
+    title_selector = 'h1'
+    title = driver.text(title_selector)
 
-                # Extract reviews count
-                reviews_selector = "div.F7nice > span:last-child"
-                reviews_text = driver.text(reviews_selector)
-                reviews = int(''.join(filter(str.isdigit, reviews_text))) if reviews_text else None
+    # Extract rating
+    rating_selector = "div.F7nice > span"
+    rating = driver.text(rating_selector)
 
-                # Extract website link
-                website_selector = "a[data-item-id='authority']"
-                website = driver.link(website_selector)
+    # Extract reviews count
+    reviews_selector = "div.F7nice > span:last-child"
+    reviews_text = driver.text(reviews_selector)
+    reviews = int(''.join(filter(str.isdigit, reviews_text))) if reviews_text else None
 
-                # Extract phone number
-                phone_xpath = "//button[starts-with(@data-item-id,'phone')]"
-                phone_element = driver.get_element_or_none(phone_xpath)
-                phone = phone_element.get_attribute("data-item-id").replace("phone:tel:", "") if phone_element else None
+    # Extract website link
+    website_selector = "a[data-item-id='authority']"
+    website = driver.get_link_by_selector(website_selector)
 
-                return {
-                    "title": title,
-                    "phone": phone,
-                    "website": website,
-                    "reviews": reviews,
-                    "rating": rating,
-                    "link": link,
-                }
+    # Extract phone number
+    phone_xpath = "//button[starts-with(@data-item-id,'phone')]"
+    phone_element = driver.get_element_or_none(phone_xpath)
+    phone = phone_element.get_attribute("data-item-id").replace("phone:tel:", "") if phone_element else None
+
+    return {
+        "title": title,
+        "phone": phone,
+        "website": website,
+        "reviews": reviews,
+        "rating": rating,
+        "link": link,
+    }
 ```
 
 
@@ -289,9 +288,11 @@ Now, it's time to launch the bot and see it in action!
 ### Running the Bot
 
 1. In the repository cloned earlier, open `task.py` and paste the following code.
+
 ```python
 from botasaurus import *
 import urllib.parse
+
 
 @browser(
     block_images=True,
@@ -299,7 +300,6 @@ import urllib.parse
     reuse_driver=True,
 )
 def scrape_places(driver: AntiDetectDriver, link):
-
     # Visit an individual place and extract data
     def scrape_place_data():
         driver.get(link)
@@ -326,7 +326,7 @@ def scrape_places(driver: AntiDetectDriver, link):
 
         # Extract website link
         website_selector = "a[data-item-id='authority']"
-        website = driver.link(website_selector)
+        website = driver.get_link_by_selector(website_selector)
 
         # Extract phone number
         phone_xpath = "//button[starts-with(@data-item-id,'phone')]"
@@ -342,6 +342,7 @@ def scrape_places(driver: AntiDetectDriver, link):
             "rating": rating,
             "link": link,
         }
+
     return scrape_place_data()
 
 
@@ -350,7 +351,6 @@ def scrape_places(driver: AntiDetectDriver, link):
     block_images=True,
 )
 def scrape_places_links(driver: AntiDetectDriver, query):
-
     # Visit Google Maps
     def visit_google_maps():
         encoded_query = urllib.parse.quote_plus(query)
@@ -361,7 +361,7 @@ def scrape_places_links(driver: AntiDetectDriver, query):
         if driver.is_in_page("https://consent.google.com/"):
             agree_button_selector = 'form:nth-child(2) > div > div > button'
             driver.click(agree_button_selector)
-            driver.google_get(url)
+            driver.get_by_google_referrer(url)
 
     # Scroll to the end of the places list to get all the places
     def scroll_to_end_of_places_list():
@@ -382,7 +382,7 @@ def scrape_places_links(driver: AntiDetectDriver, query):
 
     def extract_place_links():
         places_links_selector = '[role="feed"] > div > div > a'
-        return driver.links(places_links_selector)
+        return driver.get_links_by_selector(places_links_selector)
 
     visit_google_maps()
     scroll_to_end_of_places_list()
@@ -393,6 +393,7 @@ def scrape_places_links(driver: AntiDetectDriver, query):
     # Return the places links to be saved as a output/links file
     filename = 'links'
     return filename, places_links
+
 
 if __name__ == "__main__":
     links = scrape_places_links()

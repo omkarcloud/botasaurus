@@ -263,8 +263,8 @@ To save the data with a different filename, pass the desired filename along with
 def scrape_article_links(driver: AntiDetectDriver, data):
     # Visit the Omkar Cloud website
     driver.get("https://www.omkar.cloud/blog/")
-    
-    links = driver.links("h3 a")
+
+    links = driver.get_links_by_selector("h3 a")
 
     filename = "links"
     return filename, links
@@ -286,8 +286,8 @@ Below is a practical example of how Botasaurus features come together in a typic
 
 ```python
 @browser(block_images=True,
-         cache=True, 
-         parallel=bt.calc_max_parallel_browsers, 
+         cache=True,
+         parallel=bt.calc_max_parallel_browsers,
          reuse_driver=True)
 def scrape_articles(driver: AntiDetectDriver, link):
     driver.get(link)
@@ -296,20 +296,22 @@ def scrape_articles(driver: AntiDetectDriver, link):
     date = driver.text("time")
 
     return {
-        "heading": heading, 
-        "date": date, 
-        "link": link, 
+        "heading": heading,
+        "date": date,
+        "link": link,
     }
+
 
 @browser(block_images=True, cache=True)
 def scrape_article_links(driver: AntiDetectDriver, data):
     # Visit the Omkar Cloud website
     driver.get("https://www.omkar.cloud/blog/")
-    
-    links = driver.links("h3 a")
+
+    links = driver.get_links_by_selector("h3 a")
 
     filename = "links"
     return filename, links
+
 
 if __name__ == "__main__":
     # Launch the web scraping task
@@ -630,23 +632,25 @@ Here's how you could use `async_queue` to scrape webpage titles while scrolling 
 ```python
 from your_scraping_library import browser, AntiDetectDriver  # Replace with your actual scraping library
 
+
 @browser(async_queue=True)
 def scrape_title(driver: AntiDetectDriver, link):
     driver.get(link)  # Navigate to the link
     return driver.title  # Scrape the title of the webpage
+
 
 @browser()
 def scrape_all_titles(driver: AntiDetectDriver):
     # ... Your code to visit the initial page ...
 
     title_queue = scrape_title()  # Initialize the asynchronous queue
-    
+
     while not end_of_page_detected(driver):  # Replace with your end-of-list condition
-        title_queue.put(driver.links('a'))  # Add each link to the queue
+        title_queue.put(driver.get_links_by_selector('a'))  # Add each link to the queue
         driver.scroll(".scrollable-element")
-        
 
     return title_queue.get()  # Get all the scraped titles at once
+
 
 if __name__ == "__main__":
     all_titles = scrape_all_titles()  # Call the function to start the scraping process

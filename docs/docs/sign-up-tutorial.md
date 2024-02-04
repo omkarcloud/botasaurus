@@ -161,7 +161,7 @@ This makes it appear to the website that the user has arrived from a Google Sear
 To achieve this organic navigation, we use the `google_get` method as follows:
 
 ```python 
-driver.google_get("https://www.omkar.cloud/auth/sign-up/")
+driver.get_by_google_referrer("https://www.omkar.cloud/auth/sign-up/")
 ```
 
 ![](/img/organic-get.gif)
@@ -525,11 +525,12 @@ Finally, it's time to put all the pieces together. Follow these steps to create 
 ```python
 from botasaurus import *
 
+
 @browser(
-    data = lambda: bt.generate_users(3, country=bt.Country.IN),
+    data=lambda: bt.generate_users(3, country=bt.Country.IN),
     block_resources=True,
-    profile= lambda account: account['username'],
-    tiny_profile= True,
+    profile=lambda account: account['username'],
+    tiny_profile=True,
 )
 def create_accounts(driver: AntiDetectDriver, account):
     name = account['name']
@@ -546,21 +547,23 @@ def create_accounts(driver: AntiDetectDriver, account):
         link = bt.TempMail.get_email_link_and_delete_mailbox(email)
         driver.get(link)
 
-    driver.google_get("https://www.omkar.cloud/auth/sign-up/")
+    driver.get_by_google_referrer("https://www.omkar.cloud/auth/sign-up/")
     sign_up()
     confirm_email()
-    bt.Profile.set_profile(account)    
+    bt.Profile.set_profile(account)
+
 
 @browser(
-    data = lambda: bt.Profile.get_profiles(),
+    data=lambda: bt.Profile.get_profiles(),
     block_resources=True,
-    profile= lambda account: account['username'],
-    tiny_profile= True,
+    profile=lambda account: account['username'],
+    tiny_profile=True,
 )
 def take_screenshots(driver: AntiDetectDriver, account):
     username = account['username']
     driver.get("https://www.omkar.cloud/")
     driver.save_screenshot(username)
+
 
 if __name__ == "__main__":
     create_accounts()
@@ -617,11 +620,12 @@ After inspecting the output, I encourage you to read the final code provided bel
 ```python
 from botasaurus import *
 
+
 @browser(
-    data = lambda: bt.generate_users(3, country=bt.Country.IN),
+    data=lambda: bt.generate_users(3, country=bt.Country.IN),
     block_resources=True,
-    profile= lambda account: account['username'],
-    tiny_profile= True,
+    profile=lambda account: account['username'],
+    tiny_profile=True,
 )
 def create_accounts(driver: AntiDetectDriver, account):
     name = account['name']
@@ -638,21 +642,23 @@ def create_accounts(driver: AntiDetectDriver, account):
         link = bt.TempMail.get_email_link_and_delete_mailbox(email)
         driver.get(link)
 
-    driver.google_get("https://www.omkar.cloud/auth/sign-up/")
+    driver.get_by_google_referrer("https://www.omkar.cloud/auth/sign-up/")
     sign_up()
     confirm_email()
-    bt.Profile.set_profile(account)    
+    bt.Profile.set_profile(account)
+
 
 @browser(
-    data = lambda: bt.Profile.get_profiles(),
+    data=lambda: bt.Profile.get_profiles(),
     block_resources=True,
-    profile= lambda account: account['username'],
-    tiny_profile= True,
+    profile=lambda account: account['username'],
+    tiny_profile=True,
 )
 def take_screenshots(driver: AntiDetectDriver, account):
     username = account['username']
     driver.get("https://www.omkar.cloud/")
     driver.save_screenshot(username)
+
 
 if __name__ == "__main__":
     create_accounts()
