@@ -14,7 +14,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import StaleElementReferenceException
+# from selenium.common.exceptions import StaleElementReferenceException
 
 from .output import is_slash_not_in_filename
 
@@ -561,6 +561,17 @@ class AntiDetectDriver(webdriver.Chrome):
             raise NoSuchElementException(f"Cannot locate element with xpath: {xpath}")
 
         return self.js_click(el)
+
+    def click_by_xpath_with_retry(self, xpath, wait=Wait.SHORT, max_retries: int = 3):
+        for _ in range(max_retries):
+            el = self.get_element_by_xpath(xpath, wait)
+            if el:
+                self.click_by_xpath(xpath, wait)
+                continue
+            break
+        else:
+            return True
+        return False
 
     def type(self, selector: str, text: str, wait=Wait.SHORT):
         """
