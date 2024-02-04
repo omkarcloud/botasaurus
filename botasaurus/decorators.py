@@ -38,7 +38,6 @@ from .create_driver_utils import (
 )
 from .creators import create_requests
 
-# import create_driver, create_requests
 from .anti_detect_driver import AntiDetectDriver
 from .beep_utils import beep_input
 from .decorators_utils import (
@@ -138,10 +137,10 @@ class ThreadWithResult(Thread):
         self.result = None
         self._exception = None
         def function():
-            # try:
+            try:
                 self.result = target(*args, **kwargs)
-            # except Exception as e:
-            #     self._exception = e
+            except Exception as e:
+                self._exception = e
 
         super().__init__(group=group, target=function, name=name, daemon=daemon)
 
@@ -338,12 +337,7 @@ def browser(
 
         def close_driver(driver: AntiDetectDriver):
             if tiny_profile:
-                #   if driver.about.profile:
                 save_cookies(driver, driver.about.profile)
-            # Maybe Fixes the Chrome Processes Hanging Issue. Not Sure
-            # nonlocal url
-            # if url is None:
-            #     url = get_driver_url_safe(driver)
 
             try:
                 driver.close()
@@ -430,9 +424,6 @@ def browser(
             if cache:
                 _create_cache_directory_if_not_exists(func)
 
-            count = LocalStorage.get_item("count", 0) + 1
-            LocalStorage.set_item("count", count)
-            #
 
             # # Pool to hold reusable drivers
             _driver_pool = wrapper_browser._driver_pool if keep_drivers_alive else []
@@ -828,8 +819,6 @@ def request(
             if cache:
                 _create_cache_directory_if_not_exists(func)
 
-            count = LocalStorage.get_item("count", 0) + 1
-            LocalStorage.set_item("count", count)
 
             def run_task(
                 data,
