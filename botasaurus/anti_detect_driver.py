@@ -545,6 +545,23 @@ class AntiDetectDriver(webdriver.Chrome):
 
         self.js_click(el)
 
+    def click_by_xpath(self, xpath, wait=Wait.SHORT):
+        """
+        Performs a JavaScript click on the element matched by the CSS selector.
+        Args:
+            xpath (str): The xpath selector.
+            wait (float): Optional wait time for the element to be present.
+        Returns:
+            None
+        Raises:
+            NoSuchElementException: If the element with the specified selector is not found.
+        """
+        el = self.get_element_by_xpath(xpath, wait)
+        if el is None:
+            raise NoSuchElementException(f"Cannot locate element with xpath: {xpath}")
+
+        self.js_click(el)
+
     def type(self, selector: str, text: str, wait=Wait.SHORT):
         """
         Types the specified text into the input element matched by the CSS selector.
