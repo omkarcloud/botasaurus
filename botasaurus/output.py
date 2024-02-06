@@ -103,12 +103,12 @@ def read_csv(filename):
         return data
 
 def get_fieldnames(data_list):
-    fieldnames = []
+    fieldnames_dict = {}  # Initialize an empty dictionary
     for item in data_list:
-        for key in item.keys():
-            if key not in fieldnames:
-                fieldnames.append(key)
-    return fieldnames
+            for key in item.keys():
+                if key not in fieldnames_dict:
+                    fieldnames_dict[key] = None  # Set the value to None, we only care about the keys
+    return list(fieldnames_dict.keys())  # Convert the dictionary keys to a list
 
 def write_csv(data, filename, log = True):
         
@@ -124,8 +124,9 @@ def write_csv(data, filename, log = True):
             data = [data]
 
 
-
         filename_new = append_output_if_needed(filename)
+
+        data = [x for x in data if isinstance(x, dict)]
 
         
         if not filename_new.endswith(".csv"):
@@ -136,7 +137,6 @@ def write_csv(data, filename, log = True):
             # print("No CSV File written as data list is empty.")
             # print("Data is empty.")
             # return
-
         try:
             with open(filename_new, 'w', newline='', encoding='utf-8') as csvfile:
                 # fieldnames = data[0].keys()  # get the fieldnames from the first dictionary

@@ -44,5 +44,7 @@ def create_requests(proxy=None,  user_agent=None, use_stealth=False,):
             'http': proxy,
             'https': proxy,
         }
-
+    else:
+        reqs.proxy = None
+        
     return reqs

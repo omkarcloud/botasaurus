@@ -330,6 +330,7 @@ def browser(
     must_raise_exceptions: Optional[List[Any]] = None,
     max_retry: Optional[int] = None,
     retry_wait: Optional[int] = None,
+    create_error_logs: bool = True,
     create_driver: Optional[Callable] = None,
 ) -> Callable:
     def decorator_browser(func: Callable) -> Callable:
@@ -387,7 +388,7 @@ def browser(
             nonlocal close_on_crash, async_queue, run_async, profile
             nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive, raise_exception,must_raise_exceptions
 
-            nonlocal output, output_formats, max_retry, retry_wait, create_driver
+            nonlocal output, output_formats, max_retry, retry_wait, create_driver, create_error_logs
 
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
@@ -416,6 +417,8 @@ def browser(
             output_formats = kwargs.get("output_formats", output_formats)
             max_retry = kwargs.get("max_retry", max_retry)
             retry_wait = kwargs.get("retry_wait", retry_wait)
+            create_error_logs = kwargs.get("create_error_logs", create_error_logs)
+            
             raise_exception = kwargs.get("raise_exception", raise_exception)
             create_driver = kwargs.get("create_driver", create_driver)
 
@@ -587,8 +590,11 @@ def browser(
                             sleep(retry_wait)
                         return run_task(data, True, retry_attempt + 1)
 
-                    print_exc()
-                    save_error_logs(format_exc(), driver)
+                    if not raise_exception:
+                        print_exc()
+
+                    if create_error_logs:
+                        save_error_logs(format_exc(), driver)
 
                     if not headless:
                         if not IS_PRODUCTION:
@@ -607,8 +613,6 @@ def browser(
 
                     if raise_exception:
                         raise error
-                    else: 
-                        print_exc()
 
                     return result
 
@@ -784,6 +788,7 @@ def request(
     must_raise_exceptions: Optional[List[Any]] = None,
     max_retry: Optional[int] = None,
     retry_wait: Optional[int] = None,
+    create_error_logs: bool = True,
 ) -> Callable:
     def decorator_requests(func: Callable) -> Callable:
         func._scraper_type = "request"
@@ -796,7 +801,7 @@ def request(
                 first_run = False  # Set the flag to False so it doesn't run again
 
             nonlocal parallel, data, cache, beep, run_async, async_queue, metadata
-            nonlocal proxy, close_on_crash, output, output_formats, max_retry, retry_wait,must_raise_exceptions , raise_exception
+            nonlocal proxy, close_on_crash, output, output_formats, max_retry, retry_wait,must_raise_exceptions , raise_exception, create_error_logs
 
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
@@ -812,6 +817,7 @@ def request(
             max_retry = kwargs.get("max_retry", max_retry)
             retry_wait = kwargs.get("retry_wait", retry_wait)
             must_raise_exceptions = kwargs.get("must_raise_exceptions", must_raise_exceptions)
+            create_error_logs = kwargs.get("create_error_logs", create_error_logs)
             
             raise_exception = kwargs.get("raise_exception", raise_exception)
 
@@ -867,7 +873,11 @@ def request(
                             sleep(retry_wait)
                         return run_task(data, True, retry_attempt + 1)
 
-                    save_error_logs(format_exc(), None)
+                    if not raise_exception:
+                        print_exc()
+
+                    if create_error_logs:
+                        save_error_logs(format_exc(), None)
 
                     if not IS_PRODUCTION:
                         if not close_on_crash:
@@ -880,8 +890,6 @@ def request(
 
                     if raise_exception:
                         raise error
-                    else: 
-                        print_exc()
 
                     return result
 
