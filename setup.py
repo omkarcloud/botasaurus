@@ -8,7 +8,7 @@ from setuptools.command.install import install
 install_requires = [
     "packaging",
     "psutil",
-    "javascript",
+    "javascript_fixes",
     "requests",
     "beautifulsoup4>=4.11.2",
     "chromedriver-autoinstaller",
@@ -35,18 +35,16 @@ def get_description():
 def install_npm_package(package_name):
     """Install an npm package using a Python module, suppressing the output and handling errors."""
 
+    from javascript_fixes.packageinstall import packageinstall
+    
     try:
-        subprocess.run([sys.executable, "-m", "javascript", "--install", package_name], 
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                           )
-
+        packageinstall(package_name)
     except Exception as e:
         pass
 
     # This really loads it up.
     try:
-        from javascript import require
-
+        from javascript_fixes import require
         pkg = require(package_name)
     except Exception as e:
         pass
@@ -85,18 +83,16 @@ def check_node():
             sys.exit(1)
     except Exception as e:
         print(
-            "You do not have node installed on your system, Kindly install it by visiting https://nodejs.org/"
+            "Botasaurus requires Node.js for its stealth and proxy features. You do not have node installed on your system, Kindly install it by visiting https://nodejs.org/"
         )
         sys.exit(1)
-
 
 def pre_install():
     check_node()
 
-
 def post_install():
-    install_npm_package("got-scraping-export")
     install_npm_package("chrome-launcher")
+    install_npm_package("got-scraping-export")
 
 
 class PostInstallCommand(install):

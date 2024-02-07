@@ -2,7 +2,7 @@ import os
 from requests.cookies import RequestsCookieJar
 from http.cookies import SimpleCookie
 from requests.models import Response
-from javascript import require
+from javascript_fixes import require
 from requests.auth import AuthBase, HTTPBasicAuth
 from requests.utils import (
     get_encoding_from_headers,

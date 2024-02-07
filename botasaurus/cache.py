@@ -27,6 +27,13 @@ def _get_cache_path(func, data):
     cache_path = os.path.join(fn_cache_dir, data_hash + ".json")
     return cache_path
 
+def _hash( data):
+    # Serialize the data to a JSON string and encode to bytes
+    serialized_data = json.dumps(data).encode('utf-8')
+    
+    # Generate a hash from the serialized data
+    return  md5(serialized_data).hexdigest()
+
 
 def _has(cache_path):
     return os.path.exists(cache_path)
@@ -43,6 +50,15 @@ def _put(result, cache_path):
 def _remove(cache_path):
     if os.path.exists(cache_path):
         os.remove(cache_path)
+
+def get_files_without_json_extension(directory_path):
+    # Get a list of all files in the directory
+    files = os.listdir(directory_path)
+    
+    # Use rstrip to remove the .json extension from all filenames in the list
+    files_without_json_extension = [file.rstrip('.json') for file in files]
+    
+    return files_without_json_extension
 
 
 created_fns = set()
@@ -62,17 +78,32 @@ def _create_cache_directory_if_not_exists(func=None):
                 created_fns.add(fn_name)
                 fn_cache_dir = f'cache/{fn_name}/'
                 create_directory_if_not_exists(fn_cache_dir)
+
 class Cache:
-
-
-
     @staticmethod
     def put(func, key_data, data):
         """Write data to a cache file in JSON format."""
         _create_cache_directory_if_not_exists(func)
         path = _get_cache_path(func, key_data)
         _put(data, path)
-        
+
+
+    @staticmethod
+    def get_cached_items(func):
+            fn_name = func.__name__
+            fn_cache_dir = f'cache/{fn_name}/'
+            cache_dir = relative_path(fn_cache_dir)
+            return get_files_without_json_extension(cache_dir)
+
+    @staticmethod
+    def hash(data):
+        return _hash(data)
+
+    @staticmethod
+    def filter_items_not_in_cache(func, items):
+        cached_items  = set(Cache.get_cached_items(func))
+        return [item for item in items if Cache.hash(item) not in cached_items]
+            
     @staticmethod
     def has(func, key_data):
         _create_cache_directory_if_not_exists(func)

@@ -1,5 +1,5 @@
 import os
-from javascript import require
+from javascript_fixes import require
 
 os.environ["timeout"] = "1000"
 os.environ["TIMEOUT"] = "1000"
