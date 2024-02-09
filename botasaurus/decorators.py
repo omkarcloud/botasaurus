@@ -1,3 +1,4 @@
+from joblib import Parallel, delayed
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import WebDriverException
 from functools import wraps
@@ -136,6 +137,7 @@ class ThreadWithResult(Thread):
     ):
         self.result = None
         self._exception = None
+
         def function():
             try:
                 self.result = target(*args, **kwargs)
@@ -151,27 +153,21 @@ class ThreadWithResult(Thread):
 
 
 def execute_threads(run, ls, n_workers):
-    def perform(item):
-        return run(item)
 
-    ts = []
-    for i in range(0, len(ls), n_workers):
-        for item in ls[i : i + n_workers]:
-            thread = ThreadWithResult(target=perform, args=(item,), daemon=True)
-            thread.start()
+    def execute_parallel_tasks():
+        return Parallel(n_jobs=n_workers, backend="threading")(
+            delayed(run)(l) for l in ls
+        )
 
-            ts.append(thread)
+    parallel_thread = ThreadWithResult(target=execute_parallel_tasks, daemon=True)
+    parallel_thread.start()
+    try:
+        while parallel_thread.is_alive():
+            parallel_thread.join(0.2)  # time out not to block KeyboardInterrupt
+    except KeyboardInterrupt:
+        sys.exit(1)
 
-        for thread in ts[i : i + n_workers]:
-            try:
-                while thread.is_alive():
-                    thread.join(0.1)  # time out not to block KeyboardInterrupt
-            except KeyboardInterrupt:
-                sys.exit(1)
-
-    result = [thread.result for thread in ts]
-
-    return result
+    return parallel_thread.result
 
 
 class AsyncResult:
@@ -288,9 +284,14 @@ def update_options(data, options, add_arguments, extensions):
         if extensions:
             if not isinstance(extensions, list):
                 extensions = [extensions]
-            extensions_str = ",".join([extension.load(with_command_line_option=False) for extension in extensions])
+            extensions_str = ",".join(
+                [
+                    extension.load(with_command_line_option=False)
+                    for extension in extensions
+                ]
+            )
             options.add_argument("--load-extension=" + extensions_str)
-            
+
     if add_arguments:
         if callable(add_arguments):
             add_arguments(data, options)
@@ -386,7 +387,7 @@ def browser(
             nonlocal parallel, data, cache, block_resources, block_images, window_size, metadata, add_arguments, extensions
             nonlocal tiny_profile, is_eager, lang, headless, beep
             nonlocal close_on_crash, async_queue, run_async, profile
-            nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive, raise_exception,must_raise_exceptions
+            nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive, raise_exception, must_raise_exceptions
 
             nonlocal output, output_formats, max_retry, retry_wait, create_driver, create_error_logs
 
@@ -418,7 +419,7 @@ def browser(
             max_retry = kwargs.get("max_retry", max_retry)
             retry_wait = kwargs.get("retry_wait", retry_wait)
             create_error_logs = kwargs.get("create_error_logs", create_error_logs)
-            
+
             raise_exception = kwargs.get("raise_exception", raise_exception)
             create_driver = kwargs.get("create_driver", create_driver)
 
@@ -426,7 +427,6 @@ def browser(
 
             if cache:
                 _create_cache_directory_if_not_exists(func)
-
 
             # # Pool to hold reusable drivers
             _driver_pool = wrapper_browser._driver_pool if keep_drivers_alive else []
@@ -578,7 +578,10 @@ def browser(
                         close_driver_pool(_driver_pool)
                         raise  # Re-raise the KeyboardInterrupt to stop execution
 
-                    if must_raise_exceptions and is_errors_instance(must_raise_exceptions, error)[0]:
+                    if (
+                        must_raise_exceptions
+                        and is_errors_instance(must_raise_exceptions, error)[0]
+                    ):
                         save_error_logs(format_exc(), driver)
                         raise
 
@@ -783,7 +786,6 @@ def request(
     close_on_crash: bool = False,
     output: Optional[Union[str, Callable]] = "default",
     output_formats: Optional[List[str]] = None,
-    
     raise_exception: bool = False,
     must_raise_exceptions: Optional[List[Any]] = None,
     max_retry: Optional[int] = None,
@@ -801,7 +803,7 @@ def request(
                 first_run = False  # Set the flag to False so it doesn't run again
 
             nonlocal parallel, data, cache, beep, run_async, async_queue, metadata
-            nonlocal proxy, close_on_crash, output, output_formats, max_retry, retry_wait,must_raise_exceptions , raise_exception, create_error_logs
+            nonlocal proxy, close_on_crash, output, output_formats, max_retry, retry_wait, must_raise_exceptions, raise_exception, create_error_logs
 
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
@@ -816,15 +818,16 @@ def request(
             output_formats = kwargs.get("output_formats", output_formats)
             max_retry = kwargs.get("max_retry", max_retry)
             retry_wait = kwargs.get("retry_wait", retry_wait)
-            must_raise_exceptions = kwargs.get("must_raise_exceptions", must_raise_exceptions)
+            must_raise_exceptions = kwargs.get(
+                "must_raise_exceptions", must_raise_exceptions
+            )
             create_error_logs = kwargs.get("create_error_logs", create_error_logs)
-            
+
             raise_exception = kwargs.get("raise_exception", raise_exception)
 
             fn_name = func.__name__
             if cache:
                 _create_cache_directory_if_not_exists(func)
-
 
             def run_task(
                 data,
@@ -862,7 +865,10 @@ def request(
                     if isinstance(error, KeyboardInterrupt):
                         raise  # Re-raise the KeyboardInterrupt to stop execution
 
-                    if must_raise_exceptions and is_errors_instance(must_raise_exceptions, error)[0]:
+                    if (
+                        must_raise_exceptions
+                        and is_errors_instance(must_raise_exceptions, error)[0]
+                    ):
                         save_error_logs(format_exc(), None)
                         raise
 
