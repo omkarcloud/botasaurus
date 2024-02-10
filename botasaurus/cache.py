@@ -1,6 +1,7 @@
 import json
 import os
 from hashlib import md5
+from joblib import Parallel, delayed
 from shutil import rmtree
 from json.decoder import JSONDecodeError
 from .decorators_utils import create_cache_directory_if_not_exists, create_directory_if_not_exists
@@ -43,7 +44,18 @@ def _get(cache_path):
         return read_json(cache_path)
     except JSONDecodeError:
         return None
-        
+
+
+def _read_json_files(file_paths):
+    results = Parallel(n_jobs=-1)(delayed(_get)(file_path) for file_path in file_paths)
+    return results
+
+def _delete_item_by_path(cache_path):
+    os.remove(cache_path)
+
+def _delete_items(file_paths):
+    Parallel(n_jobs=-1)(delayed(_delete_item_by_path)(file_path) for file_path in file_paths)
+
 def _put(result, cache_path):
     write_json(result, cache_path)
 
@@ -80,6 +92,9 @@ def _create_cache_directory_if_not_exists(func=None):
                 create_directory_if_not_exists(fn_cache_dir)
 
 class Cache:
+
+    REFRESH = "REFRESH"
+    
     @staticmethod
     def put(func, key_data, data):
         """Write data to a cache file in JSON format."""
@@ -87,23 +102,21 @@ class Cache:
         path = _get_cache_path(func, key_data)
         _put(data, path)
 
-
-    @staticmethod
-    def get_cached_items(func):
-            fn_name = func.__name__
-            fn_cache_dir = f'cache/{fn_name}/'
-            cache_dir = relative_path(fn_cache_dir)
-            return get_files_without_json_extension(cache_dir)
-
     @staticmethod
     def hash(data):
         return _hash(data)
 
     @staticmethod
     def filter_items_not_in_cache(func, items):
-        cached_items  = set(Cache.get_cached_items(func))
+        cached_items  = set(Cache.get_items_hashes(func))
         return [item for item in items if Cache.hash(item) not in cached_items]
             
+
+    @staticmethod
+    def filter_items_in_cache(func, items):
+        cached_items  = set(Cache.get_items_hashes(func))
+        return [item for item in items if Cache.hash(item) in cached_items]
+                        
     @staticmethod
     def has(func, key_data):
         _create_cache_directory_if_not_exists(func)
@@ -119,12 +132,43 @@ class Cache:
             return _get(path)
         return None
 
+
+    @staticmethod
+    def get_items(func, items=None):
+        hashes = Cache.get_items_hashes(func, items)
+        fn_name = func.__name__
+        paths = [relative_path(f'cache/{fn_name}/{r}.json') for r in hashes]
+        return _read_json_files(paths)
+
+    @staticmethod
+    def get_items_hashes(func, items=None):
+        fn_name = func.__name__
+        fn_cache_dir = f'cache/{fn_name}/'
+        cache_dir = relative_path(fn_cache_dir)
+        results =  get_files_without_json_extension(cache_dir)
+
+        if items is None:
+            return results
+        else: 
+            items  = set([Cache.hash(item) for item in items])
+            return [r for r in results if r in items]
+
     @staticmethod
     def remove(func, key_data):
         """Remove a specific cache file."""
         _create_cache_directory_if_not_exists(func)
         path = _get_cache_path(func, key_data)
         _remove(path)
+
+    @staticmethod
+    def remove_items(func, items):
+
+        """Remove a specific cache file."""
+        hashes = Cache.get_items_hashes(func, items)
+        fn_name = func.__name__
+        paths = [relative_path(f'cache/{fn_name}/{r}.json') for r in hashes]
+        _delete_items(paths)
+        return len(hashes)
 
     @staticmethod
     def clear(func=None):

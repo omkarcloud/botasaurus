@@ -41,13 +41,13 @@ Botasaurus is built for creating awesome scrapers. It comes fully baked, with ba
 - **Access Cloudflare Websites with Simple HTTP Requests:** We can access Cloudflare-protected pages using simple HTTP requests. Saving you both time and money spent on proxies. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#how-to-scrape-cloudflare-protected-websites-with-simple-http-requests)
 - **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework as of writing to offer SSL support for authenticated proxies. No other browser automation libraries be it seleniumwire, puppeteer, playwright offers this important web scraping feature, this feautre enables you to easily access Cloudflare protected websites when using authenticated proxies, which would otherwise be blocked if you used only the bare authenticated proxy.
 - **Use Any Chrome Extension with Just 1 Line of Code:** Easily integrate any Chrome extension, be it a Captcha Solving Extension, Adblocker, or any other from the Chrome Web Store, with just [one line of code.](https://github.com/omkarcloud/botasaurus#how-to-use-chrome-extensions). Say Sayonara, to the manual process of downloading, unzipping, configuring, and loading extensions. 
+- **Sitemap Support:** With just [one line of code](https://github.com/omkarcloud/botasaurus#how-to-use-chrome-extensions), you can get all links for a website.
 - **Data Cleaners:** Make your scrapers robust by cleaning data with expert created data cleaners.
 - **Debuggability:** When a crash occurs due to an incorrect selector, etc., Botasaurus pauses the browser instead of closing it, facilitating painless on-the-spot debugging.
 - **Caching:** Botasaurus allows you to cache web scraping results, ensuring lightning-fast performance on subsequent scrapes.
 - **Easy Configuration:** Easily save hours of Development Time with easy parallelization, profile, and proxy configuration. We make asynchronous, parallel scraping a child's play.
 - **Build Robust Scrapers:** Easily configure retry on exceptions to ensure no errors comes in between you and the data
 - **Time-Saving Selenium Shortcuts:** Botasaurus comes with numerous Selenium shortcuts to make web scraping incredibly easy.
-
 
 ## 🚀 Getting Started with Botasaurus
 
@@ -761,6 +761,61 @@ Utilize the `reuse_driver` option to reuse drivers, reducing the time required f
 @browser(reuse_driver=True)
 def scrape_heading_task(driver: AntiDetectDriver, data):
   # ...
+```
+### How to get all links in a Sitemap?
+
+In web scraping, it is a common use case to scrape product pages, blogs, etc. But before scraping these pages, we need the links to these pages.
+
+Some web scrapers increase their workload by writing code to visit each page 1 by 1 to gather links, which they could have found by just opening the Sitemap.
+
+The Sitemap Module in Botasaurus helps you get Sitemaps of any website. It supports:
+- ".gz" sitemaps
+- recursively fetch links from all nested sitemaps.
+
+For example, let's say you are bored, and you want to read stories. A website with great stories is moralstories26.com. But because you are an avid reader of moralstories26.com, you are unable to find some fresh content.
+
+In such a case, you can use the Sitemap Module to simply fetch all moral stories ever published on moralstories26. Find the ones you have never read and read them. Here is the code to do it.
+
+```python
+from botasaurus import *
+from botasaurus.sitemap import Sitemap
+
+sitemap = Sitemap("https://moralstories26.com/post-sitemap.xml")
+links = sitemap.links()
+bt.write_temp_json(links)
+```
+And here we have 1000+ stories to read from.
+
+![sitemap-links](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/sitemap-links.png)
+
+You can also pass multiple sitemaps as a list
+
+```python
+from botasaurus import *
+from botasaurus.sitemap import Sitemap
+
+sitemap = Sitemap(["https://moralstories26.com/post-sitemap.xml", "https://moralstories26.com/post-sitemap2.xml"])
+links = sitemap.links()
+bt.write_temp_json(links)
+```
+
+Also, to ensure your scrapers run super fast, we cache the Sitemap, but you may want to periodically refresh the cache (maybe to read new stories 🤔) with the most up-to-date sitemap links, which you can do as follows:
+
+```python
+from botasaurus import *
+from botasaurus.sitemap import Sitemap
+from botasaurus.cache import Cache
+
+sitemap = Sitemap(
+    [
+        "https://moralstories26.com/post-sitemap.xml",
+        "https://moralstories26.com/post-sitemap2.xml",
+    ],
+    cache=Cache.REFRESH,  # Refresh the cache with up to date stories.
+)
+
+links = sitemap.links()
+bt.write_temp_json(links)
 ```
 
 ### Could you show me a practical example where all these Botasaurus Features Come Together to accomplish a typical web scraping project?

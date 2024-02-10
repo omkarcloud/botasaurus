@@ -306,7 +306,7 @@ def browser(
     parallel: Optional[Union[Callable[[Any], int], int]] = None,
     data: Optional[Union[Callable[[], Any], Any]] = None,
     metadata: Optional[Any] = None,
-    cache: bool = False,
+    cache: Union[bool, str] = False,  
     block_images: bool = False,
     block_resources: bool = False,
     window_size: Optional[Union[Callable[[Any], str], str]] = None,
@@ -432,7 +432,7 @@ def browser(
             _driver_pool = wrapper_browser._driver_pool if keep_drivers_alive else []
 
             def run_task(data, is_retry, retry_attempt, retry_driver=None) -> Any:
-                if cache:
+                if cache is True:
                     path = _get_cache_path(func, data)
                     if _has(path):
                         return _get(path)
@@ -563,9 +563,9 @@ def browser(
                     else:
                         close_driver(driver)
 
-                    if cache:
+                    if cache is True or cache == Cache.REFRESH :
                         if is_dont_cache(result):
-                            pass
+                            Cache.remove(func, data)
                         else:
                             Cache.put(func, data, result)
 
@@ -776,7 +776,7 @@ def request(
     parallel: Optional[Union[Callable[[Any], int], int]] = None,
     data: Optional[Union[Callable[[], Any], Any]] = None,
     metadata: Optional[Any] = None,
-    cache: bool = False,
+    cache: Union[bool, str] = False,  
     beep: bool = False,
     use_stealth: bool = False,
     run_async: bool = False,
@@ -834,7 +834,7 @@ def request(
                 is_retry,
                 retry_attempt,
             ) -> Any:
-                if cache:
+                if cache is True:
                     path = _get_cache_path(func, data)
                     if _has(path):
                         return _get(path)
@@ -852,9 +852,9 @@ def request(
                         result = func(reqs, data, metadata)
                     else:
                         result = func(reqs, data)
-                    if cache:
+                    if cache is True or cache == Cache.REFRESH :
                         if is_dont_cache(result):
-                            pass
+                            Cache.remove(func, data)
                         else:
                             Cache.put(func, data, result)
 

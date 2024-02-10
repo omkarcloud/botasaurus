@@ -67,7 +67,7 @@ class GotAdapter:
         got_kwargs = {"url": url, "headerGeneratorOptions": headerGeneratorOptions}
 
         for key, value in kwargs.items():
-            if key == "data" :
+            if key == "data":
                 if value is not None:
                     got_kwargs["body"] = value
             elif key == "json" and value is not None:
@@ -75,7 +75,7 @@ class GotAdapter:
                     got_kwargs["json"] = value
             elif key == "headers":
                 dt = value or {}
-                got_kwargs["headers"] =  {**dt, **got_kwargs.get("headers", {})}
+                got_kwargs["headers"] = {**dt, **got_kwargs.get("headers", {})}
             elif key == "params":
                 got_kwargs["searchParams"] = value
             elif key == "auth":
@@ -114,7 +114,7 @@ class GotAdapter:
             # elif key == 'files':
             #     got_kwargs['files'] = value  # May need special handling
             elif key == "timeout":
-                got_kwargs["timeout"] = value * 1000
+                got_kwargs["timeout"] = {"request": value * 1000}
             elif key == "proxies":
                 if isinstance(value, dict):
                     value = value.get("http", value.get("https"))
@@ -172,7 +172,9 @@ class GotAdapter:
 
     @staticmethod
     def get(url, **kwargs):
-        got_response = got.get(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
+        got_response = got.get(
+            GotAdapter._convert_to_got_request(url, kwargs), timeout=300
+        )
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
@@ -182,22 +184,30 @@ class GotAdapter:
 
     @staticmethod
     def put(url, **kwargs):
-        got_response = got.put(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
+        got_response = got.put(
+            GotAdapter._convert_to_got_request(url, kwargs), timeout=300
+        )
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def patch(url, **kwargs):
-        got_response = got.patch(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
+        got_response = got.patch(
+            GotAdapter._convert_to_got_request(url, kwargs), timeout=300
+        )
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def head(url, **kwargs):
-        got_response = got.head(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
+        got_response = got.head(
+            GotAdapter._convert_to_got_request(url, kwargs), timeout=300
+        )
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def delete(url, **kwargs):
-        got_response = got.delete(GotAdapter._convert_to_got_request(url, kwargs), timeout=300)
+        got_response = got.delete(
+            GotAdapter._convert_to_got_request(url, kwargs), timeout=300
+        )
         return GotAdapter._convert_to_requests_response(got_response)
 
 
