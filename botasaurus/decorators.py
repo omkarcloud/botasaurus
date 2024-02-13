@@ -152,7 +152,7 @@ class ThreadWithResult(Thread):
             raise self._exception
 
 
-def execute_threads(run, ls, n_workers):
+def run_parallel(run, ls, n_workers):
 
     def execute_parallel_tasks():
         return Parallel(n_jobs=n_workers, backend="threading")(
@@ -358,7 +358,7 @@ def browser(
                 while pool:
                     pool.pop()
             elif len(pool) > 0:
-                execute_threads(close_driver, pool, len(pool))
+                run_parallel(close_driver, pool, len(pool))
                 while pool:
                     pool.pop()
 
@@ -661,7 +661,7 @@ def browser(
 
                 if callable(parallel):
                     print(f"Running {n} Browsers in Parallel")
-                result = execute_threads(run, used_data, n)
+                result = run_parallel(run, used_data, n)
 
             if not keep_drivers_alive:
                 close_driver_pool(_driver_pool)
@@ -940,7 +940,7 @@ def request(
                 if callable(parallel):
                     print(f"Running {n} Requests in Parallel")
 
-                result = execute_threads(run, used_data, n)
+                result = run_parallel(run, used_data, n)
 
             # result = flatten(result)
             if not async_queue:
