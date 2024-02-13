@@ -413,13 +413,13 @@ To verify this, run the following code:
 
 First, install the necessary packages:
 ```bash 
-python -m pip install selenium_wire chromedriver_autoinstaller
+python -m pip install selenium_wire chromedriver_autoinstaller_fix
 ```
 
 Then, execute this Python script:
 ```python
 from seleniumwire import webdriver
-from chromedriver_autoinstaller import install
+from chromedriver_autoinstaller_fix import install
 
 # Define the proxy
 proxy_options = {

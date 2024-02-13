@@ -7,7 +7,7 @@ install_requires = [
     "requests",
     "joblib>=1.3.2",
     "beautifulsoup4>=4.11.2",
-    "chromedriver-autoinstaller",
+    "chromedriver-autoinstaller-fix",
     "cloudscraper",
     "selenium==4.5.0",
     "botasaurus-proxy-authentication",

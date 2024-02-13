@@ -1,16 +1,15 @@
 import os
 import shutil
 
-import chromedriver_autoinstaller
-from chromedriver_autoinstaller import get_chrome_version
-from chromedriver_autoinstaller.utils import get_major_version
+from chromedriver_autoinstaller_fix import get_chrome_version, install
+from chromedriver_autoinstaller_fix.utils import get_major_version
 
 
 def is_windows():
     return os.name == 'nt'
 
 def download_driver_in_path():
-    path = chromedriver_autoinstaller.install(path='build/')  
+    path = install(path='build/')  
     # print(path)
 
 def recreate_build_dir():
