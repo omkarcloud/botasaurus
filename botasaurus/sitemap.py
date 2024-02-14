@@ -1,6 +1,13 @@
+from random import shuffle
+import re
+import functools
 import xml.etree.ElementTree as ET
-from urllib.parse import urlparse, unquote_plus
+from urllib.parse import urlparse, unquote_plus, urlunparse
 from gzip import decompress
+from typing import Union, List
+
+from .list_utils import flatten
+from .cl import join_link
 from .decorators import request
 
 default_request_options = {
@@ -20,7 +27,7 @@ class GunzipException(Exception):
     pass
 
 
-def gunzip(data: bytes) -> bytes:
+def gunzip(data) :
     """
     Decompresses gzipped data.
 
@@ -80,13 +87,18 @@ def isgzip(url, response):
 @request(
     **default_request_options,
 )
-def fetch_content(request, url):
+def fetch_content(request, url: str):
     """Fetch content from a URL, handling gzip if necessary."""
     response = request.get(url, timeout=30)
     status_code = response.status_code
 
     if status_code == 404:
-        print("Sitemap not found (404) at the following URL: " + response.url)
+
+        if url.endswith("robots.txt"):
+            print("robots.txt not found (404) at the following URL: " + response.url)
+
+        else:
+            print("Sitemap not found (404) at the following URL: " + response.url)
         return None
 
     response.raise_for_status()
@@ -97,69 +109,653 @@ def fetch_content(request, url):
         return response.text
 
 
+def extractor_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Call the original function to get the filter function
+        decorator_func = func(*args, **kwargs)
+
+        # Return the structured dictionary
+        return {
+            "function_name": func.__name__,
+            "arguments": [args, kwargs],
+            "function": decorator_func,
+        }
+
+    return wrapper
+
+
+def filter_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # Call the original function to get the filter function
+        filter_func = func(*args, **kwargs)
+
+        # Return the structured dictionary
+        return {
+            "function_name": func.__name__,
+            "arguments": [args, kwargs],
+            "function": filter_func,
+        }
+
+    return wrapper
+
+
+def extract_link_upto_nth_segment(n, url):
+    parsed_url = urlparse(url)
+    path_segments = parsed_url.path.strip("/").split("/")[:n]
+    new_path = "/".join(path_segments)
+
+    # Check if the original URL ends with a slash and adjust the new path accordingly
+
+    if not new_path:
+        new_path = "/"
+
+    if parsed_url.path.endswith("/"):
+        new_path = new_path.rstrip("/") + "/"
+
+    # Reconstruct the URL up to the nth segment, preserving the trailing slash if present
+    return urlunparse(
+        (parsed_url.scheme, parsed_url.netloc, new_path, "", "", "")
+    )
+
+
+class Filters:
+
+    @staticmethod
+    @filter_decorator
+    def has_exactly_n_segments(n):
+        def filter_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            return len(segments) == n
+
+        return filter_func
+
+    @staticmethod
+    def has_exactly_1_segment():
+        return Filters.has_exactly_n_segments(1)
+
+    @staticmethod
+    def has_exactly_2_segments():
+        return Filters.has_exactly_n_segments(2)
+
+    @staticmethod
+    def has_exactly_3_segments():
+        return Filters.has_exactly_n_segments(3)
+
+    @staticmethod
+    @filter_decorator
+    def has_at_least_n_segments(n):
+        def filter_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            return len(segments) >= n
+
+        return filter_func
+
+    @staticmethod
+    def has_at_least_1_segment():
+        return Filters.has_at_least_n_segments(1)
+
+    @staticmethod
+    def has_at_least_2_segments():
+        return Filters.has_at_least_n_segments(2)
+
+    @staticmethod
+    def has_at_least_3_segments():
+        return Filters.has_at_least_n_segments(3)
+
+    @staticmethod
+    @filter_decorator
+    def has_at_most_n_segments(n):
+        def filter_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            return len(segments) <= n
+
+        return filter_func
+
+    @staticmethod
+    def has_at_most_1_segment():
+        return Filters.has_at_most_n_segments(1)
+
+    @staticmethod
+    def has_at_most_2_segments():
+        return Filters.has_at_most_n_segments(2)
+
+    @staticmethod
+    def has_at_most_3_segments():
+        return Filters.has_at_most_n_segments(3)
+
+    @staticmethod
+    @filter_decorator
+    def nth_segment_equals(n: int, value: Union[str, List[str]]):
+        def filter_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            if 0 <= n < len(segments):
+                if isinstance(value, list):  # Check if value is a list
+                    return segments[n] in value  # Return True if nth segment matches any string in the list
+                return segments[n] == value
+            return False
+
+        return filter_func
+
+
+    @staticmethod
+    def first_segment_equals(value: Union[str, List[str]]):
+        return Filters.nth_segment_equals(0, value)
+
+    @staticmethod
+    def second_segment_equals(value: Union[str, List[str]]):
+        return Filters.nth_segment_equals(1, value)
+
+    @staticmethod
+    def third_segment_equals(value: Union[str, List[str]]):
+        return Filters.nth_segment_equals(2, value)
+
+    @staticmethod
+    @filter_decorator
+    def last_segment_equals(value: Union[str, List[str]]):
+        def filter_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            return segments[-1] == value if segments else False
+
+        return filter_func
+
+    @staticmethod
+    @filter_decorator
+    def nth_segment_not_equals(n: int, value: Union[str, List[str]]):
+        def filter_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            if 0 <= n < len(segments):
+                if isinstance(value, list):  # Check if value is a list
+                    return segments[n] not in value  # Return True if nth segment does not match any string in the list
+                return segments[n] != value
+            return True
+
+        return filter_func
+
+    @staticmethod
+    def first_segment_not_equals(value: Union[str, List[str]]):
+        return Filters.nth_segment_not_equals(0, value)
+
+    @staticmethod
+    def second_segment_not_equals(value: Union[str, List[str]]):
+        return Filters.nth_segment_not_equals(1, value)
+
+    @staticmethod
+    def third_segment_not_equals(value: Union[str, List[str]]):
+        return Filters.nth_segment_not_equals(2, value)
+
+    @staticmethod
+    @filter_decorator
+    def last_segment_not_equals(value: Union[str, List[str]]):
+        def filter_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            return segments[-1] != value if segments else True
+
+        return filter_func
+
+    @staticmethod
+    @filter_decorator
+    def any_segment_equals(value: Union[str, List[str]]):
+        def filter_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            if isinstance(value, list):  # Check if value is a list
+                # Return True if any of the segments matches any string in the list
+                return any(segment in value for segment in segments)
+            return value in segments  # Check if value is in segments for a single string
+
+        return filter_func
+
+    @staticmethod
+    @filter_decorator
+    def domain_equals(domain: Union[str, List[str]]):
+        def filter_func(url):
+            netloc = urlparse(url).netloc
+            if isinstance(domain, list):  # Check if domain is a list
+                return netloc in domain  # Return True if netloc matches any domain in the list
+            return netloc == domain  # Check for a single domain string
+
+        return filter_func
+
+    @staticmethod
+    @filter_decorator
+    def domain_not_equals(domain: Union[str, List[str]]):
+        def filter_func(url):
+            netloc = urlparse(url).netloc
+            if isinstance(domain, list):  # Check if domain is a list
+                return netloc not in domain  # Return True if netloc does not match any domain in the list
+            return netloc != domain  # Check for a single domain string
+
+        return filter_func
+
+class Extractors:
+
+    @staticmethod
+    @extractor_decorator
+    def extract_nth_segment(n):
+        def extractor_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            if 0 <= n < len(segments):
+                return segments[n]
+            return None
+
+        return extractor_func
+
+    @staticmethod
+    def extract_first_segment():
+        return Extractors.extract_nth_segment(0)
+
+    @staticmethod
+    def extract_second_segment():
+        return Extractors.extract_nth_segment(1)
+
+    @staticmethod
+    def extract_third_segment():
+        return Extractors.extract_nth_segment(2)
+
+    @staticmethod
+    @extractor_decorator
+    def extract_last_segment():
+        def extractor_func(url):
+            path = urlparse(url).path.strip("/")
+            segments = path.split("/") if path else []
+            if segments:
+                return segments[-1]
+            return None
+
+        return extractor_func
+
+    @staticmethod
+    @extractor_decorator
+    def extract_link_upto_nth_segment(n):
+        def extractor_func(url):
+            return extract_link_upto_nth_segment(n, url)
+
+        return extractor_func
+
+    @staticmethod
+    def extract_link_upto_first_segment():
+        return Extractors.extract_link_upto_nth_segment(1)
+
+    @staticmethod
+    def extract_link_upto_second_segment():
+        return Extractors.extract_link_upto_nth_segment(2)
+
+    @staticmethod
+    def extract_link_upto_third_segment():
+        return Extractors.extract_link_upto_nth_segment(3)
+
+
+def wrap_in_sitemap(urls):
+    return [{"url":url, "type":"sitemap"} for url in urls]
+
+def get_sitemaps_urls(request_options, urls):
+    visited = set()
+
+    @request(**request_options)
+    def sitemap(req, data):
+
+        nonlocal visited  # Reference the global visited set
+
+
+        url = data.get("url")
+        # [   if isinstance( data, dict)]:
+        # If the URL has already been visited, return an empty list to prevent infinite recursion
+        if url in visited:
+            return []
+
+        visited.add(url)
+
+        content = fetch_content(url)
+
+        if not content:
+            return []
+
+        root = ET.fromstring(content)
+
+        namespaces = {"sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+
+        locs = [
+            sm.find("sitemap:loc", namespaces).text
+            for sm in root.findall("sitemap:sitemap", namespaces)
+        ]
+
+        links = [url]
+
+        parsed = sitemap(wrap_in_sitemap(locs))
+
+        for x in parsed:
+            links.extend(x)
+
+        return links
+
+    return sitemap(
+        wrap_in_sitemap(urls)
+    )
+
+
+def get_urls(request_options, urls):
+    visited = set()
+
+    @request(**request_options)
+    def sitemap(req, url):
+
+        nonlocal visited  # Reference the global visited set
+
+        # If the URL has already been visited, return an empty list to prevent infinite recursion
+        if url in visited:
+            return []
+
+        visited.add(url)
+
+        content = fetch_content(url)
+
+        if not content:
+            return []
+
+        root = ET.fromstring(content)
+
+        # Namespace handling, as sitemap XMLs often define namespaces
+        namespaces = {"sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+
+        links = []
+        # Look for URL entries, which indicate actual page links
+        for url_entry in root.findall("sitemap:url", namespaces):
+            loc = url_entry.find("sitemap:loc", namespaces).text
+            links.append(loc)
+
+        # Look for sitemap entries, which indicate nested sitemaps
+        locs = [
+            sm.find("sitemap:loc", namespaces).text
+            for sm in root.findall("sitemap:sitemap", namespaces)
+        ]
+
+        parsed = sitemap(locs)
+
+        for x in parsed:
+            links.extend(x)
+
+        return links
+
+    return sitemap(
+        urls,
+    )
+
+
+def clean_robots_txt_url(url):
+    return extract_link_upto_nth_segment(0, url) + "robots.txt"
+
+
+def is_empty_path(url):
+    return not urlparse(url).path.strip("/")
+
+
+def get_sitemaps_from_robots(request_options, urls):
+    visited = set()
+
+    @request(**request_options)
+    def sitemap(req, url):
+
+        nonlocal visited  # Reference the global visited set
+
+        # If the URL has already been visited, return an empty list to prevent infinite recursion
+        if url in visited:
+            return []
+
+        visited.add(url)
+
+        content = fetch_content(url)
+
+        if not content:
+            return []
+
+        return parse_sitemaps_from_robots_txt(
+            extract_link_upto_nth_segment(0, url), content
+        )
+    ls = []
+    
+    for url in urls:
+        temp = sitemap(clean_robots_txt_url(url)) if is_empty_path(url) else url
+        ls.append(temp)
+    
+    return flatten(
+      ls  
+    )
+
+
+def remove_function_key(data_list):
+    """
+    Removes the 'function' key from each dictionary in the list.
+
+    :param data_list: List of dictionaries, each potentially containing a 'function' key.
+    :return: A new list of dictionaries, each without the 'function' key.
+    """
+    return [
+        {key: value for key, value in item.items() if key != "function"}
+        for item in data_list
+    ]
+
+
+def apply_filters_maps_sorts_randomize(
+    request_options,
+    urls,
+    filters,
+    extractors,
+    sort_links,
+    randomize_links,
+):
+
+    @request(**request_options)
+    def sitemap(req, _):
+        nonlocal urls
+        for filter_info in filters:
+            filter_func = filter_info["function"]
+            urls = [url for url in urls if filter_func(url)]
+
+        for map_info in extractors:
+            extract_func = map_info["function"]
+            urls = [extract_func(url) for url in urls]
+
+        all_urls = unique_keys(urls)
+
+        if sort_links:
+            all_urls.sort()
+        elif randomize_links:
+            shuffle(all_urls)
+        return all_urls
+
+    filters_without_function = remove_function_key(filters)
+    extractors_without_function = remove_function_key(extractors)
+
+    data = {
+        "filters": filters_without_function,
+        "extractors": extractors_without_function,
+        "sort_links": sort_links,
+        "randomize_links": randomize_links,
+        "urls": urls,
+    }
+
+    return sitemap(
+        data,
+    )
+
+
+def unique_keys(all_urls):
+    return list(dict.fromkeys(all_urls))
+
+
+def clean_url(base_url, url: str) -> bool:
+    """
+    Returns true if URL is of the "http" ("https") scheme.
+
+    :param url: URL to test.
+    :return: True if argument URL is of the "http" ("https") scheme.
+    """
+    if url is None:
+        print("URL is None")
+        return False
+    if len(url) == 0:
+        print("URL is empty")
+        return False
+
+
+    try:
+        uri = urlparse(url)
+        _ = urlunparse(uri)
+
+    except Exception as ex:
+        print(f"Cannot parse URL {url}: {ex}")
+        return False
+
+    if not uri.scheme:
+        return join_link(base_url, url)
+
+    if uri.scheme.lower() not in ["http", "https"]:
+        return join_link(base_url, url)
+
+    if not uri.hostname:
+        return join_link(base_url, url)
+
+    return url
+
+
+def parse_sitemaps_from_robots_txt(base_url, robots_txt_content):
+    """
+    Parses sitemaps URLs from the content of a robots.txt file.
+
+    :param robots_txt_content: The content of the robots.txt file as a string.
+    :return: A list of unique sitemaps URLs found in the robots.txt content.
+    """
+    # Serves as an ordered set because we want to deduplicate URLs but also retain the order
+    sitemap_urls = {}
+
+    for robots_txt_line in robots_txt_content.splitlines():
+        robots_txt_line = robots_txt_line.strip()
+        # robots.txt is supposed to be case sensitive, but handling it case-insensitively here
+        sitemap_match = re.search(
+            r"^sitemap:\s*(.+?)$", robots_txt_line, flags=re.IGNORECASE
+        )
+        if sitemap_match:
+            sitemap_url = sitemap_match.group(1)
+
+            cleaned = clean_url(base_url, sitemap_url)
+            if cleaned:
+                sitemap_urls[cleaned] = True
+            else:
+                print(
+                    f"Sitemap URL '{sitemap_url}' is not a valid URL, skipping"
+                )
+
+    return list(sitemap_urls.keys())
+
+
 class Sitemap:
     def __init__(self, urls, cache=True):
-        self.urls = urls if isinstance(urls, list) else [urls]
         self.cache = cache
+        self.filters = []  # Existing filters list
+        self.extractors = []  # New list for extractors
+        self.sort_links = False  # Flag for sorting links
+        self.randomize_links = False  # Flag for randomizing links
+
+        urls = urls if isinstance(urls, list) else [urls]
+
+        urls = get_sitemaps_from_robots(self._create_request_options(), urls )
+        self.urls = urls
+
+    def filter(self, *filter_funcs):
+        for func in filter_funcs:
+            if callable(func):  # Check if the argument is a function
+                # Raise an exception with a helpful message
+                raise Exception(f"Kindly check the filter '{func.__name__}' and see if you forgot to call it.")
+        
+        self.filters.extend(filter_funcs)  # Extend the filters list only if all checks pass
+
+        return self  # Allow chaining
+    def extract(self, *extractor_funcs):
+        for func in extractor_funcs:
+            if callable(func):  # Check if the argument is a function
+                # Raise an exception with a helpful message
+                raise Exception(f"Kindly check the extractor '{func.__name__}' and see if you forgot to call it.")
+
+        self.extractors.extend(extractor_funcs)  # Extend the extractors list only if all checks pass
+
+        return self  # Allow chaining for extractors
+
+    def sort(self):
+        self.sort_links = True
+        self.randomize_links = False  # Ensure randomize is not set if sort is called
+        return self  # Allow chaining
+
+    def randomize(self):
+        self.randomize_links = True
+        self.sort_links = False  # Ensure sort is not set if randomize is called
+        return self  # Allow chaining
 
     def links(self):
+        request_options = self._create_request_options()
+
+        # This function should be defined or imported in your code
+        result = get_urls(request_options, self.urls)
+
         all_urls = []
-        visited = set()
-
-        @request(**default_request_options, parallel=40, cache=self.cache)
-        def sitemaps_json(req, url):
-            """Recursively parse a sitemap, including nested sitemaps."""
-
-            nonlocal visited  # Reference the global visited set
-
-            # If the URL has already been visited, return an empty list to prevent infinite recursion
-            if url in visited:
-                return []
-
-            visited.add(url)
-
-            content = fetch_content(url)
-
-            if not content:
-                return []
-
-            root = ET.fromstring(content)
-
-            # Namespace handling, as sitemap XMLs often define namespaces
-            namespaces = {"sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-
-            links = []
-            # Look for URL entries, which indicate actual page links
-            for url_entry in root.findall("sitemap:url", namespaces):
-                loc = url_entry.find("sitemap:loc", namespaces).text
-                links.append(loc)
-
-            # Look for sitemap entries, which indicate nested sitemaps
-            locs = [
-                sitemap.find("sitemap:loc", namespaces).text
-                for sitemap in root.findall("sitemap:sitemap", namespaces)
-            ]
-
-            parsed = sitemaps_json(locs)
-
-            for x in parsed:
-                links.extend(x)
-
-            return links
-
-        result = sitemaps_json(
-            self.urls,
-        )
-
         for x in result:
             all_urls.extend(x)
 
-        # Uniqify the
-        all_urls = list(dict.fromkeys(all_urls))
+        # This function should be defined or imported in your code
+        result = apply_filters_maps_sorts_randomize(
+            request_options,
+            all_urls,
+            self.filters,
+            self.extractors,
+            self.sort_links,
+            self.randomize_links,
+        )
 
-        return all_urls
+        return result
+
+    def sitemaps(self):
+        request_options = self._create_request_options()
+
+        # This function should be defined or imported in your code
+        result = get_sitemaps_urls(request_options, self.urls)
+
+        all_urls = []
+        for x in result:
+            all_urls.extend(x)
+
+        # This function should be defined or imported in your code
+        result = apply_filters_maps_sorts_randomize(
+            request_options,
+            all_urls,
+            self.filters,
+            self.extractors,
+            self.sort_links,
+            self.randomize_links,
+        )
+
+        return result
+
+    def _create_request_options(self):
+        return {
+            **default_request_options,
+            "parallel": 40,
+            "cache": self.cache,
+        }
 
 
 if __name__ == "__main__":
-    sitemap = Sitemap("https://www.g2.com/sitemaps/sitemap_index.xml.gz")
-    print(sitemap.links())
+    print(
+        Extractors.extract_link_upto_nth_segment(0)["function"](
+            "https://www.g2.com/aa/"
+        )
+    )
+    

@@ -762,44 +762,77 @@ Utilize the `reuse_driver` option to reuse drivers, reducing the time required f
 def scrape_heading_task(driver: AntiDetectDriver, data):
   # ...
 ```
-### How to get all links in a Sitemap?
 
-In web scraping, it is a common use case to scrape product pages, blogs, etc. But before scraping these pages, we need the links to these pages.
+### How to Extract Links from a Sitemap?
 
-Some web scrapers increase their workload by writing code to visit each page 1 by 1 to gather links, which they could have found by just opening the Sitemap.
+In web scraping, it is a common use case to scrape product pages, blogs, etc. But before scraping these pages, you need to get the links to these pages.
 
-The Sitemap Module in Botasaurus helps you get Sitemaps of any website. It supports:
-- ".gz" sitemaps
-- recursively fetch links from all nested sitemaps.
+Many developers unnecessarily increase their work by writing code to visit each page one by one and scrape links, which they could have easily by just looking at the Sitemap.
 
-For example, let's say you are bored, and you want to read stories. A website with great stories is moralstories26.com. But because you are an avid reader of moralstories26.com, you are unable to find some fresh content.
+The Botasaurus Sitemap Module makes this process easy as cake by allowing you to get all links or sitemaps using:
+- The homepage URL (e.g., `https://www.omkar.cloud/`)
+- A direct sitemap link (e.g., `https://www.omkar.cloud/sitemap.xml`)
+- A `.gz` compressed sitemap (e.g., `https://www.g2.com/sitemaps/sitemap_index.xml.gz`)
 
-In such a case, you can use the Sitemap Module to simply fetch all moral stories ever published on moralstories26. Find the ones you have never read and read them. Here is the code to do it.
+For example, if you're an Angel Investor seeking innovative tech startups, G2 is an ideal platform where companies showcase their products. You can run the following code to fetch over 160K+ product links from G2:
+
+```python
+from botasaurus import *
+from botasaurus.sitemap import Sitemap, Filters, Extractors
+
+links = (
+    Sitemap("https://www.g2.com/sitemaps/sitemap_index.xml.gz")
+    .filter(Filters.first_segment_equals("products"))
+    .extract(Extractors.extract_link_upto_second_segment())
+    .links()
+)
+bt.write_temp_json(links)
+```
+
+**Output:** 
+
+![g2-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/g2-sitemap-links.png)
+
+
+Or, if you're in the mood for some reading and looking for good stories, the following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
+
+```python
+from botasaurus import *
+from botasaurus.sitemap import Sitemap, Filters
+
+sitemaps = (
+    Sitemap("https://moralstories26.com/")
+    .filter(
+        Filters.has_exactly_1_segment(),
+        Filters.first_segment_not_equals(
+            ["about", "privacy-policy", "akbar-birbal", "animal", "education", "fables", "facts", "family", "famous-personalities", "folktales", "friendship", "funny", "heartbreaking", "inspirational", "life", "love", "management", "motivational", "mythology", "nature", "quotes", "spiritual", "uncategorized", "zen"]
+        ),
+    )
+    .links()
+)
+
+bt.write_temp_json(sitemaps)
+```
+
+**Output:** 
+
+![moralstories26-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/moralstories26-sitemap-links.png)
+
+Before scraping a site, it's useful to identify the available sitemaps. This can be easily done with the following code:
 
 ```python
 from botasaurus import *
 from botasaurus.sitemap import Sitemap
 
-sitemap = Sitemap("https://moralstories26.com/post-sitemap.xml")
-links = sitemap.links()
-bt.write_temp_json(links)
-```
-And here we have 1000+ stories to read from.
-
-![sitemap-links](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/sitemap-links.png)
-
-You can also pass multiple sitemaps as a list
-
-```python
-from botasaurus import *
-from botasaurus.sitemap import Sitemap
-
-sitemap = Sitemap(["https://moralstories26.com/post-sitemap.xml", "https://moralstories26.com/post-sitemap2.xml"])
-links = sitemap.links()
-bt.write_temp_json(links)
+sitemaps = Sitemap("https://www.omkar.cloud/").sitemaps()
+bt.write_temp_json(sitemaps)
 ```
 
-Also, to ensure your scrapers run super fast, we cache the Sitemap, but you may want to periodically refresh the cache (maybe to read new stories 🤔) with the most up-to-date sitemap links, which you can do as follows:
+**Output:** 
+
+![omkar-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/omkar-sitemap-links.png)
+
+To ensure your scrapers run super fast, we cache the Sitemap, but you may want to periodically refresh the cache, which you can do as follows:
 
 ```python
 from botasaurus import *
@@ -811,12 +844,14 @@ sitemap = Sitemap(
         "https://moralstories26.com/post-sitemap.xml",
         "https://moralstories26.com/post-sitemap2.xml",
     ],
-    cache=Cache.REFRESH,  # Refresh the cache with up to date stories.
+    cache=Cache.REFRESH,  # Refresh the cache with up-to-date stories.
 )
 
 links = sitemap.links()
 bt.write_temp_json(links)
 ```
+
+In summary, the sitemap is an awesome module for easily extracting links you need for web scraping.
 
 ### Could you show me a practical example where all these Botasaurus Features Come Together to accomplish a typical web scraping project?
 
