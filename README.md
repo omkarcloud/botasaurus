@@ -711,6 +711,26 @@ scrape_heading_task(["https://nowsecure.nl/", "https://steamdb.info/sub/363669/a
 
 The above code makes the scraper more robust by raising an exception when detected and retrying up to 5 times to visit the website.
 
+### How to Solve Captchas in Web Scraping?
+
+Facing captchas is really common and annoying hurdle in web scraping. Fortunately, CapSolver can be used to automatically solve captchas, saving both time and effort. Here's how you can use it:
+
+```python
+from botasaurus import *
+from capsolver_extension_python import Capsolver
+
+@browser(
+    extensions=[Capsolver(api_key="CAP-MY_KEY")],  # Replace "CAP-MY_KEY" with your actual CapSolver Key
+)  
+def solve_captcha(driver: AntiDetectDriver, data):
+    driver.get("https://recaptcha-demo.appspot.com/recaptcha-v2-checkbox.php")
+    driver.prompt()
+
+solve_captcha()
+```
+
+To solve captcha's with CapSolver, you will need Capsolver API Key. If you do not have a CapSolver API Key, follow the instructions [here](https://github.com/omkarcloud/botasaurus/blob/master/capsolver-sign-up.md) to create a CapSolver account and obtain one.
+
 ### How to Use Chrome Extensions?
 
 Botasaurus allows the use of ANY Chrome Extension with just 1 Line of Code. Below is an example that uses the AdBlocker Chrome Extension:
@@ -728,29 +748,7 @@ def open_chrome(driver: AntiDetectDriver, data):
 open_chrome()
 ```
 
-#### Solving Captchas in Web Scraping
-
-Captcha solving is a common requirement in web scraping. Botasaurus includes built-in integration for CapSolver. Here is how to use it.
-
-```python
-from botasaurus import *
-from capsolver_extension_python import Capsolver
-
-@browser(
-    extensions=[Capsolver(api_key="CAP-MY_KEY")], # Replace with your own CapSolver Key
-)  
-def solve_captcha(driver: AntiDetectDriver, data):
-    driver.get("https://recaptcha-demo.appspot.com/recaptcha-v2-checkbox.php")
-    driver.prompt()
-
-solve_captcha()
-```
-
-Other captcha solving tools like [2captcha](https://github.com/omkarcloud/twocaptcha-extension-python) are also supported.
-
-#### Configuring Extensions with Additional Settings
-
-In some cases an extension requires additional configuration like API keys or credentials, for that you can create a Custom Extension. Learn how to create and configure Custom Extension [here](https://github.com/omkarcloud/chrome-extension-python).
+Also, In some cases an extension requires additional configuration like API keys or credentials, for that you can create a Custom Extension. Learn how to create and configure Custom Extension [here](https://github.com/omkarcloud/chrome-extension-python).
 
 
 ### I want to Scrape a large number of Links, a new selenium driver is getting created for each new link, this increases the time to scrape data. How can I reuse Drivers?
