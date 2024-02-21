@@ -4,7 +4,7 @@ To simplify the captcha-solving process using CapSolver and save both time and e
 
 1. Start by creating a CapSolver account. Visit [capsolver.com](https://dashboard.capsolver.com/passport/register?inviteCode=lvdYBC4sYKRm) to sign up.
 
-   ![Sign Up](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/sign-up-capsolver.png)
+   ![Sign Up](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/sign_up_capsolver.png)
 
 2. After setting up your account, the next step involves funding it. CapSolver allows you to add funds via various payment methods including PayPal and cryptocurrencies. Also, the minimum deposit is $6, and depending on your location, taxes ranging from 12% to 18% will apply.
 
