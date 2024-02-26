@@ -1,8 +1,8 @@
 import requests
 import csv
+from json import dumps
 from .utils import  read_file as _read_file, relative_path, write_json as _write_json, read_json as _read_json, write_html as _write_html, write_file as _write_file
 from .beep_utils import prompt
-
 
 def is_slash_not_in_filename(filename):
     return '/' not in filename and '\\' not in filename
@@ -23,6 +23,12 @@ def fix_json_filename(filename):
 
 def read_json(filename):
         filename = fix_json_filename(filename)
+
+        return _read_json(filename)
+
+
+def read_temp_json():
+        filename = fix_json_filename('temp')
 
         return _read_json(filename)
 
@@ -110,6 +116,32 @@ def get_fieldnames(data_list):
                     fieldnames_dict[key] = None  # Set the value to None, we only care about the keys
     return list(fieldnames_dict.keys())  # Convert the dictionary keys to a list
 
+def convert_nested_to_json(input_list):
+    """
+    Iterates through a list of dictionaries and converts any nested dictionaries or lists
+    within those dictionaries into JSON-formatted strings.
+
+    :param input_list: The list of dictionaries to process.
+    :return: A new list with dictionaries having nested dictionaries/lists converted to JSON strings.
+    """
+    output_list = []
+
+    for item in input_list:
+        processed_dict = {}
+        for key, value in item.items():
+            if isinstance(value, (dict, list, tuple, set)):
+                # Convert the value to a JSON-formatted string if it's a dict or list
+                processed_dict[key] = dumps(value)
+            else:
+                # Keep the value as is if it's not a dict or list
+                processed_dict[key] = value
+        output_list.append(processed_dict)
+
+    return output_list
+
+def remove_non_dicts(data):
+    return [x for x in data if isinstance(x, dict)]
+
 def write_csv(data, filename, log = True):
         
         """
@@ -126,7 +158,7 @@ def write_csv(data, filename, log = True):
 
         filename_new = append_output_if_needed(filename)
 
-        data = [x for x in data if isinstance(x, dict)]
+        data = convert_nested_to_json(remove_non_dicts(data))
 
         
         if not filename_new.endswith(".csv"):

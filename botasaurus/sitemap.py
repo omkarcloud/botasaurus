@@ -557,13 +557,27 @@ def apply_filters_maps_sorts_randomize(
     @request(**request_options)
     def sitemap(req, _):
         nonlocal urls
-        for filter_info in filters:
-            filter_func = filter_info["function"]
-            urls = [url for url in urls if filter_func(url)]
 
-        for map_info in extractors:
-            extract_func = map_info["function"]
-            urls = [extract_func(url) for url in urls]
+        filtered_urls = []
+        for url in urls:
+            passes_filters = True
+            for filter_info in filters:
+                filter_func = filter_info["function"]
+                if not filter_func(url):
+                    passes_filters = False
+                    break
+            if passes_filters:
+                filtered_urls.append(url)
+
+        extracted_urls = []
+        for url in filtered_urls:
+            transformed_url = url
+            for map_info in extractors:
+                extract_func = map_info["function"]
+                transformed_url = extract_func(transformed_url)  # Apply each extract function in turn
+            extracted_urls.append(transformed_url)  # Add the final transformed URL to the new list
+
+        urls = extracted_urls
 
         all_urls = unique_keys(urls)
 

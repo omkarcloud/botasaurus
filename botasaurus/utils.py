@@ -7,7 +7,7 @@ from http.client import RemoteDisconnected
 from time import sleep
 from urllib.error import ContentTooShortError, URLError
 from sys import platform, exit
-
+from .list_utils import flatten_depth
 
 def is_errors_instance(instances, error):
     for i in range(len(instances)):
@@ -227,7 +227,7 @@ def sleep_forever():
 
 
 def flatten(l):
-    return [item for sublist in l for item in sublist]
+    return flatten_depth(l, depth=1)
 
 
 def is_error(errs):
