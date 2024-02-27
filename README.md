@@ -1363,11 +1363,15 @@ Become one of our amazing stargazers by giving us a star ⭐ on GitHub!
 
 It's just one click, but it means the world to me.
 
-[![Stargazers for @omkarcloud/botasaurus](https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus)](https://github.com/omkarcloud/botasaurus/stargazers)
+<a href="https://github.com/omkarcloud/botasaurus/stargazers">
+    <img src="https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus" style="width: 70%;" alt="Stargazers for @omkarcloud/botasaurus">
+</a>
 
 ## Sponsors
 
-<img src="https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/capsolver.png" width="70%"  alt="capsolver">
+<a href="https://www.capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=botsaurus">
+    <img src="https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/capsolver.png" style="width: 70%;" alt="capsolver">
+</a>
 
 [Capsolver.com](https://www.capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=botsaurus) is an AI-powered service that provides automatic captcha solving capabilities. It supports a range of captcha types, including reCAPTCHA, hCaptcha, and FunCaptcha, AWS Captcha, Geetest, image captcha among others. Capsolver offers both Chrome and Firefox extensions for ease of use, API integration for developers, and various pricing packages to suit different needs.
 
