@@ -1364,7 +1364,7 @@ Become one of our amazing stargazers by giving us a star ⭐ on GitHub!
 It's just one click, but it means the world to me.
 
 <a href="https://github.com/omkarcloud/botasaurus/stargazers">
-    <img src="https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus" style="width: 70%;" alt="Stargazers for @omkarcloud/botasaurus">
+    <img src="https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus" style="width: 50%;" alt="Stargazers for @omkarcloud/botasaurus">
 </a>
 
 ## Sponsors
