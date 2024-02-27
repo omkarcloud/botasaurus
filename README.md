@@ -1365,6 +1365,14 @@ It's just one click, but it means the world to me.
 
 [![Stargazers for @omkarcloud/botasaurus](https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus)](https://github.com/omkarcloud/botasaurus/stargazers)
 
+## Sponsors
+
+![capsolver.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/capsolver.png)
+
+[Capsolver.com](https://www.capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=botsaurus) is an AI-powered service that provides automatic captcha solving capabilities. It supports a range of captcha types, including reCAPTCHA, hCaptcha, and FunCaptcha, AWS Captcha, Geetest, image captcha among others. Capsolver offers both Chrome and Firefox extensions for ease of use, API integration for developers, and various pricing packages to suit different needs.
+
+
+
 ## Disclaimer for Botasaurus Project
 
 > By using Botasaurus, you agree to comply with all applicable local and international laws related to data scraping, copyright, and privacy. The developers of Botasaurus are not responsible for any misuse of this software. It is the sole responsibility of the user to ensure adherence to all relevant laws regarding data scraping, copyright, and privacy, and to use Botasaurus in an ethical and legal manner.
