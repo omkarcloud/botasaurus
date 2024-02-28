@@ -1321,7 +1321,7 @@ Executing above command will close all Chrome instances, thereby helping to prev
  
 ---
 
-
+<!-- 
 ### What feautres are Coming in Botasaurus 4?
 Botasaurus 4, which is currently in its beta phase, allows you to:
   - A sms API to receive OTPs.
@@ -1331,11 +1331,10 @@ Botasaurus 4, which is currently in its beta phase, allows you to:
   - Whatsapp/Email Alerts
   - An API to interface with Gmail and Outlook accounts.
   - MySQL/PostgreSQL Integration
-  - And Many More :)
+  - And Many More :) -->
   
-Developers are actively using Botasaurus 4 in production environments and saving hours of Development Time. To get access to Botasaurus 4, please [reach out to us](mailto:chetan@omkar.cloud?subject=Access%20Botasaurus%204&body=I%20want%20to%20use%20Botasaurus%204%20and%20gain%20access%20to%20feature%3A%20%5BTELL%20YOUR%20FEATURE%5D) and let us know which feature you would like to access.
+<!-- Developers are actively using Botasaurus 4 in production environments and saving hours of Development Time. To get access to Botasaurus 4, please [reach out to us](mailto:chetan@omkar.cloud?subject=Access%20Botasaurus%204&body=I%20want%20to%20use%20Botasaurus%204%20and%20gain%20access%20to%20feature%3A%20%5BTELL%20YOUR%20FEATURE%5D) and let us know which feature you would like to access. -->
  
-
 
 ### Conclusion
 
