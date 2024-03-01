@@ -764,29 +764,10 @@ Many developers unnecessarily increase their work by writing code to visit each 
 The Botasaurus Sitemap Module makes this process easy as cake by allowing you to get all links or sitemaps using:
 - The homepage URL (e.g., `https://www.omkar.cloud/`)
 - A direct sitemap link (e.g., `https://www.omkar.cloud/sitemap.xml`)
-- A `.gz` compressed sitemap (e.g., `https://www.g2.com/sitemaps/sitemap_index.xml.gz`)
-
-For example, if you're an Angel Investor seeking innovative tech startups, G2 is an ideal platform where companies showcase their products. You can run the following code to fetch over 160K+ product links from G2:
-
-```python
-from botasaurus import *
-from botasaurus.sitemap import Sitemap, Filters, Extractors
-
-links = (
-    Sitemap("https://www.g2.com/sitemaps/sitemap_index.xml.gz")
-    .filter(Filters.first_segment_equals("products"))
-    .extract(Extractors.extract_link_upto_second_segment())
-    .links()
-)
-bt.write_temp_json(links)
-```
-
-**Output:** 
-
-![g2-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/g2-sitemap-links.png)
+- A `.gz` compressed sitemap
 
 
-Or, if you're in the mood for some reading and looking for good stories, the following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
+Let's say you're in the mood for some reading and looking for good stories, the following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
 
 ```python
 from botasaurus import *
@@ -810,7 +791,7 @@ bt.write_temp_json(sitemaps)
 
 ![moralstories26-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/moralstories26-sitemap-links.png)
 
-Before scraping a site, it's useful to identify the available sitemaps. This can be easily done with the following code:
+Also, Before scraping a site, it's useful to identify the available sitemaps. This can be easily done with the following code:
 
 ```python
 from botasaurus import *
