@@ -228,15 +228,11 @@ Botasaurus will launch a new browser instance for each item in the list and merg
 
 Please note that the `data` parameter can also handle items such as dictionaries.
 
-For instance, if you're automating the sign-up process for bot accounts on a website, you can pass dictionaries to it like so:
-
 ```python
 @browser(data=[{"name": "Mahendra Singh Dhoni", ...}, {"name": "Virender Sehwag", ...}])
 def scrape_heading_task(driver: AntiDetectDriver, data: dict):
     # ...
 ```
-
-<!-- In this example, the `data` parameter is supplied with a list of dictionaries. Each dictionary contains details for a different bot account that you wish to sign up. -->
 
 ### How to Scrape in Parallel?
 
@@ -535,9 +531,7 @@ scrape_heading_task()
 
 This challenge requires performing JS computations that differentiates a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. 
 
-It's commonly used to protect:
-- Login/Sign Up pages
-- Sign Up Flows
+It's commonly used to protect Auth pages:
 
 Example Pages: https://nowsecure.nl/
 
@@ -681,7 +675,7 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
 scrape_heading_task()
 ```
 
-If you are doing web scraping of publicly available data, then the above code is good and recommended to be used. However, if you are creating multiple accounts, then we don't recommend using the above code because the website may use tools like [fingerprint](https://fingerprint.com/) to capture fingerprints and uniquely identify that bots are creating multiple accounts.
+If you are doing web scraping of publicly available data, then the above code is good and recommended to be used. but stealth driver is fingerprintable using tools like [fingerprint](https://fingerprint.com/).
 
 5. We expect to access Cloudflare websites 9 out of 10 times. However, in some cases, they do detect us for reasons like IP blacklisting. In such cases, you can use the following code snippet to make your scraper more robust:
 ```python
@@ -1066,14 +1060,6 @@ soup = anti_detect_request.bs4("https://www.omkar.cloud/")
 
 --- 
 
-## Sign Up Bots
-
-Sometimes, data is hidden behind an authentication wall, requiring you to sign up via email or Google to access it. Sign-up automation is designed for this use case; it assists in downloading reports, scraping account usage history, and more.
-
-Please note that it is important to use this functionality ethically and only for legitimate purposes. You can learn about it [here](https://www.omkar.cloud/botasaurus/docs/sign-up-features/)
-
----
-
 ### How to Run Botasaurus in Docker?
 
 To run Botasaurus in Docker, use the Botasaurus Starter Template, which includes the necessary Dockerfile and Docker Compose configurations:
@@ -1088,7 +1074,7 @@ docker-compose build && docker-compose up
 
 Botasaurus Starter Template comes with the necessary `.gitpod.yml` to easily run it in Gitpod, a browser-based development environment. Set it up in just 5 minutes by following these steps:
 
-1. Open Botasaurus Starter Template, by visiting [this link](https://gitpod.io/#https://github.com/omkarcloud/botasaurus-starter) and sign up using your GitHub account.
+1. Open Botasaurus Starter Template, by visiting [this link](https://gitpod.io/#https://github.com/omkarcloud/botasaurus-starter) and sign up on gitpod.
    
    ![Screenshot (148)](https://github.com/omkarcloud/google-maps-scraper/assets/53407137/f498dda8-5352-4f7a-9d70-c717859670d4.png)
   
@@ -1329,7 +1315,6 @@ Botasaurus 4, which is currently in its beta phase, allows you to:
   - Use Kubernetes to run thousands of bots in parallel.
   - Schedule Scraping Tasks at specific times or intervals
   - Whatsapp/Email Alerts
-  - An API to interface with Gmail and Outlook accounts.
   - MySQL/PostgreSQL Integration
   - And Many More :) -->
   

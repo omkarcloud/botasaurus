@@ -1,30 +1,6 @@
 # Changing IP [Must Read]
 
-Changing your IP is of immense importance in bot development and web scraping as it helps prevent suspension and bypass IP blocks.
-
-## Why Change IP?
-
-I once read in a book, **"When your why is clear, the how is easy."** So, let's understand why you need to change your IP.
-
-There are two most important reasons to change your IP:
-
-**1. Preventing Suspension:** 
-Imagine you create 100 accounts on LinkedIn using the same IP. Soon enough, LinkedIn will ask you for identity verification.
-
-![LinkedIn Restricted Account](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/linkedin-restricted.png)
-
-LinkedIn restricts the account because it recognizes that 100 accounts were created using a single IP, indicating possible bot activity.
-
-To avoid such restrictions, you need to change your IP each time the bot runs.
-
-Remember, the golden rule to prevent suspension is **"No two bots should have the same IP."**
-
-**2. Bypassing IP Blocks:** 
-If you try to scrape fiverr.com, after a few page scrapes, you might encounter the following PerimeterX screen.
-
-![Fiverr IP Block](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/fiverr-block.webp)
-
-In cases like these, when you get blocked, you need to change your IP to continue scraping.
+Changing your IP is of immense importance in bot development and web scraping as it helps you bypass IP blocks.
 
 ## Methods for Changing IP
 
@@ -81,4 +57,4 @@ In practical terms, for more than 90% of cases involving small-scale scraping an
 
 It is a free, fast, and code-free method to obtain IPs with high reputation. This is my go-to method for acquiring IPs with high reputation.
 
-For larger web scraping/automation tasks, such as scraping one million pages or creating 5000 accounts on a website, we recommend using proxies. If possible, consider disabling the loading of CSS and images to reduce costs.
+For larger web scraping/automation tasks, such as scraping a million pages, we recommend using proxies. If possible, consider disabling the loading of CSS and images to reduce costs.
