@@ -766,8 +766,25 @@ The Botasaurus Sitemap Module makes this process easy as cake by allowing you to
 - A direct sitemap link (e.g., `https://www.omkar.cloud/sitemap.xml`)
 - A `.gz` compressed sitemap
 
+For example,  to get a list of books from bookswagon.com, you can use following code:
 
-Let's say you're in the mood for some reading and looking for good stories, the following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
+```python
+from botasaurus import *
+from botasaurus.sitemap import Sitemap, Filters
+
+links = (
+    Sitemap("https://www.bookswagon.com/googlesitemap/sitemapproducts-1.xml")
+    .filter(Filters.first_segment_equals("book"))
+    .links()
+)
+bt.write_temp_json(links)
+```
+
+**Output:** 
+
+![book-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/books-wagaon.png)
+
+Or, Let's say you're in the mood for some reading and looking for good stories, the following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
 
 ```python
 from botasaurus import *
