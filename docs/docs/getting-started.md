@@ -37,4 +37,4 @@ You can edit the `task.py` file based on your Project Needs.
 
 ## Next Steps
 
-If you are new to Botasaurus, we encourage you to learn about Botasaurus [here](sign-up-tutorial.md).
+If you are new to Botasaurus, we encourage you to learn about Botasaurus [here](google-maps-scraping-tutorial).

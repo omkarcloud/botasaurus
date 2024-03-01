@@ -398,6 +398,17 @@ class Extractors:
 def wrap_in_sitemap(urls):
     return [{"url":url, "type":"sitemap"} for url in urls]
 
+def clean_sitemap_response(s, char='<'):
+    # Find the index of the given character
+    char_index = s.find(char)
+    
+    # If the character is not found, return the original string
+    if char_index == -1:
+        return s
+    
+    # Otherwise, return the substring starting from the character
+    return s[char_index:]
+
 def get_sitemaps_urls(request_options, urls):
     visited = set()
 
@@ -415,7 +426,7 @@ def get_sitemaps_urls(request_options, urls):
 
         visited.add(url)
 
-        content = fetch_content(url)
+        content = clean_sitemap_response(fetch_content(url))
 
         if not content:
             return []
@@ -457,7 +468,7 @@ def get_urls(request_options, urls):
 
         visited.add(url)
 
-        content = fetch_content(url)
+        content = clean_sitemap_response(fetch_content(url))
 
         if not content:
             return []
