@@ -7,6 +7,22 @@ from time import sleep, time
 from .chrome_launcher_adapter import ChromeLauncherAdapter
 from .create_driver_utils import create_selenium_driver, do_create_driver_with_custom_driver_creator
 from selenium.webdriver.chrome.options import Options
+import subprocess
+from os import name
+
+def kill_process_by_pid(pid):
+    if pid is None:
+        raise ValueError("A PID must be provided")
+    try:
+        if name == 'nt':
+            subprocess.run(['taskkill', '/PID', str(pid), '/F'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:  # macOS and Linux share the same command for killing a process by PID
+            subprocess.run(['kill', str(pid)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError:
+        # already killed
+        pass
+    except Exception as e:
+        print(f"An error occurred while trying to kill the process with PID {pid}: {e}")
 
 
 # COPIED FROM chrome-launcher code (https://github.com/GoogleChrome/chrome-launcher/blob/main/src/flags.ts), Mostly same but the extensions, media devices etc are not disabled to avoid detection
@@ -224,6 +240,9 @@ def do_create_stealth_driver(data, options, desired_capabilities, start_url, wai
         "debuggerAddress", f"127.0.0.1:{debug_port}"
     )
     remote_driver = create_selenium_driver(remote_driver_options, desired_capabilities)
+    pid = chrome.pid
+
+    remote_driver.kill_chrome_by_pid = lambda: kill_process_by_pid(pid)
 
     if not should_wait:
             sleep(1) # Still do some wait to prevent exceptions

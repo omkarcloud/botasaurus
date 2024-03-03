@@ -483,5 +483,7 @@ window.scrollBy(0, 10000);
     def quit(self) -> None:
         if hasattr(self, 'close_proxy') and callable(self.close_proxy):
           self.close_proxy()
+        super().quit()
 
-        return super().quit()
+        if hasattr(self, 'kill_chrome_by_pid') and callable(self.kill_chrome_by_pid):
+          self.kill_chrome_by_pid()
