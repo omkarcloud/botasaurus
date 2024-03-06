@@ -335,7 +335,8 @@ def browser(
     create_driver: Optional[Callable] = None,
 ) -> Callable:
     def decorator_browser(func: Callable) -> Callable:
-        func._scraper_type = "browser"
+        if not hasattr(func, '_scraper_type'):
+            func._scraper_type = "browser"
 
         def close_driver(driver: AntiDetectDriver):
             if tiny_profile:
@@ -793,7 +794,8 @@ def request(
     create_error_logs: bool = True,
 ) -> Callable:
     def decorator_requests(func: Callable) -> Callable:
-        func._scraper_type = "request"
+        if not hasattr(func, '_scraper_type'):
+            func._scraper_type = "request"
 
         @wraps(func)
         def wrapper_requests(*args, **kwargs) -> Any:

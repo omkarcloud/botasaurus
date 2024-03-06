@@ -790,7 +790,7 @@ Or, Let's say you're in the mood for some reading and looking for good stories, 
 from botasaurus import *
 from botasaurus.sitemap import Sitemap, Filters
 
-sitemaps = (
+links = (
     Sitemap("https://moralstories26.com/")
     .filter(
         Filters.has_exactly_1_segment(),
@@ -801,7 +801,7 @@ sitemaps = (
     .links()
 )
 
-bt.write_temp_json(sitemaps)
+bt.write_temp_json(links)
 ```
 
 **Output:** 
@@ -1346,7 +1346,7 @@ Become one of our amazing stargazers by giving us a star ⭐ on GitHub!
 It's just one click, but it means the world to me.
 
 <a href="https://github.com/omkarcloud/botasaurus/stargazers">
-    <img src="https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus" style="width: 50%;" alt="Stargazers for @omkarcloud/botasaurus">
+    <img src="https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus" alt="Stargazers for @omkarcloud/botasaurus">
 </a>
 
 ## Sponsors
