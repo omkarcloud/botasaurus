@@ -1,0 +1,8 @@
+{
+    "extends": [
+      "@apify/ts"
+    ],
+    "parserOptions": {
+      "project": "tsconfig.eslint.json"
+    }
+  }

@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "upload": "python increment_version.py && rm -rf dist/ bota.egg-info  MANIFEST && python setup.py sdist && pip install -e . && python -m twine upload dist/* --verbose",
+    "install": "rm -rf dist/ bota.egg-info  MANIFEST && python setup.py sdist && pip install -e .",
+    "local-install": "pip install ."
+  }
+}

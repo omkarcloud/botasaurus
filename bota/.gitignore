@@ -1,0 +1,15 @@
+.idea/
+__pycache__/
+build/
+dist/
+*.egg-info*
+
+*.pyc
+.*
+LICENSE.txt
+MANIFEST.in
+README.txt
+!.gitignore
+!.gitlab-ci.yml
+Pipfile
+Pipfile.lock

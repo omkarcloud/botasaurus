@@ -1,0 +1,43 @@
+{
+    "name": "botasaurus-controls",
+    "version": "6.0.15",
+    "description": "controls adder for botasaurus.",
+    "main": "dist/index.js",
+    "engines": {
+        "node": ">=15.10.0"
+    },
+    "files": [
+        "dist"
+    ],
+    "devDependencies": {
+        "@apify/tsconfig": "^0.1.0",
+        "@types/node": "^16.4.13",
+        "@typescript-eslint/eslint-plugin": "^4.29.1",
+        "@typescript-eslint/parser": "^4.29.1",
+        "eslint": "^7.0.0",
+        "fs-extra": "^9.1.0",
+        "rimraf": "^3.0.2",
+        "ts-node": "^10.2.0",
+        "typescript": "^4.3.5",
+        "uglify-js": "^3.17.4"
+    },
+    "scripts": {
+        "build": "rimraf dist && tsc && python fix.py && node minify-script.js",
+        "prepublishOnly": "npm run build",
+        "lint": "eslint src test",
+        "lint:fix": "eslint src test --fix",
+        "test": "jest --coverage"
+    },
+    "author": {
+        "name": "Chetan",
+        "url": "https://www.omkar.cloud"
+    },
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/omkarcloud/botasaurus"
+    },
+    "bugs": {
+        "url": "https://github.com/omkarcloud/botasaurus/issues"
+    }
+}
