@@ -1,7 +1,7 @@
 from threading import Lock
 from .task_executor import TaskExecutor
-from ..scraper.scraper import Scraper
-from ..utils.k8s import K8s
+from .scraper import Scraper
+from .k8s import K8s
 
 class MasterExecutor(TaskExecutor):
 

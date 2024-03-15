@@ -1,4 +1,4 @@
-from ..routes.executor import executor
+from .executor import executor
 from bottle import (
     request,
     post,

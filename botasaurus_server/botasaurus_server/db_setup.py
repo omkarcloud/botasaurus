@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from ..models.models import Base  # Assuming Task is one of your models
+from .models import Base  # Assuming Task is one of your models
 from os import path, getcwd
 
 

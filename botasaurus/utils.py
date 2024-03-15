@@ -9,6 +9,7 @@ from urllib.error import ContentTooShortError, URLError
 from sys import platform, exit
 from .list_utils import flatten_depth
 
+
 def is_errors_instance(instances, error):
     for i in range(len(instances)):
         ins = instances[i]

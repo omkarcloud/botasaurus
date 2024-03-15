@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean, Foreign
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from datetime import datetime, UTC
-from ..utils.cleaners import normalize_dicts_by_fieldnames
+from .cleaners import normalize_dicts_by_fieldnames
 
 Base = declarative_base()
 

@@ -5,11 +5,11 @@ from math import inf
 from sqlalchemy import and_
 import traceback
 from sqlalchemy.exc import OperationalError
-from ..utils.cleaners import clean_data
-from ..utils.db_setup import Session
-from ..scraper.scraper import Scraper
-from ..models.models import Task, TaskStatus, TaskHelper, create_cache
-from ..scraper.scraper_type import ScraperType
+from .cleaners import clean_data
+from .db_setup import Session
+from .scraper import Scraper
+from .models import Task, TaskStatus, TaskHelper, create_cache
+from .scraper_type import ScraperType
 
 class TaskExecutor:
 

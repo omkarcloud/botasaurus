@@ -3,8 +3,8 @@ import requests
 import traceback
 import time
 import random
-from ..utils.cleaners import clean_data
-from ..scraper.scraper import Scraper
+from .cleaners import clean_data
+from .scraper import Scraper
 
 def make_request_with_retry(request_lambda, max_retries=6, initial_delay=1, backoff_factor=2, max_delay=60):
     retries = -1

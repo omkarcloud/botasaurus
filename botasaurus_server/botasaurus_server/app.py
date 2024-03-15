@@ -1,14 +1,14 @@
 from bottle import run
-from .utils.config import is_in_kubernetes, is_worker, is_master
+from .config import is_in_kubernetes, is_worker, is_master
 
 if is_master:
-    from .routes import master_routes
+    from . import master_routes
 elif is_worker:
-    from .routes import worker_routes
+    from . import worker_routes
 else:
-    from .routes import task_routes
+    from . import task_routes
 
-from .routes.executor import executor
+from .executor import executor
 
 def run_backend():
     executor.load()

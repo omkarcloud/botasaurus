@@ -2,7 +2,7 @@ import json
 from hashlib import sha256
 from datetime import datetime, timedelta, UTC
 from .db_setup import Session
-from ..models.models import Cache
+from .models import Cache
 
 def is_expired(cache_entry, days):
     return datetime.now(UTC).replace(tzinfo=None) > cache_entry.created_at + timedelta(days=days)

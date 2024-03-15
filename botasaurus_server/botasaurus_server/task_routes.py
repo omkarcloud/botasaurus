@@ -11,16 +11,16 @@ from bottle import (
 )
 import json
 from .executor import executor
-from ..utils.apply_offset_limit import apply_offset_limit
-from ..ui.filters import apply_filters
-from ..ui.sorts import apply_sorts
-from ..ui.views import apply_view
+from .apply_offset_limit import apply_offset_limit
+from .filters import apply_filters
+from .sorts import apply_sorts
+from .views import apply_view
 
-from ..utils.download import download_results
-from ..scraper.scraper import Scraper
-from ..utils.convert_to_english import convert_unicode_dict_to_ascii_dict
+from .download import download_results
+from .scraper import Scraper
+from .convert_to_english import convert_unicode_dict_to_ascii_dict
 
-from ..models.models import (
+from .models import (
     Cache,
     Task,
     create_cache_key,
@@ -28,8 +28,8 @@ from ..models.models import (
     serialize_task,
     TaskHelper,
 )
-from ..utils.db_setup import Session
-from ..utils.errors import JsonHTTPResponse, JsonHTTPResponseWithMessage
+from .db_setup import Session
+from .errors import JsonHTTPResponse, JsonHTTPResponseWithMessage
 
 
 TASK_NOT_FOUND = {"status": 404, "message": "Task not found"}
@@ -540,10 +540,10 @@ def validate_download_params(json_data, allowed_sorts, allowed_views):
 
     # View Validation (if applicable)
     view = json_data.get("view")
+
     if view == "__all_fields__":
         view = None
-
-    if view:
+    elif view:
         if not is_string_of_min_length(view):
             raise JsonHTTPResponse(
                 {"message": "View must be a string with at least one character"}, 400
@@ -557,7 +557,9 @@ def validate_download_params(json_data, allowed_sorts, allowed_views):
                 },
                 400,
             )
-
+    else: 
+        if allowed_views:
+            view = allowed_views[0]
     # Convert to English Validation (if applicable)
     convert_to_english = json_data.get("convert_to_english", True)
     if not isinstance(convert_to_english, bool):
@@ -644,8 +646,7 @@ def validate_results_request(json_data, allowed_sorts, allowed_views):
 
     if view == "__all_fields__":
         view = None
-
-    if view:
+    elif view:
         if not is_string_of_min_length(view):
             raise JsonHTTPResponse(
                 {"message": "View must be a string with at least one character"}, 400
@@ -659,6 +660,10 @@ def validate_results_request(json_data, allowed_sorts, allowed_views):
                 },
                 400,
             )
+    else: 
+        if allowed_views:
+            view = allowed_views[0]
+
 
     # Offset Validation
     offset = json_data.get("offset", 0)  # Default to 0 if missing

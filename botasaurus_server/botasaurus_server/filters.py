@@ -2,7 +2,7 @@ import json
 from casefy import snakecase, titlecase
 import json
 
-from ..utils.errors import JsonHTTPResponseWithMessage
+from .errors import JsonHTTPResponseWithMessage
 
 class BaseFilter:
     def __init__(self, field, label=None):
