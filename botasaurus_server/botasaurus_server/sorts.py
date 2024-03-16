@@ -2,9 +2,10 @@ from datetime import datetime
 from casefy import snakecase, titlecase
 
 class BaseSort:
-    def __init__(self, field, label=None):
+    def __init__(self, field, label=None, is_default=False):
         self.field = field
         self.label = label
+        self.is_default = is_default
         self.reverse = False
         class_name = snakecase(self.__class__.__name__)
         self.id = f"{field}_{class_name}"
@@ -48,8 +49,9 @@ class NumericAscendingSort(BaseSort):
 
 
 class NumericDescendingSort(BaseSort):
-    def __init__(self, field, label=None):
-        super().__init__(field, label)
+    def __init__(self, field, label=None, is_default=False):
+
+        super().__init__(field, label,is_default)
         self.reverse = True  # For descending order
 
     def get_label(self):
@@ -132,8 +134,8 @@ class NullsLastSort(BaseSort):
 
 
 class _DateSort(BaseSort):
-    def __init__(self, field, label=None, date_format=None):
-        super().__init__(field, label)
+    def __init__(self, field, label=None, date_format=None, is_default=False):
+        super().__init__(field, label,is_default)
         self.date_format = date_format
 
     def parse_date(self, date_str):
@@ -193,8 +195,8 @@ class AlphabeticAscendingSort(BaseSort):
 
 
 class AlphabeticDescendingSort(BaseSort):
-    def __init__(self, field, label=None):
-        super().__init__(field, label)
+    def __init__(self, field, label=None, is_default=False):
+        super().__init__(field, label,is_default)
         self.reverse = True  # Z to A
 
     def get_label(self):
@@ -203,10 +205,12 @@ class AlphabeticDescendingSort(BaseSort):
 
 
 class Sort(BaseSort):
-    def __init__(self, label, sorts=[]):
+    def __init__(self, label, sorts=[], is_default=False):
         # Since Sort does not use a single field, we pass None to BaseSort's field parameter.
-        super().__init__(None, label)
+        super().__init__(None, label, is_default)
         self.sorts = sorts
+        self.is_default = is_default
+        
         class_name = snakecase(self.__class__.__name__)
         label_cased = snakecase(label)
 

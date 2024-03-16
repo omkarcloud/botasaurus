@@ -494,7 +494,7 @@ def get_task(task_id):
             raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
 
 
-def validate_download_params(json_data, allowed_sorts, allowed_views):
+def validate_download_params(json_data, allowed_sorts, allowed_views, default_sort):
     """Validates download parameters for a task."""
 
     ensure_json_body_is_dict(json_data)
@@ -521,8 +521,11 @@ def validate_download_params(json_data, allowed_sorts, allowed_views):
         if not isinstance(filters, dict):
             raise JsonHTTPResponse({"message": "Filters must be a dictionary"}, 400)
 
-    # Sort Validation (if applicable)
-    sort = json_data.get("sort")
+
+    if "sort" not in json_data:
+        sort = default_sort
+    else:
+        sort = json_data.get("sort")
     if sort:
         if not is_string_of_min_length(sort):
             raise JsonHTTPResponse(
@@ -598,6 +601,7 @@ def download_task_results(task_id):
         request.json,
         Server.get_sort_ids(scraper_name),
         Server.get_view_ids(scraper_name),
+        Server.get_default_sort(scraper_name),
     )
 
     # Apply sorts, filters, and view
@@ -613,7 +617,7 @@ def download_task_results(task_id):
     return download_results(results, fmt, filename)
 
 
-def validate_results_request(json_data, allowed_sorts, allowed_views):
+def validate_results_request(json_data, allowed_sorts, allowed_views, default_sort):
     """Validates parameters for a task results request (excluding format)."""
 
     ensure_json_body_is_dict(json_data)  # Assuming you have this helper
@@ -625,7 +629,12 @@ def validate_results_request(json_data, allowed_sorts, allowed_views):
             raise JsonHTTPResponse({"message": "Filters must be a dictionary"}, 400)
 
     # Sort Validation (if applicable)
-    sort = json_data.get("sort")
+
+    if "sort" not in json_data:
+        sort = default_sort
+    else:
+        sort = json_data.get("sort")
+    
     if sort:
         if not is_string_of_min_length(sort):
             raise JsonHTTPResponse(
@@ -713,8 +722,8 @@ def get_task_results(task_id):
         request.json,
         Server.get_sort_ids(scraper_name),
         Server.get_view_ids(scraper_name),
+        Server.get_default_sort(scraper_name),
     )
-
     # Apply sorts, filters, and view
     results = apply_sorts(results, sort, Server.get_sorts(scraper_name))
     results = apply_filters(results, filters, Server.get_filters(scraper_name))

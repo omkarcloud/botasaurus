@@ -145,6 +145,16 @@ class _Server:
             duplicate_sort_ids = [id for id in sort_ids if sort_ids.count(id) > 1]
             raise ValueError(f"Duplicate sorts found: {duplicate_sort_ids}")
 
+        is_default_found = False
+        default_sort = None
+        for sort in sorts:
+            if sort.is_default:
+                if is_default_found:
+                    nid  = sort.id
+                    raise ValueError(f"More than one default sort ({default_sort}, {nid}) found. Kindly apply is_default sort on 1 Sort.")
+                is_default_found = True
+                default_sort = sort.id
+
         # Check for duplicate filters
         filter_ids = [filter_.id for filter_ in filters]
         if len(filter_ids) != len(set(filter_ids)):
@@ -154,20 +164,20 @@ class _Server:
         scraper_name = scraper_function.__name__
 
         input_js = self.get_input_js(scraper_name)
-
         self.scrapers[scraper_name] = {
-            "name": scraper_name,
-            "input_js": input_js,
-            "function": scraper_function,
-            "scraper_name": scraper_name,
-            "scraper_type": scraper_function._scraper_type,
-            "get_task_name": get_task_name,
-            "create_all_task": create_all_task,
-            "split_task": split_task,
-            "filters": filters,
-            "sorts": sorts,
-            "views": views,
-        }
+        "name": scraper_name,
+        "input_js": input_js,
+        "function": scraper_function,
+        "scraper_name": scraper_name,
+        "scraper_type": scraper_function._scraper_type,
+        "get_task_name": get_task_name,
+        "create_all_task": create_all_task,
+        "split_task": split_task,
+        "filters": filters,
+        "sorts": sorts,
+        "views": views,
+        "default_sort": default_sort,  
+    }
 
     def get_scrapers_config(self):
         scraper_list = []
@@ -180,6 +190,7 @@ class _Server:
             views_json.append(
                 {"id": "__all_fields__", "label": "All Fields", "fields": []}
             )
+            default_sort = scraper["default_sort"]
 
             scraper_list.append(
                 {
@@ -190,6 +201,7 @@ class _Server:
                     "filters": [filter_.to_json() for filter_ in scraper["filters"]],
                     "sorts": [sort.to_json() for sort in scraper["sorts"]],
                     "views": views_json,
+                    "default_sort": default_sort,                      
                 }
             )
         return scraper_list
@@ -278,6 +290,9 @@ class _Server:
 
     def get_views(self, scraper_name):
         return self.scrapers[scraper_name]["views"]
+
+    def get_default_sort(self, scraper_name):
+        return self.scrapers[scraper_name]["default_sort"]
 
     def get_sort_ids(self, scraper_name):
         return [s.id for s in self.get_sorts(scraper_name)]
