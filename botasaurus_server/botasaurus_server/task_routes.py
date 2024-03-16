@@ -17,7 +17,7 @@ from .sorts import apply_sorts
 from .views import apply_view
 
 from .download import download_results
-from .scraper import Scraper
+from .server import Server
 from .convert_to_english import convert_unicode_dict_to_ascii_dict
 
 from .models import (
@@ -97,8 +97,8 @@ def validate_task_request(json_data):
             400,
         )
 
-    if not Scraper.get_scraper(scraper_name):
-        valid_scraper_names = Scraper.get_scrapers_names()
+    if not Server.get_scraper(scraper_name):
+        valid_scraper_names = Server.get_scrapers_names()
         valid_names_string = ", ".join(valid_scraper_names)
 
         if len(valid_scraper_names) == 0:
@@ -118,7 +118,7 @@ def validate_task_request(json_data):
             {"message": "'data' key must be a valid JSON object"}, 400
         )
 
-    controls = Scraper.get_controls(scraper_name)
+    controls = Server.get_controls(scraper_name)
 
     result = controls.getBackendValidationResult(data).valueOf()
 
@@ -235,7 +235,7 @@ def create_tasks(scraper, data, metadata, is_sync):
                 
                 return tasks, cache_items_len
 
-        if Scraper.cache:
+        if Server.cache:
             tasks, cached_tasks_len = create_cached_tasks(db, tasks_data)
         else: 
             tasks = []
@@ -281,15 +281,15 @@ def get_api():
 
 @get("/api/config")
 def get_api_config():
-    scrapers = Scraper.get_scrapers_config()
-    config = Scraper.get_config()
+    scrapers = Server.get_scrapers_config()
+    config = Server.get_config()
     return {**config, "scrapers": scrapers}
 
 def create_async_task(validated_data):
     scraper_name, data, metadata = validated_data
 
     tasks_with_all_task, tasks, split_task = create_tasks(
-        Scraper.get_scraper(scraper_name), data, metadata, False
+        Server.get_scraper(scraper_name), data, metadata, False
     )
 
     if split_task:
@@ -337,7 +337,7 @@ def submit_sync_task():
         for validated_data_item in validated_data_items:
             scraper_name, data, metadata = validated_data_item
             ts.append(
-                create_tasks(Scraper.get_scraper(scraper_name), data, metadata, True)
+                create_tasks(Server.get_scraper(scraper_name), data, metadata, True)
             )
 
         # wait for completion
@@ -372,7 +372,7 @@ def submit_sync_task():
         scraper_name, data, metadata = validate_task_request(request.json)
 
         tasks_with_all_task, tasks, split_task = create_tasks(
-            Scraper.get_scraper(scraper_name), data, metadata, True
+            Server.get_scraper(scraper_name), data, metadata, True
         )
 
         if tasks_with_all_task and tasks_with_all_task[0]['is_all_task']:
@@ -569,7 +569,7 @@ def validate_download_params(json_data, allowed_sorts, allowed_views):
 
 
 def generate_filename(task_id, view, scraper_name):
-    scraper_name = snakecase(Scraper.get_scraper(scraper_name)["name"])
+    scraper_name = snakecase(Server.get_scraper(scraper_name)["name"])
 
     filename = f"task_{task_id}"
 
@@ -596,14 +596,14 @@ def download_task_results(task_id):
 
     fmt, filters, sort, view, convert_to_english = validate_download_params(
         request.json,
-        Scraper.get_sort_ids(scraper_name),
-        Scraper.get_view_ids(scraper_name),
+        Server.get_sort_ids(scraper_name),
+        Server.get_view_ids(scraper_name),
     )
 
     # Apply sorts, filters, and view
-    results = apply_sorts(results, sort, Scraper.get_sorts(scraper_name))
-    results = apply_filters(results, filters, Scraper.get_filters(scraper_name))
-    results = apply_view(results, view, Scraper.get_views(scraper_name))
+    results = apply_sorts(results, sort, Server.get_sorts(scraper_name))
+    results = apply_filters(results, filters, Server.get_filters(scraper_name))
+    results = apply_view(results, view, Server.get_views(scraper_name))
 
     if convert_to_english:
         results = convert_unicode_dict_to_ascii_dict(results)
@@ -711,14 +711,14 @@ def get_task_results(task_id):
 
     filters, sort, view, offset, limit = validate_results_request(
         request.json,
-        Scraper.get_sort_ids(scraper_name),
-        Scraper.get_view_ids(scraper_name),
+        Server.get_sort_ids(scraper_name),
+        Server.get_view_ids(scraper_name),
     )
 
     # Apply sorts, filters, and view
-    results = apply_sorts(results, sort, Scraper.get_sorts(scraper_name))
-    results = apply_filters(results, filters, Scraper.get_filters(scraper_name))
-    results = apply_view(results, view, Scraper.get_views(scraper_name))
+    results = apply_sorts(results, sort, Server.get_sorts(scraper_name))
+    results = apply_filters(results, filters, Server.get_filters(scraper_name))
+    results = apply_view(results, view, Server.get_views(scraper_name))
 
     results = apply_offset_limit(results, offset, limit)
     results["task"] = serialized_task

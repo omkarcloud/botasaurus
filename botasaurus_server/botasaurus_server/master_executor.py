@@ -1,6 +1,6 @@
 from threading import Lock
 from .task_executor import TaskExecutor
-from .scraper import Scraper
+from .server import Server
 from .k8s import K8s
 
 class MasterExecutor(TaskExecutor):
@@ -38,7 +38,7 @@ class MasterExecutor(TaskExecutor):
             self.current_capacity[scraper_type] -= 1
 
     def calculate_max_capacity(self):
-        limit = Scraper.get_rate_limit()
+        limit = Server.get_rate_limit()
         replicas = len(self.k8s.nodes)
         return {"request": limit["request"] * replicas, "browser": limit["browser"] * replicas}
 

@@ -8,8 +8,8 @@ def run_frontend():
     # Change to frontend directory
     frontend_dir = os.path.join(os.getcwd(), "frontend")
     # Run frontend server
-    # subprocess.check_call("npm run start", shell=True, cwd=frontend_dir)
-    subprocess.check_call("npm run dev", shell=True, cwd=frontend_dir)
+    subprocess.check_call("npm run start", shell=True, cwd=frontend_dir)
+    # subprocess.check_call("npm run dev", shell=True, cwd=frontend_dir)
 
 def install():
     print("Installing frontend dependencies...")

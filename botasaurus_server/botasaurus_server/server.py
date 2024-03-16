@@ -20,7 +20,7 @@ def get_readme():
         return ""
 
 
-class _Scraper:
+class _Server:
     def __init__(self):
         self.scrapers = {}
         self.rate_limit = {"browser": 1, "request": 30}
@@ -286,4 +286,4 @@ class _Scraper:
         return [v.id for v in self.get_views(scraper_name)]
 
 
-Scraper = _Scraper()
+Server = _Server()

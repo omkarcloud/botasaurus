@@ -4,7 +4,7 @@ import traceback
 import time
 import random
 from .cleaners import clean_data
-from .scraper import Scraper
+from .server import Server
 
 def make_request_with_retry(request_lambda, max_retries=6, initial_delay=1, backoff_factor=2, max_delay=60):
     retries = -1
@@ -45,7 +45,7 @@ class WorkerExecutor():
         metadata = {"metadata": task["metadata"]} if task["metadata"] != {} else {}
         task_data = task["data"]
 
-        fn = Scraper.get_scraping_function(scraper_name)
+        fn = Server.get_scraping_function(scraper_name)
 
         try:
             result = fn(

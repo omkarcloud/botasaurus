@@ -7,7 +7,7 @@ import traceback
 from sqlalchemy.exc import OperationalError
 from .cleaners import clean_data
 from .db_setup import Session
-from .scraper import Scraper
+from .server import Server
 from .models import Task, TaskStatus, TaskHelper, create_cache
 from .scraper_type import ScraperType
 
@@ -37,11 +37,11 @@ class TaskExecutor:
         while True:
             with Session() as session:
                 try:
-                    if Scraper.get_browser_scrapers():
+                    if Server.get_browser_scrapers():
                         self.process_tasks(session, ScraperType.BROWSER)
                         session.commit()
 
-                    if Scraper.get_request_scrapers():
+                    if Server.get_request_scrapers():
                         self.process_tasks(session, ScraperType.REQUEST)
                         session.commit()
 
@@ -68,7 +68,7 @@ class TaskExecutor:
         )
 
     def get_max_running_count(self, scraper_type):
-        return Scraper.get_rate_limit()[scraper_type]
+        return Server.get_rate_limit()[scraper_type]
 
     def get_current_running_count(self, scraper_type):
         return self.current_capacity[scraper_type]
@@ -132,7 +132,7 @@ class TaskExecutor:
         metadata = {"metadata": task["metadata"]} if task["metadata"] != {} else {}
         task_data = task["data"]
 
-        fn = Scraper.get_scraping_function(scraper_name)
+        fn = Server.get_scraping_function(scraper_name)
 
         try:
             result = fn(
@@ -229,7 +229,7 @@ class TaskExecutor:
                     [TaskStatus.IN_PROGRESS],
                 )
             
-            if Scraper.cache:
+            if Server.cache:
                 task = TaskHelper.get_task(session, task_id)
                 scraper_name = task.scraper_name
                 data = task.data
