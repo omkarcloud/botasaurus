@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from threading import Thread, Lock
 import time
 from math import inf
@@ -91,7 +91,7 @@ class TaskExecutor:
             # Bulk update the status of tasks
             if task_ids:
                 session.query(Task).filter(Task.id.in_(task_ids)).update(
-                    {"status": TaskStatus.IN_PROGRESS, "started_at": datetime.now(UTC)}
+                    {"status": TaskStatus.IN_PROGRESS, "started_at": datetime.now(timezone.utc)}
                 )
 
             # Bulk update the status of parent tasks
@@ -99,7 +99,7 @@ class TaskExecutor:
                 session.query(Task).filter(
                     Task.id.in_(list(parent_ids)), Task.started_at.is_(None)
                 ).update(
-                    {"status": TaskStatus.IN_PROGRESS, "started_at": datetime.now(UTC)}
+                    {"status": TaskStatus.IN_PROGRESS, "started_at": datetime.now(timezone.utc)}
                 )
 
             # Commit the changes
@@ -209,7 +209,7 @@ class TaskExecutor:
                     {
                         "result": exception_log,
                         "status": TaskStatus.FAILED,
-                        "finished_at": datetime.now(UTC),
+                        "finished_at": datetime.now(timezone.utc),
                     },
                     [TaskStatus.IN_PROGRESS],
                 )
@@ -224,7 +224,7 @@ class TaskExecutor:
                         "result": result,
                         "result_count": len(result),
                         "status": TaskStatus.COMPLETED,
-                        "finished_at": datetime.now(UTC),
+                        "finished_at": datetime.now(timezone.utc),
                     },
                     [TaskStatus.IN_PROGRESS],
                 )

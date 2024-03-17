@@ -112,6 +112,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set SCRAPER Enviroment Variable
+        run: |
+          echo "SCRAPER=$(echo "gcr.io/""$GKE_PROJECT""/scraper:""$GITHUB_SHA")" >> $GITHUB_ENV
+
+      - name: Update Images
+        run: |
+          SCRAPER_ESCAPE=$(printf '%s\n' "$SCRAPER" | sed -e 's/[\/&]/\\&/g')
+          sed -i -e 's/omkar\/scraper:1.0.0/'"$SCRAPER_ESCAPE"'/g' master-depl.yaml
+          sed -i -e 's/omkar\/scraper:1.0.0/'"$SCRAPER_ESCAPE"'/g' worker-statefulset.yaml
+        working-directory: k8s/app
+
       - name: Authenticate to Google Cloud
         uses: "google-github-actions/auth@v1"
         with:
@@ -119,14 +130,6 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
-
-      - name: Update Images
-        run: |
-          echo "SCRAPER=$(echo "gcr.io/""$GKE_PROJECT""/scraper:""$GITHUB_SHA")" >> $GITHUB_ENV
-          SCRAPER_ESCAPE=$(printf '%s\n' "$SCRAPER" | sed -e 's/[\/&]/\\&/g')
-          sed -i -e 's/omkar\/scraper:1.0.0/'"$SCRAPER_ESCAPE"'/g' master-depl.yaml
-          sed -i -e 's/omkar\/scraper:1.0.0/'"$SCRAPER_ESCAPE"'/g' worker-depl.yaml
-        working-directory: k8s/app
 
       - name: Configure Docker
         run: gcloud --quiet auth configure-docker
@@ -194,6 +197,7 @@ def build(cluster_name, workers, use_browser):
     if workers <= 0:
         click.echo("The number of workers must be greater than 0.")
         return
+    cluster_name = cluster_name.strip()
 
     worker_ram = WORKER_RAM_WITH_BROWSER if use_browser else WORKER_RAM_WITHOUT_BROWSER
 
@@ -314,7 +318,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: full-access
 rules:
-  - apiGroups: [""]
+  - apiGroups: ["*"]
     resources: ["*"]
     verbs: ["*"]
 ---
@@ -610,6 +614,18 @@ def perform_create_cluster(cluster_name, max_nodes):
         stderr=subprocess.STDOUT,
     )
 
+
+    # Update the ingress-nginx repository
+    subprocess.run(
+        [
+            "helm",
+            "repo",
+            "update"
+        ],
+        check=True,
+        stderr=subprocess.STDOUT,
+    )
+
     # Install or upgrade the ingress-nginx chart with the external IP
     subprocess.run(
         [
@@ -719,6 +735,8 @@ def create_cluster(cluster_name, nodes):
     if nodes <= 0:
         click.echo("The number of nodes must be greater than 0.")
         return
+    
+    cluster_name = cluster_name.strip()
 
     click.echo(f"------ Creating cluster {cluster_name} ------")
 
@@ -737,6 +755,7 @@ def create_cluster(cluster_name, nodes):
 )
 def delete_cluster(cluster_name, force):
     """Deletes the cluster"""
+    cluster_name = cluster_name.strip()
     if not force:  # Ask for confirmation if --force is not used
         if not click.confirm(
             f"Are you sure you want to delete cluster '{cluster_name}'? This will permanently delete the entire database in '{cluster_name}'! If you need the data, please download it before proceeding."

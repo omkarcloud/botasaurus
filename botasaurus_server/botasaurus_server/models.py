@@ -3,7 +3,7 @@ import json
 from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from .cleaners import normalize_dicts_by_fieldnames
 
 Base = declarative_base()
@@ -18,7 +18,7 @@ class TaskStatus:
 
 
 def calculate_duration(obj):
-    end_time = obj.finished_at if obj.finished_at else datetime.now(UTC).replace(tzinfo=None)
+    end_time = obj.finished_at if obj.finished_at else datetime.now(timezone.utc).replace(tzinfo=None)
     if obj.started_at:
         duration = (end_time - obj.started_at).total_seconds()
 
@@ -254,7 +254,7 @@ class TaskHelper:
             {
                 "result": None,
                 "status": TaskStatus.FAILED,
-                "finished_at": datetime.now(UTC),
+                "finished_at": datetime.now(timezone.utc),
             },
         )
 
@@ -263,7 +263,7 @@ class TaskHelper:
         session.query(Task).filter(
             Task.id == task_id,
             Task.finished_at.is_(None),
-        ).update({"finished_at": datetime.now(UTC)})
+        ).update({"finished_at": datetime.now(timezone.utc)})
 
         return TaskHelper.update_task(
             session,
@@ -276,7 +276,7 @@ class TaskHelper:
         session.query(Task).filter(
             Task.parent_task_id == task_id,
             Task.finished_at.is_(None),
-        ).update({"finished_at": datetime.now(UTC)})
+        ).update({"finished_at": datetime.now(timezone.utc)})
 
         return (
             session.query(Task)
@@ -297,7 +297,7 @@ class TaskHelper:
                 "result": all_results,
                 "result_count": len(all_results),
                 "status": TaskStatus.COMPLETED,
-                "finished_at": datetime.now(UTC),
+                "finished_at": datetime.now(timezone.utc),
             },
         )
 

@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from casefy import snakecase
 from time import sleep
 from bottle import (
@@ -146,7 +146,7 @@ def create_tasks(scraper, data, metadata, is_sync):
     else:
         tasks_data = [data]
     
-    all_task_sort_id  =  int(datetime.now(UTC).timestamp())
+    all_task_sort_id  =  int(datetime.now(timezone.utc).timestamp())
     with Session() as db:
         all_task = None
         all_task_id = None
@@ -204,7 +204,7 @@ def create_tasks(scraper, data, metadata, is_sync):
                 
 
                 def create_cached_task(task_data, cached_result, sort_id):
-                    now_time = datetime.now(UTC)
+                    now_time = datetime.now(timezone.utc)
                     task_name = get_task_name(task_data) if get_task_name else None
                     return Task(
                             status=TaskStatus.COMPLETED,
