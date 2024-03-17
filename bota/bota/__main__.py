@@ -10,6 +10,15 @@ def cli():
     """Botasaurus Kubernetes Cluster management CLI"""
     pass
 
+def catch_file_not_found_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except FileNotFoundError as e:
+            print("You don't have gcloud installed on your system. Kindly install it.")
+            sys.exit(1)
+    return wrapper
+
 WORKER_RAM_WITH_BROWSER = 1600
 WORKER_RAM_WITHOUT_BROWSER = 800
 WORKER_CPU = 1
@@ -371,7 +380,7 @@ def get_all_lines(data):
     else:
         return []
 
-
+@catch_file_not_found_error
 def get_project_id():
     result = subprocess.run(
         ["gcloud", "projects", "list", "--format=value(projectId)", "--limit=1"],
@@ -426,6 +435,9 @@ def get_cluster_status(cluster_name, zone, project_id):
         text=True,
     )
     return get_first_line(result.stdout)
+
+
+
 
 
 def get_cluster_names(project_id):
@@ -735,7 +747,6 @@ def create_cluster(cluster_name, nodes):
     if nodes <= 0:
         click.echo("The number of nodes must be greater than 0.")
         return
-    
     cluster_name = cluster_name.strip()
 
     click.echo(f"------ Creating cluster {cluster_name} ------")
