@@ -69,8 +69,11 @@ class GotAdapter:
         for key, value in kwargs.items():
             if key == "data":
                 if value is not None:
+                    if isinstance(value, dict):
+                        raise ValueError("The 'data' parameter does not support dictionaries; use the 'json' parameter instead.")
+
                     got_kwargs["body"] = value
-            elif key == "json" and value is not None:
+            elif key == "json":
                 if value is not None:
                     got_kwargs["json"] = value
             elif key == "headers":
