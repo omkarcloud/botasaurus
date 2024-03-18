@@ -4,17 +4,25 @@ from threading import Thread
 import sys
 from .app import run_backend
 
-def run_frontend():
-    # Change to frontend directory
-    frontend_dir = os.path.join(os.getcwd(), "frontend")
-    # Run frontend server
-    subprocess.check_call("npm run start", shell=True, cwd=frontend_dir)
-    # subprocess.check_call("npm run dev", shell=True, cwd=frontend_dir)
 
 def install():
     print("Installing frontend dependencies...")
-    frontend_dir = os.path.join(os.getcwd(), 'frontend')
+    frontend_dir = os.path.join(os.getcwd(), "frontend")
     subprocess.check_call("npm install && npm run build", shell=True, cwd=frontend_dir)
+
+
+def start_frontend():
+    frontend_dir = os.path.join(os.getcwd(), "frontend")
+    subprocess.check_call("npm run start", shell=True, cwd=frontend_dir)
+
+def run_frontend():
+    # Change to frontend directory
+    try:
+        start_frontend()
+    except subprocess.CalledProcessError as e:
+        # Resolve Errors, When user forgets to install frontend
+        install()
+        start_frontend()
 
 def run_server():
     if len(sys.argv) == 1:
@@ -38,6 +46,7 @@ def run_server():
     else:
         # Unknown argument provided, raise an exception with the argument
         raise Exception(f"Unknown argument: {sys.argv[1]}")
+
 
 if __name__ == "__main__":
     run_server()

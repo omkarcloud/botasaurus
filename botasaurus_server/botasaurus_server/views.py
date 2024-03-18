@@ -118,7 +118,7 @@ class View:
         for field in fields:
             if isinstance(field, (Field, CustomField)):
                 # Wrap field.key in a dict with a 'key' attribute
-                flat_list.append({"key": field.key,})
+                flat_list.append({"key": field.output_key,})
             elif isinstance(field, (ExpandDictField, ExpandListField)):
                 # Only add nested fields without adding the key of the ExpandDictField or ExpandListField itself
                 flat_list.extend(self._flatten_fields(field.fields))
