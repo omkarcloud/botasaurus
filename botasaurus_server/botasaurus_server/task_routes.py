@@ -80,14 +80,7 @@ def dict_to_string(errors_dict):
     return result_string
 
 
-def validate_task_request(json_data):
-    """Validates the task request data."""
-
-    ensure_json_body_is_dict(json_data)
-
-    scraper_name = json_data.get("scraper_name")
-    data = json_data.get("data")
-
+def validate_scraper_name(scraper_name):
     if not scraper_name:
         raise JsonHTTPResponse({"message": "'scraper_name' must be provided"}, 400)
 
@@ -110,6 +103,17 @@ def validate_task_request(json_data):
 
         raise JsonHTTPResponse({"message": error_message}, 400)
 
+
+def validate_task_request(json_data):
+    """Validates the task request data."""
+
+    ensure_json_body_is_dict(json_data)
+
+    scraper_name = json_data.get("scraper_name")
+    data = json_data.get("data")
+
+    validate_scraper_name(scraper_name)
+
     if data is None:
         raise JsonHTTPResponse({"message": "'data' key must be provided"}, 400)
 
@@ -130,7 +134,6 @@ def validate_task_request(json_data):
     data = result["data"]
     metadata = result["metadata"]
     return scraper_name, data, metadata
-
 
 def create_tasks(scraper, data, metadata, is_sync):
     create_all_tasks = scraper["create_all_task"]
@@ -593,7 +596,7 @@ def download_task_results(task_id):
 
         scraper_name = task.scraper_name
         results = task.result
-
+    validate_scraper_name(scraper_name)
     if not isinstance(results, list):
         raise JsonHTTPResponse('No Results')
 
@@ -714,7 +717,7 @@ def get_task_results(task_id):
         scraper_name = task.scraper_name
         results = task.result
         serialized_task = serialize_task(task, False)
-
+    validate_scraper_name(scraper_name)
     if not isinstance(results, list):
         return jsonify({**empty, "results":results, "task":serialized_task })
 

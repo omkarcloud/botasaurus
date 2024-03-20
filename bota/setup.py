@@ -20,7 +20,7 @@ def get_description():
 
 setup(
     name="bota",
-    version='4.0.4',
+    version='4.0.5',
     author="Chetan Jain",
     author_email="chetan@omkar.cloud",
     description="CLI for botasaurus.",

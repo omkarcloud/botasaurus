@@ -1,7 +1,8 @@
-import time
+from time import sleep
 from kubernetes import config
 from kubernetes.client import CoreV1Api, ApiClient, AppsV1Api
 import requests
+import traceback
 from .config import is_in_kubernetes
 
 class K8s:
@@ -23,13 +24,17 @@ class K8s:
         ready_workers = 0
         total_workers = self.get_worker_count()
         while ready_workers < total_workers:
-            ready_workers = self.get_ready_worker_count()
-            
-            if ready_workers < total_workers:
-                break
+            try:
+                ready_workers = self.get_ready_worker_count()
+                if not (ready_workers < total_workers):
+                    break
 
-            print(f"Only {ready_workers} out of {total_workers} Workers are ready. Waiting for all Workers to be ready.")
-            time.sleep(10)
+                print(f"Only {ready_workers} out of {total_workers} Workers are ready. Waiting for all Workers to be ready.")
+                sleep(1)
+            except Exception as e:
+                print(f"An exception occurred: {str(e)}")
+                traceback.print_exc()
+
         print("All Workers are ready!")
 
     def get_worker_count(self):

@@ -10,6 +10,10 @@ def cli():
     """Botasaurus Kubernetes Cluster management CLI"""
     pass
 
+
+def create_ip_name(cluster_name):
+    return f"{cluster_name}-ip"
+
 def catch_file_not_found_error(func):
     def wrapper(*args, **kwargs):
         try:
@@ -226,17 +230,21 @@ def build(cluster_name, workers, use_browser):
     create_directory_if_not_exists(".github/workflows")
 
     # Constants for file content
-    INGRESS_CONTENT = """apiVersion: networking.k8s.io/v1
+    ip_name = create_ip_name(cluster_name)
+    # Constants for file content
+    INGRESS_CONTENT = f"""apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-service
   annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/proxy-body-size: 80m
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: "{ip_name}"
 spec:
+  defaultBackend:
+    service:
+      name: default-http-backend
+      port:
+        number: 80
   rules:
     - http:
         paths:
@@ -399,8 +407,7 @@ def get_cluster_external_ip(cluster_name, region, project_id):
             "addresses",
             "describe",
             create_ip_name(cluster_name),
-            "--region",
-            region,
+            "--global",
             "--project",
             project_id,
             "--format=value(address)",
@@ -410,10 +417,6 @@ def get_cluster_external_ip(cluster_name, region, project_id):
         text=True,
     )
     return get_first_line(ip_address_result.stdout)
-
-
-def create_ip_name(cluster_name):
-    return f"{cluster_name}-ip"
 
 
 def get_cluster_status(cluster_name, zone, project_id):
@@ -469,8 +472,7 @@ def list_all_ips(project_id, region):
             "--format=value(name)",
             "--project",
             project_id,
-            "--regions",
-            region,
+            "--global",
         ],
         check=True,
         capture_output=True,
@@ -496,8 +498,7 @@ def delete_external_ip(cluster_name, region, project_id):
                 "addresses",
                 "delete",
                 f"{cluster_name}-ip",
-                "--region",
-                region,
+                "--global",
                 "--project",
                 project_id,
                 "--quiet",
@@ -563,6 +564,7 @@ def cluster_exists(cluster_name, project_id):
 
 def check_ip_exists(cluster_name, project_id, region):
     ips = list_all_ips(project_id, region)
+    print(ips) # LAter remove rey rey
     return create_ip_name(cluster_name) in ips
 
 
@@ -598,8 +600,7 @@ def perform_create_cluster(cluster_name, max_nodes):
                 "addresses",
                 "create",
                 f"{cluster_name}-ip",
-                "--region",
-                region,
+                "--global",
                 "--project",
                 project_id,
             ],
@@ -611,49 +612,49 @@ def perform_create_cluster(cluster_name, max_nodes):
 
     get_cluster_credentials(cluster_name, zone, project_id)
 
-    click.echo("Enabling nginx load balancer...")
+    # click.echo("Enabling nginx load balancer...")
 
-    # Add the ingress-nginx repository
-    subprocess.run(
-        [
-            "helm",
-            "repo",
-            "add",
-            "ingress-nginx",
-            "https://kubernetes.github.io/ingress-nginx",
-        ],
-        check=True,
-        stderr=subprocess.STDOUT,
-    )
+    # # Add the ingress-nginx repository
+    # subprocess.run(
+    #     [
+    #         "helm",
+    #         "repo",
+    #         "add",
+    #         "ingress-nginx",
+    #         "https://kubernetes.github.io/ingress-nginx",
+    #     ],
+    #     check=True,
+    #     stderr=subprocess.STDOUT,
+    # )
 
 
-    # Update the ingress-nginx repository
-    subprocess.run(
-        [
-            "helm",
-            "repo",
-            "update"
-        ],
-        check=True,
-        stderr=subprocess.STDOUT,
-    )
+    # # Update the ingress-nginx repository
+    # subprocess.run(
+    #     [
+    #         "helm",
+    #         "repo",
+    #         "update"
+    #     ],
+    #     check=True,
+    #     stderr=subprocess.STDOUT,
+    # )
 
-    # Install or upgrade the ingress-nginx chart with the external IP
-    subprocess.run(
-        [
-            "helm",
-            "upgrade",
-            "--install",
-            "ingress-nginx-chart",
-            "ingress-nginx/ingress-nginx",
-            "--set",
-            f"controller.service.loadBalancerIP={ip_address}",
-            "--set",
-            "controller.service.externalTrafficPolicy=Local",
-        ],
-        check=True,
-        stderr=subprocess.STDOUT,
-    )
+    # # Install or upgrade the ingress-nginx chart with the external IP
+    # subprocess.run(
+    #     [
+    #         "helm",
+    #         "upgrade",
+    #         "--install",
+    #         "ingress-nginx-chart",
+    #         "ingress-nginx/ingress-nginx",
+    #         "--set",
+    #         f"controller.service.loadBalancerIP={ip_address}",
+    #         "--set",
+    #         "controller.service.externalTrafficPolicy=Local",
+    #     ],
+    #     check=True,
+    #     stderr=subprocess.STDOUT,
+    # )
 
     return ip_address
 
