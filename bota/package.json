@@ -1,7 +1,9 @@
 {
   "scripts": {
-    "upload": "python increment_version.py && rm -rf dist/ bota.egg-info  MANIFEST && python setup.py sdist && pip install -e . && python -m twine upload dist/* --verbose",
-    "install": "rm -rf dist/ bota.egg-info  MANIFEST && python setup.py sdist && pip install -e .",
-    "local-install": "pip install ."
-  }
-}
+    "pretest": "pip3 install -e . && python3 -m bota --install chalk@4",
+    "prepare": "pip3 install black",
+    "lint": "python3 -m black --line-length 100 src",
+    "fix": "standard --fix",
+    "test": "mocha",
+    "upload": "python increment_version.py && rm -rf dist/ src/bota.egg-info bota/bota_storage.json  MANIFEST  && python setup.py sdist && pip install -e . && python -m twine upload dist/* --verbose && pip install  -e . "
+  }}
