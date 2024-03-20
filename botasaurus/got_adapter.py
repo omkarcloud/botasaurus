@@ -2,19 +2,24 @@ import os
 from requests.cookies import RequestsCookieJar
 from http.cookies import SimpleCookie
 from requests.models import Response
-from javascript_fixes import require
 from requests.auth import AuthBase, HTTPBasicAuth
-from requests.utils import (
-    get_encoding_from_headers,
-)
+from requests.utils import get_encoding_from_headers
 from requests.structures import CaseInsensitiveDict
 
 
 os.environ["timeout"] = "1000"
 os.environ["TIMEOUT"] = "1000"
-got = require("got-scraping-export")
 
-
+adapter = None
+def get_adapter():
+    global adapter
+    if adapter:
+      return adapter
+    else:
+      from javascript_fixes import require
+      adapter = require("got-scraping-export")
+      return adapter  
+    
 class GotAdapter:
     @staticmethod
     def _create_requests_cookie_jar_from_headers(response_headers):
@@ -175,40 +180,40 @@ class GotAdapter:
 
     @staticmethod
     def get(url, **kwargs):
-        got_response = got.get(
+        got_response = get_adapter().get(
             GotAdapter._convert_to_got_request(url, kwargs), timeout=300
         )
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def post(url, **kwargs):
-        got_response = got.post(GotAdapter._convert_to_got_request(url, kwargs))
+        got_response = get_adapter().post(GotAdapter._convert_to_got_request(url, kwargs))
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def put(url, **kwargs):
-        got_response = got.put(
+        got_response = get_adapter().put(
             GotAdapter._convert_to_got_request(url, kwargs), timeout=300
         )
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def patch(url, **kwargs):
-        got_response = got.patch(
+        got_response = get_adapter().patch(
             GotAdapter._convert_to_got_request(url, kwargs), timeout=300
         )
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def head(url, **kwargs):
-        got_response = got.head(
+        got_response = get_adapter().head(
             GotAdapter._convert_to_got_request(url, kwargs), timeout=300
         )
         return GotAdapter._convert_to_requests_response(got_response)
 
     @staticmethod
     def delete(url, **kwargs):
-        got_response = got.delete(
+        got_response = get_adapter().delete(
             GotAdapter._convert_to_got_request(url, kwargs), timeout=300
         )
         return GotAdapter._convert_to_requests_response(got_response)

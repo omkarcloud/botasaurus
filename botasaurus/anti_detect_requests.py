@@ -2,16 +2,7 @@
 from cloudscraper import CloudScraper
 from bs4 import BeautifulSoup
 from requests.models import Response
-
-adapter = None
-def get_adapter():
-    global adapter
-    if adapter:
-      return adapter
-    else:
-      from .got_adapter import GotAdapter
-      adapter = GotAdapter
-      return adapter  
+from .got_adapter import GotAdapter
 # Create a subclass of CloudScraper
 class AntiDetectRequests(CloudScraper):
     
@@ -22,7 +13,7 @@ class AntiDetectRequests(CloudScraper):
     def request(self, method, url, *args, **kwargs):
         if self.use_stealth:
             # Use static methods of GotAdapter for making the request
-            got_method = getattr(get_adapter(), method.lower(), None)
+            got_method = getattr(GotAdapter, method.lower(), None)
             
             
             if 'proxies' not in kwargs and hasattr(self, 'proxies') and getattr(self, 'proxies', None):

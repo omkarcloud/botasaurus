@@ -994,7 +994,9 @@ def request(
         elif async_queue:
 
             @wraps(func)
-            def async_wrapper(**wrapper_kwargs):
+            def async_wrapper(*args, **wrapper_kwargs):
+                if args:
+                  raise ValueError('When using "async_queue", data must be passed via ".put".')
                 task_queue = Queue()
                 result_list = []
                 orginal_data = []
