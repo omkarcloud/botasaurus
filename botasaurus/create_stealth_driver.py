@@ -1,3 +1,5 @@
+from javascript_fixes.errors import JavaScriptError
+from sys import argv
 from .exceptions import CloudflareDetection
 from .check_and_download_driver import check_and_download_driver
 from typing import Callable, Any, Optional, Union
@@ -221,12 +223,35 @@ def bypass_detection(driver: AntiDetectDriver, raise_exception):
                     return
                 sleep(1.79)
 
+
+def add_server_args(options):
+    if '--disable-dev-shm-usage' not in options._arguments:
+        options.add_argument('--disable-dev-shm-usage')
+    if '--no-sandbox' not in options._arguments:
+        options.add_argument('--no-sandbox')
+    if '--headless=new' not in options._arguments:
+        options.add_argument('--headless=new')
+
+def is_server_mode():
+    # Check if '--server' is in the list of command-line arguments
+    return '--server' in argv
+
+def launch_server_safe_chrome(options, start_url):
+    try:
+        return launch_chrome(start_url, options._arguments)
+    except JavaScriptError as e:
+        if "ECONNREFUSED" in e.js and not is_server_mode():
+            add_server_args(options)
+            print("Chrome failed to launch. Retrying with additional server options. To add server options by default, include '--server' in your launch command.")
+            return launch_chrome(start_url, options._arguments)
+        raise
+
 def do_create_stealth_driver(data, options, desired_capabilities, start_url, wait,  raise_exception,add_arguments):
     options = clean_options(options)
     if add_arguments:
       add_arguments(data, options)
     
-    chrome = launch_chrome(start_url, options._arguments)
+    chrome = launch_server_safe_chrome(options, start_url)
     debug_port = chrome.port
 
     should_wait = start_url and wait

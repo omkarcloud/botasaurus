@@ -215,7 +215,7 @@ def load_cookies(driver: AntiDetectDriver, profile):
 
     # driver.execute_cdp_cmd('Network.disable', {})
 
-def add_server_args(options:Options):
+def add_server_args(options):
     if '--disable-dev-shm-usage' not in options._arguments:
         options.add_argument('--disable-dev-shm-usage')
     if '--no-sandbox' not in options._arguments:
@@ -228,8 +228,6 @@ def is_server_mode():
     return '--server' in argv
 
 def create_selenium_driver(options, desired_capabilities, attempt_download=True):
-    if is_server_mode():
-        add_server_args(options)
 
     try:
         path = relative_path(get_driver_path(), 0)
@@ -245,7 +243,7 @@ def create_selenium_driver(options, desired_capabilities, attempt_download=True)
             do_download_driver()
             # Retry creating the Selenium driver once more
             return create_selenium_driver( options, desired_capabilities, attempt_download=False)
-        elif "session not created: Chrome failed to start: exited normally" in str(e) and attempt_download:
+        elif "session not created: Chrome failed to start: exited normally" in str(e) and attempt_download and not is_server_mode():
             add_server_args(options)
                 #  To automate process 
             print("Chrome failed to launch. Retrying with additional server options. To add server options by default, include '--server' in your launch command.")
