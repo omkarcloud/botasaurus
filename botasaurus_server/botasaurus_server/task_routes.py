@@ -10,6 +10,7 @@ from bottle import (
     redirect,
 )
 import json
+from sqlalchemy import not_
 from .executor import executor
 from .apply_offset_limit import apply_offset_limit
 from .filters import apply_filters
@@ -142,12 +143,6 @@ def create_tasks(scraper, data, metadata, is_sync):
     scraper_type = scraper["scraper_type"]
     get_task_name = scraper["get_task_name"]
 
-    if split_task:
-        tasks_data = split_task(data)
-        if len(tasks_data) == 0:
-            return [], [], split_task
-    else:
-        tasks_data = [data]
     
     all_task_sort_id  =  int(datetime.now(timezone.utc).timestamp())
     with Session() as db:
@@ -172,8 +167,14 @@ def create_tasks(scraper, data, metadata, is_sync):
 
             all_task_id = all_task.id
 
+    if split_task:
+        tasks_data = split_task(data)
+        if len(tasks_data) == 0:
+            return [], [], split_task
+    else:
+        tasks_data = [data]
             
-        def createTask(task_data, sort_id):
+    def createTask(task_data, sort_id):
                 task_name = get_task_name(task_data) if get_task_name else None
                 return Task(
                 status=TaskStatus.PENDING,
@@ -190,7 +191,7 @@ def create_tasks(scraper, data, metadata, is_sync):
 
             )
 
-        def create_cached_tasks(session, task_datas):
+    def create_cached_tasks(session, task_datas):
                 ls = []
                 cache_keys = []
                 
@@ -238,9 +239,9 @@ def create_tasks(scraper, data, metadata, is_sync):
                 
                 return tasks, cache_items_len
 
-        if Server.cache:
+    if Server.cache:
             tasks, cached_tasks_len = create_cached_tasks(db, tasks_data)
-        else: 
+    else: 
             tasks = []
             for idx, task_data in enumerate(tasks_data):
                 # Assign sort_id for the non-cached task
@@ -249,21 +250,20 @@ def create_tasks(scraper, data, metadata, is_sync):
             cached_tasks_len = 0
        
 
-        db.add_all(tasks)
-        db.commit()
+    db.add_all(tasks)
+    db.commit()
 
-        if cached_tasks_len > 0:
-            tasklen = len(tasks)
-            if tasklen == cached_tasks_len:
-                print('All Tasks Results are Returned from cache')
-            else:
-                print(f'{cached_tasks_len} out of {tasklen} Results are Returned from cache')
+    if cached_tasks_len > 0:
+        tasklen = len(tasks)
+        if tasklen == cached_tasks_len:
+            print('All Tasks Results are Returned from cache')
+        else:
+            print(f'{cached_tasks_len} out of {tasklen} Results are Returned from cache')
+        executor.complete_parent_task_if_possible(db, all_task_id)
 
-            executor.complete_parent_task_if_possible(db, all_task_id)
-
-        db.commit()
-        tasks = serialize(tasks)
-        all_task = serialize(all_task)
+    db.commit()
+    tasks = serialize(tasks)
+    all_task = serialize(all_task)
 
     tasks_with_all_task = tasks
     if all_task:
@@ -496,6 +496,24 @@ def get_task(task_id):
         else:
             raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
 
+@post("/api/tasks/is-any-task-finished")  # Add this route
+def is_any_task_finished():
+    json_data = request.json
+
+    if not is_list_of_integers(json_data.get("task_ids")):
+        raise JsonHTTPResponse(
+            {"message": "'task_ids' must be a list of integers"}, 400
+        )
+
+    task_ids = json_data["task_ids"]
+   
+    with Session() as session:
+        is_any_task_finished = session.query(Task.id).filter(
+            Task.id.in_(task_ids),
+            not_(Task.status.in_([TaskStatus.IN_PROGRESS, TaskStatus.PENDING]))
+        ).first() is not None
+
+    return jsonify({"result": is_any_task_finished})
 
 def validate_download_params(json_data, allowed_sorts, allowed_views, default_sort):
     """Validates download parameters for a task."""
