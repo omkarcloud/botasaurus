@@ -172,7 +172,10 @@ class GotAdapter:
 
         if gr.body is not None:
             if encoding:
-                response._content = gr.body.encode(encoding)
+                try:
+                  response._content = gr.body.encode(encoding)
+                except UnicodeEncodeError:
+                  response._content = gr.body.encode('utf-8')
             else:
                 response._content = gr.body.encode()
 

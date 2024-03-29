@@ -85,6 +85,9 @@ def write_temp_json(data, log = True):
             write_json(data, filename, log)
 
 
+def write_temp_csv(data, log = True):
+    write_csv(data, "temp.csv", log)
+
 def fix_csv_filename(filename):
     filename = append_output_if_needed(filename)
 
