@@ -18,8 +18,8 @@ class TaskStatus:
 
 
 def calculate_duration(obj):
-    end_time = obj.finished_at if obj.finished_at else datetime.now(timezone.utc).replace(tzinfo=None)
     if obj.started_at:
+        end_time = obj.finished_at if obj.finished_at else datetime.now(timezone.utc).replace(tzinfo=None)
         duration = (end_time - obj.started_at).total_seconds()
 
         if duration == 0:
@@ -123,7 +123,7 @@ def create_cache_key(scraper_type, data):
     return scraper_type + '-' + sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 def check_cache_exists(session, key):
-    return session.query(Cache).filter(Cache.key == key).count() > 0
+    return session.query(Cache.id).filter(Cache.key == key).first() is not None
 
 def create_cache(session, scraper_type, data, result):
     key = create_cache_key(scraper_type, data)
@@ -182,10 +182,9 @@ class TaskHelper:
 
         return query.count()
 
-    @staticmethod
     def is_task_completed_or_failed(session, task_id):
         return (
-            session.query(Task)
+            session.query(Task.id)  # Select only the id column for efficiency
             .filter(
                 Task.id == task_id,
                 Task.status.in_(
@@ -195,8 +194,7 @@ class TaskHelper:
                     ]
                 ),
             )
-            .count()
-            != 0
+            .first() is not None  # Use .first() to check existence, which is more efficient than .count()
         )
 
     @staticmethod
@@ -252,7 +250,6 @@ class TaskHelper:
             session,
             task_id,
             {
-                "result": None,
                 "status": TaskStatus.FAILED,
                 "finished_at": datetime.now(timezone.utc),
             },

@@ -515,6 +515,51 @@ def is_any_task_finished():
 
     return jsonify({"result": is_any_task_finished})
 
+@get("/api/tasks/is-task-updated")
+def is_task_updated():
+    # Extract 'task_id' and 'last_updated' from query parameters
+    task_id = request.query.task_id
+    last_updated_str = request.query.last_updated
+    query_status = request.query.status  # Extract the 'status' parameter
+
+    # Validate 'task_id' using is_valid_integer
+    if not is_valid_integer(task_id):
+        raise JsonHTTPResponse({"message": "'task_id' must be a valid integer"}, 400)
+
+
+    # Validate 'task_id' using is_valid_integer
+    if not is_string_of_min_length(query_status):
+        raise JsonHTTPResponse(
+            {"message": "'status' must be a string with at least one character"}, 400
+        )
+
+    # Convert 'task_id' to integer
+    task_id = int(task_id)
+
+    # Parse 'last_updated' using fromisoformat
+    try:
+        # Assuming last_updated_str is in 'YYYY-MM-DDTHH:MM:SS.ssssss' format
+        last_updated = datetime.fromisoformat(last_updated_str.rstrip("Z"))  # Strip 'Z' if present
+        last_updated = last_updated.replace(tzinfo=None)  # Make 'last_updated' naive for comparison
+    except ValueError:
+        raise JsonHTTPResponse({"message": "'last_updated' must be in valid ISO 8601 format"}, 400)
+
+    # Query the database for the task's 'updated_at' timestamp using the given 'task_id'
+    with Session() as session:
+        task_data = session.query(Task.updated_at, Task.status).filter(Task.id == task_id).first()
+        if not task_data:
+            raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
+        
+        task_updated_at, task_status = task_data
+        task_updated_at = task_updated_at.replace(tzinfo=None)  # Make 'task_updated_at' naive for comparison
+        
+        if (task_updated_at > last_updated) or (task_status != query_status):
+          is_updated = True
+        else:
+          is_updated = False
+          
+    return jsonify({"result": is_updated})
+
 def validate_download_params(json_data, allowed_sorts, allowed_views, default_sort):
     """Validates download parameters for a task."""
 
