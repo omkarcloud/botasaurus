@@ -82,8 +82,25 @@ def has_folder(folder_name):
 
 
 def get_username():
-    
     return os.getlogin()
+
+def write_file( data, path,):
+    with open(path, 'w', encoding="utf-8") as fp:
+        fp.write(data)
+
+
+def write_file_sudo( data, path,):
+        echo_command = f"echo '{data}'"
+        
+        # The command to append the text to the Apache config file
+        append_command = "sudo tee -a " + path
+        
+        # Complete command with a pipe from echo to tee
+        command = f"{echo_command} | {append_command}"
+        
+        subprocess.run(command, shell=True, 
+            check=True,
+            stderr=subprocess.STDOUT,)
 
 def create_clone_commands(git_repo_url, folder_name):
     clone_commands = "" if has_folder(folder_name) else f"git clone {git_repo_url} {folder_name}"
@@ -92,7 +109,7 @@ def create_clone_commands(git_repo_url, folder_name):
 cd {folder_name}
 python3 -m pip install -r requirements.txt && python3 run.py install"""
     
-def createInstallReqsCommand(git_repo_url):
+def installreqs(git_repo_url):
     folder_name = extractRepositoryName(git_repo_url)
     uname = get_username()
 
@@ -139,20 +156,12 @@ WantedBy=multi-user.target"""
     apache_conf = r"""<VirtualHost *:80>
     ServerAdmin webmaster@localhost
     DocumentRoot /var/www/html
-
-    
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-    
     ProxyPass /api http://127.0.0.1:8000/api
     ProxyPassReverse /api http://127.0.0.1:8000/api
-
-    
     ProxyPass / http://127.0.0.1:3000/
     ProxyPassReverse / http://127.0.0.1:3000/
-
-    
 </VirtualHost>"""
     
     
@@ -171,29 +180,13 @@ wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-ke
 sudo apt-get update && sudo apt-get install -y google-chrome-stable && sudo rm -rf /var/lib/apt/lists/*"""
     
     sysytemctl_commands=f"""
-sudo dd of=/home/{uname}/{folder_name}/launch-frontend.sh << EOF
-{launch_frontend_sh}
-EOF
-
-
-sudo dd of=/home/{uname}/{folder_name}/launch-backend.sh << EOF
-{launch_backend_sh}
-EOF
-
-sudo dd of=/etc/systemd/system/launch-backend.service << EOF
-{launch_backend_service}
-EOF
-
 sudo chmod +x /home/{uname}/{folder_name}/launch-backend.sh || true
+sudo chmod +x /home/{uname}/{folder_name}/launch-frontend.sh || true
+
 sudo systemctl daemon-reload
-sudo systemctl enable launch-backend.service
+sudo systemctl enable .service
 sudo systemctl start launch-backend.service
 
-sudo dd of=/etc/systemd/system/launch-frontend.service << EOF
-{launch_frontend_service}
-EOF
-
-sudo chmod +x /home/{uname}/{folder_name}/launch-frontend.sh || true
 sudo systemctl daemon-reload
 sudo systemctl enable launch-frontend.service
 sudo systemctl start launch-frontend.service
@@ -201,25 +194,34 @@ sudo systemctl start launch-frontend.service
 sudo a2enmod proxy
 sudo a2enmod proxy_http
 
-sudo dd of=/etc/apache2/sites-available/000-default.conf << EOF
-{apache_conf}
-EOF
-
 sudo systemctl restart apache2
 """
-    clone_commands = create_clone_commands(git_repo_url, folder_name)
+    # todo: ucomment this
+    # subprocess.run(remove_empty_lines(install_dependencies),     shell=True, 
+    #         check=True,
+    #         stderr=subprocess.STDOUT,)
 
-    final_commands = f"""{install_dependencies}\n{clone_commands}\n{sysytemctl_commands}"""
-    return remove_empty_lines(final_commands)
+    clone_commands = create_clone_commands(git_repo_url, folder_name)
+    subprocess.run(remove_empty_lines(clone_commands),     shell=True, 
+            check=True,
+            stderr=subprocess.STDOUT,)
+    
+    write_file(launch_backend_sh, f"/home/{uname}/{folder_name}/launch-backend.sh")
+    write_file(launch_frontend_sh, f"/home/{uname}/{folder_name}/launch-frontend.sh")
+
+    write_file_sudo(launch_backend_service, "/etc/systemd/system/launch-backend.service")
+    write_file_sudo(launch_frontend_service, "/etc/systemd/system/launch-frontend.service")
+
+    write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
+    subprocess.run(remove_empty_lines(sysytemctl_commands),     shell=True, 
+            check=True,
+            stderr=subprocess.STDOUT,)
+
 
 
 def install_scraper_in_vm(git_repo_url):
     validateRepository(git_repo_url)
-    created = createInstallReqsCommand(git_repo_url)
-    subprocess.run(created,     shell=True, 
-            check=True,
-            stderr=subprocess.STDOUT,
-)
+    installreqs(git_repo_url)
     click.echo("Scraper Installation successful!")
     click.echo("Now, Checking VM Status...")
     ip = get_vm_ip()
@@ -227,5 +229,5 @@ def install_scraper_in_vm(git_repo_url):
     click.echo(create_visit_ip_text(ip))
 
 if __name__ == "__main__":
-    print(createInstallReqsCommand("https://github.com/omkarcloud/google-maps-scraper"))
+    print(installreqs("https://github.com/omkarcloud/google-maps-scraper"))
     
