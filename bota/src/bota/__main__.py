@@ -387,14 +387,21 @@ def get_all_lines(data):
     else:
         return []
 
+def exit_if_err(result):
+    if result.stderr:
+      print("Command failed with following error:")
+      print(result.stderr)
+      sys.exit(1)
+
 @catch_file_not_found_error
 def get_project_id():
     result = subprocess.run(
         ["gcloud", "projects", "list", "--format=value(projectId)", "--limit=1"],
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
     )
+    exit_if_err(result)
     return get_first_line(result.stdout)
 
 
@@ -415,6 +422,7 @@ def get_cluster_external_ip(cluster_name, region, project_id):
         capture_output=True,
         text=True,
     )
+    exit_if_err(ip_address_result)
     return get_first_line(ip_address_result.stdout)
 
 
@@ -436,6 +444,7 @@ def get_cluster_status(cluster_name, zone, project_id):
         capture_output=True,
         text=True,
     )
+    exit_if_err(result)
     return get_first_line(result.stdout)
 
 
@@ -458,6 +467,7 @@ def get_cluster_names(project_id):
         capture_output=True,
         text=True,
     )
+    exit_if_err(result)
     return get_all_lines(result.stdout)
 
 
@@ -477,6 +487,7 @@ def list_all_ips(project_id):
         capture_output=True,
         text=True,
     )
+    exit_if_err(result)
     return get_all_lines(result.stdout)
 
 
@@ -515,6 +526,7 @@ def delete_external_ip(cluster_name,  project_id):
 
 
 def enable_gcloud(project_id):
+    click.echo("Enabling services...")
     subprocess.run(
         [
             "gcloud",
@@ -792,6 +804,8 @@ def install_scraper(repo_url):
     """Installs a scraper inside VM"""
     repo_url = repo_url.strip()
 
+    click.echo(f"------ Installing Scraper ------")
+    enable_gcloud() 
     install_scraper_in_vm(repo_url)
 
 @cli.command()

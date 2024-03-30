@@ -227,7 +227,7 @@ def install_scraper_in_vm(git_repo_url):
     folder_name = extractRepositoryName(git_repo_url)
     created = createInstallReqsCommand(git_repo_url, folder_name)
     subprocess.run(created, shell=True, check=True)
-    click.echo("Scraper Installation successful")
+    click.echo("Scraper Installation successful!")
     click.echo("Now, Checking VM Status...")
     ip = get_vm_ip()
     wait_till_up(ip)
