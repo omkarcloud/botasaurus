@@ -389,9 +389,8 @@ def get_all_lines(data):
 
 def exit_if_err(result):
     if result.stderr:
-      print("Command failed with following error:")
       print(result.stderr)
-      sys.exit(1)
+      raise Exception("Command failed with above error.")
 
 @catch_file_not_found_error
 def get_project_id():
@@ -490,6 +489,26 @@ def list_all_ips(project_id):
     exit_if_err(result)
     return get_all_lines(result.stdout)
 
+def list_all_ips_regional(project_id, region):
+    result = subprocess.run(
+        [
+            "gcloud",
+            "compute",
+            "addresses",
+            "list",
+            "--format=value(name)",
+            "--project",
+            project_id,
+            "--regions",
+            region,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    exit_if_err(result)
+    return get_all_lines(result.stdout)
+
 
 DEFAULT_INSTANCE = "e2-small"
 
@@ -523,6 +542,35 @@ def delete_external_ip(cluster_name,  project_id):
             pass  # Deletion was already considered successful
         else:
             raise e  # Re-raise the exception for other errors
+
+
+def delete_external_ip_regional(cluster_name,  project_id, region):
+    try:
+        subprocess.run(
+            [
+                "gcloud",
+                "compute",
+                "addresses",
+                "delete",
+                f"{cluster_name}-ip",
+                "--region",
+                region,
+                "--project",
+                project_id,
+                "--quiet",
+            ],
+            check=True,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+    except subprocess.CalledProcessError as e:
+        if "was not found" in e.stderr:
+            pass  # Deletion was already considered successful
+        else:
+            raise e  # Re-raise the exception for other errors
+
+
 
 
 def enable_gcloud(project_id):
@@ -575,6 +623,10 @@ def cluster_exists(cluster_name, project_id):
 
 def does_ip_exists(cluster_name, project_id):
     ips = list_all_ips(project_id)
+    return create_ip_name(cluster_name) in ips
+
+def does_ip_exists_regional(cluster_name, project_id, region):
+    ips = list_all_ips_regional(project_id, region)
     return create_ip_name(cluster_name) in ips
 
 
@@ -670,6 +722,23 @@ def create_external_ip(cluster_name, project_id):
             check=True,
             stderr=subprocess.STDOUT,
         )
+
+def create_external_ip_regional(cluster_name, project_id, region):
+    subprocess.run(
+            [
+                "gcloud",
+                "compute",
+                "addresses",
+                "create",
+                f"{cluster_name}-ip",
+                "--region",
+                region,
+                "--project",
+                project_id,
+            ],
+            check=True,
+            stderr=subprocess.STDOUT,
+        )    
 
 
 def delete_pvc_if_exists(pvc_name):
@@ -813,14 +882,15 @@ def install_scraper(repo_url):
 def create_ip(name):
     """Creates an IP address for a VM"""
     name = name.strip()
+    region = "us-central1"
 
     project_id = get_project_id()
 
-    if does_ip_exists(name, project_id):
-        click.echo(f"IP address for VM {name} already exists.")
+    if does_ip_exists_regional(name, project_id, region):
+        click.echo(f"IP address already exists.")
     else:
-        click.echo(f"------ Creating IP address for VM: {name} ------")
-        create_external_ip(name, project_id)
+        click.echo(f"------ Creating IP address in {region}: {name} ------")
+        create_external_ip_regional(name, project_id, region)
         click.echo("IP address created successfully.")
 
 @cli.command()
@@ -831,21 +901,21 @@ def create_ip(name):
 def delete_ip(name, force):
     """Deletes an IP address for a VM"""
     name = name.strip()
-
+    region = "us-central1"
     project_id = get_project_id()
 
-    if not does_ip_exists(name, project_id):
-        click.echo(f"IP address for VM {name} not found.")
+    if not does_ip_exists_regional(name, project_id, region):
+        click.echo(f"IP address not found.")
         return
 
     if not force:
-        if not click.confirm(f"Are you sure you want to delete the IP address for VM '{name}'?"):
+        if not click.confirm(f"Are you sure you want to delete the IP address '{name}'?"):
             click.echo("Deletion aborted.")
             return
 
-    click.echo(f"------ Deleting IP address for VM: {name} ------")
+    click.echo(f"------ Deleting IP address in {region}: {name} ------")
 
-    delete_external_ip(name,  project_id) 
+    delete_external_ip_regional(name,  project_id, region) 
     click.echo("IP address deleted successfully.")
 
 if __name__ == "__main__":
