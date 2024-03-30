@@ -421,7 +421,6 @@ def get_cluster_external_ip(cluster_name, region, project_id):
         capture_output=True,
         text=True,
     )
-    exit_if_err(ip_address_result)
     return get_first_line(ip_address_result.stdout)
 
 
@@ -443,7 +442,6 @@ def get_cluster_status(cluster_name, zone, project_id):
         capture_output=True,
         text=True,
     )
-    exit_if_err(result)
     return get_first_line(result.stdout)
 
 
@@ -466,7 +464,6 @@ def get_cluster_names(project_id):
         capture_output=True,
         text=True,
     )
-    exit_if_err(result)
     return get_all_lines(result.stdout)
 
 
@@ -486,7 +483,6 @@ def list_all_ips(project_id):
         capture_output=True,
         text=True,
     )
-    exit_if_err(result)
     return get_all_lines(result.stdout)
 
 def list_all_ips_regional(project_id, region):
@@ -506,7 +502,6 @@ def list_all_ips_regional(project_id, region):
         capture_output=True,
         text=True,
     )
-    exit_if_err(result)
     return get_all_lines(result.stdout)
 
 
@@ -919,6 +914,7 @@ def delete_ip(name, force):
     click.echo("IP address deleted successfully.")
 
 if __name__ == "__main__":
+
     cli()
     # Usage examples:
     # 1. python -m botasaurus_server build --cluster-name omkar --workers 1 --use-browser true
