@@ -174,27 +174,17 @@ sudo apt-get update && sudo apt-get install -y google-chrome-stable && sudo rm -
 sudo dd of=/home/{uname}/{folder_name}/launch-frontend.sh << EOF
 {launch_frontend_sh}
 EOF
-sudo chmod +x launch-frontend.sh
 
 
 sudo dd of=/home/{uname}/{folder_name}/launch-backend.sh << EOF
 {launch_backend_sh}
 EOF
-sudo chmod +x launch-backend.sh
-
-
-sudo a2enmod proxy
-sudo a2enmod proxy_http
-
-sudo dd of=/etc/apache2/sites-available/000-default.conf << EOF
-{apache_conf}
-EOF
-sudo systemctl restart apache2
-
 
 sudo dd of=/etc/systemd/system/launch-backend.service << EOF
 {launch_backend_service}
 EOF
+
+sudo chmod +x /home/{uname}/{folder_name}/launch-backend.sh || true
 sudo systemctl daemon-reload
 sudo systemctl enable launch-backend.service
 sudo systemctl start launch-backend.service
@@ -203,9 +193,20 @@ sudo dd of=/etc/systemd/system/launch-frontend.service << EOF
 {launch_frontend_service}
 EOF
 
+sudo chmod +x /home/{uname}/{folder_name}/launch-frontend.sh || true
 sudo systemctl daemon-reload
 sudo systemctl enable launch-frontend.service
-sudo systemctl start launch-frontend.service"""
+sudo systemctl start launch-frontend.service
+
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+
+sudo dd of=/etc/apache2/sites-available/000-default.conf << EOF
+{apache_conf}
+EOF
+
+sudo systemctl restart apache2
+"""
     clone_commands = create_clone_commands(git_repo_url, folder_name)
 
     final_commands = f"""{install_dependencies}\n{clone_commands}\n{sysytemctl_commands}"""
