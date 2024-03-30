@@ -93,7 +93,7 @@ def write_file_sudo( data, path,):
         echo_command = f"echo '{data}'"
         
         # The command to append the text to the Apache config file
-        append_command = "sudo tee -a " + path
+        append_command = "sudo tee " + path
         
         # Complete command with a pipe from echo to tee
         command = f"{echo_command} | {append_command}"
@@ -184,7 +184,7 @@ sudo chmod +x /home/{uname}/{folder_name}/launch-backend.sh || true
 sudo chmod +x /home/{uname}/{folder_name}/launch-frontend.sh || true
 
 sudo systemctl daemon-reload
-sudo systemctl enable .service
+sudo systemctl enable launch-backend.service
 sudo systemctl start launch-backend.service
 
 sudo systemctl daemon-reload
