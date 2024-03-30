@@ -4,8 +4,9 @@ import sys
 import time
 import click
 from os import path, makedirs
+from .vm import install_scraper_in_vm
 
-@click.group()
+@click.group(context_settings=dict(max_content_width=95))
 def cli():
     """Botasaurus Kubernetes Cluster management CLI"""
     pass
@@ -187,8 +188,7 @@ def create_file_with_content(file_path, content):
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(content)
 
-
-@cli.command()
+@cli.command(help='Creates the manifest files for Kubernetes deployment and GitHub Actions')
 @click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
 @click.option(
     "--workers",
@@ -204,8 +204,7 @@ def create_file_with_content(file_path, content):
     type=bool,
     help="Specify if the scraper uses a browser, affects cpu and ram allocation.",
 )
-def build(cluster_name, workers, use_browser):
-    """Creates the manifest files"""
+def create_manifests(cluster_name, workers, use_browser):
 
     if workers <= 0:
         click.echo("The number of workers must be greater than 0.")
@@ -462,7 +461,7 @@ def get_cluster_names(project_id):
     return get_all_lines(result.stdout)
 
 
-def list_all_ips(project_id, region):
+def list_all_ips(project_id):
     result = subprocess.run(
         [
             "gcloud",
@@ -489,7 +488,7 @@ def run_create_cluster_command(cluster_name, zone, project_id, max_nodes):
     subprocess.run(command, shell=True, check=True, stderr=subprocess.STDOUT)
 
 
-def delete_external_ip(cluster_name, region, project_id):
+def delete_external_ip(cluster_name,  project_id):
     try:
         subprocess.run(
             [
@@ -562,9 +561,8 @@ def cluster_exists(cluster_name, project_id):
     return cluster_name in cluster_names
 
 
-def check_ip_exists(cluster_name, project_id, region):
-    ips = list_all_ips(project_id, region)
-    print(ips) # LAter remove rey rey
+def does_ip_exists(cluster_name, project_id):
+    ips = list_all_ips(project_id)
     return create_ip_name(cluster_name) in ips
 
 
@@ -589,24 +587,11 @@ def perform_create_cluster(cluster_name, max_nodes):
             time.sleep(2)
 
     # Usage:
-    if not check_ip_exists(cluster_name, project_id, region):
+    if not does_ip_exists(cluster_name, project_id):
         # Create an external IP address
-        click.echo("Getting IP address...")
+        click.echo("Creating IP address...")
 
-        subprocess.run(
-            [
-                "gcloud",
-                "compute",
-                "addresses",
-                "create",
-                f"{cluster_name}-ip",
-                "--global",
-                "--project",
-                project_id,
-            ],
-            check=True,
-            stderr=subprocess.STDOUT,
-        )
+        create_external_ip(cluster_name, project_id)
 
     ip_address = get_cluster_external_ip(cluster_name, region, project_id)
 
@@ -658,6 +643,22 @@ def perform_create_cluster(cluster_name, max_nodes):
 
     return ip_address
 
+def create_external_ip(cluster_name, project_id):
+    subprocess.run(
+            [
+                "gcloud",
+                "compute",
+                "addresses",
+                "create",
+                f"{cluster_name}-ip",
+                "--global",
+                "--project",
+                project_id,
+            ],
+            check=True,
+            stderr=subprocess.STDOUT,
+        )
+
 
 def delete_pvc_if_exists(pvc_name):
     """Deletes the specified PVC only if it exists, then waits for its deletion."""
@@ -708,10 +709,10 @@ def perform_delete_cluster(cluster_name):
 
     delete_scraper_images(project_id)
 
-    if check_ip_exists(cluster_name, project_id, region):
+    if does_ip_exists(cluster_name, project_id):
         # Delete the external IP address associated with the cluster
         click.echo("Deleting IP address...")
-        delete_external_ip(cluster_name, region, project_id)
+        delete_external_ip(cluster_name,  project_id)
 
     if has_cluster:
         click.echo("Deleting the cluster...")
@@ -757,7 +758,10 @@ def create_cluster(cluster_name, nodes):
 
     click.echo("Next steps:")
     click.echo("1. Deploy the Scraper using Github Actions.")
-    click.echo("2. Visit http://{}/ to access it.".format(ip_address))
+    click.echo(create_visit_ip_text(ip_address))
+
+def create_visit_ip_text(ip_address):
+    return "2. Visit http://{}/ to use the Scraper.".format(ip_address)
 
 
 @cli.command()
@@ -781,6 +785,54 @@ def delete_cluster(cluster_name, force):
 
     click.echo(f"Successfully deleted cluster.")
 
+
+@cli.command()
+@click.option("--repo-url", prompt="Enter the repository URL for the scraper (e.g., https://github.com/your-username/your-repository)", required=True, help="The GitHub repository URL to install.")
+def install_scraper(repo_url):
+    """Installs a scraper inside VM"""
+    repo_url = repo_url.strip()
+
+    install_scraper_in_vm(repo_url)
+
+@cli.command()
+@click.option("--name", prompt="Enter VM name", required=True, help="The name of the VM where to create the IP address.")
+def create_ip(name):
+    """Creates an IP address for a VM"""
+    name = name.strip()
+
+    project_id = get_project_id()
+
+    if does_ip_exists(name, project_id):
+        click.echo(f"IP address for VM {name} already exists.")
+    else:
+        click.echo(f"------ Creating IP address for VM: {name} ------")
+        create_external_ip(name, project_id)
+        click.echo("IP address created successfully.")
+
+@cli.command()
+@click.option("--name", prompt="Enter VM name", required=True, help="The name of the VM to delete the IP address for.")
+@click.option(
+    "--force", is_flag=True, help="Force deletion of the IP address without confirmation. Use this option with caution."
+)
+def delete_ip(name, force):
+    """Deletes an IP address for a VM"""
+    name = name.strip()
+
+    project_id = get_project_id()
+
+    if not does_ip_exists(name, project_id):
+        click.echo(f"IP address for VM {name} not found.")
+        return
+
+    if not force:
+        if not click.confirm(f"Are you sure you want to delete the IP address for VM '{name}'?"):
+            click.echo("Deletion aborted.")
+            return
+
+    click.echo(f"------ Deleting IP address for VM: {name} ------")
+
+    delete_external_ip(name,  project_id) 
+    click.echo("IP address deleted successfully.")
 
 if __name__ == "__main__":
     cli()
