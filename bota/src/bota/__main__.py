@@ -583,13 +583,13 @@ def enable_gcloud(project_id):
         ],
         check=True,
         stderr=subprocess.STDOUT,
-    )  # Modification here
+    ) 
 
 
 def delete_scraper_images(project_id):
     method = "delete"
     command = f"""for tag in $(gcloud container images list-tags gcr.io/{project_id}/scraper --format='get(TAGS)' --limit=unlimited | sed 's/,/ /g'); do gcloud container images {method} gcr.io/{project_id}/scraper:$tag --quiet --project {project_id} || true; done"""
-    subprocess.run(command, shell=True, check=True)
+    subprocess.run(command, shell=True, check=True, stderr=subprocess.STDOUT)
 
 
 def get_cluster_credentials(cluster_name, zone, project_id):
@@ -656,49 +656,6 @@ def perform_create_cluster(cluster_name, max_nodes):
 
     get_cluster_credentials(cluster_name, zone, project_id)
 
-    # click.echo("Enabling nginx load balancer...")
-
-    # # Add the ingress-nginx repository
-    # subprocess.run(
-    #     [
-    #         "helm",
-    #         "repo",
-    #         "add",
-    #         "ingress-nginx",
-    #         "https://kubernetes.github.io/ingress-nginx",
-    #     ],
-    #     check=True,
-    #     stderr=subprocess.STDOUT,
-    # )
-
-
-    # # Update the ingress-nginx repository
-    # subprocess.run(
-    #     [
-    #         "helm",
-    #         "repo",
-    #         "update"
-    #     ],
-    #     check=True,
-    #     stderr=subprocess.STDOUT,
-    # )
-
-    # # Install or upgrade the ingress-nginx chart with the external IP
-    # subprocess.run(
-    #     [
-    #         "helm",
-    #         "upgrade",
-    #         "--install",
-    #         "ingress-nginx-chart",
-    #         "ingress-nginx/ingress-nginx",
-    #         "--set",
-    #         f"controller.service.loadBalancerIP={ip_address}",
-    #         "--set",
-    #         "controller.service.externalTrafficPolicy=Local",
-    #     ],
-    #     check=True,
-    #     stderr=subprocess.STDOUT,
-    # )
 
     return ip_address
 
@@ -745,12 +702,16 @@ def delete_pvc_if_exists(pvc_name):
     if result.returncode == 0:
         click.echo("Deleting the database...")
 
-        subprocess.run(["kubectl", "delete", "pvc", pvc_name], check=True)
+        subprocess.run(["kubectl", "delete", "pvc", pvc_name],             check=True,
+            stderr=subprocess.STDOUT,
+)
 
         click.echo("Waiting for the deletion of database...")
         subprocess.run(
             ["kubectl", "wait", "--for=delete", f"pvc/{pvc_name}", "--timeout=300s"],
-            check=True,
+                        check=True,
+            stderr=subprocess.STDOUT,
+
         )
 
 
@@ -869,7 +830,6 @@ def install_scraper(repo_url):
     repo_url = repo_url.strip()
 
     click.echo(f"------ Installing Scraper ------")
-    enable_gcloud() 
     install_scraper_in_vm(repo_url)
 
 @cli.command()

@@ -5,22 +5,11 @@ import subprocess
 import requests
 
 def get_vm_ip():
-    """
-    Fetches the external IP address of the current GCP VM instance from the metadata server.
-
-    Returns:
-    str: The external IP address of the instance, or None if it cannot be determined.
-    """
     metadata_url = "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip"
     headers = {"Metadata-Flavor": "Google"}
-
-    try:
-        response = requests.get(metadata_url, headers=headers)
-        response.raise_for_status()  # Raise an error for bad responses
-        return response.text
-    except requests.exceptions.RequestException as e:
-        print(f"Error querying metadata server: {e}")
-        return None
+    response = requests.get(metadata_url, headers=headers)
+    response.raise_for_status()  # Raise an error for bad responses
+    return response.text
 
 def create_visit_ip_text(ip):
     return "The Scraper is running. Visit http://{}/ to use the Scraper.".format(ip)
@@ -42,7 +31,7 @@ def wait_till_up(ip):
     while elapsed_time <= timeout:
         try:
             # Attempt to connect to the IP address
-            response = requests.get(f"http://{ip}/", timeout=5)
+            response = requests.get(f"http://{ip}/api", timeout=5)
             
             # If the response is successful, return without raising an exception
             if response.status_code == 200:
@@ -97,13 +86,14 @@ def get_username():
     return os.getlogin()
 
 def create_clone_commands(git_repo_url, folder_name):
-    clone_commands = "" if has_folder(folder_name) else f"\ngit clone {git_repo_url} {folder_name}"
+    clone_commands = "" if has_folder(folder_name) else f"git clone {git_repo_url} {folder_name}"
     return  f"""
+{clone_commands}    
 cd {folder_name}
 python3 -m pip install -r requirements.txt && python3 run.py install"""
     
-def createInstallReqsCommand(git_repo_url, folder_name):
-
+def createInstallReqsCommand(git_repo_url):
+    folder_name = extractRepositoryName(git_repo_url)
     uname = get_username()
 
     launch_frontend_sh = r"""#!/bin/bash
@@ -166,7 +156,7 @@ WantedBy=multi-user.target"""
 </VirtualHost>"""
     
     
-    install_dependencies = f"""sudo apt install python3-pip
+    install_dependencies = f"""sudo apt install -y python3-pip
 alias python=python3
 echo "alias python=python3" >> /home/{uname}/.bashrc
  
@@ -224,9 +214,11 @@ sudo systemctl start launch-frontend.service"""
 
 def install_scraper_in_vm(git_repo_url):
     validateRepository(git_repo_url)
-    folder_name = extractRepositoryName(git_repo_url)
-    created = createInstallReqsCommand(git_repo_url, folder_name)
-    subprocess.run(created, shell=True, check=True)
+    created = createInstallReqsCommand(git_repo_url)
+    subprocess.run(created,     shell=True, 
+            check=True,
+            stderr=subprocess.STDOUT,
+)
     click.echo("Scraper Installation successful!")
     click.echo("Now, Checking VM Status...")
     ip = get_vm_ip()
@@ -234,8 +226,5 @@ def install_scraper_in_vm(git_repo_url):
     click.echo(create_visit_ip_text(ip))
 
 if __name__ == "__main__":
-    
-    print(createInstallReqsCommand("https://github.com/google-github-actions/g2-scraper", "g2-scraper"))
-    
-    
+    print(createInstallReqsCommand("https://github.com/omkarcloud/google-maps-scraper"))
     
