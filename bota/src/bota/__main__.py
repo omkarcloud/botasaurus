@@ -24,7 +24,7 @@ def catch_file_not_found_error(func):
             sys.exit(1)
     return wrapper
 
-WORKER_RAM_WITH_BROWSER = 1600
+WORKER_RAM_WITH_BROWSER = 4000
 WORKER_RAM_WITHOUT_BROWSER = 800
 WORKER_CPU = 1
 
@@ -294,11 +294,11 @@ spec:
         - name: master
           resources:
             requests:
-              memory: "800Mi" 
-              cpu: "1000m"              
+              memory: "600Mi" 
+              cpu: "300m"              
             limits:
-              memory: "800Mi"
-              cpu: "1000m"           
+              memory: "600Mi"
+              cpu: "300m"           
           image: omkar/scraper:1.0.0
           volumeMounts:
             - mountPath: /db
@@ -360,7 +360,7 @@ roleRef:
     volumes_dir = "k8s/volumes"
     workflows_dir = ".github/workflows"
 
-    create_file_with_content(f"{app_dir}/ingress-srv.yaml", INGRESS_CONTENT)
+    create_file_with_content(f"{app_dir}/ingress.yaml", INGRESS_CONTENT)
     create_file_with_content(f"{app_dir}/master-depl.yaml", MASTER_DEPL_CONTENT)
 
     create_file_with_content(f"{app_dir}/worker-statefulset.yaml", worker_depl_content)
@@ -505,11 +505,15 @@ def list_all_ips_regional(project_id, region):
     return get_all_lines(result.stdout)
 
 
-DEFAULT_INSTANCE = "e2-small"
 
 
-def run_create_cluster_command(cluster_name, zone, project_id, max_nodes):
-    command = f"""gcloud beta container --project "{project_id}" clusters create "{cluster_name}" --no-enable-basic-auth --cluster-version "1.27.8-gke.1067004" --release-channel "regular" --machine-type "{DEFAULT_INSTANCE}" --image-type "COS_CONTAINERD" --disk-type "pd-balanced" --disk-size "20" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "{max_nodes}" --logging=SYSTEM,WORKLOAD --monitoring=SYSTEM --enable-ip-alias --network "projects/{project_id}/global/networks/default" --subnetwork "projects/{project_id}/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --security-posture=standard --workload-vulnerability-scanning=disabled --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --binauthz-evaluation-mode=DISABLED --enable-managed-prometheus --enable-shielded-nodes --node-locations {zone} --zone {zone} """
+def create_cluster_command_string(cluster_name, zone, project_id, max_nodes, machine_type):
+    num_nodes = max_nodes
+    command = f"""gcloud beta container --project "{project_id}" clusters create "{cluster_name}" --no-enable-basic-auth --cluster-version "1.27.8-gke.1067004" --release-channel "regular" --machine-type "{machine_type}" --image-type "COS_CONTAINERD" --disk-type "pd-balanced" --disk-size "30" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "{num_nodes}" --logging=SYSTEM,WORKLOAD --monitoring=SYSTEM --enable-ip-alias --network "projects/{project_id}/global/networks/default" --subnetwork "projects/{project_id}/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --security-posture=standard --workload-vulnerability-scanning=disabled --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --binauthz-evaluation-mode=DISABLED --enable-managed-prometheus --enable-shielded-nodes --node-locations {zone} --zone {zone}"""
+    return command
+
+def run_create_cluster_command(cluster_name, zone, project_id, max_nodes, machine_type):
+    command = create_cluster_command_string(cluster_name, zone, project_id, max_nodes, machine_type)
     subprocess.run(command, shell=True, check=True, stderr=subprocess.STDOUT)
 
 
@@ -589,8 +593,8 @@ def enable_gcloud(project_id):
 def delete_scraper_images(project_id):
     method = "delete"
     command = f"""for tag in $(gcloud container images list-tags gcr.io/{project_id}/scraper --format='get(TAGS)' --limit=unlimited | sed 's/,/ /g'); do gcloud container images {method} gcr.io/{project_id}/scraper:$tag --quiet --project {project_id} || true; done"""
-    subprocess.run(command, shell=True, check=True, stderr=subprocess.STDOUT)
-
+    # shows a red error if no images, hence hide the output.
+    subprocess.run(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def get_cluster_credentials(cluster_name, zone, project_id):
     click.echo("Getting cluster credentials...")
@@ -625,7 +629,7 @@ def does_ip_exists_regional(cluster_name, project_id, region):
     return create_ip_name(cluster_name) in ips
 
 
-def perform_create_cluster(cluster_name, max_nodes):
+def perform_create_cluster(cluster_name, max_nodes, machine_type):
     project_id = get_project_id()
 
     # TODO: maybe determine based on nearest country best. allow config as well.
@@ -636,7 +640,7 @@ def perform_create_cluster(cluster_name, max_nodes):
 
     if not cluster_exists(cluster_name, project_id):
         click.echo("Creating cluster...")
-        run_create_cluster_command(cluster_name, zone, project_id, max_nodes)
+        run_create_cluster_command(cluster_name, zone, project_id, max_nodes, machine_type)
 
         while True:
             result = get_cluster_status(cluster_name, zone, project_id)
@@ -771,26 +775,33 @@ def perform_delete_cluster(cluster_name):
             stderr=subprocess.STDOUT,
         )
 
+DEFAULT_INSTANCE = "n1-standard-2"
+
+    #  help="The number of worker for the Kubernetes deployment. Defaults to 3."
+    # prompt="Enter the number of workers to run. Default",
 
 @cli.command()
 @click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
+@click.option("--machine-type", prompt=f"Enter machine type. Default", default=DEFAULT_INSTANCE, help=f"Specify the GCP machine type to create. Defaults to {DEFAULT_INSTANCE}.")
 @click.option(
     "--nodes",
-    prompt="Enter the maximum number of nodes to run in the cluster (default: 3). Keep in mind that, based on the GCP quota, there is a default limit of 3 nodes. You may need to request a quota increase if you want to create clusters with more nodes.",
+    prompt="Enter the maximum number of nodes to run in the cluster (default: 3). Keep in mind that, based on the GCP quota, You may need to request a quota increase if you want to create clusters with more nodes.",
     default=3,
     type=int,
     help="Maximum number of nodes for the cluster. Defaults to 3. Adjust based on requirements and GCP quota."
 )
-def create_cluster(cluster_name, nodes):
+def create_cluster(cluster_name, machine_type, nodes):
     """Create the cluster"""
     if nodes <= 0:
         click.echo("The number of nodes must be greater than 0.")
         return
+    
     cluster_name = cluster_name.strip()
+    machine_type = machine_type.strip()
 
     click.echo(f"------ Creating cluster {cluster_name} ------")
 
-    ip_address = perform_create_cluster(cluster_name, nodes)
+    ip_address = perform_create_cluster(cluster_name, nodes, machine_type)
     click.echo(f"Successfully created cluster.")
 
     click.echo("Next steps:")
@@ -798,7 +809,7 @@ def create_cluster(cluster_name, nodes):
     click.echo(create_visit_ip_text(ip_address))
 
 def create_visit_ip_text(ip_address):
-    return "2. Visit http://{}/ to use the Scraper.".format(ip_address)
+    return "2. After Deploying the Scraper via Github Actions. Visit http://{}/ to use the Scraper.".format(ip_address)
 
 
 @cli.command()
@@ -873,6 +884,7 @@ def delete_ip(name, force):
     delete_external_ip_regional(name,  project_id, region) 
     click.echo("IP address deleted successfully.")
 
+# python -m src.bota.__main__
 if __name__ == "__main__":
 
     cli()
