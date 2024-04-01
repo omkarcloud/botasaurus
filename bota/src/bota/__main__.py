@@ -33,8 +33,9 @@ def relative_path(path, goback=0):
     return os.path.abspath(os.path.join(os.getcwd(), *levels, path.strip()))
 
 
-def create_worker_depl_content(workers, ram, cpu):
-    return f"""apiVersion: apps/v1
+def create_worker_depl_content(workers, ram, cpu, use_browser):
+    if not use_browser:
+      return f"""apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: worker-sts
@@ -66,6 +67,60 @@ spec:
           env:
             - name: NODE_TYPE
               value: "WORKER"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker-srv
+spec:
+  selector:
+    app: worker
+  clusterIP: None
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+"""
+
+    return f"""apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: worker-sts
+spec:
+  serviceName: worker-srv
+  replicas: {workers}
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          command: ["python"]
+          args: ["run.py", "backend"]
+          resources:
+            requests:
+              memory: "{ram}Mi"
+              cpu: "{cpu}m"
+            limits:
+              memory: "{ram}Mi"
+              cpu: "{cpu}m"
+          image: omkar/scraper:1.0.0
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+          ports:
+            - containerPort: 8000
+          env:
+            - name: NODE_TYPE
+              value: "WORKER"
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
 ---
 apiVersion: v1
 kind: Service
@@ -236,14 +291,12 @@ kind: Ingress
 metadata:
   name: ingress-service
   annotations:
-    kubernetes.io/ingress.class: gce
-    kubernetes.io/ingress.global-static-ip-name: "{ip_name}"
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 80m
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
 spec:
-  defaultBackend:
-    service:
-      name: default-http-backend
-      port:
-        number: 80
   rules:
     - http:
         paths:
@@ -294,10 +347,10 @@ spec:
         - name: master
           resources:
             requests:
-              memory: "600Mi" 
+              memory: "500Mi" 
               cpu: "300m"              
             limits:
-              memory: "600Mi"
+              memory: "500Mi"
               cpu: "300m"           
           image: omkar/scraper:1.0.0
           volumeMounts:
@@ -352,7 +405,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 """
     master_db_content = create_master_db_content(cluster_name)
-    worker_depl_content = create_worker_depl_content(workers, worker_ram, worker_cpu)
+    worker_depl_content = create_worker_depl_content(workers, worker_ram, worker_cpu, use_browser)
     gke_content = create_gke_content(cluster_name)
 
     app_dir = "k8s/app"
@@ -412,7 +465,8 @@ def get_cluster_external_ip(cluster_name, region, project_id):
             "addresses",
             "describe",
             create_ip_name(cluster_name),
-            "--global",
+            "--region",
+            region,
             "--project",
             project_id,
             "--format=value(address)",
@@ -467,24 +521,6 @@ def get_cluster_names(project_id):
     return get_all_lines(result.stdout)
 
 
-def list_all_ips(project_id):
-    result = subprocess.run(
-        [
-            "gcloud",
-            "compute",
-            "addresses",
-            "list",
-            "--format=value(name)",
-            "--project",
-            project_id,
-            "--global",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return get_all_lines(result.stdout)
-
 def list_all_ips_regional(project_id, region):
     result = subprocess.run(
         [
@@ -515,32 +551,6 @@ def create_cluster_command_string(cluster_name, zone, project_id, max_nodes, mac
 def run_create_cluster_command(cluster_name, zone, project_id, max_nodes, machine_type):
     command = create_cluster_command_string(cluster_name, zone, project_id, max_nodes, machine_type)
     subprocess.run(command, shell=True, check=True, stderr=subprocess.STDOUT)
-
-
-def delete_external_ip(cluster_name,  project_id):
-    try:
-        subprocess.run(
-            [
-                "gcloud",
-                "compute",
-                "addresses",
-                "delete",
-                f"{cluster_name}-ip",
-                "--global",
-                "--project",
-                project_id,
-                "--quiet",
-            ],
-            check=True,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
-
-    except subprocess.CalledProcessError as e:
-        if "was not found" in e.stderr:
-            pass  # Deletion was already considered successful
-        else:
-            raise e  # Re-raise the exception for other errors
 
 
 def delete_external_ip_regional(cluster_name,  project_id, region):
@@ -620,10 +630,6 @@ def cluster_exists(cluster_name, project_id):
     return cluster_name in cluster_names
 
 
-def does_ip_exists(cluster_name, project_id):
-    ips = list_all_ips(project_id)
-    return create_ip_name(cluster_name) in ips
-
 def does_ip_exists_regional(cluster_name, project_id, region):
     ips = list_all_ips_regional(project_id, region)
     return create_ip_name(cluster_name) in ips
@@ -650,34 +656,62 @@ def perform_create_cluster(cluster_name, max_nodes, machine_type):
             time.sleep(2)
 
     # Usage:
-    if not does_ip_exists(cluster_name, project_id):
+    if not does_ip_exists_regional(cluster_name, project_id, region):
         # Create an external IP address
         click.echo("Creating IP address...")
 
-        create_external_ip(cluster_name, project_id)
+        create_external_ip_regional(cluster_name, project_id, region)
 
     ip_address = get_cluster_external_ip(cluster_name, region, project_id)
 
     get_cluster_credentials(cluster_name, zone, project_id)
 
+    click.echo("Enabling nginx load balancer...")
+
+    # Add the ingress-nginx repository
+    subprocess.run(
+        [
+            "helm",
+            "repo",
+            "add",
+            "ingress-nginx",
+            "https://kubernetes.github.io/ingress-nginx",
+        ],
+        check=True,
+        stderr=subprocess.STDOUT,
+    )
+
+
+    # Update the ingress-nginx repository
+    subprocess.run(
+        [
+            "helm",
+            "repo",
+            "update"
+        ],
+        check=True,
+        stderr=subprocess.STDOUT,
+    )
+
+    # Install or upgrade the ingress-nginx chart with the external IP
+    subprocess.run(
+        [
+            "helm",
+            "upgrade",
+            "--install",
+            "ingress-nginx-chart",
+            "ingress-nginx/ingress-nginx",
+            "--set",
+            f"controller.service.loadBalancerIP={ip_address}",
+            "--set",
+            "controller.service.externalTrafficPolicy=Local",
+        ],
+        check=True,
+        stderr=subprocess.STDOUT,
+    )
 
     return ip_address
 
-def create_external_ip(cluster_name, project_id):
-    subprocess.run(
-            [
-                "gcloud",
-                "compute",
-                "addresses",
-                "create",
-                f"{cluster_name}-ip",
-                "--global",
-                "--project",
-                project_id,
-            ],
-            check=True,
-            stderr=subprocess.STDOUT,
-        )
 
 def create_external_ip_regional(cluster_name, project_id, region):
     subprocess.run(
@@ -750,10 +784,10 @@ def perform_delete_cluster(cluster_name):
 
     delete_scraper_images(project_id)
 
-    if does_ip_exists(cluster_name, project_id):
+    if does_ip_exists_regional(cluster_name, project_id, region):
         # Delete the external IP address associated with the cluster
         click.echo("Deleting IP address...")
-        delete_external_ip(cluster_name,  project_id)
+        delete_external_ip_regional(cluster_name,  project_id, region)
 
     if has_cluster:
         click.echo("Deleting the cluster...")

@@ -22,7 +22,16 @@ class K8s:
 
     def wait_for_workers(self):
         ready_workers = 0
-        total_workers = self.get_worker_count()
+        total_workers = 0
+        while not total_workers:
+            try:
+                total_workers = self.get_worker_count()
+                if total_workers:
+                    break
+            except Exception as e:
+                print(f"An exception occurred: {str(e)}")
+                traceback.print_exc()
+            sleep(1)
         while ready_workers < total_workers:
             try:
                 ready_workers = self.get_ready_worker_count()
@@ -68,3 +77,5 @@ class K8s:
         payload = {"task": task, "node_name": node_name}
         response = requests.post(url, json=payload)
         response.raise_for_status()
+if __name__ == "__main__":
+    K8s()    

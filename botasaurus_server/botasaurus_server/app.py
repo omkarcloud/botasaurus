@@ -1,5 +1,7 @@
-from bottle import run
+from bottle import run, BaseRequest
 from .config import is_in_kubernetes, is_worker, is_master
+
+BaseRequest.MEMFILE_MAX = 100 * 1024 * 1024 # 100 MB
 
 if is_master:
     from . import master_routes
