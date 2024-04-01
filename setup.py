@@ -10,8 +10,7 @@ install_requires = [
     "chromedriver-autoinstaller-fix",
     "cloudscraper",
     "selenium==4.5.0",
-    "botasaurus-proxy-authentication",
-    "capsolver_extension_python",
+    "botasaurus-proxy-authentication"
 ]
 extras_require = {}
 cpython_dependencies = [

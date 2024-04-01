@@ -12,7 +12,7 @@ def get_vm_ip():
     return response.text
 
 def create_visit_ip_text(ip):
-    return "The Scraper is running. Visit http://{}/ to use the Scraper.".format(ip)
+    return "Hurray! your scraper is running. Visit http://{}/ to use it.".format(ip)
 
 def wait_till_up(ip):
     """
@@ -35,7 +35,6 @@ def wait_till_up(ip):
             
             # If the response is successful, return without raising an exception
             if response.status_code == 200:
-                print(f"The VM at http://{ip}/ is up and running.")
                 return
         except requests.ConnectionError:
             # If a connection error occurs, just wait and try again
@@ -196,10 +195,9 @@ sudo a2enmod proxy_http
 
 sudo systemctl restart apache2
 """
-    # todo: ucomment this
-    # subprocess.run(remove_empty_lines(install_dependencies),     shell=True, 
-    #         check=True,
-    #         stderr=subprocess.STDOUT,)
+    subprocess.run(remove_empty_lines(install_dependencies),     shell=True, 
+            check=True,
+            stderr=subprocess.STDOUT,)
 
     clone_commands = create_clone_commands(git_repo_url, folder_name)
     subprocess.run(remove_empty_lines(clone_commands),     shell=True, 
@@ -229,5 +227,4 @@ def install_scraper_in_vm(git_repo_url):
     click.echo(create_visit_ip_text(ip))
 
 if __name__ == "__main__":
-    print(installreqs("https://github.com/omkarcloud/google-maps-scraper"))
-    
+    pass

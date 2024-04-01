@@ -705,26 +705,6 @@ scrape_heading_task(["https://nowsecure.nl/", "https://steamdb.info/sub/363669/a
 
 The above code makes the scraper more robust by raising an exception when detected and retrying up to 5 times to visit the website.
 
-### How to Solve Captchas in Web Scraping?
-
-Facing captchas is really common and annoying hurdle in web scraping. Fortunately, CapSolver can be used to automatically solve captchas, saving both time and effort. Here's how you can use it:
-
-```python
-from botasaurus import *
-from capsolver_extension_python import Capsolver
-
-@browser(
-    extensions=[Capsolver(api_key="CAP-MY_KEY")],  # Replace "CAP-MY_KEY" with your actual CapSolver Key
-)  
-def solve_captcha(driver: AntiDetectDriver, data):
-    driver.get("https://recaptcha-demo.appspot.com/recaptcha-v2-checkbox.php")
-    driver.prompt()
-
-solve_captcha()
-```
-
-To solve captcha's with CapSolver, you will need Capsolver API Key. If you do not have a CapSolver API Key, follow the instructions [here](https://github.com/omkarcloud/botasaurus/blob/master/capsolver-sign-up.md) to create a CapSolver account and obtain one.
-
 ### How to Use Chrome Extensions?
 
 Botasaurus allows the use of ANY Chrome Extension with just 1 Line of Code. Below is an example that uses the AdBlocker Chrome Extension:
@@ -1349,14 +1329,6 @@ It's just one click, but it means the world to me.
 <a href="https://github.com/omkarcloud/botasaurus/stargazers">
     <img src="https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus" alt="Stargazers for @omkarcloud/botasaurus">
 </a>
-
-## Sponsors
-
-<a href="https://www.capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=botsaurus">
-    <img src="https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/capsolver.png" style="width: 70%;" alt="capsolver">
-</a>
-
-[Capsolver.com](https://www.capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=botsaurus) is an AI-powered service that provides automatic captcha solving capabilities. It supports a range of captcha types, including reCAPTCHA, hCaptcha, and FunCaptcha, AWS Captcha, Geetest, image captcha among others. Capsolver offers both Chrome and Firefox extensions for ease of use, API integration for developers, and various pricing packages to suit different needs.
 
 ## Disclaimer for Botasaurus Project
 

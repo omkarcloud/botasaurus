@@ -150,15 +150,14 @@ class TaskExecutor:
             )
 
             result = clean_data(result)
-
             self.mark_task_as_success(task_id, result)
-
+            self.decrement_capcity(scraper_type)
         except Exception:
+            self.decrement_capcity(scraper_type)
             exception_log = traceback.format_exc()
             traceback.print_exc()
             self.mark_task_as_failure(task_id, exception_log)
         finally:
-            self.decrement_capcity(scraper_type)
             self.update_parent_task(task_id)
 
     def update_parent_task(self, task_id):
