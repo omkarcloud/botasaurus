@@ -28,7 +28,7 @@ def get_description():
 
 setup(
     name="botasaurus_server",
-    version='4.0.12',
+    version='4.0.13',
     author="Chetan Jain",
     author_email="chetan@omkar.cloud",
     description="Botasaurus Server allows you to transform your scrapers into APIs or scale them using Kubernetes.",

@@ -13,4 +13,4 @@ class ControlsAdapter:
     @staticmethod
     def createControls(input_js):
         # Directly use get_botasaurus_controls to access and invoke createControls
-        return get_botasaurus_controls().createControls(input_js)
+        return get_botasaurus_controls().createControls(input_js, timeout=300)

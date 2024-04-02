@@ -125,7 +125,7 @@ def validate_task_request(json_data):
 
     controls = Server.get_controls(scraper_name)
 
-    result = controls.getBackendValidationResult(data).valueOf()
+    result = controls.getBackendValidationResult(data, timeout=300).valueOf()
 
     errors = result["errors"]
 
