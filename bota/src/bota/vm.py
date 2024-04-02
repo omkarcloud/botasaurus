@@ -45,7 +45,7 @@ def wait_till_up(ip):
 
     # If the function hasn't returned after the loop, raise an exception
     raise Exception(f"The VM at http://{ip}/ is not up after {timeout} seconds. Please check the logs using "
-                    '"journalctl -xeu launch-backend.service" or "journalctl -xeu launch-frontend.service".')
+                    '"journalctl -u launch-backend.service -b" or "journalctl -u launch-frontend.service -b".')
 
 def remove_empty_lines(text):
     """

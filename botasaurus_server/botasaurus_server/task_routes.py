@@ -10,7 +10,7 @@ from bottle import (
     redirect,
 )
 import json
-from sqlalchemy import not_
+from sqlalchemy import not_,  and_, or_
 from .executor import executor
 from .apply_offset_limit import apply_offset_limit
 from .filters import apply_filters
@@ -466,12 +466,19 @@ def queryTasks(with_results, sort_by_date, page=None, per_page=None):
                     }
                 )
 
-def is_valid_integer(param):
+def is_valid_positive_integer(param):
     try:
         return int(param) > 0
     except (ValueError, TypeError):
         return False
     
+
+def is_valid_positive_integer_including_zero(param):
+    try:
+        return int(param) >= 0
+    except (ValueError, TypeError):
+        return False
+        
     
 @get("/api/tasks")
 def get_tasks():
@@ -482,7 +489,7 @@ def get_tasks():
 
     # Validate page and per_page
     if page or per_page:  # Check if any pagination parameter is provided
-        if not (is_valid_integer(page) and is_valid_integer(per_page)):
+        if not (is_valid_positive_integer(page) and is_valid_positive_integer(per_page)):
             raise JsonHTTPResponseWithMessage("Invalid 'page' or 'per_page' parameter. Both must be positive integers.")
 
     return queryTasks(with_results, sort_by_date, page, per_page)
@@ -496,6 +503,25 @@ def get_task(task_id):
         else:
             raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
 
+def is_valid_all_tasks(tasks):
+    if not isinstance(tasks, list):
+        return False
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            return False
+
+        if not is_valid_positive_integer(task.get("id")):
+            return False
+        else:
+            task["id"] = int(task["id"])
+
+        if not is_valid_positive_integer_including_zero(task.get("result_count")):
+            return False
+        else: 
+            task["result_count"] = int(task["result_count"])
+    return True
+
 @post("/api/tasks/is-any-task-finished")  # Add this route
 def is_any_task_finished():
     json_data = request.json
@@ -504,13 +530,21 @@ def is_any_task_finished():
         raise JsonHTTPResponse(
             {"message": "'task_ids' must be a list of integers"}, 400
         )
+    if not is_valid_all_tasks(json_data.get("all_tasks")):
+        raise JsonHTTPResponse(
+            {"message": "'all_tasks' must be a list of dictionaries with 'id' and 'result_count' keys"}, 400
+        )
 
     task_ids = json_data["task_ids"]
-   
+    all_tasks = json_data["all_tasks"]
+    
     with Session() as session:
+        all_tasks_query = [and_(Task.id == x['id'], Task.result_count >  x['result_count']) for x in all_tasks]
         is_any_task_finished = session.query(Task.id).filter(
-            Task.id.in_(task_ids),
-            not_(Task.status.in_([TaskStatus.IN_PROGRESS, TaskStatus.PENDING]))
+            or_(
+                and_(Task.id.in_(task_ids), not_(Task.status.in_([TaskStatus.IN_PROGRESS, TaskStatus.PENDING]))),
+                *all_tasks_query
+            )
         ).first() is not None
 
     return jsonify({"result": is_any_task_finished})
@@ -523,7 +557,7 @@ def is_task_updated():
     query_status = request.query.status  # Extract the 'status' parameter
 
     # Validate 'task_id' using is_valid_integer
-    if not is_valid_integer(task_id):
+    if not is_valid_positive_integer(task_id):
         raise JsonHTTPResponse({"message": "'task_id' must be a valid integer"}, 400)
 
 
@@ -923,7 +957,7 @@ def patch_task():
     return_tasks = request.query.get("return_tasks", "false").lower() == "true"    
     if return_tasks:
       page = request.query.get("page",)
-      if not (is_valid_integer(page)):
+      if not (is_valid_positive_integer(page)):
             raise JsonHTTPResponseWithMessage("Invalid 'page' parameter. Must be a positive integer.")
       return queryTasks(False, True, page, 100)
     return OK_MESSAGE
