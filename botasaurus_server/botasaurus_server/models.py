@@ -93,7 +93,7 @@ class Task(Base):
 
     # Timestamps
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def to_json(self):
         """Serializes all properties of the Task object into a JSON dictionary."""
@@ -107,7 +107,7 @@ class Cache(Base):
     key = Column(String, index=True, unique=True)
     result = Column(JSON)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
+    updated_at = Column(DateTime,  server_default=func.now(), onupdate=func.now())
 
     def to_json(self):
         return {

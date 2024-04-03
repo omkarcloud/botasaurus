@@ -4,20 +4,25 @@ import time
 from math import inf
 from sqlalchemy import and_
 import traceback
-from sqlalchemy.exc import OperationalError
 from .cleaners import clean_data
 from .db_setup import Session
 from .server import Server
 from .models import Task, TaskStatus, TaskHelper, create_cache
 from .scraper_type import ScraperType
+from .retry_on_db_error import retry_on_db_error
 
 class TaskExecutor:
 
     def load(self):
         self.current_capacity = {"browser": 0, "request": 0}
         self.lock = Lock()
-
+    
     def start(self):
+        self.fix_in_progress_tasks()
+        Thread(target=self.task_worker, daemon=True).start()
+    
+    @retry_on_db_error
+    def fix_in_progress_tasks(self):
         with Session() as session:
             # Delete tasks with is_sync=True and status as either pending or in progress
             session.query(Task).filter(
@@ -31,32 +36,23 @@ class TaskExecutor:
                 {"status": TaskStatus.PENDING, "started_at": None},
             )
             session.commit()
-        Thread(target=self.task_worker, daemon=True).start()
+
 
     def task_worker(self):
         while True:
-            with Session() as session:
-                try:
-                    if Server.get_browser_scrapers():
-                        self.process_tasks(session, ScraperType.BROWSER)
-                        session.commit()
+            if Server.get_browser_scrapers():
+                self.process_tasks( ScraperType.BROWSER)
 
-                    if Server.get_request_scrapers():
-                        self.process_tasks(session, ScraperType.REQUEST)
-                        session.commit()
+            if Server.get_request_scrapers():
+                self.process_tasks( ScraperType.REQUEST)
 
-                except OperationalError as e:
-                    session.rollback()  # Roll back in case of errors
-                    print(f"An OperationalError occurred: {e}")  # Log the error
+            time.sleep(1)
 
-            time.sleep(0.1)
-
-    def process_tasks(self, session, scraper_type):
+    def process_tasks(self, scraper_type):
         rate_limit = self.get_max_running_count(scraper_type)
         current_count = self.get_current_running_count(scraper_type)
 
         self.execute_pending_tasks(
-            session,
             and_(
                 Task.status == TaskStatus.PENDING,
                 Task.scraper_type == scraper_type,
@@ -73,41 +69,43 @@ class TaskExecutor:
     def get_current_running_count(self, scraper_type):
         return self.current_capacity[scraper_type]
 
-    def execute_pending_tasks(self, session, task_filter, current, limit, scraper_type):
+    @retry_on_db_error
+    def execute_pending_tasks(self, task_filter, current, limit, scraper_type):
         if current < limit:
-            query = (
-                session.query(Task).filter(task_filter).order_by(Task.is_sync.desc()) # Prioritize syncronous tasks
-            )
-            if limit != inf:
-                remaining = limit - current
-                query = query.limit(remaining)
-
-            tasks = query.all()
-
-            # Collect task and parent IDs
-            task_ids = [task.id for task in tasks]
-            parent_ids = {task.parent_task_id for task in tasks if task.parent_task_id}
-
-            # Bulk update the status of tasks
-            if task_ids:
-                session.query(Task).filter(Task.id.in_(task_ids)).update(
-                    {"status": TaskStatus.IN_PROGRESS, "started_at": datetime.now(timezone.utc)}
+            with Session() as session:
+                query = (
+                    session.query(Task).filter(task_filter).order_by(Task.is_sync.desc()) # Prioritize syncronous tasks
                 )
+                if limit != inf:
+                    remaining = limit - current
+                    query = query.limit(remaining)
 
-            # Bulk update the status of parent tasks
-            if parent_ids:
-                session.query(Task).filter(
-                    Task.id.in_(list(parent_ids)), Task.started_at.is_(None)
-                ).update(
-                    {"status": TaskStatus.IN_PROGRESS, "started_at": datetime.now(timezone.utc)}
-                )
+                tasks = query.all()
 
-            # Commit the changes
-            session.commit()
+                if tasks:
+                    # Collect task and parent IDs
+                    task_ids = [task.id for task in tasks]
+                    parent_ids = {task.parent_task_id for task in tasks if task.parent_task_id}
 
-            # Start tasks after commit
-            for task in tasks:
-                self.run_task_and_update_state(scraper_type, task.to_json())
+                    # Bulk update the status of tasks
+                    if task_ids:
+                        session.query(Task).filter(Task.id.in_(task_ids)).update(
+                            {"status": TaskStatus.IN_PROGRESS, "started_at": datetime.now(timezone.utc)}
+                        )
+
+                    # Bulk update the status of parent tasks
+                    if parent_ids:
+                        session.query(Task).filter(
+                            Task.id.in_(list(parent_ids)), Task.started_at.is_(None)
+                        ).update(
+                            {"status": TaskStatus.IN_PROGRESS, "started_at": datetime.now(timezone.utc)}
+                        )
+
+                    session.commit()
+
+                    # Start tasks after commit
+                    for task in tasks:
+                        self.run_task_and_update_state(scraper_type, task.to_json())
 
     def run_task_and_update_state(self, scraper_type, task_json):
         Thread(
@@ -159,7 +157,7 @@ class TaskExecutor:
             self.mark_task_as_failure(task_id, exception_log)
         finally:
             self.update_parent_task(task_id)
-
+    @retry_on_db_error
     def update_parent_task(self, task_id):
         with Session() as session:
             task_to_update = session.get(Task, task_id)
@@ -199,7 +197,7 @@ class TaskExecutor:
                                     )
                     session.commit()
 
-
+    @retry_on_db_error
     def mark_task_as_failure(self, task_id, exception_log):
         with Session() as session:
             TaskHelper.update_task(
@@ -213,7 +211,8 @@ class TaskExecutor:
                     [TaskStatus.IN_PROGRESS],
                 )
             session.commit()
-
+    
+    @retry_on_db_error
     def mark_task_as_success(self, task_id, result):
         with Session() as session:
             TaskHelper.update_task(

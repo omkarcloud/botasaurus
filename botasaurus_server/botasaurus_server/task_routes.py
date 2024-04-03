@@ -31,7 +31,7 @@ from .models import (
 )
 from .db_setup import Session
 from .errors import JsonHTTPResponse, JsonHTTPResponseWithMessage
-
+from .retry_on_db_error import retry_on_db_error
 
 TASK_NOT_FOUND = {"status": 404, "message": "Task not found"}
 OK_MESSAGE = {"message": "OK"}
@@ -145,27 +145,10 @@ def create_tasks(scraper, data, metadata, is_sync):
 
     
     all_task_sort_id  =  int(datetime.now(timezone.utc).timestamp())
-    with Session() as db:
-        all_task = None
-        all_task_id = None
-        if create_all_tasks:
-            all_task = Task(
-                status=TaskStatus.PENDING,
-                scraper_name=scraper_name,
-                scraper_type=scraper_type,
-                is_all_task=True,
-                is_sync=is_sync,
-                parent_task_id=None,
-                data=data,
-                meta_data=metadata,
-                result=None,
-                task_name="All Task",
-                sort_id=all_task_sort_id,  # Set the sort_id for the all task
-            )
-            db.add(all_task)
-            db.commit()
-
-            all_task_id = all_task.id
+    all_task = None
+    all_task_id = None
+    if create_all_tasks:
+        all_task, all_task_id = perform_create_all_task(data, metadata, is_sync, scraper_name, scraper_type, all_task_sort_id)
 
     if split_task:
         tasks_data = split_task(data)
@@ -191,7 +174,7 @@ def create_tasks(scraper, data, metadata, is_sync):
 
             )
 
-    def create_cached_tasks(session, task_datas):
+    def create_cached_tasks(task_datas):
                 ls = []
                 cache_keys = []
                 
@@ -200,12 +183,9 @@ def create_tasks(scraper, data, metadata, is_sync):
                     ls.append({'key': key, 'task_data': t})
                     cache_keys.append(key)
                 
-                cache_items = session.query(Cache).filter(Cache.key.in_(cache_keys)).all()
-                cache_items_len = len(cache_items)
-                cache_map = {cache.key: cache.result for cache in cache_items}
+                cache_items_len, cache_map = create_cache_details(cache_keys)
                 
                 tasks = []
-                
 
                 def create_cached_task(task_data, cached_result, sort_id):
                     now_time = datetime.now(timezone.utc)
@@ -240,7 +220,7 @@ def create_tasks(scraper, data, metadata, is_sync):
                 return tasks, cache_items_len
 
     if Server.cache:
-            tasks, cached_tasks_len = create_cached_tasks(db, tasks_data)
+            tasks, cached_tasks_len = create_cached_tasks(tasks_data)
     else: 
             tasks = []
             for idx, task_data in enumerate(tasks_data):
@@ -249,27 +229,65 @@ def create_tasks(scraper, data, metadata, is_sync):
                 tasks.append(createTask(task_data, sort_id))
             cached_tasks_len = 0
        
-
-    db.add_all(tasks)
-    db.commit()
-
+    tasks = perform_create_tasks(tasks)
     if cached_tasks_len > 0:
         tasklen = len(tasks)
         if tasklen == cached_tasks_len:
             print('All Tasks Results are Returned from cache')
         else:
             print(f'{cached_tasks_len} out of {tasklen} Results are Returned from cache')
-        executor.complete_parent_task_if_possible(db, all_task_id)
-
-    db.commit()
-    tasks = serialize(tasks)
-    all_task = serialize(all_task)
+        if all_task_id:
+            perform_complete_task(all_task_id)
 
     tasks_with_all_task = tasks
-    if all_task:
+    if all_task_id:
         tasks_with_all_task = [all_task] + tasks
 
     return tasks_with_all_task, tasks, split_task
+
+@retry_on_db_error
+def perform_complete_task(all_task_id):
+    with Session() as session:
+        executor.complete_parent_task_if_possible(session, all_task_id)
+        session.commit()
+
+@retry_on_db_error
+def perform_create_tasks(tasks):
+    with Session() as session:
+        session.add_all(tasks)
+        session.commit()
+        return serialize(tasks)
+
+
+@retry_on_db_error
+def create_cache_details(cache_keys):
+    with Session() as session:
+        cache_items = session.query(Cache).filter(Cache.key.in_(cache_keys)).all()
+        cache_items_len = len(cache_items)
+        cache_map = {cache.key: cache.result for cache in cache_items}
+    return cache_items_len,cache_map
+
+@retry_on_db_error
+def perform_create_all_task(data, metadata, is_sync, scraper_name, scraper_type, all_task_sort_id):
+    with Session() as session:
+            all_task = Task(
+                    status=TaskStatus.PENDING,
+                    scraper_name=scraper_name,
+                    scraper_type=scraper_type,
+                    is_all_task=True,
+                    is_sync=is_sync,
+                    parent_task_id=None,
+                    data=data,
+                    meta_data=metadata,
+                    result=None,
+                    task_name="All Task",
+                    sort_id=all_task_sort_id,  # Set the sort_id for the all task
+                )
+            session.add(all_task)
+            session.commit()
+
+            all_task_id = all_task.id
+            return serialize(all_task),all_task_id
 
 
 @get("/")
@@ -317,7 +335,7 @@ def submit_async_task():
         result = create_async_task(validate_task_request(request.json))
         return jsonify(result)
 
-
+@retry_on_db_error
 def refetch_tasks(item):
     with Session() as session:
         if isinstance(item, list):
@@ -355,9 +373,8 @@ def submit_sync_task():
             for task in wait_tasks:
                 task_id = task["id"]
                 while True:
-                    with Session() as session:
-                        if TaskHelper.is_task_completed_or_failed(session, task_id):
-                            break
+                    if is_task_done(task_id):
+                        break
                     sleep(0.1)
         # give results
         rst = []
@@ -386,19 +403,22 @@ def submit_sync_task():
         for task in wait_tasks:
             task_id = task["id"]
             while True:
-                with Session() as session:
-                    if TaskHelper.is_task_completed_or_failed(session, task_id):
-                        break
+                if is_task_done(task_id):
+                    break
                 sleep(0.1)
 
         if split_task:
             return jsonify(refetch_tasks(tasks_with_all_task))
         else:
             return jsonify(refetch_tasks(tasks[0]))
+@retry_on_db_error
+def is_task_done(task_id):
+    with Session() as session:
+        x  =  TaskHelper.is_task_completed_or_failed(session, task_id)
+    return x
 
 
-
-
+@retry_on_db_error
 def queryTasks(with_results, sort_by_date, page=None, per_page=None):
     with Session() as session:
         if with_results:
@@ -494,14 +514,18 @@ def get_tasks():
 
     return queryTasks(with_results, sort_by_date, page, per_page)
 
-@get("/api/tasks/<task_id:int>")
-def get_task(task_id):
+@retry_on_db_error
+def get_task_from_db(task_id):
     with Session() as session:
         task = TaskHelper.get_task(session, task_id)
         if task:
             return serialize(task)
         else:
             raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
+
+@get("/api/tasks/<task_id:int>")
+def get_task(task_id):
+    return get_task_from_db(task_id)
 
 def is_valid_all_tasks(tasks):
     if not isinstance(tasks, list):
@@ -538,6 +562,11 @@ def is_any_task_finished():
     task_ids = json_data["task_ids"]
     all_tasks = json_data["all_tasks"]
     
+    is_any_task_finished = perform_is_any_task_finished(task_ids, all_tasks)
+
+    return jsonify({"result": is_any_task_finished})
+@retry_on_db_error
+def perform_is_any_task_finished(task_ids, all_tasks):
     with Session() as session:
         all_tasks_query = [and_(Task.id == x['id'], Task.result_count >  x['result_count']) for x in all_tasks]
         is_any_task_finished = session.query(Task.id).filter(
@@ -546,8 +575,8 @@ def is_any_task_finished():
                 *all_tasks_query
             )
         ).first() is not None
-
-    return jsonify({"result": is_any_task_finished})
+        
+    return is_any_task_finished
 
 @get("/api/tasks/is-task-updated")
 def is_task_updated():
@@ -570,6 +599,7 @@ def is_task_updated():
     # Convert 'task_id' to integer
     task_id = int(task_id)
 
+    
     # Parse 'last_updated' using fromisoformat
     try:
         # Assuming last_updated_str is in 'YYYY-MM-DDTHH:MM:SS.ssssss' format
@@ -579,20 +609,26 @@ def is_task_updated():
         raise JsonHTTPResponse({"message": "'last_updated' must be in valid ISO 8601 format"}, 400)
 
     # Query the database for the task's 'updated_at' timestamp using the given 'task_id'
-    with Session() as session:
-        task_data = session.query(Task.updated_at, Task.status).filter(Task.id == task_id).first()
-        if not task_data:
-            raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
-        
-        task_updated_at, task_status = task_data
-        task_updated_at = task_updated_at.replace(tzinfo=None)  # Make 'task_updated_at' naive for comparison
-        
-        if (task_updated_at > last_updated) or (task_status != query_status):
-          is_updated = True
-        else:
-          is_updated = False
+    task_data = perform_is_task_updated(task_id)
+
+    if not task_data:
+        raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
+    
+    task_updated_at, task_status = task_data
+    task_updated_at = task_updated_at.replace(tzinfo=None)  # Make 'task_updated_at' naive for comparison
+    
+    if (task_updated_at > last_updated) or (task_status != query_status):
+      is_updated = True
+    else:
+      is_updated = False
           
     return jsonify({"result": is_updated})
+
+@retry_on_db_error
+def perform_is_task_updated(task_id):
+    with Session() as session:
+        task_data = session.query(Task.updated_at, Task.status).filter(Task.id == task_id).first()
+    return task_data
 
 def validate_download_params(json_data, allowed_sorts, allowed_views, default_sort):
     """Validates download parameters for a task."""
@@ -686,13 +722,7 @@ def generate_filename(task_id, view, scraper_name):
 @post("/api/tasks/<task_id:int>/download")
 def download_task_results(task_id):
 
-    with Session() as session:
-        task = TaskHelper.get_task(session, task_id)
-        if not task:
-            raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
-
-        scraper_name = task.scraper_name
-        results = task.result
+    scraper_name, results = perform_download_task_results(task_id)
     validate_scraper_name(scraper_name)
     if not isinstance(results, list):
         raise JsonHTTPResponse('No Results')
@@ -715,6 +745,17 @@ def download_task_results(task_id):
     filename = generate_filename(task_id, view, scraper_name)
 
     return download_results(results, fmt, filename)
+
+@retry_on_db_error
+def perform_download_task_results(task_id):
+    with Session() as session:
+        task = TaskHelper.get_task(session, task_id)
+        if not task:
+            raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
+
+        scraper_name = task.scraper_name
+        results = task.result
+    return scraper_name,results
 
 
 def validate_results_request(json_data, allowed_sorts, allowed_views, default_sort):
@@ -806,14 +847,7 @@ empty = {"count": 0, "page_count": 0, "next": None, "previous": None,}
 @post("/api/tasks/<task_id:int>/results")
 def get_task_results(task_id):
 
-    with Session() as session:
-        task = TaskHelper.get_task(session, task_id)
-        if not task:
-            raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
-
-        scraper_name = task.scraper_name
-        results = task.result
-        serialized_task = serialize_task(task, False)
+    scraper_name, results, serialized_task = perform_get_task_results(task_id)
     validate_scraper_name(scraper_name)
     if not isinstance(results, list):
         return jsonify({**empty, "results":results, "task":serialized_task })
@@ -832,6 +866,18 @@ def get_task_results(task_id):
     results = apply_offset_limit(results, offset, limit)
     results["task"] = serialized_task
     return jsonify(results)
+
+@retry_on_db_error
+def perform_get_task_results(task_id):
+    with Session() as session:
+        task = TaskHelper.get_task(session, task_id)
+        if not task:
+            raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
+
+        scraper_name = task.scraper_name
+        results = task.result
+        serialized_task = serialize_task(task, False)
+    return scraper_name,results,serialized_task
 
 
 def delete_task(session, task):
@@ -940,19 +986,23 @@ def validate_patch_task(json_data):
 
     return action, task_ids
 
+@retry_on_db_error
+def perform_patch_task(action, task_id):
+    with Session() as session:
+        task = session.get(Task, task_id)
+        if task:
+            if action == "delete":
+                delete_task(session, task)
+            elif action == "abort":
+                abort_task(session, task)
+        session.commit()
+
 @route("/api/tasks", method="PATCH")
 def patch_task():
     action, task_ids = validate_patch_task(request.json)
 
     for task_id in task_ids:
-        with Session() as session:
-            task = session.get(Task, task_id)
-            if task:
-                if action == "delete":
-                    delete_task(session, task)
-                elif action == "abort":
-                    abort_task(session, task)
-            session.commit()
+        perform_patch_task(action, task_id)
 
     return_tasks = request.query.get("return_tasks", "false").lower() == "true"    
     if return_tasks:
