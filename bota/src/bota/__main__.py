@@ -8,7 +8,7 @@ from .vm import install_scraper_in_vm
 
 @click.group(context_settings=dict(max_content_width=95))
 def cli():
-    """Botasaurus Kubernetes Cluster management CLI"""
+    """Botasaurus CLI"""
     pass
 
 
@@ -259,189 +259,6 @@ def create_file_with_content(file_path, content):
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(content)
 
-@cli.command(help='Creates the manifest files for Kubernetes deployment and GitHub Actions')
-@click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
-@click.option(
-    "--workers",
-    prompt="Enter the number of workers to run. Default",
-    default=3,
-    type=int,
-     help="The number of worker for the Kubernetes deployment. Defaults to 3."
-)
-@click.option(
-    "--use-browser",
-    prompt="Are browsers used in the scraper? [y/N]",
-    required=True,
-    type=bool,
-    help="Specify if the scraper uses a browser, affects cpu and ram allocation.",
-)
-def create_manifests(cluster_name, workers, use_browser):
-
-    if workers <= 0:
-        click.echo("The number of workers must be greater than 0.")
-        return
-    cluster_name = cluster_name.strip()
-
-    worker_ram = WORKER_RAM_WITH_BROWSER if use_browser else WORKER_RAM_WITHOUT_BROWSER
-
-    click.echo(
-        f"------ Creating manifest files for cluster '{cluster_name}' with {workers} workers, where each worker node will have {worker_ram} RAM and {WORKER_CPU} CPU ------"
-    )
-
-    worker_cpu = WORKER_CPU * 1000
-
-    # click.echo(f"worker nodes will have {worker_ram} RAM and {WORKER_CPU} CPU.")
-
-    create_directory_if_not_exists("k8s")
-    create_directory_if_not_exists("k8s/app")
-    create_directory_if_not_exists("k8s/roles")
-    create_directory_if_not_exists("k8s/volumes")
-    create_directory_if_not_exists(".github")
-    create_directory_if_not_exists(".github/workflows")
-
-    # Constants for file content
-    ip_name = create_ip_name(cluster_name)
-    # Constants for file content
-    INGRESS_CONTENT = f"""apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ingress-service
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/proxy-body-size: 80m
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-spec:
-  rules:
-    - http:
-        paths:
-          # This triggers a 503 error and safeguards the API from unauthorized access to Kubernetes.
-          - path: /api/k8s
-            pathType: Prefix
-            backend:
-              service:
-                name: default-http-backend
-                port:
-                  number: 80
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: master-srv
-                port:
-                  number: 8000
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: master-srv
-                port:
-                  number: 3000
-"""
-    MASTER_DEPL_CONTENT = """apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: master-depl
-spec:
-  replicas: 1
-  strategy:
-    type: Recreate  
-  selector:
-    matchLabels:
-      app: master
-  template:
-    metadata:
-      labels:
-        app: master
-    spec:
-      volumes:
-        - name: db
-          persistentVolumeClaim:
-            claimName: master-db
-      containers:
-        - name: master
-          resources:
-            requests:
-              memory: "800Mi" 
-              cpu: "1000m"              
-            limits:
-              memory: "800Mi"
-              cpu: "1000m"           
-          image: omkar/scraper:1.0.0
-          volumeMounts:
-            - mountPath: /db
-              name: db
-          ports:  
-            - containerPort: 3000
-              name: frontend
-            - containerPort: 8000
-              name: backend
-          env:
-            - name: NODE_TYPE
-              value: "MASTER"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: master-srv
-spec:
-  selector:
-    app: master
-  ports:
-    - name: frontend
-      protocol: TCP
-      port: 3000
-      targetPort: 3000
-    - name: backend
-      protocol: TCP
-      port: 8000
-      targetPort: 8000
-"""
-    FULL_ACCESS_CONTENT = """kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: full-access
-rules:
-  - apiGroups: ["*"]
-    resources: ["*"]
-    verbs: ["*"]
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: full-access
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: default
-roleRef:
-  kind: ClusterRole
-  name: full-access
-  apiGroup: rbac.authorization.k8s.io
-"""
-    master_db_content = create_master_db_content(cluster_name)
-    worker_depl_content = create_worker_depl_content(workers, worker_ram, worker_cpu, use_browser)
-    gke_content = create_gke_content(cluster_name)
-
-    app_dir = "k8s/app"
-    roles_dir = "k8s/roles"
-    volumes_dir = "k8s/volumes"
-    workflows_dir = ".github/workflows"
-
-    create_file_with_content(f"{app_dir}/ingress.yaml", INGRESS_CONTENT)
-    create_file_with_content(f"{app_dir}/master-depl.yaml", MASTER_DEPL_CONTENT)
-
-    create_file_with_content(f"{app_dir}/worker-statefulset.yaml", worker_depl_content)
-
-    create_file_with_content(f"{roles_dir}/full-access.yaml", FULL_ACCESS_CONTENT)
-
-    create_file_with_content(f"{volumes_dir}/master-db.yaml", master_db_content)
-
-    create_file_with_content(f"{workflows_dir}/gke.yaml", gke_content)
-
-    click.echo(f"Successfully created manifest files.")
-
 
 def exit_if_err(result):
     if result.stderr:
@@ -646,13 +463,17 @@ def run_create_cluster_commands(cluster_name, max_nodes, machine_type):
             if status == "RUNNING":
                 break
             time.sleep(2)
-
+    else:
+          click.echo("Skipping cluster creation as it already exists.")
+        
     # Usage:
     if not does_ip_exists_regional(cluster_name, project_id, region):
         # Create an external IP address
         click.echo("Creating IP address...")
 
         create_external_ip_regional(cluster_name, project_id, region)
+    else:
+        click.echo("Skipping IP address creation as it already exists.")
 
     ip_address = get_regional_ip_details(cluster_name, region, project_id)
 
@@ -803,72 +624,6 @@ def run_delete_cluster_commands(cluster_name):
 
 DEFAULT_INSTANCE = "n1-standard-2"
 
-    #  help="The number of worker for the Kubernetes deployment. Defaults to 3."
-    # prompt="Enter the number of workers to run. Default",
-
-@cli.command()
-@click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
-@click.option("--machine-type", prompt=f"Enter machine type. Default", default=DEFAULT_INSTANCE, help=f"Specify the GCP machine type to create. Defaults to {DEFAULT_INSTANCE}.")
-@click.option(
-    "--nodes",
-    prompt="Enter the maximum number of nodes to run in the cluster (default: 3). Keep in mind that, based on the GCP quota, You may need to request a quota increase if you want to create clusters with more nodes.",
-    default=3,
-    type=int,
-    help="Maximum number of nodes for the cluster. Defaults to 3. Adjust based on requirements and GCP quota."
-)
-def create_cluster(cluster_name, machine_type, nodes):
-    """Create the cluster"""
-    if nodes <= 0:
-        click.echo("The number of nodes must be greater than 0.")
-        return
-    
-    cluster_name = cluster_name.strip()
-    machine_type = machine_type.strip()
-
-    click.echo(f"------ Creating cluster {cluster_name} ------")
-
-    ip_address = run_create_cluster_commands(cluster_name, nodes, machine_type)
-    click.echo(f"Successfully created cluster.")
-
-    click.echo("Next steps:")
-    click.echo("1. Deploy the Scraper using Github Actions.")
-    click.echo(create_visit_ip_text(ip_address))
-
-def create_visit_ip_text(ip_address):
-    return "2. After Deploying the Scraper via Github Actions. Visit http://{}/ to use the Scraper.".format(ip_address)
-
-
-@cli.command()
-@click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to delete.")
-@click.option(
-    "--force", is_flag=True, help="Force deletion of the cluster without confirmation. Use this option with caution."
-)
-def delete_cluster(cluster_name, force):
-    """Deletes the cluster"""
-    cluster_name = cluster_name.strip()
-    if not force:  # Ask for confirmation if --force is not used
-        if not click.confirm(
-            f"Are you sure you want to delete cluster '{cluster_name}'? This will permanently delete the entire database in '{cluster_name}'! If you need the data, please download it before proceeding."
-        ):
-            click.echo("Deletion aborted.")
-            sys.exit(1)
-            return  # Exit if the user doesn't confirm
-
-    click.echo(f"------ Deleting cluster {cluster_name} ------")
-    run_delete_cluster_commands(cluster_name)
-
-    click.echo(f"Successfully deleted cluster.")
-
-
-@cli.command()
-@click.option("--repo-url", prompt="Enter the repository URL for the scraper (e.g., https://github.com/your-username/your-repository)", required=True, help="The GitHub repository URL to install.")
-def install_scraper(repo_url):
-    """Installs a scraper inside VM"""
-    repo_url = repo_url.strip()
-
-    click.echo(f"------ Installing Scraper ------")
-    install_scraper_in_vm(repo_url)
-
 @cli.command()
 @click.option("--name", prompt="Enter VM name", required=True, help="The name of the VM where to create the IP address.")
 def create_ip(name):
@@ -909,6 +664,253 @@ def delete_ip(name, force):
 
     delete_external_ip_regional(name,  project_id, region) 
     click.echo("IP address deleted successfully.")
+
+def create_visit_ip_text(ip_address):
+    return "2. After Deploying the Scraper via Github Actions. Visit http://{}/ to use the Scraper.".format(ip_address)
+
+
+@cli.command()
+@click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
+@click.option("--machine-type", prompt=f"Enter machine type. Default", default=DEFAULT_INSTANCE, help=f"Specify the GCP machine type to create. Defaults to {DEFAULT_INSTANCE}.")
+@click.option(
+    "--nodes",
+    prompt="Enter the maximum number of nodes to run in the cluster (default: 3). Keep in mind that, based on the GCP quota, You may need to request a quota increase if you want to create clusters with more nodes.",
+    default=3,
+    type=int,
+    help="Maximum number of nodes for the cluster. Defaults to 3. Adjust based on requirements and GCP quota."
+)
+def create_cluster(cluster_name, machine_type, nodes):
+    """Create the cluster"""
+    if nodes <= 0:
+        click.echo("The number of nodes must be greater than 0.")
+        return
+    
+    cluster_name = cluster_name.strip()
+    machine_type = machine_type.strip()
+
+    click.echo(f"------ Creating cluster {cluster_name} ------")
+
+    ip_address = run_create_cluster_commands(cluster_name, nodes, machine_type)
+    click.echo(f"Successfully created cluster.")
+
+    click.echo("Next steps:")
+    click.echo("1. Deploy the Scraper using Github Actions.")
+    click.echo(create_visit_ip_text(ip_address))
+
+
+@cli.command(help='Creates the manifest files for Kubernetes deployment and GitHub Actions')
+@click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
+@click.option(
+    "--workers",
+    prompt="Enter the number of workers to run. Default",
+    default=3,
+    type=int,
+     help="The number of worker for the Kubernetes deployment. Defaults to 3."
+)
+@click.option(
+    "--use-browser",
+    prompt="Are browsers used in the scraper? [y/N]",
+    required=True,
+    type=bool,
+    help="Specify if the scraper uses a browser, affects cpu and ram allocation.",
+)
+def create_manifests(cluster_name, workers, use_browser):
+
+    if workers <= 0:
+        click.echo("The number of workers must be greater than 0.")
+        return
+    cluster_name = cluster_name.strip()
+
+    worker_ram = WORKER_RAM_WITH_BROWSER if use_browser else WORKER_RAM_WITHOUT_BROWSER
+
+    click.echo(
+        f"------ Creating manifest files for cluster '{cluster_name}' with {workers} workers, where each worker node will have {worker_ram} RAM and {WORKER_CPU} CPU ------"
+    )
+
+    worker_cpu = WORKER_CPU * 1000
+
+    # click.echo(f"worker nodes will have {worker_ram} RAM and {WORKER_CPU} CPU.")
+
+    create_directory_if_not_exists("k8s")
+    create_directory_if_not_exists("k8s/app")
+    create_directory_if_not_exists("k8s/roles")
+    create_directory_if_not_exists("k8s/volumes")
+    create_directory_if_not_exists(".github")
+    create_directory_if_not_exists(".github/workflows")
+
+    # Constants for file content
+    ip_name = create_ip_name(cluster_name)
+    # Constants for file content
+    INGRESS_CONTENT = f"""apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-service
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 80m
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+spec:
+  rules:
+    - http:
+        paths:
+          # This triggers a 503 error and safeguards the API from unauthorized access to Kubernetes.
+          - path: /api/k8s
+            pathType: Prefix
+            backend:
+              service:
+                name: default-http-backend
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: master-srv
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: master-srv
+                port:
+                  number: 3000
+"""
+    MASTER_DEPL_CONTENT = """apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: master-depl
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate  
+  selector:
+    matchLabels:
+      app: master
+  template:
+    metadata:
+      labels:
+        app: master
+    spec:
+      volumes:
+        - name: db
+          persistentVolumeClaim:
+            claimName: master-db
+      containers:
+        - name: master
+          resources:
+            requests:
+              memory: "800Mi" 
+              cpu: "1000m"              
+            limits:
+              memory: "800Mi"
+              cpu: "1000m"           
+          image: omkar/scraper:1.0.0
+          volumeMounts:
+            - mountPath: /db
+              name: db
+          ports:  
+            - containerPort: 3000
+              name: frontend
+            - containerPort: 8000
+              name: backend
+          env:
+            - name: NODE_TYPE
+              value: "MASTER"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: master-srv
+spec:
+  selector:
+    app: master
+  ports:
+    - name: frontend
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+    - name: backend
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
+"""
+    FULL_ACCESS_CONTENT = """kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: full-access
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: full-access
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: full-access
+  apiGroup: rbac.authorization.k8s.io
+"""
+    master_db_content = create_master_db_content(cluster_name)
+    worker_depl_content = create_worker_depl_content(workers, worker_ram, worker_cpu, use_browser)
+    gke_content = create_gke_content(cluster_name)
+
+    app_dir = "k8s/app"
+    roles_dir = "k8s/roles"
+    volumes_dir = "k8s/volumes"
+    workflows_dir = ".github/workflows"
+
+    create_file_with_content(f"{app_dir}/ingress.yaml", INGRESS_CONTENT)
+    create_file_with_content(f"{app_dir}/master-depl.yaml", MASTER_DEPL_CONTENT)
+
+    create_file_with_content(f"{app_dir}/worker-statefulset.yaml", worker_depl_content)
+
+    create_file_with_content(f"{roles_dir}/full-access.yaml", FULL_ACCESS_CONTENT)
+
+    create_file_with_content(f"{volumes_dir}/master-db.yaml", master_db_content)
+
+    create_file_with_content(f"{workflows_dir}/gke.yaml", gke_content)
+
+    click.echo(f"Successfully created manifest files.")
+
+@cli.command()
+@click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to delete.")
+@click.option(
+    "--force", is_flag=True, help="Force deletion of the cluster without confirmation. Use this option with caution."
+)
+def delete_cluster(cluster_name, force):
+    """Deletes the cluster"""
+    cluster_name = cluster_name.strip()
+    if not force:  # Ask for confirmation if --force is not used
+        if not click.confirm(
+            f"Are you sure you want to delete cluster '{cluster_name}'? This will permanently delete the entire database in '{cluster_name}'! If you need the data, please download it before proceeding."
+        ):
+            click.echo("Deletion aborted.")
+            sys.exit(1)
+            return  # Exit if the user doesn't confirm
+
+    click.echo(f"------ Deleting cluster {cluster_name} ------")
+    run_delete_cluster_commands(cluster_name)
+
+    click.echo(f"Successfully deleted cluster.")
+
+
+@cli.command()
+@click.option("--repo-url", prompt="Enter the repository URL for the scraper (e.g., https://github.com/your-username/your-repository)", required=True, help="The GitHub repository URL to install.")
+def install_scraper(repo_url):
+    """Installs a scraper inside VM"""
+    repo_url = repo_url.strip()
+
+    click.echo(f"------ Installing Scraper ------")
+    install_scraper_in_vm(repo_url)
 
 # python -m src.bota.__main__
 if __name__ == "__main__":
