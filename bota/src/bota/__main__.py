@@ -15,7 +15,14 @@ def cli():
 def create_ip_name(cluster_name):
     return f"{cluster_name}-ip"
 
-def catch_file_not_found_error(func):
+
+def create_directory_if_not_exists(passed_path):
+    dir_path = relative_path(passed_path, 0)
+    if not path.exists(dir_path):
+        makedirs(dir_path)
+
+
+def catch_gcloud_not_found_error(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -24,9 +31,24 @@ def catch_file_not_found_error(func):
             sys.exit(1)
     return wrapper
 
+
+def get_first_line(data):
+    ls = data.strip().splitlines()
+    first_line = ls[0].strip() if ls else None
+    return first_line
+
+
+def get_all_lines(data):
+    ls = data.strip().splitlines()
+    if ls:
+        return [l.strip() for l in ls]
+    else:
+        return []
+
 WORKER_RAM_WITH_BROWSER = 4000
 WORKER_RAM_WITHOUT_BROWSER = 800
 WORKER_CPU = 1
+
 
 def relative_path(path, goback=0):
     levels = [".."] * (goback + -1)
@@ -233,12 +255,6 @@ jobs:
     )
 
 
-def create_directory_if_not_exists(passed_path):
-    dir_path = relative_path(passed_path, 0)
-    if not path.exists(dir_path):
-        makedirs(dir_path)
-
-
 def create_file_with_content(file_path, content):
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(content)
@@ -347,11 +363,11 @@ spec:
         - name: master
           resources:
             requests:
-              memory: "500Mi" 
-              cpu: "300m"              
+              memory: "800Mi" 
+              cpu: "1000m"              
             limits:
-              memory: "500Mi"
-              cpu: "300m"           
+              memory: "800Mi"
+              cpu: "1000m"           
           image: omkar/scraper:1.0.0
           volumeMounts:
             - mountPath: /db
@@ -427,25 +443,12 @@ roleRef:
     click.echo(f"Successfully created manifest files.")
 
 
-def get_first_line(data):
-    ls = data.strip().splitlines()
-    first_line = ls[0].strip() if ls else None
-    return first_line
-
-
-def get_all_lines(data):
-    ls = data.strip().splitlines()
-    if ls:
-        return [l.strip() for l in ls]
-    else:
-        return []
-
 def exit_if_err(result):
     if result.stderr:
       print(result.stderr)
       raise Exception("Command failed with above error.")
 
-@catch_file_not_found_error
+@catch_gcloud_not_found_error
 def get_project_id():
     result = subprocess.run(
         ["gcloud", "projects", "list", "--format=value(projectId)", "--limit=1"],
@@ -457,7 +460,7 @@ def get_project_id():
     return get_first_line(result.stdout)
 
 
-def get_cluster_external_ip(cluster_name, region, project_id):
+def get_regional_ip_details(cluster_name, region, project_id):
     ip_address_result = subprocess.run(
         [
             "gcloud",
@@ -499,9 +502,6 @@ def get_cluster_status(cluster_name, zone, project_id):
     return get_first_line(result.stdout)
 
 
-
-
-
 def get_cluster_names(project_id):
     result = subprocess.run(
         [
@@ -541,14 +541,12 @@ def list_all_ips_regional(project_id, region):
     return get_all_lines(result.stdout)
 
 
-
-
 def create_cluster_command_string(cluster_name, zone, project_id, max_nodes, machine_type):
     num_nodes = max_nodes
     command = f"""gcloud beta container --project "{project_id}" clusters create "{cluster_name}" --no-enable-basic-auth --cluster-version "1.27.8-gke.1067004" --release-channel "regular" --machine-type "{machine_type}" --image-type "COS_CONTAINERD" --disk-type "pd-balanced" --disk-size "30" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "{num_nodes}" --logging=SYSTEM,WORKLOAD --monitoring=SYSTEM --enable-ip-alias --network "projects/{project_id}/global/networks/default" --subnetwork "projects/{project_id}/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --security-posture=standard --workload-vulnerability-scanning=disabled --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --binauthz-evaluation-mode=DISABLED --enable-managed-prometheus --enable-shielded-nodes --node-locations {zone} --zone {zone}"""
     return command
 
-def run_create_cluster_command(cluster_name, zone, project_id, max_nodes, machine_type):
+def run_create_cluster_commands(cluster_name, zone, project_id, max_nodes, machine_type):
     command = create_cluster_command_string(cluster_name, zone, project_id, max_nodes, machine_type)
     subprocess.run(command, shell=True, check=True, stderr=subprocess.STDOUT)
 
@@ -579,10 +577,7 @@ def delete_external_ip_regional(cluster_name,  project_id, region):
         else:
             raise e  # Re-raise the exception for other errors
 
-
-
-
-def enable_gcloud(project_id):
+def enable_gcloud_services(project_id):
     click.echo("Enabling services...")
     subprocess.run(
         [
@@ -624,29 +619,26 @@ def get_cluster_credentials(cluster_name, zone, project_id):
         stderr=subprocess.STDOUT,
     )
 
-
 def cluster_exists(cluster_name, project_id):
     cluster_names = get_cluster_names(project_id)
     return cluster_name in cluster_names
-
 
 def does_ip_exists_regional(cluster_name, project_id, region):
     ips = list_all_ips_regional(project_id, region)
     return create_ip_name(cluster_name) in ips
 
-
-def perform_create_cluster(cluster_name, max_nodes, machine_type):
+def run_create_cluster_commands(cluster_name, max_nodes, machine_type):
     project_id = get_project_id()
 
     # TODO: maybe determine based on nearest country best. allow config as well.
     zone = "us-central1-a"
     region = "us-central1"
 
-    enable_gcloud(project_id)
+    enable_gcloud_services(project_id)
 
     if not cluster_exists(cluster_name, project_id):
         click.echo("Creating cluster...")
-        run_create_cluster_command(cluster_name, zone, project_id, max_nodes, machine_type)
+        run_create_cluster_commands(cluster_name, zone, project_id, max_nodes, machine_type)
 
         while True:
             result = get_cluster_status(cluster_name, zone, project_id)
@@ -662,7 +654,7 @@ def perform_create_cluster(cluster_name, max_nodes, machine_type):
 
         create_external_ip_regional(cluster_name, project_id, region)
 
-    ip_address = get_cluster_external_ip(cluster_name, region, project_id)
+    ip_address = get_regional_ip_details(cluster_name, region, project_id)
 
     get_cluster_credentials(cluster_name, zone, project_id)
 
@@ -753,7 +745,7 @@ def delete_pvc_if_exists(pvc_name):
         )
 
 
-def perform_delete_cluster(cluster_name):
+def run_delete_cluster_commands(cluster_name):
     project_id = get_project_id()
     zone = "us-central1-a"
     region = "us-central1"
@@ -775,7 +767,7 @@ def perform_delete_cluster(cluster_name):
                 "--ignore-not-found=true",
             ],
             check=True,
-            stderr=subprocess.STDOUT,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
 
         delete_pvc_if_exists("master-db")
@@ -835,7 +827,7 @@ def create_cluster(cluster_name, machine_type, nodes):
 
     click.echo(f"------ Creating cluster {cluster_name} ------")
 
-    ip_address = perform_create_cluster(cluster_name, nodes, machine_type)
+    ip_address = run_create_cluster_commands(cluster_name, nodes, machine_type)
     click.echo(f"Successfully created cluster.")
 
     click.echo("Next steps:")
@@ -863,7 +855,7 @@ def delete_cluster(cluster_name, force):
             return  # Exit if the user doesn't confirm
 
     click.echo(f"------ Deleting cluster {cluster_name} ------")
-    perform_delete_cluster(cluster_name)
+    run_delete_cluster_commands(cluster_name)
 
     click.echo(f"Successfully deleted cluster.")
 

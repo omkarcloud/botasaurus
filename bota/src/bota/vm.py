@@ -3,13 +3,53 @@ import click
 import os
 import subprocess
 import requests
+from requests.exceptions import ReadTimeout
+import traceback
 
-def get_vm_ip():
+def find_ip(attempts=5, proxy=None) -> str:
+    """Finds the public IP address of the current connection."""
+    url = 'https://checkip.amazonaws.com/'
+    proxies = None
+
+    try:
+        response = requests.get(url, proxies=proxies, timeout=10)
+        return response.text.strip()
+
+    except ReadTimeout:
+        if attempts > 1:
+            print("ReadTimeout occurred. Retrying...")
+            return find_ip(attempts - 1, proxy)
+        else:
+            print("Max attempts reached. Failed to get IP address.")
+            return None
+
+    except Exception as e:
+        traceback.print_exc()
+        return None
+
+def is_running_on_gcp():
+    try:
+        response = requests.get(
+            "http://metadata.google.internal/computeMetadata/v1/instance",
+            headers={"Metadata-Flavor": "Google"},
+        )
+        return response.status_code == 200  # Success
+    except requests.exceptions.RequestException:
+        return False  # Assume not on GCP if request fails 
+
+
+def get_gcp_ip():
     metadata_url = "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip"
     headers = {"Metadata-Flavor": "Google"}
     response = requests.get(metadata_url, headers=headers)
     response.raise_for_status()  # Raise an error for bad responses
     return response.text
+
+def get_vm_ip():
+    if is_running_on_gcp():
+        return get_gcp_ip()
+    else:
+        return find_ip()
 
 def create_visit_ip_text(ip):
     return "Hurray! your scraper is running. Visit http://{}/ to use it.".format(ip)
@@ -120,7 +160,7 @@ npm run start"""
     launch_backend_sh = r"""#!/bin/bash
 sudo pkill chrome
 sudo pkill -f "python3 run.py backend"
-/usr/bin/python3 run.py backend"""
+VM=true /usr/bin/python3 run.py backend"""
 
     launch_backend_service = f"""[Unit]
 Description=Launch Backend
