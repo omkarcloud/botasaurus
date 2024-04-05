@@ -39,29 +39,35 @@ class TaskExecutor:
 
 
     def task_worker(self):
+        browser_scrapers = len(Server.get_browser_scrapers()) > 0
+        request_scrapers = len(Server.get_request_scrapers()) > 0
+        
         while True:
-            if Server.get_browser_scrapers():
-                self.process_tasks( ScraperType.BROWSER)
+            try:
+                if browser_scrapers:
+                    self.process_tasks(ScraperType.BROWSER)
 
-            if Server.get_request_scrapers():
-                self.process_tasks( ScraperType.REQUEST)
+                if request_scrapers:
+                    self.process_tasks(ScraperType.REQUEST)
+            except:
+              traceback.print_exc()
 
             time.sleep(1)
 
     def process_tasks(self, scraper_type):
         rate_limit = self.get_max_running_count(scraper_type)
         current_count = self.get_current_running_count(scraper_type)
-
-        self.execute_pending_tasks(
-            and_(
-                Task.status == TaskStatus.PENDING,
-                Task.scraper_type == scraper_type,
-                Task.is_all_task == False,
-            ),
-            current_count,
-            rate_limit,
-            scraper_type
-        )
+        if current_count < rate_limit:
+            self.execute_pending_tasks(
+                and_(
+                    Task.status == TaskStatus.PENDING,
+                    Task.scraper_type == scraper_type,
+                    Task.is_all_task == False,
+                ),
+                current_count,
+                rate_limit,
+                scraper_type
+            )
 
     def get_max_running_count(self, scraper_type):
         return Server.get_rate_limit()[scraper_type]
@@ -71,7 +77,6 @@ class TaskExecutor:
 
     @retry_on_db_error
     def execute_pending_tasks(self, task_filter, current, limit, scraper_type):
-        if current < limit:
             with Session() as session:
                 query = (
                     session.query(Task).filter(task_filter).order_by(Task.is_sync.desc()) # Prioritize syncronous tasks
@@ -108,18 +113,18 @@ class TaskExecutor:
                         self.run_task_and_update_state(scraper_type, task.to_json())
 
     def run_task_and_update_state(self, scraper_type, task_json):
-        Thread(
-                target=self.run_task, args=(task_json,), daemon=True
-                ).start()
-        
+        Thread(target=self.run_task, args=(task_json,), daemon=True).start()
         self.increment_capacity(scraper_type)
+        
 
     def increment_capacity(self, scraper_type):
-        with self.lock:
+        # Temp Lock Disabling to check if it reduces the deadlock on vm tasks
+        # with self.lock:
             self.current_capacity[scraper_type] += 1
 
     def decrement_capcity(self, scraper_type):
-        with self.lock:
+        # Temp Lock Disabling to check if it reduces the deadlock on vm tasks
+        # with self.lock:
             self.current_capacity[scraper_type] -= 1
 
     def run_task(self, task):
@@ -131,32 +136,35 @@ class TaskExecutor:
         task_data = task["data"]
 
         fn = Server.get_scraping_function(scraper_name)
-
         try:
-            result = fn(
-                task_data,
-                **metadata,
-                parallel=None,
-                cache=False,
-                beep=False,
-                run_async=False,
-                async_queue=False,
-                raise_exception=True,
-                close_on_crash=True,
-                output=None,
-                create_error_logs=False
-            )
+            try:
+                result = fn(
+                    task_data,
+                    **metadata,
+                    parallel=None,
+                    cache=False,
+                    beep=False,
+                    run_async=False,
+                    async_queue=False,
+                    raise_exception=True,
+                    close_on_crash=True,
+                    output=None,
+                    create_error_logs=False
+                )
 
-            result = clean_data(result)
-            self.mark_task_as_success(task_id, result)
-            self.decrement_capcity(scraper_type)
-        except Exception:
-            self.decrement_capcity(scraper_type)
-            exception_log = traceback.format_exc()
-            traceback.print_exc()
-            self.mark_task_as_failure(task_id, exception_log)
-        finally:
-            self.update_parent_task(task_id)
+                result = clean_data(result)
+                self.mark_task_as_success(task_id, result)
+                self.decrement_capcity(scraper_type)
+            except:
+                self.decrement_capcity(scraper_type)
+                exception_log = traceback.format_exc()
+                traceback.print_exc()
+                self.mark_task_as_failure(task_id, exception_log)
+            finally:
+                self.update_parent_task(task_id)
+        except Exception as e:
+          print("Error in run_task ", e)
+    
     @retry_on_db_error
     def update_parent_task(self, task_id):
         with Session() as session:

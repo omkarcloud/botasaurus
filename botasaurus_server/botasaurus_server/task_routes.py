@@ -416,8 +416,43 @@ def is_task_done(task_id):
     with Session() as session:
         x  =  TaskHelper.is_task_completed_or_failed(session, task_id)
     return x
-
-
+# TODO: output can request just what it needs which is more efficient and less buggy.       # if with_results:
+        #     ets = [
+        #         Task.id,
+        #         Task.status,
+        #         Task.task_name,
+        #         # Task.scraper_name,
+        #         Task.result_count,
+        #         # Task.scraper_type,
+        #         Task.is_all_task,
+        #         # Task.is_sync,
+        #         # Task.parent_task_id,
+        #         # Task.data,
+        #         # Task.meta_data,
+        #         Task.result,
+        #         Task.finished_at,
+        #         Task.started_at,
+        #         # Task.created_at,
+        #         # Task.updated_at,
+        #     ]
+        # else:
+        #     ets = [
+        #         Task.id,
+        #         Task.status,
+        #         Task.task_name,
+        #         # Task.scraper_name,
+        #         Task.result_count,
+        #         # Task.scraper_type,
+        #         Task.is_all_task,
+        #         # Task.is_sync,
+        #         # Task.parent_task_id,
+        #         # Task.data,
+        #         # Task.meta_data,
+        #         Task.finished_at,
+        #         Task.started_at,
+        #         # Task.created_at,
+        #         # Task.updated_at,
+        #     ]
 @retry_on_db_error
 def queryTasks(with_results, sort_by_date, page=None, per_page=None):
     with Session() as session:
@@ -550,28 +585,36 @@ def is_valid_all_tasks(tasks):
 def is_any_task_finished():
     json_data = request.json
 
-    if not is_list_of_integers(json_data.get("task_ids")):
+    if not is_list_of_integers(json_data.get("pending_task_ids")):
         raise JsonHTTPResponse(
-            {"message": "'task_ids' must be a list of integers"}, 400
+            {"message": "'pending_task_ids' must be a list of integers"}, 400
         )
+    if not is_list_of_integers(json_data.get("progress_task_ids")):
+        raise JsonHTTPResponse(
+            {"message": "'progress_task_ids' must be a list of integers"}, 400
+        )
+
     if not is_valid_all_tasks(json_data.get("all_tasks")):
         raise JsonHTTPResponse(
             {"message": "'all_tasks' must be a list of dictionaries with 'id' and 'result_count' keys"}, 400
         )
 
-    task_ids = json_data["task_ids"]
+    pending_task_ids = json_data["pending_task_ids"]
+    progress_task_ids = json_data["progress_task_ids"]
     all_tasks = json_data["all_tasks"]
     
-    is_any_task_finished = perform_is_any_task_finished(task_ids, all_tasks)
+    is_any_task_finished = perform_is_any_task_finished(pending_task_ids, progress_task_ids, all_tasks)
 
     return jsonify({"result": is_any_task_finished})
+
 @retry_on_db_error
-def perform_is_any_task_finished(task_ids, all_tasks):
+def perform_is_any_task_finished(pending_task_ids, progress_task_ids, all_tasks):
     with Session() as session:
         all_tasks_query = [and_(Task.id == x['id'], Task.result_count >  x['result_count']) for x in all_tasks]
         is_any_task_finished = session.query(Task.id).filter(
             or_(
-                and_(Task.id.in_(task_ids), not_(Task.status.in_([TaskStatus.IN_PROGRESS, TaskStatus.PENDING]))),
+                and_(Task.id.in_(pending_task_ids), Task.status != TaskStatus.PENDING),
+                and_(Task.id.in_(progress_task_ids), Task.status != TaskStatus.IN_PROGRESS),
                 *all_tasks_query
             )
         ).first() is not None
