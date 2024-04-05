@@ -3,6 +3,7 @@ import os
 from sys import argv
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.common.exceptions import SessionNotCreatedException
 from shutil import rmtree
 from .get_chrome_version import get_driver_path
 from selenium.common.exceptions import SessionNotCreatedException
