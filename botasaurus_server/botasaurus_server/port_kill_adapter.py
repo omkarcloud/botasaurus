@@ -2,6 +2,16 @@ import subprocess
 import re
 import os
 
+def catch_lsof_not_found_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except FileNotFoundError as e:
+            print("""To use Botasaurus, it is recommended to install lsof by running the following command:
+sudo apt-get update && sudo apt-get install -y lsof""")
+    return wrapper
+
+@catch_lsof_not_found_error
 def kill_processes_using_port(port, method='tcp'):
     protocol = 'udp' if method == 'udp' else 'tcp'
     grep_keyword = 'UDP' if method == 'udp' else 'LISTEN'
@@ -53,7 +63,10 @@ def kill_process_on_port(port, method='tcp'):
 
     else:
         # Unix-like systems
-        result = subprocess.run(['lsof', '-i', '-P'], capture_output=True, text=True)
+        result = get_lsof_text()
+        # no lsof installed
+        if not result:
+            return None
         stdout = result.stdout
 
         if not stdout:
@@ -67,7 +80,10 @@ def kill_process_on_port(port, method='tcp'):
             # raise ValueError(f'No process running on port {port}')
         else:
             kill_processes_using_port(port, method)
-        # subprocess.run(['lsof', '-i', f'{method}:{port}', '|', 'grep', f'{method.upper()}', '|', 'awk', '{print $2}', '|', 'xargs', 'kill', '-9'], capture_output=True)
+
+@catch_lsof_not_found_error
+def get_lsof_text():
+    return subprocess.run(['lsof', '-i', '-P'], capture_output=True, text=True)
 
 # kill_process_on_port(8000)        
 # def kill(port):

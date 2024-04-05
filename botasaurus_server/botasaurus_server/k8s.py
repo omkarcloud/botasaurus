@@ -3,7 +3,7 @@ from kubernetes import config
 from kubernetes.client import CoreV1Api, ApiClient, AppsV1Api
 import requests
 import traceback
-from .config import is_in_kubernetes
+from .env import is_in_kubernetes
 
 class K8s:
     def __init__(self):

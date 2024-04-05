@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from os import path, getcwd
-from .config import is_master
+from .env import is_master
 from .models import Base  # Assuming Task is one of your models
 
 

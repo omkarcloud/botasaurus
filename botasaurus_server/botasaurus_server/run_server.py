@@ -3,7 +3,7 @@ import os
 from threading import Thread
 import sys
 import webbrowser
-from .config import is_vmish
+from .env import is_vmish
 from .app import run_backend
 from .port_kill_adapter import killfrontendandbackendports, killbackendport
 

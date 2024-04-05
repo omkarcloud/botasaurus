@@ -1,5 +1,5 @@
 from bottle import run, BaseRequest
-from .config import is_in_kubernetes, is_worker, is_master
+from .env import is_in_kubernetes, is_worker, is_master
 
 BaseRequest.MEMFILE_MAX = 100 * 1024 * 1024 # 100 MB Max Data Payload
 

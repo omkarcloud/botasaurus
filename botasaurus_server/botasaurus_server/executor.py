@@ -1,4 +1,4 @@
-from .config import is_master, is_worker
+from .env import is_master, is_worker
 
 if is_master:
     from .master_executor import MasterExecutor
