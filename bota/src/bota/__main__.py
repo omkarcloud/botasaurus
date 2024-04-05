@@ -4,7 +4,9 @@ import sys
 import time
 import click
 from os import path, makedirs
-from .vm import install_scraper_in_vm
+
+from .package_storage import PackageStorage
+from .vm import extractRepositoryName, install_scraper_in_vm
 
 @click.group(context_settings=dict(max_content_width=95))
 def cli():
@@ -188,7 +190,7 @@ env:
   GITHUB_SHA: ${{ github.sha }}
   GKE_CLUSTER_NAME: GKE_CLUSTER_NAME_TEMPLATE
   GKE_PROJECT: ${{ secrets.GKE_PROJECT }}
-  GKE_ZONE: us-central1-a
+  GKE_ZONE: GKE_ZONE_TEMPLATE
   USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
 jobs:
   setup-build-publish-deploy:
@@ -252,7 +254,7 @@ jobs:
           kubectl get pods
 """.replace(
         "GKE_CLUSTER_NAME_TEMPLATE", cluster_name
-    )
+    ).replace("GKE_ZONE_TEMPLATE", get_zone())
 
 
 def create_file_with_content(file_path, content):
@@ -266,16 +268,92 @@ def exit_if_err(result):
       raise Exception("Command failed with above error.")
 
 @catch_gcloud_not_found_error
-def get_project_id():
-    result = subprocess.run(
-        ["gcloud", "projects", "list", "--format=value(projectId)", "--limit=1"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    exit_if_err(result)
-    return get_first_line(result.stdout)
+def project_exists(project_id):
+    try:
+        # Execute the gcloud command to describe the project
+        result = subprocess.run(
+            ["gcloud", "projects", "describe", project_id, "--format=value(projectId)"],
+            check=False,  # Do not raise exception on non-zero exit
+            capture_output=True,  # Capture the output and error
+            text=True  # Return output and error as string
+        )
 
+        # If the command executed successfully and the output contains the project ID, the project exists
+        if result.returncode == 0 and project_id in result.stdout.strip():
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"An error occurred while checking the project: {e}")
+        return False
+
+def set_and_get_project_id():
+    project_ids = get_project_ids()
+    if len(project_ids) == 0:
+        click.echo("No GCP projects found. Please create a project first.")
+        sys.exit(1)
+    elif len(project_ids) == 1:
+        fitem = project_ids[0]
+        PackageStorage.set_item("project_id", fitem)
+        click.echo(f"Selected {fitem} project.")
+        return fitem
+    else:
+        click.echo("Multiple projects found. Please select one:")
+        for idx, project_id in enumerate(project_ids):
+            click.echo(f"{idx + 1}: {project_id}")
+        while True:
+            selection = click.prompt("Enter the number of the project you want to use", type=int)
+            if 1 <= selection <= len(project_ids):
+                selected_project_id = project_ids[selection - 1]
+                PackageStorage.set_item("project_id", selected_project_id)
+                return selected_project_id
+            else:
+                click.echo("Invalid selection. Please select a number from the list.")
+
+@catch_gcloud_not_found_error
+def get_project_id():
+    project_id = PackageStorage.get_item("project_id")
+    if project_id:
+        if project_exists(project_id):
+            return project_id
+    
+    pj =  set_and_get_project_id()
+    click.echo(f"You have selected {pj} project.")
+    return pj
+
+@catch_gcloud_not_found_error
+def get_project_ids():
+    result = subprocess.run(["gcloud", "projects", "list", "--format=value(projectId)"],
+        check=False, capture_output=True, text=True)
+    exit_if_err(result)
+    return get_all_lines(result.stdout)
+
+def set_get_region():
+      all_regions = ["us-central1","us-east1","us-east4","us-east5","us-south1","us-west1","us-west2","us-west3","us-west4","africa-south1","asia-east1","asia-east2","asia-northeast1","asia-northeast2","asia-northeast3","asia-south1","asia-south2","asia-southeast1","asia-southeast2","australia-southeast1","australia-southeast2","europe-central2","europe-north1","europe-southwest1","europe-west1","europe-west10","europe-west12","europe-west2","europe-west3","europe-west4","europe-west6","europe-west8","europe-west9","me-central1","me-central2","me-west1","northamerica-northeast1","northamerica-northeast2","southamerica-east1","southamerica-west1"]
+      click.echo("Please choose datacenter region:")
+      for i, region in enumerate(all_regions, start=1):
+          click.echo(f"{i}. {region}")
+        
+      while True:
+          selection = click.prompt("Enter the number of the region to use", type=int, default=1)
+          if 1 <= selection <= len(all_regions):
+              selected_region = all_regions[selection - 1]
+              PackageStorage.set_item("region", selected_region)
+              return selected_region
+          else:
+              click.echo("Invalid selection. Please select a number from the list.")
+    
+def get_region():
+   region = PackageStorage.get_item("region")
+   if not region:
+       rgn =  set_get_region()
+       click.echo(f"You have selected {rgn} region.")
+       return rgn
+   return region
+
+def get_zone():
+   region = get_region()
+   return f"{region}-a"
 
 def get_regional_ip_details(cluster_name, region, project_id):
     ip_address_result = subprocess.run(
@@ -358,13 +436,13 @@ def list_all_ips_regional(project_id, region):
     return get_all_lines(result.stdout)
 
 
-def create_cluster_command_string(cluster_name, zone, project_id, max_nodes, machine_type):
+def create_cluster_command_string(cluster_name, rgn, zone, project_id, max_nodes, machine_type):
     num_nodes = max_nodes
-    command = f"""gcloud beta container --project "{project_id}" clusters create "{cluster_name}" --no-enable-basic-auth --cluster-version "1.27.8-gke.1067004" --release-channel "regular" --machine-type "{machine_type}" --image-type "COS_CONTAINERD" --disk-type "pd-balanced" --disk-size "30" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "{num_nodes}" --logging=SYSTEM,WORKLOAD --monitoring=SYSTEM --enable-ip-alias --network "projects/{project_id}/global/networks/default" --subnetwork "projects/{project_id}/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --security-posture=standard --workload-vulnerability-scanning=disabled --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --binauthz-evaluation-mode=DISABLED --enable-managed-prometheus --enable-shielded-nodes --node-locations {zone} --zone {zone}"""
+    command = f"""gcloud beta container --project "{project_id}" clusters create "{cluster_name}" --no-enable-basic-auth --cluster-version "1.27.8-gke.1067004" --release-channel "regular" --machine-type "{machine_type}" --image-type "COS_CONTAINERD" --disk-type "pd-balanced" --disk-size "30" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "{num_nodes}" --logging=SYSTEM,WORKLOAD --monitoring=SYSTEM --enable-ip-alias --network "projects/{project_id}/global/networks/default" --subnetwork "projects/{project_id}/regions/{rgn}/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --security-posture=standard --workload-vulnerability-scanning=disabled --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --binauthz-evaluation-mode=DISABLED --enable-managed-prometheus --enable-shielded-nodes --node-locations {zone} --zone {zone}"""
     return command
 
-def run_create_cluster_commands(cluster_name, zone, project_id, max_nodes, machine_type):
-    command = create_cluster_command_string(cluster_name, zone, project_id, max_nodes, machine_type)
+def perform_create_cluster_commands(cluster_name, rgn,zone, project_id, max_nodes, machine_type):
+    command = create_cluster_command_string(cluster_name, rgn,zone, project_id, max_nodes, machine_type)
     subprocess.run(command, shell=True, check=True, stderr=subprocess.STDOUT)
 
 
@@ -412,6 +490,17 @@ def enable_gcloud_services(project_id):
     ) 
 
 
+def has_images(project_id):
+    command = f"gcloud container images list-tags gcr.io/{project_id}/scraper --format='get(TAGS)' --limit=1"
+    
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
+
+    # Check if the command output (stdout) is not empty, indicating the presence of at least one image tag.
+    if result.stdout.strip():
+        return True
+    else:
+        return False
+
 def delete_scraper_images(project_id):
     method = "delete"
     command = f"""for tag in $(gcloud container images list-tags gcr.io/{project_id}/scraper --format='get(TAGS)' --limit=unlimited | sed 's/,/ /g'); do gcloud container images {method} gcr.io/{project_id}/scraper:$tag --quiet --project {project_id} || true; done"""
@@ -447,24 +536,38 @@ def does_ip_exists_regional(cluster_name, project_id, region):
 def run_create_cluster_commands(cluster_name, max_nodes, machine_type):
     project_id = get_project_id()
 
-    # TODO: maybe determine based on nearest country best. allow config as well.
-    zone = "us-central1-a"
-    region = "us-central1"
+    region = get_region()
+    zone =get_zone()
 
     enable_gcloud_services(project_id)
+    skipped = False
+    if cluster_exists(cluster_name, project_id):
+        click.echo(f"Cluster '{cluster_name}' already exists.")
+        if click.confirm("Do you want to delete the existing cluster and create a new one?"):
+            delete_cluster(cluster_name, force=True)
+        else:
+            click.echo("Skipping cluster creation.")
+            skipped = True
 
-    if not cluster_exists(cluster_name, project_id):
-        click.echo("Creating cluster...")
-        run_create_cluster_commands(cluster_name, zone, project_id, max_nodes, machine_type)
+    if not skipped:
+      click.echo("------------")
+      click.echo(f"Creating cluster '{cluster_name}' with the following configuration:")
+      click.echo(f"    - Workers: {max_nodes}")
+      if machine_type == DEFAULT_INSTANCE:
+          click.echo(f"    - Worker resources: {7.5} GB RAM, {2} CPU each")
+      click.echo(f"    - Persistent volume: 4GB for storing scraper output")
+      click.echo("------------")
 
-        while True:
-            result = get_cluster_status(cluster_name, zone, project_id)
-            status = result
-            if status == "RUNNING":
-                break
-            time.sleep(2)
-    else:
-          click.echo("Skipping cluster creation as it already exists.")
+      perform_create_cluster_commands(cluster_name, region, zone, project_id, max_nodes, machine_type)
+
+      while True:
+          result = get_cluster_status(cluster_name, zone, project_id)
+          status = result
+          if status == "RUNNING":
+              break
+          else:
+              click.echo("Waiting for the cluster to be up...")
+              time.sleep(2)
         
     # Usage:
     if not does_ip_exists_regional(cluster_name, project_id, region):
@@ -551,30 +654,6 @@ def delete_pvc_if_exists(pvc_name):
     )
 
     if result.returncode == 0:
-        click.echo("Deleting the database...")
-
-        subprocess.run(["kubectl", "delete", "pvc", pvc_name],             check=True,
-            stderr=subprocess.STDOUT,
-)
-
-        click.echo("Waiting for the deletion of database...")
-        subprocess.run(
-            ["kubectl", "wait", "--for=delete", f"pvc/{pvc_name}", "--timeout=300s"],
-                        check=True,
-            stderr=subprocess.STDOUT,
-
-        )
-
-
-def run_delete_cluster_commands(cluster_name):
-    project_id = get_project_id()
-    zone = "us-central1-a"
-    region = "us-central1"
-
-    has_cluster = cluster_exists(cluster_name, project_id)
-    if has_cluster:
-
-        get_cluster_credentials(cluster_name, zone, project_id)
 
         # Delete the Deployment
         subprocess.run(
@@ -591,36 +670,20 @@ def run_delete_cluster_commands(cluster_name):
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
 
-        delete_pvc_if_exists("master-db")
+        click.echo("Deleting the database...")
 
-    click.echo("Deleting Images...")
-
-    delete_scraper_images(project_id)
-
-    if does_ip_exists_regional(cluster_name, project_id, region):
-        # Delete the external IP address associated with the cluster
-        click.echo("Deleting IP address...")
-        delete_external_ip_regional(cluster_name,  project_id, region)
-
-    if has_cluster:
-        click.echo("Deleting the cluster...")
-        # Delete the cluster
-        subprocess.run(
-            [
-                "gcloud",
-                "container",
-                "clusters",
-                "delete",
-                cluster_name,
-                "--zone",
-                zone,
-                "--project",
-                project_id,
-                "--quiet",
-            ],
-            check=True,
+        subprocess.run(["kubectl", "delete", "pvc", pvc_name],             check=True,
             stderr=subprocess.STDOUT,
+)
+
+        click.echo("Waiting for the deletion of database...")
+        subprocess.run(
+            ["kubectl", "wait", "--for=delete", f"pvc/{pvc_name}", "--timeout=300s"],
+                        check=True,
+            stderr=subprocess.STDOUT,
+
         )
+
 
 DEFAULT_INSTANCE = "n1-standard-2"
 
@@ -628,17 +691,16 @@ DEFAULT_INSTANCE = "n1-standard-2"
 @click.option("--name", prompt="Enter VM name", required=True, help="The name of the VM where to create the IP address.")
 def create_ip(name):
     """Creates an IP address for a VM"""
-    name = name.strip()
-    region = "us-central1"
-
     project_id = get_project_id()
+    name = name.strip()
+    region = get_region()
 
     if does_ip_exists_regional(name, project_id, region):
-        click.echo(f"IP address already exists.")
+        click.echo(f"IP address {name}-ip already exists.")
     else:
-        click.echo(f"------ Creating IP address in {region}: {name} ------")
+        click.echo(f"------ Creating IP address {name} ------")
         create_external_ip_regional(name, project_id, region)
-        click.echo("IP address created successfully.")
+        click.echo("Successfully created IP address.")
 
 @cli.command()
 @click.option("--name", prompt="Enter VM name", required=True, help="The name of the VM to delete the IP address for.")
@@ -647,12 +709,12 @@ def create_ip(name):
 )
 def delete_ip(name, force):
     """Deletes an IP address for a VM"""
-    name = name.strip()
-    region = "us-central1"
     project_id = get_project_id()
+    name = name.strip()
+    region = get_region()
 
     if not does_ip_exists_regional(name, project_id, region):
-        click.echo(f"IP address not found.")
+        click.echo(f"IP address {name}-ip not found.")
         return
 
     if not force:
@@ -660,14 +722,10 @@ def delete_ip(name, force):
             click.echo("Deletion aborted.")
             return
 
-    click.echo(f"------ Deleting IP address in {region}: {name} ------")
+    click.echo(f"------ Deleting IP address {name} ------")
 
     delete_external_ip_regional(name,  project_id, region) 
-    click.echo("IP address deleted successfully.")
-
-def create_visit_ip_text(ip_address):
-    return "2. After Deploying the Scraper via Github Actions. Visit http://{}/ to use the Scraper.".format(ip_address)
-
+    click.echo("Successfully deleted IP address.")
 
 @cli.command()
 @click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
@@ -688,15 +746,19 @@ def create_cluster(cluster_name, machine_type, nodes):
     cluster_name = cluster_name.strip()
     machine_type = machine_type.strip()
 
-    click.echo(f"------ Creating cluster {cluster_name} ------")
+    click.echo("------------")
+    click.echo(f"Creating cluster '{cluster_name}' with the following components:")
+    click.echo(f"    - {nodes} nodes running on {machine_type}")
+    click.echo(f"    - A static IP address")
+    click.echo("------------")
 
     ip_address = run_create_cluster_commands(cluster_name, nodes, machine_type)
-    click.echo(f"Successfully created cluster.")
+    click.echo(f"Hurray! You have successfully created the cluster.")
 
-    click.echo("Next steps:")
+    click.echo("Your Next steps are as follows:")
     click.echo("1. Deploy the Scraper using Github Actions.")
-    click.echo(create_visit_ip_text(ip_address))
-
+    click.echo("2. Then, wait 5 minutes for the cluster to fully deploy.")
+    click.echo("3. Visit http://{}/ to use the Scraper.".format(ip_address))
 
 @cli.command(help='Creates the manifest files for Kubernetes deployment and GitHub Actions')
 @click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
@@ -723,9 +785,13 @@ def create_manifests(cluster_name, workers, use_browser):
 
     worker_ram = WORKER_RAM_WITH_BROWSER if use_browser else WORKER_RAM_WITHOUT_BROWSER
 
-    click.echo(
-        f"------ Creating manifest files for cluster '{cluster_name}' with {workers} workers, where each worker node will have {worker_ram} RAM and {WORKER_CPU} CPU ------"
-    )
+    click.echo("------------")
+    click.echo(f"Creating manifest files for cluster '{cluster_name}' with the following configuration:")
+    click.echo(f"    - Workers: {workers}") 
+    click.echo(f"    - Worker resources: {worker_ram} GB RAM, {WORKER_CPU} CPU each")
+    click.echo(f"    - Persistent volume: 4GB for storing scraper output")
+    click.echo("------------")
+
 
     worker_cpu = WORKER_CPU * 1000
 
@@ -881,6 +947,52 @@ roleRef:
 
     click.echo(f"Successfully created manifest files.")
 
+def run_delete_cluster_commands(cluster_name):
+    project_id = get_project_id()
+    region = get_region()
+    zone =get_zone()
+
+    has_cluster = cluster_exists(cluster_name, project_id)
+    if has_cluster:
+        get_cluster_credentials(cluster_name, zone, project_id)
+        delete_pvc_if_exists("master-db")
+
+    if has_images(project_id):
+      click.echo("Deleting Images...")
+      delete_scraper_images(project_id)
+    else:
+      click.echo("Skipping image deletion as no images exists.")
+    if does_ip_exists_regional(cluster_name, project_id, region):
+        # Delete the external IP address associated with the cluster
+        click.echo("Deleting IP address...")
+        delete_external_ip_regional(cluster_name,  project_id, region)
+    else:
+        click.echo("Skipping IP address deletion as it does not exist.")
+
+    if has_cluster:
+        click.echo("Deleting the cluster...")
+        # Delete the cluster
+        subprocess.run(
+            [
+                "gcloud",
+                "container",
+                "clusters",
+                "delete",
+                cluster_name,
+                "--zone",
+                zone,
+                "--project",
+                project_id,
+                "--quiet",
+            ],
+            check=True,
+            stderr=subprocess.STDOUT,
+        )
+        return False
+    else:
+        click.echo("Skipping cluster deletion as it does not exist.")
+        return True
+
 @cli.command()
 @click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to delete.")
 @click.option(
@@ -898,9 +1010,9 @@ def delete_cluster(cluster_name, force):
             return  # Exit if the user doesn't confirm
 
     click.echo(f"------ Deleting cluster {cluster_name} ------")
-    run_delete_cluster_commands(cluster_name)
-
-    click.echo(f"Successfully deleted cluster.")
+    has_skipped = run_delete_cluster_commands(cluster_name)
+    if not has_skipped:
+      click.echo(f"Successfully deleted cluster.")
 
 
 @cli.command()
@@ -909,12 +1021,62 @@ def install_scraper(repo_url):
     """Installs a scraper inside VM"""
     repo_url = repo_url.strip()
 
-    click.echo(f"------ Installing Scraper ------")
-    install_scraper_in_vm(repo_url)
+    click.echo("------------")
+    click.echo("Performing the following steps to install the scraper:")
+    click.echo("    - Installing Google Chrome")
+    click.echo(f"    - Cloning the {folder_name} repository and installing dependencies")
+    click.echo("    - Creating systemctl services to ensure the scraper runs continuously on the VM")
+    click.echo("------------")
+    folder_name = extractRepositoryName(repo_url)
+    install_scraper_in_vm(repo_url, folder_name)
+
+@cli.command()
+def switch_project():
+    """Switches the default project ID"""
+    project_id = set_and_get_project_id()
+    click.echo(f"Successfully switched to project: {project_id}")
+
+@cli.command()
+def switch_region():
+    """Switches the default region"""
+    region = set_get_region()
+    click.echo(f"Successfully switched to region: {region}")
+
+
+@cli.command()
+@click.option("--force", is_flag=True, help="Force deletion of all IP addresses without confirmation. Use this option with caution.")
+def delete_all_ips(force):
+    """Deletes all IP addresses"""
+
+    project_id = get_project_id()
+    region = get_region()  # Get the current region using the get_region function
+
+    ips = list_all_ips_regional(project_id, region)
+    if not ips:
+        click.echo(f"No IP addresses found in region '{region}'.")
+        return
+
+    if not force:
+        click.echo(f"The following IP addresses will be deleted in region '{region}':")
+        for ip in ips:
+            click.echo(f"- {ip}")
+        if not click.confirm("Are you sure you want to proceed?"):
+            click.echo("Deletion aborted.")
+            return
+
+    for ip in ips:
+        call_ip = ip.rstrip('-ip')
+        if does_ip_exists_regional(call_ip, project_id, region):
+            click.echo(f"Deleting IP address '{ip}' ...")
+            delete_external_ip_regional(call_ip, project_id, region)
+            click.echo(f"IP address '{ip}' deleted successfully.")
+        else:
+            click.echo(f"IP address '{ip}' not found or already deleted.")
+
+    click.echo(f"Successfully deleted all IP addresses in region '{region}'.")
 
 # python -m src.bota.__main__
 if __name__ == "__main__":
-
     cli()
     # Usage examples:
     # 1. python -m botasaurus_server build --cluster-name omkar --workers 1 --use-browser true

@@ -52,7 +52,7 @@ def get_vm_ip():
         return find_ip()
 
 def create_visit_ip_text(ip):
-    return "Hurray! your scraper is running. Visit http://{}/ to use it.".format(ip)
+    return "Hurray! your scraper is up and running. Visit http://{}/ to use it.".format(ip)
 
 def wait_till_up(ip):
     """
@@ -148,8 +148,8 @@ def create_clone_commands(git_repo_url, folder_name):
 cd {folder_name}
 python3 -m pip install -r requirements.txt && python3 run.py install"""
     
-def installreqs(git_repo_url):
-    folder_name = extractRepositoryName(git_repo_url)
+def installreqs(git_repo_url, folder_name):
+    
     uname = get_username()
 
     launch_frontend_sh = r"""#!/bin/bash
@@ -257,10 +257,10 @@ sudo systemctl restart apache2
 
 
 
-def install_scraper_in_vm(git_repo_url):
+def install_scraper_in_vm(git_repo_url, folder_name):
     validateRepository(git_repo_url)
-    installreqs(git_repo_url)
-    click.echo("Scraper Installation successful!")
+    installreqs(git_repo_url, folder_name)
+    click.echo("Successfully installed the Scraper.")
     click.echo("Now, Checking VM Status...")
     ip = get_vm_ip()
     wait_till_up(ip)
