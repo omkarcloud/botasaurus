@@ -454,7 +454,7 @@ def is_task_done(task_id):
         #         # Task.updated_at,
         #     ]
 @retry_on_db_error
-def queryTasks(with_results, sort_by_date, page=None, per_page=None):
+def queryTasks(with_results, page=None, per_page=None):
     with Session() as session:
         if with_results:
             ets = [
@@ -497,8 +497,7 @@ def queryTasks(with_results, sort_by_date, page=None, per_page=None):
         tasks_query = session.query(Task).with_entities(*ets)
         total_count = tasks_query.count()
 
-        if sort_by_date:
-            tasks_query = tasks_query.order_by(Task.sort_id.desc())
+        tasks_query = tasks_query.order_by(Task.sort_id.desc())
 
         # Apply pagination if page and per_page are provided and valid
         if page is not None and per_page is not None:
@@ -511,7 +510,7 @@ def queryTasks(with_results, sort_by_date, page=None, per_page=None):
 
         tasks = tasks_query.all()
         
-
+        # 
         return jsonify(
                     {
                         "results": [
@@ -538,7 +537,6 @@ def is_valid_positive_integer_including_zero(param):
 @get("/api/tasks")
 def get_tasks():
     with_results = request.query.get("with_results", "true").lower() == "true"
-    sort_by_date = request.query.get("sort_by_date", "true").lower() == "true"
     page = request.query.get("page")
     per_page = request.query.get("per_page")
 
@@ -547,7 +545,7 @@ def get_tasks():
         if not (is_valid_positive_integer(page) and is_valid_positive_integer(per_page)):
             raise JsonHTTPResponseWithMessage("Invalid 'page' or 'per_page' parameter. Both must be positive integers.")
 
-    return queryTasks(with_results, sort_by_date, page, per_page)
+    return queryTasks(with_results,  page, per_page)
 
 @retry_on_db_error
 def get_task_from_db(task_id):
@@ -853,7 +851,7 @@ def validate_results_request(json_data, allowed_sorts, allowed_views, default_so
                 },
                 400,
             )
-    else: 
+    else:
         if allowed_views:
             view = allowed_views[0]
 

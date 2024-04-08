@@ -6,6 +6,27 @@ import webbrowser
 from .env import is_vmish
 from .app import run_backend
 from .port_kill_adapter import killfrontendandbackendports, killbackendport
+def show_help():
+    print("""
+Botasaurus Server CLI
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  (no arguments)    Runs both the backend and frontend services.
+  backend           Runs only the backend api service.
+  install           Installs the frontend service.
+  dev               Run the backend normally, and the frontend in development mode with hot reloading, allowing you to see UI changes immediately as you update the Next.js frontend code in the "frontend/src" folder.  This functionality is mostly not needed and is only useful when you need to change frontend ui's appearance. 
+""")
+
+def open_browser():
+    # Wait for a few seconds before opening the browser
+    webbrowser.open('http://localhost:3000/')
+
+def open_browser_in_thread():
+    if not is_vmish:
+        Thread(target=open_browser, daemon=True).start()
 
 def install():
     print("Installing frontend dependencies...")
@@ -26,14 +47,6 @@ def start_frontend(is_dev):
 )
     return result
 
-def open_browser():
-    # Wait for a few seconds before opening the browser
-    # sleep(1)
-    webbrowser.open('http://localhost:3000/')
-
-def open_browser_in_thread():
-    if not is_vmish:
-            Thread(target=open_browser, daemon=True).start()
 def run_frontend(is_dev):
     try:
         start_frontend(is_dev)
@@ -46,8 +59,8 @@ def run_frontend(is_dev):
         open_browser_in_thread()
         start_frontend(is_dev)
 
-
 def run_server():
+
     if len(sys.argv) == 1:
         print_frontend_run_message()
         killfrontendandbackendports()
@@ -55,23 +68,22 @@ def run_server():
         Thread(target=run_backend, daemon=True).start()
         open_browser_in_thread()
         run_frontend(False)
+    elif "--help" in sys.argv:
+        show_help()
+    elif sys.argv[1] == "install":
+        install()
     elif sys.argv[1] == "backend":
         # Argument "backend" provided, run only backend
         killbackendport()
         run_backend()
-    elif sys.argv[1] == "install":
-        install()
     elif sys.argv[1] == "dev":
-        print("Starting frontend server at http://localhost:3000/")
+        print_frontend_run_message()
         killfrontendandbackendports()
         # No arguments provided, run both backend and frontend
         Thread(target=run_backend, daemon=True).start()
         open_browser_in_thread()
         run_frontend(True)
     else:
-        # Unknown argument provided, raise an exception with the argument
-        raise Exception(f"Unknown argument: {sys.argv[1]}")
-
-
-if __name__ == "__main__":
-    run_server()
+        print(f"Error: No such command: {sys.argv[1]}")
+        print("Try '--help' for help.")
+        sys.exit(1) 
