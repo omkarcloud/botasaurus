@@ -36,6 +36,17 @@ def isoformat(obj):
     return obj.isoformat() if obj else None
 
 
+def serialize_ui_output_task(obj, _):
+    return {
+        "id": obj.id ,  
+        "status": obj.status ,  
+        "task_name": obj.task_name ,  
+        "result_count": obj.result_count ,  
+        "is_all_task": obj.is_all_task ,  
+        "finished_at": obj.finished_at ,  
+        "started_at": obj.started_at 
+    }
+
 def serialize_task(obj, with_result):
     if with_result:
         result = {"result": obj.result}
