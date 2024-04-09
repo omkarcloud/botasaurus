@@ -1,5 +1,5 @@
 from typing import Callable, Optional
-from selenium.common.exceptions import  StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException
 from functools import wraps
 import traceback
 from time import sleep, time
@@ -13,11 +13,6 @@ def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=
         @wraps(func)
         def wrapper(*args, **kwargs):
             tries = 0
-            
-            if instances != ANY:
-              errors_only_instances = list(map(lambda el: el[0] if isinstance(el, tuple) else el, instances)) if instances else []
-            
-            
 
             while tries < retries:
                 tries += 1
@@ -25,6 +20,8 @@ def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=
                     created_result = func(*args, **kwargs)
                     return created_result
                 except Exception as e:
+                    if instances != ANY:
+                        errors_only_instances = list(map(lambda el: el[0] if isinstance(el, tuple) else el, instances)) if instances else []
                     if instances != ANY:
                         is_valid_error, index = is_errors_instance(errors_only_instances, e)
 

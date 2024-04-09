@@ -13,6 +13,10 @@ def cli():
     """Botasaurus CLI"""
     pass
 
+def relative_path(path, goback=0):
+    levels = [".."] * (goback + -1)
+    return os.path.abspath(os.path.join(os.getcwd(), *levels, path.strip()))
+
 
 def create_ip_name(cluster_name):
     return f"{cluster_name}-ip"
@@ -51,10 +55,6 @@ WORKER_RAM_WITH_BROWSER = 4000
 WORKER_RAM_WITHOUT_BROWSER = 800
 WORKER_CPU = 1
 
-
-def relative_path(path, goback=0):
-    levels = [".."] * (goback + -1)
-    return os.path.abspath(os.path.join(os.getcwd(), *levels, path.strip()))
 
 
 def create_worker_depl_content(workers, ram, cpu, use_browser):
@@ -335,7 +335,7 @@ def set_get_region():
           click.echo(f"{i}. {region}")
         
       while True:
-          selection = click.prompt("Enter the number of the region to use", type=int, default=1)
+          selection = click.prompt("Enter the number of the region to use. Defaults to us-central1", type=int, default=1)
           if 1 <= selection <= len(all_regions):
               selected_region = all_regions[selection - 1]
               PackageStorage.set_item("region", selected_region)
@@ -1021,13 +1021,13 @@ def install_scraper(repo_url):
     """Installs a scraper inside VM"""
     repo_url = repo_url.strip()
 
+    folder_name = extractRepositoryName(repo_url)
     click.echo("------------")
     click.echo("Performing the following steps to install the scraper:")
     click.echo("    - Installing Google Chrome")
     click.echo(f"    - Cloning the {folder_name} repository and installing dependencies")
     click.echo("    - Creating systemctl services to ensure the scraper runs continuously on the VM")
     click.echo("------------")
-    folder_name = extractRepositoryName(repo_url)
     install_scraper_in_vm(repo_url, folder_name)
 
 @cli.command()

@@ -1,13 +1,23 @@
 import requests
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError
+from .utils import get_filename_from_response_headers, write_json_response, write_file_response, remove_paths_from_url
 
-from .utils import write_json_response, write_file_response
-
-class ApiException (Exception):
+class ApiException(Exception):
      pass
 
 def _create_filename(path):
     return "output/responses/" + path + ".json"
+
+def _raise_for_status(response):
+        if 400 <= response.status_code < 500:
+            data = response.json()
+            message = data.get("message")
+            if message:
+                raise ApiException(message)
+            else:
+                response.raise_for_status()    
+        elif 500 <= response.status_code < 600:
+            response.raise_for_status()
 
 class Api:
     def __init__(self, api_url: str | None = None, create_response_files: bool = True) -> None:
@@ -18,10 +28,10 @@ class Api:
         :param create_response_files: Indicates if the client should create response files for each API call. This is useful for debugging or development purposes. Defaults to True.
         """
         DEFAULT_API_URL = "http://127.0.0.1:8000"
-        self.api_url = (api_url or DEFAULT_API_URL).rstrip("/")
-        self.create_response_files = create_response_files  # Flag for creating response files
+        self._api_url = remove_paths_from_url(api_url) if api_url else  DEFAULT_API_URL
+        self._create_response_files = create_response_files  # Flag for creating response files
         if not self.is_api_running():
-            raise ApiException(f"API at {self.api_url} is not running. Please check if the API is up and running.")
+            raise ApiException(f"API at {self._api_url} is not running. Please check if the API is up and running.")
 
     def _write_json(self, filename, data):
         """
@@ -30,24 +40,14 @@ class Api:
         :param filename: The filename for the JSON file to be created.
         :param data: The data to be written to the file.
         """
-        if self.create_response_files:  
+        if self._create_response_files:  
             path = _create_filename(filename)
             write_json_response(path, data) 
             print(f"View {filename} response at: ./{path}")
 
     def _make_api_url(self, path):
-        return f"{self.api_url}/{path}"
+        return f"{self._api_url}/{path}"
 
-    def _raise_for_status(self, response):
-        if 400 <= response.status_code < 500:
-            data = response.json()
-            message = data.get("message")
-            if message:
-                raise ApiException(message)
-            else:
-                response.raise_for_status()    
-        elif 500 <= response.status_code < 600:
-            response.raise_for_status()
         
     def is_api_running(self) -> bool:
         """
@@ -62,7 +62,7 @@ class Api:
         except ConnectionError:
             raise ApiException("""API at {} is not running. 
 Check the network connection, or verify if the API is running on a different endpoint. In case the API is running on a different endpoint, you can pass the endpoint as follows:
-api = Api('https://example.com')""".format(self.api_url))
+api = Api('https://example.com')""".format(self._api_url))
 
     def create_async_task(self, data, scraper_name=None):
         """
@@ -78,7 +78,7 @@ api = Api('https://example.com')""".format(self.api_url))
             "scraper_name": scraper_name,
         }
         response = requests.post(url, json=payload)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
         self._write_json("create_async_task", response_data)  # Call write_json with method name
         return response_data
@@ -97,7 +97,7 @@ api = Api('https://example.com')""".format(self.api_url))
             "scraper_name": scraper_name,
         }
         response = requests.post(url, json=payload)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
         self._write_json("create_sync_task", response_data)  # Call write_json with method name
         return response_data
@@ -114,7 +114,7 @@ api = Api('https://example.com')""".format(self.api_url))
         # Prepare the payload as a list of tasks, each with its data and optional scraper_name
         payload = [{"data": data, "scraper_name": scraper_name} for data in data_items]
         response = requests.post(url, json=payload)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
         self._write_json("create_async_tasks", response_data)  # Call write_json with method name
         return response_data
@@ -131,12 +131,12 @@ api = Api('https://example.com')""".format(self.api_url))
         # Prepare the payload as a list of tasks, each with its data and optional scraper_name
         payload = [{"data": data, "scraper_name": scraper_name} for data in data_items]
         response = requests.post(url, json=payload)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
         self._write_json("create_sync_tasks", response_data)  # Call write_json with method name
         return response_data
 
-    def get_tasks(self, page=None, per_page=None, with_results=True):
+    def get_tasks(self, page=1, per_page=None, with_results=True):
         """
         Fetches tasks from the server, with optional result inclusion, pagination, and filtering.
 
@@ -155,10 +155,10 @@ api = Api('https://example.com')""".format(self.api_url))
             params["per_page"] = str(per_page)
 
         response = requests.get(url, params=params)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
 
-        if self.create_response_files:  
+        if self._create_response_files:  
             has_many_pages = response_data["total_pages"] > 1
 
             filename  = f"get_tasks-page-{page}"  if has_many_pages else "get_tasks"
@@ -180,7 +180,7 @@ api = Api('https://example.com')""".format(self.api_url))
         """
         url = self._make_api_url(f"api/tasks/{task_id}")
         response = requests.get(url)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
         self._write_json("get_task", response_data)  # Call write_json with method name
         return response_data
@@ -212,10 +212,10 @@ api = Api('https://example.com')""".format(self.api_url))
         if per_page:
             payload["per_page"] = per_page
         response = requests.post(url, json=payload)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
 
-        if self.create_response_files:  
+        if self._create_response_files:  
             has_many_pages = response_data["total_pages"] > 1
 
             filename  = f"get_task_results-page-{page}"  if has_many_pages else "get_task_results"
@@ -255,13 +255,14 @@ api = Api('https://example.com')""".format(self.api_url))
 
         url = self._make_api_url(f"api/tasks/{task_id}/download")
         response = requests.post(url, json=payload)
-        self._raise_for_status(response)
+        _raise_for_status(response)
 
         content = response.content
-        if self.create_response_files:
-            path = write_file_response("output/responses/", response, content) 
+        filename = get_filename_from_response_headers(response)
+        if self._create_response_files:
+            path = write_file_response("output/responses/", filename, content) 
             print(f"View downloaded file at: ./{path}")
-        return content
+        return content, filename
 
     def abort_task(self, task_id):
         """
@@ -272,7 +273,7 @@ api = Api('https://example.com')""".format(self.api_url))
         """
         url = self._make_api_url(f"api/tasks/{task_id}/abort")
         response = requests.patch(url)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
         self._write_json("abort_task", response_data)  # Call write_json with method name
         return response_data
@@ -287,7 +288,7 @@ api = Api('https://example.com')""".format(self.api_url))
         """
         url = self._make_api_url(f"api/tasks/{task_id}")
         response = requests.delete(url)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
         self._write_json("delete_task", response_data)  # Call write_json with method name
         return response_data
@@ -302,7 +303,7 @@ api = Api('https://example.com')""".format(self.api_url))
         url = self._make_api_url("api/tasks/bulk-delete")
         payload = {"task_ids": task_ids}
         response = requests.post(url, json=payload)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
         self._write_json("delete_tasks", response_data)  # Call write_json with method name
         return response_data
@@ -317,7 +318,7 @@ api = Api('https://example.com')""".format(self.api_url))
         url = self._make_api_url("api/tasks/bulk-abort")
         payload = {"task_ids": task_ids}
         response = requests.post(url, json=payload)
-        self._raise_for_status(response)
+        _raise_for_status(response)
         response_data = response.json()
         self._write_json("abort_tasks", response_data)  # Call write_json with method name
         return response_data
@@ -327,5 +328,4 @@ if __name__     == "__main__":
     api = Api()
     #print(api.get_task(3, ))
     print(api.delete_task(3))
-    print(api.get_tasks())
     # print(api.download_task_results(4, format="xlsx"))

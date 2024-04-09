@@ -1,5 +1,23 @@
 import json
 from os import path, makedirs, getcwd
+from urllib.parse import urlparse
+
+def remove_paths_from_url(url):
+    """
+    Removes the paths from a given URL.
+    
+    Args:
+        url (str): The URL to remove paths from.
+        
+    Returns:
+        str: The URL with the paths removed.
+    """
+    parsed_url = urlparse(url)
+    
+    # Construct the new URL with only the scheme, netloc, and port (if present)
+    new_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+    
+    return new_url
 
 def relative_path(target_path, goback=0):
     levels = [".."] * (goback + -1)
@@ -26,14 +44,16 @@ def write_json_response(path, data,  indent=4):
         json.dump(data, fp, indent=indent)
 
 
-def write_file_response(file_path, response, content ):
+
+def get_filename_from_response_headers(response):
     content_disposition = response.headers.get('Content-Disposition')
     filename = content_disposition.split('filename=')[1].strip('"')
-    
+    return filename
+        
+def write_file_response(file_path, filename, content ):
     create_output_directory_if_not_exists()
     
     fullpath = file_path + filename
     with open(fullpath, 'wb') as file:
         file.write(content)
     return fullpath
-        

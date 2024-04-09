@@ -203,20 +203,23 @@ WantedBy=multi-user.target"""
     ProxyPassReverse / http://127.0.0.1:3000/
 </VirtualHost>"""
     
+    # lsof install as we need it.
     
     install_dependencies = f"""sudo apt install -y python3-pip
 alias python=python3
 echo "alias python=python3" >> /home/{uname}/.bashrc
  
 
-
-sudo apt-get install -y wget gnupg2 apt-transport-https ca-certificates software-properties-common && sudo rm -rf /var/lib/apt/lists/*
+sudo apt-get update
+sudo apt-get install -y lsof wget gnupg2 apt-transport-https ca-certificates software-properties-common && sudo rm -rf /var/lib/apt/lists/*
 
 
 wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - &&  echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee -a /etc/apt/sources.list.d/google-chrome.list
 
 
-sudo apt-get update && sudo apt-get install -y google-chrome-stable && sudo rm -rf /var/lib/apt/lists/*"""
+
+sudo apt-get install -y google-chrome-stable 
+sudo apt-get install -y google-chrome-stable && sudo rm -rf /var/lib/apt/lists/*"""
     
     sysytemctl_commands=f"""
 sudo chmod +x /home/{uname}/{folder_name}/launch-backend.sh || true
