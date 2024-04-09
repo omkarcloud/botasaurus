@@ -10,20 +10,30 @@ def create_directory_if_not_exists(passed_path):
     if not path.exists(dir_path):
         makedirs(dir_path)
 
-
-def create_output_directory_if_not_exists():
-    create_directory_if_not_exists("output")
-    create_directory_if_not_exists("output/responses")
-
 output_directory_created = False
- 
-def write_json_response(path, data,  indent=4):
+def create_output_directory_if_not_exists():
     global output_directory_created
     # Check if output directory exists, if not, create it
     if not output_directory_created:
-        create_output_directory_if_not_exists()
+        create_directory_if_not_exists("output")
+        create_directory_if_not_exists("output/responses")
         output_directory_created = True
 
-    with open("output/responses/" + path + ".json", 'w', encoding="utf-8") as fp:
+ 
+def write_json_response(path, data,  indent=4):
+    create_output_directory_if_not_exists()
+    with open(path, 'w', encoding="utf-8") as fp:
         json.dump(data, fp, indent=indent)
 
+
+def write_file_response(file_path, response, content ):
+    content_disposition = response.headers.get('Content-Disposition')
+    filename = content_disposition.split('filename=')[1].strip('"')
+    
+    create_output_directory_if_not_exists()
+    
+    fullpath = file_path + filename
+    with open(fullpath, 'wb') as file:
+        file.write(content)
+    return fullpath
+        
