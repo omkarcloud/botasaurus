@@ -11,12 +11,12 @@ def apply_pagination(data, page, per_page):
     
     # Handle the case where per_page is None - return all items
     if per_page is None:
-        per_page = count
+        per_page = 1 if count == 0 else count 
         page = 1
 
     # Calculate the total number of pages
     total_pages = max((count + per_page - 1) // per_page, 1)  # Ensure at least 1 page
-
+    page = max(min(page, total_pages), 1)  # Ensure page is within valid range
     # Calculate indices for slicing the data list to get the current page of results
     start = (page - 1) * per_page
     end = min(start + per_page, count)

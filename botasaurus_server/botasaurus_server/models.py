@@ -19,14 +19,18 @@ class TaskStatus:
 
 def calculate_duration(obj):
     if obj.started_at:
-        end_time = obj.finished_at if obj.finished_at else datetime.now(timezone.utc).replace(tzinfo=None)
+        end_time = (
+            obj.finished_at
+            if obj.finished_at
+            else datetime.now(timezone.utc).replace(tzinfo=None)
+        )
         duration = (end_time - obj.started_at).total_seconds()
 
         if duration == 0:
-          return 0
+            return 0
 
-        result = float(format(duration, '.2f'))
-        
+        result = float(format(duration, ".2f"))
+
         return result
 
     return None
@@ -37,15 +41,26 @@ def isoformat(obj):
 
 
 def serialize_ui_output_task(obj, _):
+    task_id = obj.id
+
     return {
-        "id": obj.id ,  
-        "status": obj.status ,  
-        "task_name": obj.task_name ,  
-        "result_count": obj.result_count ,  
-        "is_all_task": obj.is_all_task ,  
-        "finished_at": obj.finished_at ,  
-        "started_at": obj.started_at 
+        "id": task_id,
+        "status": obj.status,
+        "task_name": obj.task_name if obj.task_name is not None else f"Task {task_id}",
+        "result_count": obj.result_count,
+        "is_all_task": obj.is_all_task,
+        "started_at": isoformat(obj.started_at),
+        "finished_at": isoformat(obj.finished_at),
     }
+
+
+def serialize_ui_display_task(obj):
+    return {
+        "scraper_name": obj.scraper_name,
+        "status": obj.status,
+        "updated_at": isoformat(obj.updated_at),
+    }
+
 
 def serialize_task(obj, with_result):
     if with_result:
@@ -69,10 +84,11 @@ def serialize_task(obj, with_result):
         "data": obj.data,
         "metadata": obj.meta_data,
         **result,
-        "result_count": obj.result_count, 
+        "result_count": obj.result_count,
         "created_at": isoformat(obj.created_at),
         "updated_at": isoformat(obj.updated_at),
     }
+
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -100,7 +116,9 @@ class Task(Base):
     data = Column(JSON)  # JSON field for storing task data
     meta_data = Column(JSON)  # JSON field for storing meta data
     result = Column(JSON)  # JSON field for storing result data
-    result_count = Column(Integer, default=0)  # Integer field for storing result count, default 0
+    result_count = Column(
+        Integer, default=0
+    )  # Integer field for storing result count, default 0
 
     # Timestamps
     created_at = Column(DateTime, server_default=func.now())
@@ -118,7 +136,7 @@ class Cache(Base):
     key = Column(String, index=True, unique=True)
     result = Column(JSON)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime,  server_default=func.now(), onupdate=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def to_json(self):
         return {
@@ -131,17 +149,23 @@ class Cache(Base):
 
 
 def create_cache_key(scraper_type, data):
-    return scraper_type + '-' + sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+    return (
+        scraper_type
+        + "-"
+        + sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+    )
+
 
 def check_cache_exists(session, key):
     return session.query(Cache.id).filter(Cache.key == key).first() is not None
 
+
 def create_cache(session, scraper_type, data, result):
     key = create_cache_key(scraper_type, data)
-    
+
     if check_cache_exists(session, key):
         session.query(Cache).filter(Cache.key == key).update({"result": result})
-    else: 
+    else:
         cache = Cache(key=key, result=result)
         session.add(cache)
 
@@ -205,7 +229,8 @@ class TaskHelper:
                     ]
                 ),
             )
-            .first() is not None  # Use .first() to check existence, which is more efficient than .count()
+            .first()
+            is not None  # Use .first() to check existence, which is more efficient than .count()
         )
 
     @staticmethod
@@ -276,7 +301,9 @@ class TaskHelper:
         return TaskHelper.update_task(
             session,
             task_id,
-            {"status": TaskStatus.ABORTED, },
+            {
+                "status": TaskStatus.ABORTED,
+            },
         )
 
     @staticmethod
@@ -289,7 +316,11 @@ class TaskHelper:
         return (
             session.query(Task)
             .filter(Task.parent_task_id == task_id)
-            .update({"status": TaskStatus.ABORTED,})
+            .update(
+                {
+                    "status": TaskStatus.ABORTED,
+                }
+            )
         )
 
     @staticmethod
@@ -297,7 +328,7 @@ class TaskHelper:
         all_results = TaskHelper.get_completed_children_results(
             session, parent_id, except_task_id
         )
-        
+
         return TaskHelper.update_task(
             session,
             parent_id,
@@ -314,7 +345,7 @@ class TaskHelper:
         all_results = TaskHelper.get_completed_children_results(
             session, parent_id, except_task_id
         )
-        
+
         return TaskHelper.update_task(
             session,
             parent_id,
@@ -322,7 +353,7 @@ class TaskHelper:
                 "result": all_results,
                 "result_count": len(all_results),
             },
-        )    
+        )
 
     @staticmethod
     def get_task(session, task_id, in_status=None):
@@ -335,6 +366,16 @@ class TaskHelper:
         else:
             return session.get(Task, task_id)
 
+    @staticmethod
+    def get_task_with_entities(session, task_id, entities):
+        return (
+            session.query(Task)
+            .with_entities(*entities)
+            .filter(Task.id == task_id)
+            .first()
+        )
+
+    # session.query(Task).with_entities(*ets)
     @staticmethod
     def get_tasks_by_ids(session, task_ids):
         return session.query(Task).filter(Task.id.in_(task_ids)).all()

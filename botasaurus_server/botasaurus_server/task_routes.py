@@ -28,13 +28,14 @@ from .models import (
     TaskStatus,
     serialize_task,
     TaskHelper,
+    serialize_ui_display_task,
     serialize_ui_output_task,
 )
 from .db_setup import Session
 from .errors import JsonHTTPResponse, JsonHTTPResponseWithMessage
 from .retry_on_db_error import retry_on_db_error
 
-TASK_NOT_FOUND = {"status": 404, "message": "Task not found"}
+
 OK_MESSAGE = {"message": "OK"}
 
 
@@ -45,6 +46,8 @@ def serialize(data):
         return [item.to_json() for item in data]
     return data.to_json()
 
+def create_task_not_found_error(task_id):
+    return JsonHTTPResponse({"status": 404, "message": f"Task {task_id} not found"}, status=404)
 
 def jsonify(ls):
     response.content_type = "application/json"
@@ -83,28 +86,28 @@ def dict_to_string(errors_dict):
 
 
 def validate_scraper_name(scraper_name):
-    if not scraper_name:
-        raise JsonHTTPResponse({"message": "'scraper_name' must be provided"}, 400)
-
-    if not is_string_of_min_length(scraper_name):
-        raise JsonHTTPResponse(
-            {"message": "'scraper_name' must be a string with at least one character"},
-            400,
-        )
-
-    if not Server.get_scraper(scraper_name):
-        valid_scraper_names = Server.get_scrapers_names()
-        valid_names_string = ", ".join(valid_scraper_names)
-
-        if len(valid_scraper_names) == 0:
+    valid_scraper_names = Server.get_scrapers_names()
+    
+    if len(valid_scraper_names) == 0:
             error_message = "No Scrapers are available."
-        elif len(valid_scraper_names) == 1:
+            raise JsonHTTPResponse({"message": error_message}, 400)
+    
+    valid_names_string = ", ".join(valid_scraper_names)
+    if scraper_name is None:
+        if len(valid_scraper_names) == 1:
+            scraper_name = valid_scraper_names[0]
+        else:
+            error_message = f"'scraper_name' must be provided when there are multiple scrapers. The scraper_name must be one of {valid_names_string}."
+            raise JsonHTTPResponse({"message": error_message}, 400)
+    elif not Server.get_scraper(scraper_name):
+        
+        if len(valid_scraper_names) == 1:
             error_message = f"A scraper with the name '{scraper_name}' does not exist. The scraper_name must be {valid_names_string}."
         else:
             error_message = f"A scraper with the name '{scraper_name}' does not exist. The scraper_name must be one of {valid_names_string}."
 
         raise JsonHTTPResponse({"message": error_message}, 400)
-
+    return scraper_name
 
 def validate_task_request(json_data):
     """Validates the task request data."""
@@ -114,7 +117,7 @@ def validate_task_request(json_data):
     scraper_name = json_data.get("scraper_name")
     data = json_data.get("data")
 
-    validate_scraper_name(scraper_name)
+    scraper_name = validate_scraper_name(scraper_name)
 
     if data is None:
         raise JsonHTTPResponse({"message": "'data' key must be provided"}, 400)
@@ -411,26 +414,6 @@ def is_task_done(task_id):
     with Session() as session:
         x  =  TaskHelper.is_task_completed_or_failed(session, task_id)
     return x
-# TODO: output can request just what it needs which is more efficient and less buggy.       # if with_results:
-        #     ets = 
-        # else:
-        #     ets = [
-        #         Task.id,
-        #         Task.status,
-        #         Task.task_name,
-        #         # Task.scraper_name,
-        #         Task.result_count,
-        #         # Task.scraper_type,
-        #         Task.is_all_task,
-        #         # Task.is_sync,
-        #         # Task.parent_task_id,
-        #         # Task.data,
-        #         # Task.meta_data,
-        #         Task.finished_at,
-        #         Task.started_at,
-        #         # Task.created_at,
-        #         # Task.updated_at,
-        #     ]
 
 def get_ets(with_results):  
         if with_results:
@@ -472,22 +455,20 @@ def get_ets(with_results):
             ]
 
 def create_page_url(page, per_page, with_results):
-    url = "/api/tasks?"
-    query_params = []
+                query_params = {}
 
-    if page:
-        query_params.append(f"page={page}")
+                if page:
+                    query_params["page"] = page
 
-    if per_page is not None:
-        query_params.append(f"per_page={per_page}")
+                if per_page is not None:
+                    query_params["per_page"] = per_page
 
-    if not with_results:
-        query_params.append("with_results=False")
+                if not with_results:
+                    query_params["with_results"] = False
 
-    if query_params:
-        url += "&".join(query_params)
+                if query_params != {}:
+                    return query_params
 
-    return url
 
 @retry_on_db_error
 def queryTasks(ets, with_results,  page=None, per_page=None, serializer = serialize_task):
@@ -496,28 +477,35 @@ def queryTasks(ets, with_results,  page=None, per_page=None, serializer = serial
         tasks_query = session.query(Task).with_entities(*ets)
         total_count = tasks_query.count()
 
-        tasks_query = tasks_query.order_by(Task.sort_id.desc())
+        if per_page is None:
+            per_page = 1 if total_count == 0 else total_count 
+            page = 1
+        else: 
+            per_page = int(per_page)
         
+        total_pages = max((total_count + per_page - 1) // per_page, 1)
+
+        
+        page = int(page)
+        page = max(min(page, total_pages), 1)  # Ensure page is within valid range
+
         # Apply pagination if page and per_page are provided and valid
+        tasks_query = tasks_query.order_by(Task.sort_id.desc())
         if per_page is not None:
             per_page = int(per_page)
-            page = int(page)
             start = (page - 1) * per_page
             tasks_query = tasks_query.limit(per_page).offset(start)
-            total_pages = max((total_count + per_page - 1) // per_page, 1)
-        else:
-            total_pages = 1
-
+        
         tasks = tasks_query.all()
         
         current_page = page if page is not None else 1
         next_page = current_page + 1 if (current_page * per_page) < total_count else None
         previous_page = current_page - 1 if current_page > 1 else None
         
-        if next_page and serializer == serialize_task:
+        if next_page:
             next_page = create_page_url(next_page, per_page, with_results)
         
-        if previous_page and serializer == serialize_task:
+        if previous_page:
             previous_page = create_page_url(previous_page, per_page, with_results)
 
         return jsonify(
@@ -552,6 +540,12 @@ def get_tasks():
     page = request.query.get("page")
     per_page = request.query.get("per_page")
 
+    if per_page is not None:
+        if not is_valid_positive_integer(per_page):
+            raise JsonHTTPResponseWithMessage("Invalid 'per_page' parameter. It must be a positive integer.")
+    else:
+        page = 1
+        per_page = None
     # Validate page and per_page
     if page is not None:
     # Check if any pagination parameter is provided
@@ -560,13 +554,6 @@ def get_tasks():
     else:
         page = 1
     
-    if per_page is not None:
-        if not is_valid_positive_integer(per_page):
-            raise JsonHTTPResponseWithMessage("Invalid 'per_page' parameter. It must be a positive integer.")
-    else:
-        page = 1
-        per_page = None
-
     return queryTasks(get_ets(with_results),  with_results, page, per_page)
 
 @retry_on_db_error
@@ -576,7 +563,7 @@ def get_task_from_db(task_id):
         if task:
             return serialize(task)
         else:
-            raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
+            raise create_task_not_found_error(task_id)
 
 @get("/api/tasks/<task_id:int>")
 def get_task(task_id):
@@ -690,17 +677,10 @@ def validate_results_request(json_data, allowed_sorts, allowed_views, default_so
     return filters, sort, view, page, per_page
 
 
-empty = {"count": 0, "page_count": 0, "next": None, "previous": None,}
+empty = {"count": 0, "total_pages": 0, "next": None, "previous": None,}
 
 
-@post("/api/tasks/<task_id:int>/results")
-def get_task_results(task_id):
-
-    scraper_name, results, serialized_task = perform_get_task_results(task_id)
-    validate_scraper_name(scraper_name)
-    if not isinstance(results, list):
-        return jsonify({**empty, "results":results, "task":serialized_task })
-
+def clean_results(scraper_name, results):
     filters, sort, view, page, per_page = validate_results_request(
         request.json,
         Server.get_sort_ids(scraper_name),
@@ -713,20 +693,28 @@ def get_task_results(task_id):
     results = apply_view(results, view, Server.get_views(scraper_name))
 
     results = apply_pagination(results, page, per_page)
-    results["task"] = serialized_task
-    return jsonify(results)
+    return results
+
 
 @retry_on_db_error
 def perform_get_task_results(task_id):
     with Session() as session:
-        task = TaskHelper.get_task(session, task_id)
+        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name, Task.result])
         if not task:
-            raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
+            raise create_task_not_found_error(task_id)
 
         scraper_name = task.scraper_name
         results = task.result
-        serialized_task = serialize_task(task, False)
-    return scraper_name,results,serialized_task
+    return scraper_name,results
+@post("/api/tasks/<task_id:int>/results")
+def get_task_results(task_id):
+    scraper_name, results= perform_get_task_results(task_id)
+    validate_scraper_name(scraper_name)
+    if not isinstance(results, list):
+        return jsonify({**empty, "results":results})
+
+    results = clean_results(scraper_name, results)
+    return jsonify(results)
 
 
 def validate_download_params(json_data, allowed_sorts, allowed_views, default_sort):
@@ -736,13 +724,15 @@ def validate_download_params(json_data, allowed_sorts, allowed_views, default_so
 
     # Format Validation
     fmt = json_data.get("format")
+    
     if not fmt:
-        raise JsonHTTPResponse({"message": "Format is required"}, 400)
-
-    if not is_string_of_min_length(fmt):  # Assuming you have this helper function
+        fmt = "json"
+    elif not is_string_of_min_length(fmt):  # Assuming you have this helper function
         raise JsonHTTPResponse(
             {"message": "Format must be a string with at least one character"}, 400
         )
+    elif fmt == "xlsx":
+        fmt = "excel"
 
     fmt = fmt.lower()
     if fmt not in ["json", "csv", "excel"]:
@@ -850,7 +840,7 @@ def perform_download_task_results(task_id):
     with Session() as session:
         task = TaskHelper.get_task(session, task_id)
         if not task:
-            raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
+            raise create_task_not_found_error(task_id)
 
         scraper_name = task.scraper_name
         results = task.result
@@ -987,7 +977,7 @@ def bulk_delete_tasks():
     return OK_MESSAGE
 
 
-@get("/ui/config")
+@get("/api/ui/config")
 def get_api_config():
     scrapers = Server.get_scrapers_config()
     config = Server.get_config()
@@ -995,7 +985,7 @@ def get_api_config():
 
 
 
-@post("/ui/tasks/is-any-task-updated")  # Add this route
+@post("/api/ui/tasks/is-any-task-updated")  # Add this route
 def is_any_task_finished():
     json_data = request.json
 
@@ -1035,12 +1025,12 @@ def perform_is_any_task_finished(pending_task_ids, progress_task_ids, all_tasks)
         
     return is_any_task_finished
 
-@get("/ui/tasks/is-task-updated")
+@post("/api/ui/tasks/is-task-updated")
 def is_task_updated():
     # Extract 'task_id' and 'last_updated' from query parameters
-    task_id = request.query.get("task_id")
-    last_updated_str = request.query.get("last_updated")
-    query_status = request.query.get("status")  # Extract the 'status' parameter
+    task_id = request.json.get("task_id")
+    last_updated_str = request.json.get("last_updated")
+    query_status = request.json.get("status")  # Extract the 'status' parameter
 
     # Validate 'task_id' using is_valid_integer
     if not is_valid_positive_integer(task_id):
@@ -1059,8 +1049,7 @@ def is_task_updated():
     
     # Parse 'last_updated' using fromisoformat
     try:
-        # Assuming last_updated_str is in 'YYYY-MM-DDTHH:MM:SS.ssssss' format
-        last_updated = datetime.fromisoformat(last_updated_str.rstrip("Z"))  # Strip 'Z' if present
+        last_updated = datetime.fromisoformat(last_updated_str)  # Strip 'Z' if present
         last_updated = last_updated.replace(tzinfo=None)  # Make 'last_updated' naive for comparison
     except ValueError:
         raise JsonHTTPResponse({"message": "'last_updated' must be in valid ISO 8601 format"}, 400)
@@ -1069,7 +1058,7 @@ def is_task_updated():
     task_data = perform_is_task_updated(task_id)
 
     if not task_data:
-        raise JsonHTTPResponse(TASK_NOT_FOUND, status=TASK_NOT_FOUND["status"])
+        raise create_task_not_found_error(task_id)
     
     task_updated_at, task_status = task_data
     task_updated_at = task_updated_at.replace(tzinfo=None)  # Make 'task_updated_at' naive for comparison
@@ -1120,17 +1109,53 @@ output_ui_tasks_ets = [
                 Task.started_at,
             ]
 
-@route("/ui/tasks", method="PATCH")
+@get("/api/ui/tasks")
+def get_ui_tasks():
+    page = request.query.get("page")
+
+    # Validate page and per_page
+    if page is not None:
+    # Check if any pagination parameter is provided
+        if not is_valid_positive_integer(page):
+            raise JsonHTTPResponseWithMessage("Invalid 'page' parameter. It must be a positive integer.")
+    else:
+        page = 1
+    
+    return queryTasks(output_ui_tasks_ets, False, page, 100, serialize_ui_output_task)
+
+@route("/api/ui/tasks", method="PATCH")
 def patch_task():
     # This is done to return the tasks after the patch operation for purpose of faster ui response.
     page = request.query.get("page")
     if not (is_valid_positive_integer(page)):
           raise JsonHTTPResponseWithMessage("Invalid 'page' parameter. Must be a positive integer.")
 
-
     action, task_ids = validate_ui_patch_task(request.json)
 
     for task_id in task_ids:
         perform_patch_task(action, task_id)
 
-    return queryTasks(output_ui_tasks_ets, False, page, 100, serialize_ui_output_task)
+    return queryTasks( output_ui_tasks_ets, False, page, 100, serialize_ui_output_task)
+
+@retry_on_db_error
+def perform_get_ui_task_results(task_id):
+    with Session() as session:
+        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name, Task.result ,Task.updated_at, Task.status ])
+        if not task:
+            raise create_task_not_found_error(task_id)
+
+        scraper_name = task.scraper_name
+        results = task.result
+        serialized_task = serialize_ui_display_task(task)
+    return scraper_name,results,serialized_task
+
+@post("/api/ui/tasks/<task_id:int>/results")
+def get_ui_task_results(task_id):
+    scraper_name, results, serialized_task = perform_get_ui_task_results(task_id)
+    validate_scraper_name(scraper_name)
+    if not isinstance(results, list):
+        return jsonify({**empty, "results":results, "task":serialized_task })
+
+    results = clean_results(scraper_name, results)
+    results["task"] = serialized_task
+    return jsonify(results)
