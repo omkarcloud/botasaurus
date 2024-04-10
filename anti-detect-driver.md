@@ -62,6 +62,13 @@ AntiDetectDriver is a modified version of Selenium designed to evade detection b
   exists = driver.exists(".button")
   ```
 
+**Source Code Returns**
+
+- `.page_source` provides the current page source as a string.
+```python
+source = driver.page_source
+  ```
+
 #### Local Storage Manipulation
 
 **Simplified Local Storage Interaction**
