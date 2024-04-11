@@ -3,6 +3,7 @@ import os
 from math import inf
 from botasaurus.utils import relative_path
 from hashlib import sha256
+from .sorts import Sort
 from .scraper_type import ScraperType
 from .controls_adapter import ControlsAdapter
 
@@ -138,6 +139,8 @@ class _Server:
         if len(view_ids) != len(set(view_ids)):
             duplicate_view_ids = [id for id in view_ids if view_ids.count(id) > 1]
             raise ValueError(f"Duplicate views found: {duplicate_view_ids}")
+        
+        
 
         # Check for duplicate sorts
         sort_ids = [sort.id for sort in sorts]
@@ -147,14 +150,22 @@ class _Server:
 
         is_default_found = False
         default_sort = None
+        
+        nosort = Sort(label='No Sort')
+        nosort.id = 'no_sort'
         for sort in sorts:
+            if sort.id == nosort.id:
+                raise ValueError(f"Sort id '{nosort.id}' is reserved. Kindly use a different id.")
+             
             if sort.is_default:
                 if is_default_found:
                     nid  = sort.id
                     raise ValueError(f"More than one default sort ({default_sort}, {nid}) found. Kindly apply is_default sort on 1 Sort.")
                 is_default_found = True
                 default_sort = sort.id
-
+        default_sort = default_sort if default_sort is not None else nosort.id
+        nosort.is_default = default_sort == nosort.id
+        sorts.insert(0, nosort)
         # Check for duplicate filters
         filter_ids = [filter_.id for filter_ in filters]
         if len(filter_ids) != len(set(filter_ids)):
@@ -187,9 +198,7 @@ class _Server:
             scraper["input_js"] = input_js
 
             views_json = [view.to_json() for view in scraper["views"]]
-            views_json.append(
-                {"id": "__all_fields__", "label": "All Fields", "fields": []}
-            )
+       
             default_sort = scraper["default_sort"]
 
             scraper_list.append(

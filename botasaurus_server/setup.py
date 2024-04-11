@@ -3,7 +3,6 @@ from setuptools import setup
 __author__ = "Chetan Jain <chetan@omkar.cloud>"
 
 install_requires = [
-    "botasaurus_api",
     "Unidecode",
     "casefy",
     "bottle",

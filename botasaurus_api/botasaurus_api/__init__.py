@@ -322,10 +322,3 @@ api = Api('https://example.com')""".format(self._api_url))
         response_data = response.json()
         self._write_json("abort_tasks", response_data)  # Call write_json with method name
         return response_data
-    
-# python -m botasaurus_api.__init__    
-if __name__     == "__main__":
-    api = Api()
-    #print(api.get_task(3, ))
-    print(api.delete_task(3))
-    # print(api.download_task_results(4, format="xlsx"))

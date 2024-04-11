@@ -595,45 +595,17 @@ def perform_is_task_updated(task_id):
     return task_data
 
 
-def validate_results_request(json_data, allowed_sorts, allowed_views, default_sort):
-    """Validates parameters for a task results request (excluding format)."""
-
-    ensure_json_body_is_dict(json_data)  # Assuming you have this helper
-
-    # Filters Validation (if applicable)
+def validate_filters(json_data):
     filters = json_data.get("filters")
     if filters:  # Only validate if it exists
         if not isinstance(filters, dict):
             raise JsonHTTPResponse({"message": "Filters must be a dictionary"}, 400)
+    return filters
 
-    # Sort Validation (if applicable)
-
-    if "sort" not in json_data:
-        sort = default_sort
-    else:
-        sort = json_data.get("sort")
-    
-    if sort:
-        if not is_string_of_min_length(sort):
-            raise JsonHTTPResponse(
-                {"message": "Sort must be a string with at least one character"}, 400
-            )
-
-        sort = sort.lower()
-        if sort not in allowed_sorts:
-            raise JsonHTTPResponse(
-                {
-                    "message": f"Invalid sort. Must be one of: {', '.join(allowed_sorts)}."
-                },
-                400,
-            )
-
-    # View Validation (if applicable)
+def validate_view(json_data, allowed_views):
     view = json_data.get("view")
 
-    if view == "__all_fields__":
-        view = None
-    elif view:
+    if view:
         if not is_string_of_min_length(view):
             raise JsonHTTPResponse(
                 {"message": "View must be a string with at least one character"}, 400
@@ -647,9 +619,44 @@ def validate_results_request(json_data, allowed_sorts, allowed_views, default_so
                 },
                 400,
             )
+            
+    return view
+
+def validate_sort(json_data, allowed_sorts, default_sort):
+    sort = json_data.get("sort", default_sort)
+    
+    if sort == 'no_sort':
+        sort = None
+    elif sort:
+        if not is_string_of_min_length(sort):
+            raise JsonHTTPResponse(
+                {"message": "Sort must be a string with at least one character"}, 400
+            )
+
+        sort = sort.lower()
+        if sort not in allowed_sorts:
+            raise JsonHTTPResponse(
+                {
+                    "message": f"Invalid sort. Must be one of: {', '.join(allowed_sorts)}."
+                },
+                400,
+            )
     else:
-        if allowed_views:
-            view = allowed_views[0]
+        sort = default_sort
+    return sort
+
+def validate_results_request(json_data, allowed_sorts, allowed_views, default_sort):
+    """Validates parameters for a task results request (excluding format)."""
+
+    ensure_json_body_is_dict(json_data)  # Assuming you have this helper
+
+    # Filters Validation (if applicable)
+    filters = validate_filters(json_data)
+
+    # Sort Validation (if applicable)
+    sort = validate_sort(json_data, allowed_sorts, default_sort)
+    # View Validation (if applicable)
+    view = validate_view(json_data, allowed_views)
 
     # Offset Validation
     page = json_data.get("page") 
@@ -677,16 +684,27 @@ def validate_results_request(json_data, allowed_sorts, allowed_views, default_so
     return filters, sort, view, page, per_page
 
 
+
 empty = {"count": 0, "total_pages": 0, "next": None, "previous": None,}
 
 
-def clean_results(scraper_name, results):
+def get_first_view(scraper_name):
+    views = Server.get_view_ids(scraper_name)
+    if views:
+        return views[0]
+    return None
+
+def clean_results(scraper_name, results, forceApplyFirstView=False):
     filters, sort, view, page, per_page = validate_results_request(
         request.json,
         Server.get_sort_ids(scraper_name),
         Server.get_view_ids(scraper_name),
         Server.get_default_sort(scraper_name),
     )
+    
+    if forceApplyFirstView:
+        view = get_first_view(scraper_name)
+
     # Apply sorts, filters, and view
     results = apply_sorts(results, sort, Server.get_sorts(scraper_name))
     results = apply_filters(results, filters, Server.get_filters(scraper_name))
@@ -741,53 +759,13 @@ def validate_download_params(json_data, allowed_sorts, allowed_views, default_so
         )
 
     # Filters Validation (if applicable)
-    filters = json_data.get("filters")
-    if filters:  # Only validate if it exists
-        if not isinstance(filters, dict):
-            raise JsonHTTPResponse({"message": "Filters must be a dictionary"}, 400)
+    filters = validate_filters(json_data)
 
-
-    if "sort" not in json_data:
-        sort = default_sort
-    else:
-        sort = json_data.get("sort")
-    if sort:
-        if not is_string_of_min_length(sort):
-            raise JsonHTTPResponse(
-                {"message": "Sort must be a string with at least one character"}, 400
-            )
-
-        sort = sort.lower()
-        if sort not in allowed_sorts:
-            raise JsonHTTPResponse(
-                {
-                    "message": f"Invalid sort. Must be one of: {', '.join(allowed_sorts)}."
-                },
-                400,
-            )
-
+    # Sort Validation (if applicable)
+    sort = validate_sort(json_data, allowed_sorts, default_sort)
     # View Validation (if applicable)
-    view = json_data.get("view")
+    view = validate_view(json_data, allowed_views)
 
-    if view == "__all_fields__":
-        view = None
-    elif view:
-        if not is_string_of_min_length(view):
-            raise JsonHTTPResponse(
-                {"message": "View must be a string with at least one character"}, 400
-            )
-
-        view = view.lower()
-        if view not in allowed_views:
-            raise JsonHTTPResponse(
-                {
-                    "message": f"Invalid view. Must be one of: {', '.join(allowed_views)}."
-                },
-                400,
-            )
-    else: 
-        if allowed_views:
-            view = allowed_views[0]
     # Convert to English Validation (if applicable)
     convert_to_english = json_data.get("convert_to_english", True)
     if not isinstance(convert_to_english, bool):
@@ -1153,9 +1131,12 @@ def perform_get_ui_task_results(task_id):
 def get_ui_task_results(task_id):
     scraper_name, results, serialized_task = perform_get_ui_task_results(task_id)
     validate_scraper_name(scraper_name)
+    foreceApplyFirstView = request.query.get("force_apply_first_view","none").lower() == "true"
+    
+    
     if not isinstance(results, list):
-        return jsonify({**empty, "results":results, "task":serialized_task })
+        return jsonify({**empty, "results": results, "task":serialized_task })
 
-    results = clean_results(scraper_name, results)
+    results = clean_results(scraper_name, results, foreceApplyFirstView)
     results["task"] = serialized_task
     return jsonify(results)

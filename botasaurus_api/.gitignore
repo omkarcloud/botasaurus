@@ -13,3 +13,6 @@ README.txt
 !.gitlab-ci.yml
 Pipfile
 Pipfile.lock
+
+
+output/
