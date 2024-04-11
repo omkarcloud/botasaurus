@@ -5,7 +5,7 @@ import time
 import click
 from os import path, makedirs
 
-from .package_storage import PackageStorage
+from .package_storage import get_package_storage
 from .vm import extractRepositoryName, install_scraper_in_vm
 
 @click.group(context_settings=dict(max_content_width=95))
@@ -294,7 +294,7 @@ def set_and_get_project_id():
         sys.exit(1)
     elif len(project_ids) == 1:
         fitem = project_ids[0]
-        PackageStorage.set_item("project_id", fitem)
+        get_package_storage().set_item("project_id", fitem)
         click.echo(f"Selected {fitem} project.")
         return fitem
     else:
@@ -305,14 +305,14 @@ def set_and_get_project_id():
             selection = click.prompt("Enter the number of the project you want to use", type=int)
             if 1 <= selection <= len(project_ids):
                 selected_project_id = project_ids[selection - 1]
-                PackageStorage.set_item("project_id", selected_project_id)
+                get_package_storage().set_item("project_id", selected_project_id)
                 return selected_project_id
             else:
                 click.echo("Invalid selection. Please select a number from the list.")
 
 @catch_gcloud_not_found_error
 def get_project_id():
-    project_id = PackageStorage.get_item("project_id")
+    project_id = get_package_storage().get_item("project_id")
     if project_id:
         if project_exists(project_id):
             return project_id
@@ -338,13 +338,13 @@ def set_get_region():
           selection = click.prompt("Enter the number of the region to use. Defaults to us-central1", type=int, default=1)
           if 1 <= selection <= len(all_regions):
               selected_region = all_regions[selection - 1]
-              PackageStorage.set_item("region", selected_region)
+              get_package_storage().set_item("region", selected_region)
               return selected_region
           else:
               click.echo("Invalid selection. Please select a number from the list.")
     
 def get_region():
-   region = PackageStorage.get_item("region")
+   region = get_package_storage().get_item("region")
    if not region:
        rgn =  set_get_region()
        click.echo(f"You have selected {rgn} region.")

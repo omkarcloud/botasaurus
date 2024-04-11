@@ -7,8 +7,6 @@ def get_cache_file_path() -> str:
 
 class localStoragePyStorageException(Exception):
     pass
-
-
 class BasicStorageBackend:
     def raise_dummy_exception(self):
         raise localStoragePyStorageException("Called dummy backend!")
@@ -94,4 +92,10 @@ class _LocalStorage:
     # def get_new_number(self):
     #     return self.storage_backend_instance.get_new_number()
 
-PackageStorage = _LocalStorage()
+_storage = None
+
+# Create fn called get_package_storage which instantiates the PackageStorage class and returns it if not instantiated 
+def get_package_storage():
+    if not _storage:
+        _storage = _LocalStorage()
+    return _storage

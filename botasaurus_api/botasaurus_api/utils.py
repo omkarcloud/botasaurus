@@ -1,23 +1,22 @@
 import json
 from os import path, makedirs, getcwd
-from urllib.parse import urlparse
 
-def remove_paths_from_url(url):
-    """
-    Removes the paths from a given URL.
-    
-    Args:
-        url (str): The URL to remove paths from.
-        
-    Returns:
-        str: The URL with the paths removed.
-    """
-    parsed_url = urlparse(url)
-    
-    # Construct the new URL with only the scheme, netloc, and port (if present)
-    new_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-    
-    return new_url
+def remove_after_first_slash(input_string):
+    i = 0
+    str_len = len(input_string)
+    while True:
+        if i < str_len:
+            char = input_string[i]
+            if char == "/":
+                if  i+1 < len(input_string) and input_string[i+1] == "/":
+                    i+=2
+                    continue
+                else:
+                    return input_string[0: i]
+            i+=1        
+        else:
+            break    
+    return input_string
 
 def relative_path(target_path, goback=0):
     levels = [".."] * (goback + -1)

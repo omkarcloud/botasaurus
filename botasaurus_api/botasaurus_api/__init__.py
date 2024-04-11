@@ -1,6 +1,6 @@
 import requests
 from requests.exceptions import ConnectionError
-from .utils import get_filename_from_response_headers, write_json_response, write_file_response, remove_paths_from_url
+from .utils import get_filename_from_response_headers, write_json_response, write_file_response, remove_after_first_slash
 
 class ApiException(Exception):
      pass
@@ -28,7 +28,7 @@ class Api:
         :param create_response_files: Indicates if the client should create response files for each API call. This is useful for debugging or development purposes. Defaults to True.
         """
         DEFAULT_API_URL = "http://127.0.0.1:8000"
-        self._api_url = remove_paths_from_url(api_url) if api_url else  DEFAULT_API_URL
+        self._api_url = remove_after_first_slash(api_url) if api_url else  DEFAULT_API_URL
         self._create_response_files = create_response_files  # Flag for creating response files
         if not self.is_api_running():
             raise ApiException(f"API at {self._api_url} is not running. Please check if the API is up and running.")

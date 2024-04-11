@@ -9,8 +9,7 @@ install_requires = [
     "kubernetes",
     "bota",
     "xlsxwriter",
-    "sqlalchemy",
-    "botasaurus>=4.0.0"
+    "sqlalchemy"
 ]
 
 extras_require = {}
