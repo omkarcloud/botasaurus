@@ -1,12 +1,14 @@
 from casefy import titlecase
 import os
 from math import inf
-from botasaurus.utils import relative_path
 from hashlib import sha256
 from .sorts import Sort
 from .scraper_type import ScraperType
 from .controls_adapter import ControlsAdapter
 
+def relative_path(path, goback=0):
+    levels = [".."] * (goback + -1)
+    return os.path.abspath(os.path.join(os.getcwd(), *levels, path.strip()))
 
 def compute_hash(content):
     return sha256(content.encode("utf-8")).hexdigest()

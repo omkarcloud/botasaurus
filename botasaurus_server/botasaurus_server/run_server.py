@@ -29,7 +29,7 @@ def open_browser_in_thread():
         Thread(target=open_browser, daemon=True).start()
 
 def install():
-    print("Installing frontend dependencies...")
+    print("Installing frontend...")
     frontend_dir = os.path.join(os.getcwd(), "frontend")
     subprocess.check_call("npm install && npm run build", shell=True, cwd=frontend_dir)
 

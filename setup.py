@@ -11,6 +11,7 @@ install_requires = [
     "cloudscraper",
     "selenium==4.5.0",
     "botasaurus_api",
+    "bota",
     "botasaurus-proxy-authentication"
 ]
 extras_require = {}

@@ -7,7 +7,6 @@ install_requires = [
     "casefy",
     "bottle",
     "kubernetes",
-    "bota",
     "xlsxwriter",
     "sqlalchemy"
 ]

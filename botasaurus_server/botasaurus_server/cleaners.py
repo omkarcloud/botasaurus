@@ -1,4 +1,11 @@
-from botasaurus.output import get_fieldnames
+
+def get_fieldnames(data_list):
+    fieldnames_dict = {}  # Initialize an empty dictionary
+    for item in data_list:
+            for key in item.keys():
+                if key not in fieldnames_dict:
+                    fieldnames_dict[key] = None  # Set the value to None, we only care about the keys
+    return list(fieldnames_dict.keys())  # Convert the dictionary keys to a list
 
 def normalize_data(data):
     if data is None:
