@@ -1279,7 +1279,7 @@ To prevent your PC from hanging, you need to close all running Chrome instances.
 You can run following command to close all chromes
 
 ```shell
-python -m botasaurus.close
+python -m close_chrome
 ```
 
 Executing above command will close all Chrome instances, thereby helping to prevent your PC from hanging.

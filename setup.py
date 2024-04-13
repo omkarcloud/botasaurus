@@ -10,6 +10,7 @@ install_requires = [
     "chromedriver-autoinstaller-fix",
     "cloudscraper",
     "selenium==4.5.0",
+    "close_chrome",
     "botasaurus_api",
     "bota",
     "botasaurus-proxy-authentication"

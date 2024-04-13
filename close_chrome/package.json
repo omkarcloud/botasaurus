@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "pretest": "pip3 install -e . && python3 -m close_chrome --install chalk@4",
+    "prepare": "pip3 install black",
+    "lint": "python3 -m black --line-length 100 src",
+    "fix": "standard --fix",
+    "test": "mocha",
+    "upload": "python increment_version.py && rm -rf dist/ src/close_chrome.egg-info src/close_chrome/package_storage.json  MANIFEST  && python setup.py sdist && pip install -e . && python -m twine upload dist/* --verbose && pip install  -e . "
+  }}
