@@ -1,9 +1,7 @@
 from typing import Callable, Optional
-from selenium.common.exceptions import StaleElementReferenceException
 from functools import wraps
 import traceback
 from time import sleep, time
-
 from .utils import is_errors_instance
 
 
@@ -50,6 +48,7 @@ def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=
 
 
 def retry_on_stale_element(_func: Optional[Callable] = None, *, retries=3, wait_time=1, raise_exception=True):
+    from selenium.common.exceptions import StaleElementReferenceException
     def decorator(func):
         @retry_if_is_error(
             instances=[StaleElementReferenceException],

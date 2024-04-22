@@ -1267,23 +1267,17 @@ from botasaurus.create_stealth_driver import create_stealth_driver
       return heading
 ```
 
+### How Do I Close All Running Chrome Instances?
 
-### How Do I Close All Running Chrome Instances When Developing with Botasaurus?
-
-While developing a scraper, you might need to interrupt the scraping process, often done by pressing `Ctrl + C`. However, this action does not automatically close the Chrome browsers, which can cause your computer to hang due to resource overuse.
+While developing a scraper, multiple browser may remain open in the background. This situation can  cause your computer to hang.
 
 ![Many Chrome processes running in Task Manager](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/chrome-running.png)
 
-To prevent your PC from hanging, you need to close all running Chrome instances. 
-
-You can run following command to close all chromes
+To prevent your PC from hanging, you can run the following command to close all Chrome instances:
 
 ```shell
 python -m close_chrome
 ```
-
-Executing above command will close all Chrome instances, thereby helping to prevent your PC from hanging.
- 
 ---
 
 <!-- 

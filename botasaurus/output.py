@@ -1,5 +1,3 @@
-import requests
-import csv
 from json import dumps
 from .utils import  read_file as _read_file, relative_path, write_json as _write_json, read_json as _read_json, write_html as _write_html, write_file as _write_file
 from .beep_utils import prompt
@@ -102,6 +100,7 @@ def read_csv(filename):
         :param filepath: str, the path to the CSV file
         :return: list of dictionaries
         """
+        import csv
 
         filename = fix_csv_filename(filename)
 
@@ -155,6 +154,7 @@ def write_csv(data, filename, log = True):
             data: a list of dictionaries
             filename: the name of the CSV file to save
         """
+        import csv
         
         if type(data) is dict:
             data = [data]
@@ -189,9 +189,9 @@ def write_csv(data, filename, log = True):
 
 
 def save_image(url, filename = None):
+        import requests
         if filename is None:
             filename = url.split("/")[-1]
-    
         response = requests.get(url)
         if response.status_code == 200:
             # Extract the filename from the URL

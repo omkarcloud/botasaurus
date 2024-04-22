@@ -1,14 +1,11 @@
-import errno
+
 import json
 import os
 import traceback
-from datetime import datetime
-from http.client import RemoteDisconnected
 from time import sleep
 from urllib.error import ContentTooShortError, URLError
 from sys import platform, exit
 from .list_utils import flatten_depth
-
 
 def is_errors_instance(instances, error):
     for i in range(len(instances)):
@@ -121,6 +118,7 @@ def silentremove(filename):
         os.remove(filename)
         return True
     except OSError as e:
+        import errno
         if e.errno != errno.ENOENT:
             raise
         else:
@@ -237,14 +235,13 @@ def is_error(errs):
         return result
     return fn
 
-NETWORK_ERRORS = [RemoteDisconnected, URLError,
+NETWORK_ERRORS = [URLError,
                   ConnectionAbortedError, ContentTooShortError,  BlockingIOError]
 
 is_network_error = is_error(NETWORK_ERRORS)
 
 def pretty_format_time(time):
    return time.strftime("%H:%M:%S, %d %B %Y").replace(" 0", " ").lstrip("0")
-
 
 
 def write_html( data, path,):
@@ -281,6 +278,7 @@ def get_driver_path():
 datetime_format = '%Y-%m-%d %H:%M:%S'
 
 def str_to_datetime(when):
+    from datetime import datetime
     return datetime.strptime(
         when, datetime_format)
 

@@ -1,5 +1,3 @@
-from psutil import virtual_memory
-
 class BrowserResourceConfig:
     AVERAGE_RICH_MEDIA_SITE = 0.5  # 0.5 GB like omkar.cloud (Most Common) 
     STATIC_SIMPLE_SITE = 0.3  # 0.3 GB like stackoverflow.com
@@ -16,6 +14,7 @@ def calc_max_parallel_browsers(average_ram_per_instance = BrowserResourceConfig.
                                      - Video Site like youtube.com, udemy.com: 0.8 GB
         :return: The maximum number of browser instances that can be run simultaneously.
         """
+        from psutil import virtual_memory
         # System available resources
         available_ram = virtual_memory().available / (1024 ** 3)  # Convert bytes to GB
 

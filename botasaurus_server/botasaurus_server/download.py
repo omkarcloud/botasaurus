@@ -1,8 +1,5 @@
 from json import dumps
 from bottle import HTTPResponse
-import xlsxwriter
-import io
-import csv
 
 def convert_nested_to_json(input_list):
     """
@@ -29,6 +26,9 @@ def convert_nested_to_json(input_list):
 
 
 def make_csv(fieldnames, results):
+    import io
+    import csv    
+
     buffer = io.StringIO()
     # Create a CSV writer that writes to the buffer
     # Note: 'newline=""' is necessary to prevent additional newlines on Windows
@@ -45,6 +45,9 @@ def make_csv(fieldnames, results):
 
 
 def make_excel(fieldnames, results):
+    import io
+    import xlsxwriter
+
     buffer = io.BytesIO()
     workbook = xlsxwriter.Workbook(buffer)
     worksheet = workbook.add_worksheet("Sheet1")  # Specify the sheet name as "Sheet1"
