@@ -68,7 +68,7 @@ class K8s:
         pods = self.k8s_api.list_namespaced_pod(namespace="default", label_selector="app=" + self.pod_type )
         nodes = []
         for pod in pods.items:
-            node = {"node_name": pod.metadata.name, "current_capacity": {"request": 0, "browser": 0}}
+            node = {"node_name": pod.metadata.name, "current_capacity": {"request": 0, "browser": 0, "task": 0}}
             nodes.append(node)
         return nodes
         

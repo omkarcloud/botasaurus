@@ -14,7 +14,7 @@ from .retry_on_db_error import retry_on_db_error
 class TaskExecutor:
 
     def load(self):
-        self.current_capacity = {"browser": 0, "request": 0}
+        self.current_capacity = {"browser": 0, "request": 0, "task": 0}
         self.lock = Lock()
     
     def start(self):
@@ -41,6 +41,7 @@ class TaskExecutor:
     def task_worker(self):
         browser_scrapers = len(Server.get_browser_scrapers()) > 0
         request_scrapers = len(Server.get_request_scrapers()) > 0
+        task_scrapers = len(Server.get_task_scrapers()) > 0
         
         while True:
             try:
@@ -49,6 +50,9 @@ class TaskExecutor:
 
                 if request_scrapers:
                     self.process_tasks(ScraperType.REQUEST)
+
+                if task_scrapers:
+                    self.process_tasks(ScraperType.TASK)
             except:
               traceback.print_exc()
 

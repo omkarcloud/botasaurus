@@ -65,32 +65,33 @@ def run_backend_in_thread():
     Thread(target=run_backend, daemon=True).start()
     
 def run_server():
-    if not Server.get_scrapers_names():
-        raise RuntimeError("No scrapers found. Please add a scraper using Server.add_scraper.")
-    
-    if len(sys.argv) == 1:
-        print_frontend_run_message()
-        killfrontendandbackendports()
-        # No arguments provided, run both backend and frontend
-        run_backend_in_thread()
-        open_browser_in_thread()
-        run_frontend(False)
-    elif "--help" in sys.argv:
-        show_help()
-    elif sys.argv[1] == "install":
-        install()
-    elif sys.argv[1] == "backend":
-        # Argument "backend" provided, run only backend
-        killbackendport()
-        run_backend()
-    elif sys.argv[1] == "dev":
-        print_frontend_run_message()
-        killfrontendandbackendports()
-        # No arguments provided, run both backend and frontend
-        run_backend_in_thread()
-        open_browser_in_thread()
-        run_frontend(True)
+    if "--help" in sys.argv:
+            show_help()
     else:
-        print(f"Error: No such command: {sys.argv[1]}")
-        print("Try '--help' for help.")
-        sys.exit(1) 
+        if not Server.get_scrapers_names():
+            raise RuntimeError("No scrapers found. Please add a scraper using Server.add_scraper.")
+        
+        if len(sys.argv) == 1:
+            print_frontend_run_message()
+            killfrontendandbackendports()
+            # No arguments provided, run both backend and frontend
+            run_backend_in_thread()
+            open_browser_in_thread()
+            run_frontend(False)
+        elif sys.argv[1] == "install":
+            install()
+        elif sys.argv[1] == "backend":
+            # Argument "backend" provided, run only backend
+            killbackendport()
+            run_backend()
+        elif sys.argv[1] == "dev":
+            print_frontend_run_message()
+            killfrontendandbackendports()
+            # No arguments provided, run both backend and frontend
+            run_backend_in_thread()
+            open_browser_in_thread()
+            run_frontend(True)
+        else:
+            print(f"Error: No such command: {sys.argv[1]}")
+            print("Try '--help' for help.")
+            sys.exit(1) 

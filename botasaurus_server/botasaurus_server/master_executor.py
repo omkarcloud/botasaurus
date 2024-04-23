@@ -9,7 +9,7 @@ class MasterExecutor(TaskExecutor):
         self.lock = Lock()
         self.k8s = K8s()
         # Initialize capacities
-        self.current_capacity = {"request": 0, "browser": 0}
+        self.current_capacity = {"request": 0, "browser": 0, "task": 0}
         self.max_capacity = self.calculate_max_capacity()
 
     def get_max_running_count(self, scraper_type):
@@ -40,7 +40,7 @@ class MasterExecutor(TaskExecutor):
     def calculate_max_capacity(self):
         limit = Server.get_rate_limit()
         replicas = len(self.k8s.nodes)
-        return {"request": limit["request"] * replicas, "browser": limit["browser"] * replicas}
+        return {"request": limit["request"] * replicas,"task": limit["task"] * replicas, "browser": limit["browser"] * replicas}
 
     def on_success(self, task_id, task_type, task_result, node_name):
         node = self.k8s.get_node(node_name)

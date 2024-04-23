@@ -26,7 +26,7 @@ def get_readme():
 class _Server:
     def __init__(self):
         self.scrapers = {}
-        self.rate_limit = {"browser": 1, "request": 30}
+        self.rate_limit = {"browser": 1, "request": 30, "task": 0}
         self.controls_cache = {}  # Cache to store Controls instances
         self.cache = False
         self.config = None
@@ -117,15 +117,16 @@ class _Server:
     ):
         if not hasattr(scraper_function, "_scraper_type"):
             raise ValueError(
-                "The function must be a scraping function decorated with either @browser or @request."
+                "The function must be a scraping function decorated with either @browser, @request or @task."
             )
 
         if scraper_function._scraper_type not in [
             ScraperType.REQUEST,
             ScraperType.BROWSER,
+            ScraperType.TASK,
         ]:
             raise ValueError(
-                f"Invalid scraper type: {scraper_function._scraper_type}. Must be 'request' or 'browser'."
+                f"Invalid scraper type: {scraper_function._scraper_type}. Must be 'browser', 'request' or 'task'."
             )
 
         if scraper_name is None:
@@ -246,6 +247,13 @@ class _Server:
             if scraper["scraper_type"] == ScraperType.BROWSER
         ]
 
+    def get_task_scrapers(self):
+        return [
+            name
+            for name, scraper in self.scrapers.items()
+            if scraper["scraper_type"] == ScraperType.TASK
+        ]
+
     def get_request_scrapers(self):
         return [
             name
@@ -253,9 +261,10 @@ class _Server:
             if scraper["scraper_type"] == ScraperType.REQUEST
         ]
 
-    def set_rate_limit(self, browser=1, request=30):
+    def set_rate_limit(self, browser=1, request=30, task=30):
         self.rate_limit["browser"] = inf if browser is None else browser
         self.rate_limit["request"] = inf if request is None else request
+        self.rate_limit["task"] = inf if task is None else task
 
     def get_rate_limit(self):
         return self.rate_limit
