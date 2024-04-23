@@ -6,7 +6,6 @@ from typing import Any, Callable, Optional, Union, List
 from time import sleep
 from botasaurus.decorators_common import first_run, evaluate_proxy, write_output, IS_PRODUCTION, AsyncQueueResult, AsyncResult, get_driver_url_safe, run_parallel, save_error_logs
 from .utils import is_errors_instance
-from .usage import Usage
 from .list_utils import flatten
 from .dontcache import is_dont_cache
 from botasaurus_driver import Driver
@@ -66,19 +65,6 @@ def browser(
                     pool.pop()
 
         url = None
-
-        def can_put_url():
-            nonlocal url
-            return url is None
-
-        def set_url(s):
-            nonlocal url
-            if s is not None:
-                url = s
-
-        def get_url():
-            nonlocal url
-            return url
 
         @wraps(func)
         def wrapper_browser(*args, **kwargs) -> Any:
@@ -182,9 +168,6 @@ def browser(
                         result = func(driver, data, metadata)
                     else:
                         result = func(driver, data)
-
-                    if can_put_url():
-                        set_url(get_driver_url_safe(driver))
                     if reuse_driver:
                         driver.config.is_new = False
                         _driver_pool.append(driver)  # Add back to the pool for reuse
@@ -242,8 +225,6 @@ def browser(
                     else:
                         close_driver(driver)
 
-                    
-
                     if raise_exception:
                         raise error
 
@@ -292,9 +273,6 @@ def browser(
 
             if not keep_drivers_alive:
                 close_driver_pool(_driver_pool)
-
-            if not async_queue:
-                Usage.put(fn_name, url)
             if return_first:
                 if not async_queue:
                     write_output(
@@ -348,7 +326,6 @@ def browser(
                         task = task_queue.get()
 
                         if task is None:
-                            Usage.put(func.__name__, get_url())
                             write_output(
                                 output,
                                 output_formats,

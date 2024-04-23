@@ -96,6 +96,7 @@ _storage = None
 
 # Create fn called get_package_storage which instantiates the PackageStorage class and returns it if not instantiated 
 def get_package_storage():
+    global _storage
     if not _storage:
         _storage = _LocalStorage()
     return _storage

@@ -95,7 +95,11 @@ class _LocalStorage:
         return self.storage_backend_instance.items()
 
 
-    # def get_new_number(self):
-    #     return self.storage_backend_instance.get_new_number()
+_storage = None
 
-BotasaurusStorage = _LocalStorage()
+# Create fn called get_package_storage which instantiates the PackageStorage class and returns it if not instantiated 
+def get_botasaurus_storage():
+    global _storage
+    if not _storage:
+        _storage = _LocalStorage()
+    return _storage

@@ -12,7 +12,6 @@ from .formats import Formats
 
 from .output import write_json, write_csv, fix_csv_filename, fix_json_filename
 
-
 from .decorators_utils import (
     create_directories_if_not_exists,
     create_directory_if_not_exists,

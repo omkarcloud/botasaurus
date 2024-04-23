@@ -1,3 +1,0 @@
-
-class CloudflareDetection(Exception):
-    pass

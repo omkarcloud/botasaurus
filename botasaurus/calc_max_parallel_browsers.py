@@ -43,7 +43,3 @@ def calc_max_parallel_browsers(average_ram_per_instance = BrowserResourceConfig.
                 return max
         
         return max_instances
-
-if __name__ == "__main__":
-    max_instances = calc_max_parallel_browsers()
-    print(f"Maximum browser instances: {max_instances}")

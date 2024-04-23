@@ -6,7 +6,6 @@ from requests.auth import AuthBase, HTTPBasicAuth
 from requests.utils import get_encoding_from_headers
 from requests.structures import CaseInsensitiveDict
 
-
 os.environ["timeout"] = "1000"
 os.environ["TIMEOUT"] = "1000"
 
@@ -220,24 +219,3 @@ class GotAdapter:
             GotAdapter._convert_to_got_request(url, kwargs), timeout=300
         )
         return GotAdapter._convert_to_requests_response(got_response)
-
-
-if __name__ == "__main__":
-    # Initiate the web scraping task
-
-    # gethttpbin()
-    response = GotAdapter.get(
-        "https://www.google.com/",
-        headers={
-            # "Referer": "https://www.google.com/",
-        },
-    )
-    # print(response.json()['region'])
-    # print(response._original_response.msg)
-    # resp = requests.get('https://www.google.com/',  proxies=)
-    print(response.reason)
-    # print(response.content)
-    # print(response)
-    # print(response)
-    # scrape_heading_task()
-    # gethttpbin()

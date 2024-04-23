@@ -48,10 +48,11 @@ def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=
 
 
 def retry_on_stale_element(_func: Optional[Callable] = None, *, retries=3, wait_time=1, raise_exception=True):
-    from selenium.common.exceptions import StaleElementReferenceException
+    from botasaurus_driver.exceptions import DetachedElementException
+
     def decorator(func):
         @retry_if_is_error(
-            instances=[StaleElementReferenceException],
+            instances=[DetachedElementException],
             retries=retries,
             wait_time=wait_time,
             raise_exception=raise_exception

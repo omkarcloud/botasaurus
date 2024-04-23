@@ -1,17 +1,15 @@
 from setuptools import setup
 
 install_requires = [
-    "packaging",
-    "psutil",
+    "psutil",    
     "javascript_fixes",
     "requests",
     "joblib>=1.3.2",
     "beautifulsoup4>=4.11.2",
-    "chromedriver-autoinstaller-fix",
     "cloudscraper",
-    "selenium==4.5.0",
     "close_chrome",
     "botasaurus_api",
+    "botasaurus_driver",
     "bota",
     "botasaurus-proxy-authentication"
 ]

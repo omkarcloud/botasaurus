@@ -8,7 +8,7 @@ from typing import Union, List
 
 from .list_utils import flatten
 from .cl import join_link
-from .decorators import request
+from .request import request
 
 default_request_options = {
     # "use_stealth": True,
@@ -775,12 +775,3 @@ class Sitemap:
             "parallel": 40,
             "cache": self.cache,
         }
-
-
-if __name__ == "__main__":
-    print(
-        Extractors.extract_link_upto_nth_segment(0)["function"](
-            "https://www.g2.com/aa/"
-        )
-    )
-    

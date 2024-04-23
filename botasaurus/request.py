@@ -5,13 +5,15 @@ from traceback import print_exc, format_exc
 from typing import Any, Callable, Optional, Union, List
 from time import sleep
 from .utils import is_errors_instance
-from .creators import create_requests
+from .create_request import create_requests
 from .beep_utils import beep_input
-from .usage import Usage
 from .list_utils import flatten
 
 from botasaurus.decorators_common import first_run, evaluate_proxy, write_output, IS_PRODUCTION, AsyncQueueResult, AsyncResult,  run_parallel, save_error_logs
 from .dontcache import is_dont_cache
+
+__all__ = ['request']
+
 def request(
     _func: Optional[Callable] = None,
     *,
@@ -188,8 +190,6 @@ def request(
 
                 result = run_parallel(run, used_data, n, True)
 
-            if not async_queue:
-                Usage.put(fn_name, None)
 
             if return_first:
                 if not async_queue:
@@ -244,7 +244,6 @@ def request(
                         task = task_queue.get()
 
                         if task is None:
-                            Usage.put(func.__name__, None)
                             # Thread Finished
                             write_output(
                                 output,

@@ -106,10 +106,3 @@ class _LocalStorage:
     #     return self.storage_backend_instance.get_new_number()
 
 LocalStorage = _LocalStorage()
-
-if __name__ == "__main__":
-    t = _LocalStorage()
-    
-    print(t.get_item("a"))
-    print(t.set_item("a" ,"ss"))
-    print(t.remove_item("a"))

@@ -6,7 +6,6 @@ from typing import Any, Callable, Optional, Union, List
 from time import sleep
 from .utils import is_errors_instance
 from .beep_utils import beep_input
-from .usage import Usage
 from .list_utils import flatten
 
 from botasaurus.decorators_common import first_run, write_output, IS_PRODUCTION, AsyncQueueResult, AsyncResult,  run_parallel, save_error_logs
@@ -178,8 +177,6 @@ def task(
 
                 result = run_parallel(run, used_data, n, True)
 
-            if not async_queue:
-                Usage.put(fn_name, None)
 
             if return_first:
                 if not async_queue:
@@ -234,7 +231,6 @@ def task(
                         task = task_queue.get()
 
                         if task is None:
-                            Usage.put(func.__name__, None)
                             # Thread Finished
                             write_output(
                                 output,
