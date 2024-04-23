@@ -1,7 +1,7 @@
 from sys import platform
 from os import path, environ, name
 
-is_in_kubernetes = 'KUBERNETES_SERVICE_HOST' in environ
+IS_IN_KUBERNETES = 'KUBERNETES_SERVICE_HOST' in environ
 
 def _is_docker():
     is_windows =  name == 'nt'
@@ -17,13 +17,12 @@ def _is_docker():
         return False
     
     # Expensive Checks
-    return path.exists('/.dockerenv') or path.isfile('/proc/self/cgroup') and 'docker' in open('/proc/self/cgroup').read() or is_in_kubernetes
+    return path.exists('/.dockerenv') or path.isfile('/proc/self/cgroup') and 'docker' in open('/proc/self/cgroup').read() or IS_IN_KUBERNETES
 
-is_docker = _is_docker()
+IS_DOCKER = _is_docker()
 
-is_vm = environ.get('VM') == 'true'
-is_gitpod_environment = 'GITPOD_WORKSPACE_ID' in environ
+IS_VM = environ.get('VM') == 'true'
 
-is_vmish = is_docker or is_vm or is_gitpod_environment
-is_vm_or_docker = is_docker or is_vm
+IS_VM_OR_DOCKER = IS_DOCKER or IS_VM
 
+IS_PRODUCTION = environ.get("ENV") == "production"

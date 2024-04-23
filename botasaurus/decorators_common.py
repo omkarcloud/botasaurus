@@ -5,7 +5,8 @@ from threading import Thread
 from typing import Any
 import os
 import sys
-from .env import is_vm_or_docker
+from .env import IS_VM_OR_DOCKER
+from .env import IS_PRODUCTION as _IS_PRODUCTION
 from .utils import write_file
 
 from .formats import Formats
@@ -38,7 +39,7 @@ def get_page_source_safe(driver):
         return "<html><body><p>Error in getting page source.</p></body></html>"
 
 
-IS_PRODUCTION = is_vm_or_docker or os.environ.get("ENV") == "production"
+IS_PRODUCTION = IS_VM_OR_DOCKER or  _IS_PRODUCTION
 create_directories_if_not_exists()
 
 # Define a global variable to track the first run
