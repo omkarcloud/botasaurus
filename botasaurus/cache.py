@@ -1,18 +1,10 @@
 import json
 import os
 from hashlib import md5
-from joblib import Parallel, delayed
 from shutil import rmtree
 from json.decoder import JSONDecodeError
 from .decorators_utils import create_cache_directory_if_not_exists, create_directory_if_not_exists
 from .utils import read_json, relative_path, write_json
-
-class DontCache:
-    def __init__(self, result):
-        self.data = result
-
-def is_dont_cache(obj):
-    return isinstance(obj, DontCache)
 
 def _get_cache_path(func, data):
     fn_name = func.__name__
@@ -47,6 +39,7 @@ def _get(cache_path):
 
 
 def _read_json_files(file_paths):
+    from joblib import Parallel, delayed
     results = Parallel(n_jobs=-1)(delayed(_get)(file_path) for file_path in file_paths)
     return results
 
@@ -54,6 +47,7 @@ def _delete_item_by_path(cache_path):
     os.remove(cache_path)
 
 def _delete_items(file_paths):
+    from joblib import Parallel, delayed
     Parallel(n_jobs=-1)(delayed(_delete_item_by_path)(file_path) for file_path in file_paths)
 
 def _put(result, cache_path):

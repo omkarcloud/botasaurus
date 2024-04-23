@@ -568,7 +568,7 @@ def browser(
                     else:
                         close_driver(driver)
 
-                    if cache is True or cache == Cache.REFRESH :
+                    if cache is True or cache == 'REFRESH' :
                         if is_dont_cache(result):
                             Cache.remove(func, data)
                         else:
@@ -858,7 +858,7 @@ def request(
                         result = func(reqs, data, metadata)
                     else:
                         result = func(reqs, data)
-                    if cache is True or cache == Cache.REFRESH :
+                    if cache is True or cache == 'REFRESH' :
                         if is_dont_cache(result):
                             Cache.remove(func, data)
                         else:
