@@ -6,6 +6,8 @@ import webbrowser
 from .env import is_vmish
 from .app import run_backend
 from .port_kill_adapter import killfrontendandbackendports, killbackendport
+from .server import Server
+
 def show_help():
     print("""
 Botasaurus Server CLI
@@ -59,13 +61,18 @@ def run_frontend(is_dev):
         open_browser_in_thread()
         start_frontend(is_dev)
 
+def run_backend_in_thread():
+    Thread(target=run_backend, daemon=True).start()
+    
 def run_server():
-
+    if not Server.get_scrapers_names():
+        raise RuntimeError("No scrapers found. Please add a scraper using Server.add_scraper.")
+    
     if len(sys.argv) == 1:
         print_frontend_run_message()
         killfrontendandbackendports()
         # No arguments provided, run both backend and frontend
-        Thread(target=run_backend, daemon=True).start()
+        run_backend_in_thread()
         open_browser_in_thread()
         run_frontend(False)
     elif "--help" in sys.argv:
@@ -80,7 +87,7 @@ def run_server():
         print_frontend_run_message()
         killfrontendandbackendports()
         # No arguments provided, run both backend and frontend
-        Thread(target=run_backend, daemon=True).start()
+        run_backend_in_thread()
         open_browser_in_thread()
         run_frontend(True)
     else:
