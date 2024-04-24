@@ -1,10 +1,3 @@
-
-from queue import Queue
-import random
-from threading import Thread
-from typing import Any
-import os
-import sys
 from .env import IS_VM_OR_DOCKER
 from .env import IS_PRODUCTION as _IS_PRODUCTION
 from .utils import write_file
@@ -43,11 +36,16 @@ IS_PRODUCTION = IS_VM_OR_DOCKER or  _IS_PRODUCTION
 create_directories_if_not_exists()
 
 # Define a global variable to track the first run
-first_run = True
-
+first_run = False
+def print_running():
+    global first_run
+    if not first_run:
+        first_run = True
+        print("Running")
+    
 
 class AsyncQueueResult:
-    def __init__(self, worker_thread, task_queue: Queue, result_list):
+    def __init__(self, worker_thread, task_queue, result_list):
         self._worker_thread = worker_thread
         self._task_queue = task_queue
         self.result_list = result_list
@@ -87,6 +85,7 @@ class AsyncQueueResult:
         self._task_queue.put([args_to_put, kwargs])
 
     def get(self):
+        import sys
         self._task_queue.put(None)
         thread = self._worker_thread
         try:
@@ -100,29 +99,11 @@ class AsyncQueueResult:
         return flatten(self.result_list)
 
 
-class ThreadWithResult(Thread):
-    def __init__(
-        self, group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None
-    ):
-        self.result = None
-        self._exception = None
-
-        def function():
-            try:
-                self.result = target(*args, **kwargs)
-            except Exception as e:
-                self._exception = e
-
-        super().__init__(group=group, target=function, name=name, daemon=daemon)
-
-    def join(self, timeout=None) -> Any:
-        super().join(timeout)
-        if self._exception:
-            raise self._exception
-
 
 def run_parallel(run, ls, n_workers, use_threads):
     from joblib import Parallel, delayed
+    from .thread_with_result import ThreadWithResult
+    import sys
     
     if use_threads:
         execute_parallel_tasks = lambda: Parallel(n_jobs=n_workers, backend="threading")(
@@ -146,6 +127,7 @@ def run_parallel(run, ls, n_workers, use_threads):
 
 class AsyncResult:
     def __init__(self, thread):
+        from queue import Queue
         self._result = None
         self._completed = False
         self._exception = None
@@ -163,6 +145,7 @@ class AsyncResult:
         self._queue.put(True)
 
     def get(self):
+        import sys
         thread = self._thread
         try:
             while thread.is_alive():
@@ -251,6 +234,7 @@ def save_error_logs(exception_log, driver):
             print(f"Error saving screenshot: {e}")
 
 def evaluate_proxy(proxy):
+                    import random
                     if isinstance(proxy, list):
                         return  random.choice(proxy)
                     return proxy            

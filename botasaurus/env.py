@@ -1,4 +1,3 @@
-from sys import platform
 from os import path, environ, name
 
 IS_IN_KUBERNETES = 'KUBERNETES_SERVICE_HOST' in environ
@@ -10,7 +9,7 @@ def _is_docker():
         return False
     
     
-    
+    from sys import platform    
     is_mac =  platform == "darwin"
     # Early exit
     if is_mac:

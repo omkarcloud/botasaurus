@@ -1,10 +1,7 @@
 from functools import wraps
-from queue import Queue
-from threading import Thread
 from traceback import print_exc, format_exc
 from typing import Any, Callable, Optional, Union, List
-from time import sleep
-from botasaurus.decorators_common import first_run, evaluate_proxy, write_output, IS_PRODUCTION, AsyncQueueResult, AsyncResult, get_driver_url_safe, run_parallel, save_error_logs
+from botasaurus.decorators_common import evaluate_proxy, print_running, write_output, IS_PRODUCTION, AsyncQueueResult, AsyncResult,  run_parallel, save_error_logs
 from .utils import is_errors_instance
 from .list_utils import flatten
 from .dontcache import is_dont_cache
@@ -21,7 +18,7 @@ def browser(
     block_images_and_css: bool = False,
     window_size: Optional[Union[Callable[[Any], str], str]] = None,
     tiny_profile: bool = False,
-    wait_for_complete_page_load: bool = False,
+    wait_for_complete_page_load: bool = True,
     add_arguments: Optional[Union[List[str], Callable[[Any, List[str]], None]]] = None,
     extensions: Optional[Union[List[Any], Callable[[Any], List[Any]]]] = None,
     lang: Optional[Union[Callable[[Any], str], str]] = None,
@@ -68,10 +65,7 @@ def browser(
 
         @wraps(func)
         def wrapper_browser(*args, **kwargs) -> Any:
-            global first_run  # Declare the global variable to modify it
-            if first_run:  # Check if it's the first run
-                print("Running")  # If so, print "Running"
-                first_run = False  # Set the flag to False so it doesn't run again
+            print_running()
 
             nonlocal parallel, data, cache, block_images_and_css, block_images, window_size, metadata, add_arguments, extensions
             nonlocal tiny_profile, wait_for_complete_page_load, lang, headless, beep
@@ -200,6 +194,7 @@ def browser(
                         print_exc()
                         close_driver(driver)
                         if retry_wait:
+                            from time import sleep
                             print("Waiting for " + str(retry_wait))
                             sleep(retry_wait)
                         return run_task(data, True, retry_attempt + 1)
@@ -301,6 +296,7 @@ def browser(
 
             @wraps(func)
             def async_wrapper(*args, **kwargs):
+                from threading import Thread
                 def thread_target():
                     result = wrapper_browser(*args, **kwargs)
                     async_result.set_result(result)
@@ -316,7 +312,11 @@ def browser(
         elif async_queue:
 
             @wraps(func)
-            def async_wrapper(**wrapper_kwargs):
+            def async_wrapper(*args, **wrapper_kwargs):
+                from queue import Queue
+                from threading import Thread
+                if args:
+                  raise ValueError('When using "async_queue", data must be passed via ".put".')
                 task_queue = Queue()
                 result_list = []
                 orginal_data = []

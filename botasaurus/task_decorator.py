@@ -1,14 +1,11 @@
 from functools import wraps
-from queue import Queue
-from threading import Thread
 from traceback import print_exc, format_exc
 from typing import Any, Callable, Optional, Union, List
-from time import sleep
 from .utils import is_errors_instance
 from .beep_utils import beep_input
 from .list_utils import flatten
 
-from botasaurus.decorators_common import first_run, write_output, IS_PRODUCTION, AsyncQueueResult, AsyncResult,  run_parallel, save_error_logs
+from botasaurus.decorators_common import print_running, write_output, IS_PRODUCTION, AsyncQueueResult, AsyncResult,  run_parallel, save_error_logs
 from .dontcache import is_dont_cache
 
 def task(
@@ -36,10 +33,7 @@ def task(
 
         @wraps(func)
         def wrapper_requests(*args, **kwargs) -> Any:
-            global first_run  # Declare the global variable to modify it
-            if first_run:  # Check if it's the first run
-                print("Running")  # If so, print "Running"
-                first_run = False  # Set the flag to False so it doesn't run again
+            print_running()
 
             nonlocal parallel, data, cache, beep, run_async, async_queue, metadata
             nonlocal close_on_crash, output, output_formats, max_retry, retry_wait, must_raise_exceptions, raise_exception, create_error_logs
@@ -108,6 +102,7 @@ def task(
                     if max_retry is not None and (max_retry) > (retry_attempt):
                         print_exc()
                         if retry_wait:
+                            from time import sleep
                             print("Waiting for " + str(retry_wait) + " seconds")
                             sleep(retry_wait)
                         return run_task(data, True, retry_attempt + 1)
@@ -204,6 +199,8 @@ def task(
 
             @wraps(func)
             def async_wrapper(*args, **kwargs):
+                from threading import Thread
+                
                 def thread_target():
                     result = wrapper_requests(*args, **kwargs)
                     async_result.set_result(result)
@@ -220,8 +217,11 @@ def task(
 
             @wraps(func)
             def async_wrapper(*args, **wrapper_kwargs):
+                from queue import Queue
+                from threading import Thread
                 if args:
                   raise ValueError('When using "async_queue", data must be passed via ".put".')
+   
                 task_queue = Queue()
                 result_list = []
                 orginal_data = []
@@ -231,7 +231,6 @@ def task(
                         task = task_queue.get()
 
                         if task is None:
-                            # Thread Finished
                             write_output(
                                 output,
                                 output_formats,

@@ -5,7 +5,7 @@ from shutil import rmtree
 from json.decoder import JSONDecodeError
 from .decorators_utils import create_cache_directory_if_not_exists, create_directory_if_not_exists
 from .utils import read_json, relative_path, write_json
-
+from .dontcache import DontCache
 def _get_cache_path(func, data):
     fn_name = func.__name__
     fn_cache_dir = f'cache/{fn_name}/'
