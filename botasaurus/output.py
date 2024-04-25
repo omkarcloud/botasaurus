@@ -1,4 +1,5 @@
 from json import dumps
+from .decorators_utils import create_output_directory_if_not_exists
 from .utils import (
     read_file as _read_file,
     relative_path,
@@ -15,6 +16,7 @@ def is_slash_not_in_filename(filename):
 
 
 def append_output_if_needed(filename):
+    create_output_directory_if_not_exists()
     filename = str(filename).strip()
     if is_slash_not_in_filename(filename):
         return "output/" + filename
@@ -218,12 +220,10 @@ def save_image(url, filename=None):
         filename = url.split("/")[-1]
     response = requests.get(url)
     if response.status_code == 200:
-        # Extract the filename from the URL
-        output_dir = "output"
 
         # Save the image in the output directory
-        path = f"{output_dir}/{filename}"
-        with open(relative_path(path, 0), "wb") as f:
+        path = append_output_if_needed(filename)
+        with open(relative_path(path), "wb") as f:
             f.write(response.content)
     else:
         print("Failed to download the image.")

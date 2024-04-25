@@ -7,7 +7,6 @@ from .formats import Formats
 from .output import write_json, write_csv, fix_csv_filename, fix_json_filename
 
 from .decorators_utils import (
-    create_directories_if_not_exists,
     create_directory_if_not_exists,
 )
 from .list_utils import flatten
@@ -33,7 +32,6 @@ def get_page_source_safe(driver):
 
 
 IS_PRODUCTION = IS_VM_OR_DOCKER or  _IS_PRODUCTION
-create_directories_if_not_exists()
 
 # Define a global variable to track the first run
 first_run = False

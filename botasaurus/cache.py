@@ -69,8 +69,6 @@ def get_files_without_json_extension(directory_path):
 
 created_fns = set()
 cache_check_done = False
-
-
 def _create_cache_directory_if_not_exists(func=None):
         global cache_check_done
         if not cache_check_done:

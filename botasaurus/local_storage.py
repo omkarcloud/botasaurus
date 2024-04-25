@@ -29,7 +29,7 @@ class JSONStorageBackend(BasicStorageBackend):
         self.refresh()
 
     def refresh(self):
-        self.json_path = relative_path( "local_storage.json", 0)
+        self.json_path = relative_path("local_storage.json")
         self.json_data = {}
 
         if not os.path.isfile(self.json_path):
