@@ -63,8 +63,8 @@ def run_frontend(is_dev):
 
 def run_backend_in_thread():
     Thread(target=run_backend, daemon=True).start()
-    
-def run_server():
+
+def run():
     if "--help" in sys.argv:
             show_help()
     else:
