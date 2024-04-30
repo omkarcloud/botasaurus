@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-def make_soup(item) -> BeautifulSoup:
+def soupify(item) -> BeautifulSoup:
     # Driver
     if hasattr(item, 'page_html'):
         return BeautifulSoup(item.page_html, 'html.parser')
@@ -11,5 +11,8 @@ def make_soup(item) -> BeautifulSoup:
     # Text
     if hasattr(item, 'text'):
         return BeautifulSoup(item.text, 'html.parser')
-    
+
+    if isinstance(item, str):
+        return BeautifulSoup(item, 'html.parser')
+
     raise ValueError(f"Unable to create BeautifulSoup object for {item}")

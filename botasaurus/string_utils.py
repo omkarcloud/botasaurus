@@ -1,6 +1,4 @@
 
-from random import randint
-from math import ceil
 
 def applyTransformer(data, transformer):
     """
@@ -24,6 +22,9 @@ def applyTransformer(data, transformer):
         return data
 
 def asteriskText(inp):
+    from random import randint
+    from math import ceil    
+
     if not inp:  # Do nothing if no string passed
         return ""
     rep="*"
@@ -48,17 +49,56 @@ def asteriskText(inp):
         i -= 1
     return "".join(arr)
 
-def asterisk(data, exceptKeys=[]):
-
+def hide_text_with_asterisk(data, exceptKeys=[]):
+    """
+    Hides the text using asterisks, replacing characters with '*'.
+    
+    Args:
+        data: The input data, which can be a dictionary, list, or string.
+        exceptKeys (list): A list of keys to exclude from hiding in dictionaries.
+    
+    Returns:
+        The data with the text hidden using asterisks.
+    
+    Examples:
+        hide_text_with_asterisk("password")
+        Output: "p*s*w**d"
+        
+        hide_text_with_asterisk({"username": "john", "password": "secret"}, exceptKeys=["username"])
+        Output: {"username": "john", "password": "s*c**t"}
+        
+        hide_text_with_asterisk(["apple", "banana", "cherry"])
+        Output: ["a*p*e", "b*n**a", "c*e**y"]
+    """
     if isinstance(data, dict):
         exceptKeys_set = set(exceptKeys)
         return {key: applyTransformer(value, asteriskText) if key not in exceptKeys_set else value for key, value in data.items()}
     elif isinstance(data, list):
-        return [asterisk(element, exceptKeys) for element in data]
+        return [hide_text_with_asterisk(element, exceptKeys) for element in data]
     elif isinstance(data, str):
         return asteriskText(data)
     else:
         return data
 
 def ht(data, exceptKeys=[]):
-    return asterisk(data, exceptKeys)    
+    """
+    Short alias for hide_text_with_asterisk().
+    
+    Args:
+        data: The input data, which can be a dictionary, list, or string.
+        exceptKeys (list): A list of keys to exclude from hiding in dictionaries.
+    
+    Returns:
+        The data with the text hidden using asterisks.
+    
+    Examples:
+        ht("password")
+        Output: "p*s*w**d"
+        
+        ht({"username": "john", "password": "secret"}, exceptKeys=["username"])
+        Output: {"username": "john", "password": "s*c**t"}
+        
+        ht(["apple", "banana", "cherry"])
+        Output: ["a*p*e", "b*n**a", "c*e**y"]
+    """
+    return hide_text_with_asterisk(data, exceptKeys)

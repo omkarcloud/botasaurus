@@ -3,10 +3,8 @@ import json
 
 from .utils import relative_path
 
-
 class localStoragePyStorageException(Exception):
     pass
-
 
 class BasicStorageBackend:
     def raise_dummy_exception(self):

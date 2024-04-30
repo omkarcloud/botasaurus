@@ -83,6 +83,13 @@ def _create_cache_directory_if_not_exists(func=None):
                 fn_cache_dir = f'cache/{fn_name}/'
                 create_directory_if_not_exists(fn_cache_dir)
 
+def get_cached_files(func):
+        fn_name = func.__name__
+        fn_cache_dir = f'cache/{fn_name}/'
+        cache_dir = relative_path(fn_cache_dir)
+        results =  get_files_without_json_extension(cache_dir)
+        return results
+
 class Cache:
 
     REFRESH = "REFRESH"
@@ -97,18 +104,7 @@ class Cache:
     @staticmethod
     def hash(data):
         return _hash(data)
-
-    @staticmethod
-    def filter_items_not_in_cache(func, items):
-        cached_items  = set(Cache.get_items_hashes(func))
-        return [item for item in items if Cache.hash(item) not in cached_items]
-            
-
-    @staticmethod
-    def filter_items_in_cache(func, items):
-        cached_items  = set(Cache.get_items_hashes(func))
-        return [item for item in items if Cache.hash(item) in cached_items]
-                        
+              
     @staticmethod
     def has(func, key_data):
         _create_cache_directory_if_not_exists(func)
@@ -134,26 +130,24 @@ class Cache:
 
     @staticmethod
     def get_items_hashes(func, items=None):
-        fn_name = func.__name__
-        fn_cache_dir = f'cache/{fn_name}/'
-        cache_dir = relative_path(fn_cache_dir)
-        results =  get_files_without_json_extension(cache_dir)
+        results = get_cached_files(func)
 
         if items is None:
+            # Return all cached items
             return results
         else: 
             items  = set([Cache.hash(item) for item in items])
             return [r for r in results if r in items]
 
     @staticmethod
-    def remove(func, key_data):
+    def delete(func, key_data):
         """Remove a specific cache file."""
         _create_cache_directory_if_not_exists(func)
         path = _get_cache_path(func, key_data)
         _remove(path)
 
     @staticmethod
-    def remove_items(func, items):
+    def delete_items(func, items):
 
         """Remove a specific cache file."""
         hashes = Cache.get_items_hashes(func, items)
@@ -161,7 +155,7 @@ class Cache:
         paths = [relative_path(f'cache/{fn_name}/{r}.json') for r in hashes]
         _delete_items(paths)
         return len(hashes)
-
+           
     @staticmethod
     def clear(func=None):
         """Clear all cache files. 
@@ -183,3 +177,48 @@ class Cache:
                 rmtree(cache_dir, ignore_errors=True)
             cache_check_done = False
             created_fns = set()
+             
+
+    @staticmethod
+    def delete_honeypots(func, items, is_honeypot):
+        # Filter items to be tested from cache
+        testitems = Cache.filter_items_in_cache(func, items)
+        
+        # Retrieve data for the test items from cache
+        testitems_data = Cache.get_items(func, testitems)
+        
+        # List to collect detected honeypots
+        collected_honeypots = []
+        
+        # Iterate over each test item and its corresponding data
+        for i in range(len(testitems_data)):
+            # Check if the item is a honeypot based on the provided function
+            if is_honeypot(testitems[i], testitems_data[i]):
+                # If it's a honeypot, add it to the collected honeypots list
+                collected_honeypots.append(testitems[i])
+
+        if collected_honeypots:
+            print(f"Deleting {len(collected_honeypots)} honeypots...")
+            # Remove detected honeypots from cache
+            Cache.delete_items(func, collected_honeypots)
+            
+        # Return the number of collected honeypots
+        return len(collected_honeypots)
+               
+    @staticmethod
+    def filter_items_not_in_cache(func, items):
+        cached_items  = set(Cache.get_items_hashes(func))
+        return [item for item in items if Cache.hash(item) not in cached_items]
+            
+
+    @staticmethod
+    def filter_items_in_cache(func, items):
+        cached_items  = set(Cache.get_items_hashes(func))
+        return [item for item in items if Cache.hash(item) in cached_items]
+                
+
+    @staticmethod
+    def print_cached_items_count(func):
+        cached_items_count  = len(get_cached_files(func))
+        print(f"Number of cached items for {func.__name__}: {cached_items_count}")
+                                        

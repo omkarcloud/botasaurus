@@ -93,7 +93,7 @@ def request(
                         result = func(reqs, data)
                     if cache is True or cache == 'REFRESH' :
                         if is_dont_cache(result):
-                            Cache.remove(func, data)
+                            Cache.delete(func, data)
                         else:
                             Cache.put(func, data, result)
 

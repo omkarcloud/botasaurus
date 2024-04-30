@@ -7,7 +7,7 @@ from .env import is_vmish
 from .app import run_backend
 from .port_kill_adapter import killfrontendandbackendports, killbackendport
 from .server import Server
-
+from time import sleep
 def show_help():
     print("""
 Botasaurus Server CLI
@@ -62,6 +62,7 @@ def run_frontend(is_dev):
         start_frontend(is_dev)
 
 def run_backend_in_thread():
+    sleep(1)
     Thread(target=run_backend, daemon=True).start()
 
 def run():
