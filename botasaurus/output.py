@@ -37,6 +37,28 @@ def read_json(filename):
     return _read_json(filename)
 
 
+
+def write_temp_json(data, log=True):
+    filename = "temp"
+
+    try:
+
+        filename = append_output_if_needed(filename)
+
+        if not filename.endswith(".json"):
+            filename = filename + ".json"
+
+        _write_json(data, filename)
+
+        if log:
+            print(f"View written JSON file at {filename}")
+    except PermissionError:
+        prompt(
+            f"{filename} is currently open in another application. Please close the the Application and press 'Enter' to save."
+        )
+        write_json(data, filename, log)
+
+
 def read_temp_json():
     filename = fix_json_filename("temp")
     return _read_json(filename)
@@ -74,28 +96,6 @@ def write_json(data, filename, log=True):
             f"{filename} is currently open in another application. Please close the the Application and press 'Enter' to save."
         )
         write_json(data, filename, log)
-
-
-def write_temp_json(data, log=True):
-    filename = "temp"
-
-    try:
-
-        filename = append_output_if_needed(filename)
-
-        if not filename.endswith(".json"):
-            filename = filename + ".json"
-
-        _write_json(data, filename)
-
-        if log:
-            print(f"View written JSON file at {filename}")
-    except PermissionError:
-        prompt(
-            f"{filename} is currently open in another application. Please close the the Application and press 'Enter' to save."
-        )
-        write_json(data, filename, log)
-
 
 def write_temp_csv(data, log=True):
     write_csv(data, "temp.csv", log)
@@ -249,6 +249,13 @@ def read_html(filename):
 
     return _read_file(filename)
 
+
+def write_temp_html(data, log=True):
+    write_html(data, "temp.csv", log)
+
+
+def read_temp_html():
+    return read_html("temp.csv")
 
 def write_file(data, filename, log=True):
 
