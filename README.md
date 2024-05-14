@@ -27,33 +27,47 @@
 
 
 
-## In a nutshell
+## Botasaurus has released a new version, causing previous Botasaurus scrapers to break. If you have come here because you have been affected, then simply set the Botasaurus version to 4.0.14 to use the old version of Botasaurus by running `python -m pip install botasaurus==4.0.14`.
 
-Botasaurus is an all-in-one web scraping framework that enables you to build awesome scrapers in less time. It solves the key pain points that we, as developers, face when scraping the modern web.
+## 🐿️ Botasaurus In a Nutshell
 
-Our mission is to make creating awesome scrapers easy for everyone.
+How wonderful that of all the web scraping tools out there, you chose to learn about Botasaurus. Congratulations! 
 
-## Features
+And now that you are here, you are in for an exciting, unusual and rewarding journey that will make your web scraping life a lot, lot easier.
 
-Botasaurus is built for creating awesome scrapers. It comes fully baked, with batteries included. Here is a list of things it can do that no other web scraping framework can:
+Now, let me tell you in bullet points about Botasaurus. (Because as per the marketing gurus, YOU as a member of Developer Tribe have a VERY short attention span.)
 
-- **Most Stealthiest Framework LITERALLY**: Based on the benchmarks, which we encourage you to read [here](https://github.com/omkarcloud/botasaurus-vs-undetected-chromedriver-vs-puppeteer-stealth-benchmarks), our framework stands as the most stealthy in both the JS and Python universes. It is more stealthy than the popular Python library `undetected-chromedriver` and the well-known JavaScript library `puppeteer-stealth`. Botasaurus can easily visit websites like `https://nowsecure.nl/`. With Botasaurus, you don't need to waste time finding ways to unblock a website. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#can-you-bypass-cloudflareimperva-challenges)
-- **Access Cloudflare Websites with Simple HTTP Requests:** We can access Cloudflare-protected pages using simple HTTP requests. Saving you both time and money spent on proxies. For usage, [see this FAQ.](https://github.com/omkarcloud/botasaurus/tree/master#how-to-scrape-cloudflare-protected-websites-with-simple-http-requests)
-- **SSL Support for Authenticated Proxy:** We are the first and only Python Web Scraping Framework as of writing to offer SSL support for authenticated proxies. No other browser automation libraries be it seleniumwire, puppeteer, playwright offers this important web scraping feature, this feautre enables you to easily access Cloudflare protected websites when using authenticated proxies, which would otherwise be blocked if you used only the bare authenticated proxy.
-- **Use Any Chrome Extension with Just 1 Line of Code:** Easily integrate any Chrome extension, be it a Captcha Solving Extension, Adblocker, or any other from the Chrome Web Store, with just [one line of code.](https://github.com/omkarcloud/botasaurus#how-to-use-chrome-extensions). Say Sayonara, to the manual process of downloading, unzipping, configuring, and loading extensions. 
-- **Sitemap Support:** With just [one line of code](https://github.com/omkarcloud/botasaurus#how-to-extract-links-from-a-sitemap), you can get all links for a website.
-- **Data Cleaners:** Make your scrapers robust by cleaning data with expert created data cleaners.
-- **Debuggability:** When a crash occurs due to an incorrect selector, etc., Botasaurus pauses the browser instead of closing it, facilitating painless on-the-spot debugging.
-- **Caching:** Botasaurus allows you to cache web scraping results, ensuring lightning-fast performance on subsequent scrapes.
-- **Easy Configuration:** Easily save hours of Development Time with easy parallelization, profile, and proxy configuration. We make asynchronous, parallel scraping a child's play.
-- **Build Robust Scrapers:** Easily configure retry on exceptions to ensure no errors comes in between you and the data
-- **Time-Saving Selenium Shortcuts:** Botasaurus comes with numerous Selenium shortcuts to make web scraping incredibly easy.
+*So, what is Botasaurus?*
+
+Botasaurus is an all-in-one web scraping framework that enables you to build awesome scrapers in less time and code, and with more fun.
+
+A Web Scraping Magician has put all his web scraping experience and best practices into Botasaurus to save you hundreds of hours of Development Time! 
+
+Now, for the magical powers awaiting you after learning Botasaurus:
+
+- Convert any Web Scraper to a UI-based Scraper in minutes, which will make your Customer sing praises of you. 
+
+![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
+
+- In terms of Stealth Capabilities, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes E-V-E-R-Y) bot detection test, no need to spend time finding ways to unblock a website.
+
+![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/solve-bot-detection.gif)
+
+- Easily save hours of Development Time with easy parallelization, profiles, extensions, and proxy configuration. Botasaurus makes asynchronous, parallel scraping a child's play.
+
+- Use Caching, Sitemap, Data cleaning, and other utilities to save hours of time spent in writing and debugging code.
+
+- Easily scale your scraper to multiple machines with Kubernetes, and get your data faster than ever.
+
+And those are just the highlights. I Mean! 
+
+There is so much more to Botasaurus, that you will be amazed at how much time you will save with it.
 
 ## 🚀 Getting Started with Botasaurus
 
-Welcome to Botasaurus! Let’s dive right in with a straightforward example to understand how it works.
+Let's dive right in with a straightforward example to understand Botasaurus.
 
-In this tutorial, we will go through the steps to scrape the heading text from [https://www.omkar.cloud/](https://www.omkar.cloud/).
+In this example, we will go through the steps to scrape the heading text from [https://www.omkar.cloud/](https://www.omkar.cloud/).
 
 ![Botasaurus in action](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-bot-running.gif)
 
@@ -67,7 +81,7 @@ python -m pip install botasaurus
 
 ### Step 2: Set Up Your Botasaurus Project
 
-Next, let’s set up the project:
+Next, let's set up the project:
 
 1. Create a directory for your Botasaurus project and navigate into it:
 
@@ -79,40 +93,39 @@ code .  # This will open the project in VSCode if you have it installed
 
 ### Step 3: Write the Scraping Code
 
-Now, create a Python script named `main.py` in your project directory and insert the following code:
+Now, create a Python script named `main.py` in your project directory and paste the following code:
 
 ```python
-from botasaurus import *
+from botasaurus.browser import browser, Driver
 
 @browser
-def scrape_heading_task(driver: AntiDetectDriver, data):
+def scrape_heading_task(driver: Driver, data):
     # Navigate to the Omkar Cloud website
     driver.get("https://www.omkar.cloud/")
     
     # Retrieve the heading element's text
-    heading = driver.text("h1")
+    heading = driver.get_text("h1")
 
     # Save the data as a JSON file in output/scrape_heading_task.json
     return {
         "heading": heading
     }
      
-if __name__ == "__main__":
-    # Initiate the web scraping task
-    scrape_heading_task()
+# Initiate the web scraping task
+scrape_heading_task()
 ```
 
-Let’s understand this code:
+Let's understand this code:
 
 - We define a custom scraping task, `scrape_heading_task`, decorated with `@browser`:
 ```python
 @browser
-def scrape_heading_task(driver: AntiDetectDriver, data):
+def scrape_heading_task(driver: Driver, data):
 ```  
 
-- Botasaurus automatically provides an Anti Detection Selenium driver to our function:
+- Botasaurus automatically provides an Anti-Detect driver to our function:
 ```python
-def scrape_heading_task(driver: AntiDetectDriver, data):
+def scrape_heading_task(driver: Driver, data):
 ```  
 
 - Inside the function, we:
@@ -121,14 +134,14 @@ def scrape_heading_task(driver: AntiDetectDriver, data):
     - Return the data to be automatically saved as `scrape_heading_task.json` by Botasaurus:
 ```python
     driver.get("https://www.omkar.cloud/")
-    heading = driver.text("h1")
+    heading = driver.get_text("h1")
     return {"heading": heading}
 ```  
 
 - Finally, we initiate the scraping task:
 ```python
-if __name__ == "__main__":
-    scrape_heading_task()
+# Initiate the web scraping task
+scrape_heading_task()
 ```  
 
 ### Step 4: Run the Scraping Task
@@ -147,15 +160,210 @@ After executing the script, it will:
 
 ![Botasaurus in action](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-bot-running.gif)
 
-Now, let’s explore another way to scrape the heading using the `request` module. Replace the previous code in `main.py` with the following:
+Now, let's explore another way to scrape the heading using the `request` module. Replace the previous code in `main.py` with the following:
 
 ```python
-from botasaurus import *
+from botasaurus.request import request, Request
+from botasaurus.soupify import soupify
 
 @request
-def scrape_heading_task(request: AntiDetectRequests, data):
+def scrape_heading_task(request: Request, data):
     # Navigate to the Omkar Cloud website
-    soup = request.bs4("https://www.omkar.cloud/")
+    response = request.get("https://www.omkar.cloud/")
+
+    # Create a BeautifulSoup object    
+    soup = soupify(response)
+    
+    # Retrieve the heading element's text
+    heading = soup.find('h1').get_text()
+
+    # Save the data as a JSON file in output/scrape_heading_task.json
+    return {
+        "heading": heading
+    }     
+# Initiate the web scraping task
+scrape_heading_task()
+```
+
+In this code:
+
+- We scrape the HTML using `request`, which is an Anti-Detect Request object specifically designed for making browser-like requests and is capable of bypassing bot detection mechanisms.
+- Next, we parse the HTML into a `BeautifulSoup` object using `soupify()` and extract the heading.
+
+### Step 5: Run the Scraping Task (which makes Anti-Detect HTTP Requests)
+
+Finally, run the bot again:
+
+```shell
+python main.py
+```
+
+This time, you will observe the exact same result as before, but instead of opening a whole Browser, we are using the Anti-Detect request module.
+
+## 💡 Understanding Botasaurus
+
+### How do I access Cloudflare-protected pages using Botasaurus?
+
+We have created a powerful web driver called `BotasaurusDriver` which provides the following benefits:
+
+- It is indistinguishable from a real browser, allowing it to pass E-V-E-R-Y bot detection challenge.
+- Compared to Selenium and Playwright, it is super fast to launch and use.
+- The API is designed by and for web scrapers, and you will love it.
+
+Cloudflare is by far the most popular bot detection system on the web. So, let's see how Botasaurus can help you access pages protected by various types of Cloudflare challenges.
+
+**Connection Challenge**
+
+This is the single most popular challenge and requires making a browser-like connection with appropriate headers to the target website. It's commonly used to protect:
+- Product Pages
+- Blog Pages 
+- Search Result Pages
+
+Example Page: https://www.g2.com/products/github/reviews
+
+#### What Works?
+
+- Visiting the website via Google Referrer (which makes the website think that you are coming from Google Search Results, and allows you).
+
+```python
+from botasaurus.browser import browser, Driver
+
+@browser
+def scrape_heading_task(driver: Driver, data):
+    # Visit the website via Google Referrer
+    driver.google_get("https://www.g2.com/products/github/reviews")
+    driver.prompt()
+    heading = driver.get_text('.product-head__title [itemprop="name"]')
+    return heading
+
+scrape_heading_task()
+```
+
+- Use the stealth request mode to make the request more stealthy. The Request Object is smart and, by default, visits any link with a Google Referrer.
+
+```python
+from botasaurus.request import request, Request
+
+@request(use_stealth=True)
+def scrape_heading_task(request: Request, data):
+    response = request.get('https://www.g2.com/products/github/reviews')
+    print(response.status_code)
+    return response.text
+
+scrape_heading_task()
+```
+
+**JS with Captcha Challenge**
+
+This challenge requires performing JS computations that differentiate a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. It also involves solving a Captcha. It's used to protect pages which are rarely but sometimes visited by humans, like:
+- 5th Page of G2 Reviews
+- Auth pages
+
+Example Page: https://www.g2.com/products/github/reviews.html?page=5&product_id=github
+
+#### What Does Not Work?
+Using `@request` does not work because although it can make browser-like HTTP requests, it cannot run JavaScript to solve the challenge.
+
+#### What Works?
+Pass the `bypass_cloudflare=True` argument to the `google_get` method to solve the Cloudflare challenge.
+
+```python
+from botasaurus.browser import browser, Driver
+
+@browser
+def scrape_heading_task(driver: Driver, data):
+    driver.google_get("https://www.g2.com/products/github/reviews.html?page=5&product_id=github", bypass_cloudflare=True)
+    driver.prompt()
+    heading = driver.get_text('.product-head__title [itemprop="name"]')
+    return heading
+
+scrape_heading_task()
+```
+
+### What are the benefits of a UI Scraper?
+
+Here are some benefits of creating a scraper with a user interface:
+
+- Simplify your scraper usage for customers, eliminating the need to teach them how to modify and run your code.
+- Protect your code by hosting the scraper on the web and offering a monthly subscription, rather than providing full access to your code. This approach:
+  - Safeguards your Python code from being copied and reused, increasing your customer's lifetime value.
+  - Generate monthly recurring revenue via subscription from your customers, surpassing a one-time payment.
+- Enable sorting, filtering, and downloading of data in various formats (JSON, Excel, CSV, etc.).
+- Provide access via a REST API for seamless integration.
+- Create a polished frontend, backend, and API integration with minimal code.
+
+### How to run a UI-based scraper?
+
+Let's run the Botasaurus Starter Template (the recommended template for greenfield Botasaurus projects), which scrapes the heading of the provided link by following these steps:
+
+1. Clone the Starter Template:
+   ```
+   git clone https://github.com/omkarcloud/botasaurus-starter my-botasaurus-project
+   cd my-botasaurus-project
+   ```
+
+2. Install dependencies (will take a few minutes):
+   ```
+   python -m pip install -r requirements.txt && python run.py install
+   ```
+
+3. Run the scraper:
+   ```
+   python run.py
+   ```
+
+Your browser will automatically open up at http://localhost:3000/. Then, enter the link you want to scrape (e.g., https://www.omkar.cloud/) and click on the Run Button.
+
+![starter-scraper-demo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-scraper-demo.gif)
+
+After some seconds, the data will be scraped.
+![starter-scraper-demo-result](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-scraper-demo-result.png)
+
+Visit http://localhost:3000/output to see all the tasks you have started.
+
+![starter-scraper-demo-tasks](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-scraper-demo-tasks.png)
+
+Go to http://localhost:3000/about to see the rendered README.md file of the project.
+
+![starter-scraper-demo-readme](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-scraper-demo-readme.png)
+
+Finally, visit http://localhost:3000/api-integration to see how to access the Scraper via API.
+
+![starter-scraper-demo-api](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-scraper-demo-api.png)
+
+The API Documentation is generated dynamically based on your Scraper's Inputs, Sorts, Filters, etc., and is unique to your Scraper. 
+
+So, whenever you need to run the Scraper via API, visit this tab and copy the code specific to your Scraper.
+
+### How to create a UI Scraper using Botasaurus?
+
+Creating a UI Scraper with Botasaurus is a simple 3-step process:
+1. Create your Scraper function
+2. Add the Scraper to the Server using 1 line of code 
+3. Define the input controls for the Scraper
+
+To understand these steps, let's go through the code of the Botasaurus Starter Template that you just ran.
+
+#### Step 1: Create the Scraper Function
+
+In `src/scrape_heading_task.py`, we define a scraping function which basically does the following:
+
+1. Receives a `data` object and extracts the "link".
+2. Retrieves the HTML content of the webpage using the "link".
+3. Converts the HTML into a BeautifulSoup object.
+4. Locates the heading element, extracts its text content and returns it.
+
+```python
+from botasaurus.request import request, Request
+from botasaurus.soupify import soupify
+
+@request
+def scrape_heading_task(request: Request, data):
+    # Navigate to the Link
+    response = request.get(data["link"])
+
+    # Create a BeautifulSoup object    
+    soup = soupify(response)
     
     # Retrieve the heading element's text
     heading = soup.find('h1').get_text()
@@ -164,246 +372,568 @@ def scrape_heading_task(request: AntiDetectRequests, data):
     return {
         "heading": heading
     }
-     
-if __name__ == "__main__":
-    # Initiate the web scraping task
-    scrape_heading_task()
 ```
 
-In this code:
+#### Step 2: Add the Scraper to the Server
 
-- We are using the BeautifulSoup (bs4) module to parse and scrape the heading.
-- The `request` object provided is not a standard Python request object but an Anti Detect request object, which also preserves cookies.
-
-### Step 5: Run the Scraping Task (Using Anti Detect Requests)
-
-Finally, run the bot again:
-
-```shell
-python main.py
-```
-
-This time, you will observe the same result as before, but instead of using Anti Detect Selenium, we are utilizing the Anti Detect request module.
-
-*Note: If you don't have Python installed, then you can run Botasaurus in Gitpod, a browser-based development environment, by following [this section](https://github.com/omkarcloud/botasaurus#how-to-run-botasaurus-in-gitpod).*
-
-## 💡 Understanding Botasaurus
-
-Let's learn about the features of Botasaurus that assist you in web scraping and automation.
-
-### Could you show me an example where you access Cloudflare Protected Website?
-
-Sure, Run the following Python code to access G2.com, a website protected by Cloudflare:
+In `backend/scrapers.py`, we:
+- Import our scraping function
+- Use `Server.add_scraper()` to register the scraper
 
 ```python
-from botasaurus import *
+from botasaurus_server.server import Server
+from src.scrape_heading_task import scrape_heading_task
 
-@browser()
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.google_get("https://www.g2.com/products/github/reviews")
-    heading = driver.text('h1')
-    print(heading)
+# Add the scraper to the server
+Server.add_scraper(scrape_heading_task)
+```
+
+#### Step 3: Define the Input Controls
+
+In `backend/inputs/scrape_heading_task.js` we:
+- Define a `getInput` function that takes the controls parameter
+- Add a link input control to it
+- Use comments to enable intellisense in VSCode (Very Very Important)
+
+```js
+/**
+ * @typedef {import('../../frontend/node_modules/botasaurus-controls/dist/index').Controls} Controls
+ */
+
+/**
+ * @param {Controls} controls
+ */
+function getInput(controls) {
+    controls
+        // Render a Link Input, which is required, defaults to "https://www.omkar.cloud/". 
+        .link('link', { isRequired: true, defaultValue: "https://www.omkar.cloud/" })
+}
+```
+
+Above was a simple example; below is a real-world example with multi-text, number, switch, select, section, and other controls.
+
+```js
+/**
+ * @typedef {import('../../frontend/node_modules/botasaurus-controls/dist/index').Controls} Controls
+ */
+
+
+/**
+ * @param {Controls} controls
+ */
+function getInput(controls) {
+    controls
+        .listOfTexts('queries', {
+            defaultValue: ["Web Developers in Bangalore"],
+            placeholder: "Web Developers in Bangalore",
+            label: 'Search Queries',
+            isRequired: true
+        })
+        .section("Email and Social Links Extraction", (section) => {
+            section.text('api_key', {
+                placeholder: "2e5d346ap4db8mce4fj7fc112s9h26s61e1192b6a526af51n9",
+                label: 'Email and Social Links Extraction API Key',
+                helpText: 'Enter your API key to extract email addresses and social media links.',
+            })
+        })
+        .section("Reviews Extraction", (section) => {
+            section
+                .switch('enable_reviews_extraction', {
+                    label: "Enable Reviews Extraction"
+                })
+                .greaterThanOrEqualToZero('max_reviews', {
+                    label: 'Max Reviews per Place (Leave empty to extract all reviews)',
+                    placeholder: 20,
+                    isShown: (data) => data['enable_reviews_extraction'], defaultValue: 20,
+                })
+                .choose('reviews_sort', {
+                    label: "Sort Reviews By",
+                    isRequired: true, isShown: (data) => data['enable_reviews_extraction'], defaultValue: 'newest', options: [{ value: 'newest', label: 'Newest' }, { value: 'most_relevant', label: 'Most Relevant' }, { value: 'highest_rating', label: 'Highest Rating' }, { value: 'lowest_rating', label: 'Lowest Rating' }]
+                })
+        })
+        .section("Language and Max Results", (section) => {
+            section
+                .addLangSelect()
+                .greaterThanOrEqualToOne('max_results', {
+                    placeholder: 100,
+                    label: 'Max Results per Search Query (Leave empty to extract all places)'
+                })
+        })
+        .section("Geo Location", (section) => {
+            section
+                .text('coordinates', {
+                    placeholder: '12.900490, 77.571466'
+                })
+                .greaterThanOrEqualToOne('zoom_level', {
+                    label: 'Zoom Level (1-21)',
+                    defaultValue: 14,
+                    placeholder: 14
+                })
+        })
+}
+```
+
+I encourage you to paste the above code into `backend/inputs/scrape_heading_task.js` and reload the page, and you will see a complex set of input controls like the image shown.
+
+![complex-input](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/complex-input.png)
+
+Now, to use Botasaurus UI for adding new scrapers, remember these points:
+
+1. Create a `backend/inputs/{your_scraping_function_name}.js` file for each scraping function.
+2. Define the `getInput` function in the file with the necessary controls.
+3. Add comments to enable intellisense in VSCode, as you won't be able to remember all the controls.
+
+Use this template as a starting point for new scraping function's input controls js file:
+
+```js
+/**
+ * @typedef {import('../../frontend/node_modules/botasaurus-controls/dist/index').Controls} Controls
+ */
+
+/**
+ * @param {Controls} controls
+ */
+function getInput(controls) {
+    // Define your controls here.
+}
+```
+
+That's it! With these simple steps, you can create a fully functional UI Scraper using Botasaurus.
+
+Later, you will learn how to add sorts and filters to make your UI Scraper even more powerful and user-friendly.
+
+![sorts-filters](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/sorts-filters.png)
+
+### What is Botasaurus, and what are its main features?
+
+Botasaurus is an all-in-one web scraping framework designed to achieve two main goals:
+1. Provide common web scraping utilities to solve the pain points of web scraping.
+2. Offer a user interface to make it easy for your non-technical customers to run web scrapers.
+
+To accomplish these goals, Botasaurus gives you 3 decorators:
+- `@browser`: For scraping web pages using a super anti-detect browser.
+- `@request`: For scraping web pages using lightweight and anti-detect HTTP requests.
+- `@task`: 
+  - For scraping web pages using third-party libraries like `hrequests`, `playwright` or `selenium`.
+  - or, For running non-web scraping tasks, such as data processing (e.g., converting video to audio). Botasaurus is not limited to web scraping tasks; any Python function can be made accessible with a stunning UI and user-friendly API.
+
+In practice, while developing with Botasaurus, you will spend most of your time in the following areas:
+- Configuring your scrapers via decorators with settings like:
+  - Which proxy to use
+  - How many scrapers to run in parallel, etc.
+- Writing your core web scraping logic using BeautifulSoup (bs4) or the Botasaurus Driver.
+
+Additionally, you will utilize the following Botasaurus utilities for debugging and development:
+- `bt`: Mainly for writing JSON, EXCEL, and HTML temporary files, and for data cleaning.
+- `Sitemap`: For accessing the website's links and sitemap.
+- Minor utilities like:
+  - `LocalStorage`: For storing scraper state.
+  - `soupify`: For creating BeautifulSoup objects from Driver, Requests response, Driver Element, or HTML string.
+  - `IPUtils`: For obtaining information (IP, country, etc.) about the current IP address.
+  - `Cache`: For managing the cache.
+
+By simply configuring these three decorators (`@browser`, `@request`, and `@task`) with arguments, you can easily create `real-time scrapers` and `large-scale datasets`, thus saving you countless hours that would otherwise be spent writing and debugging code from scratch.
+
+### How to use decorators in Botasaurus?
+
+Decorators are the heart of Botasaurus. To use a decorator function, you can call it with:
+- A single item
+- A list of items
+
+If a scraping function is given a list of items, it will sequentially call the scraping function for each data item.
+
+For example, if you pass a list of three links to the `scrape_heading_task` function:
+```python
+from botasaurus.browser import browser, Driver
+
+@browser
+def scrape_heading_task(driver: Driver, link):
+    driver.get(link)
+    heading = driver.get_text("h1")
     return heading
 
-scrape_heading_task()
+scrape_heading_task(["https://www.omkar.cloud/", "https://www.omkar.cloud/blog/", "https://stackoverflow.com/"]) # <-- list of items
 ```
 
-After running this script, you'll notice that the G2 page opens successfully, and the code prints the page's heading.
+Then, Botasaurus will launch a new browser instance for each item, and the final results will be stored in `output/scrape_heading_task.json`.
 
-![not blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/botasurussuccesspage.png)
+![list-demo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/list-demo.gif)
 
-### How to Scrape Multiple Data Points/Links?
+### How does Botasaurus help me in debugging?
 
-To scrape multiple data points or links, define the `data` variable and provide a list of items to be scraped:
+Botasaurus helps you in debugging by:
 
-```python
-@browser(data=["https://www.omkar.cloud/", "https://www.omkar.cloud/blog/", "https://stackoverflow.com/"])
-def scrape_heading_task(driver: AntiDetectDriver, data):
-  # ...
-```
-
-Botasaurus will launch a new browser instance for each item in the list and merge and store the results in `scrape_heading_task.json` at the end of the scraping.
+- Easily viewing the result of the scraping function, as it is saved in `output/{your_scraping_function_name}.json`. Say goodbye to print statements.
 
 ![scraped data](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/scraped-data.png)
 
-Please note that the `data` parameter can also handle items such as dictionaries.
-
-```python
-@browser(data=[{"name": "Mahendra Singh Dhoni", ...}, {"name": "Virender Sehwag", ...}])
-def scrape_heading_task(driver: AntiDetectDriver, data: dict):
-    # ...
-```
-
-### How to Scrape in Parallel?
-
-To scrape data in parallel, set the `parallel` option in the browser decorator:
-
-```python
-@browser(parallel=3, data=["https://www.omkar.cloud/", ...])
-def scrape_heading_task(driver: AntiDetectDriver, data):
-  # ...
-```
-
-### How to know how many scrapers to run parallely?
-
-To determine the optimal number of parallel scrapers, pass the `bt.calc_max_parallel_browsers` function, which calculates the maximum number of browsers that can be run in parallel based on the available RAM:
-
-```python
-@browser(parallel=bt.calc_max_parallel_browsers, data=["https://www.omkar.cloud/", ...])
-def scrape_heading_task(driver: AntiDetectDriver, data):
-  # ...
-```
-
-*Example: If you have 5.8 GB of free RAM, `bt.calc_max_parallel_browsers` would return 10, indicating you can run up to 10 browsers in parallel.*
-
-### How to Cache the Web Scraping Results?
-
-To cache web scraping results and avoid re-scraping the same data, set `cache=True` in the decorator:
-
-```python
-@browser(cache=True, data=["https://www.omkar.cloud/", ...])
-def scrape_heading_task(driver: AntiDetectDriver, data):
-  # ...  
-```
-
-
-### How Botasaurus helps me in debugging?
-
-Botasaurus enhances the debugging experience by pausing the browser instead of closing it when an error occurs. This allows you to inspect the page and understand what went wrong, which can be especially helpful in debugging and removing the hassle of reproducing edge cases.
-
-Botasaurus also plays a beep sound to alert you when an error occurs.
+- Bringing your attention to errors in browser mode with a beep sound and pausing the browser, allowing you to debug the error on the spot.
 
 ![](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/error-prompt.png)
 
-### How to Block Resources like CSS, Images, and Fonts to Save Bandwidth?
+- Even if an exception is raised in headless mode, it will still open the website in your default browser, making it easier to debug code in a headless browser. (Isn't it cool?)
 
-Blocking resources such as CSS, images, and fonts can significantly speed up your web scraping tasks, reduce bandwidth usage, and save money spent on proxies.
+![headless-error](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/headless-error.png)
 
-For example, a page that originally takes 4 seconds and 12 MB's to load might only take one second and 100 KB to load after css, images, etc have been blocked.
+### How to configure the Browser Decorator?
 
-To block images, simply use the `block_resources` parameter. For example:
+The Browser Decorator allows you to easily configure various aspects of the browser, such as:
+
+- Blocking images and CSS
+- Setting up proxies
+- Specifying profiles
+- Enabling headless mode
+- Using Chrome extensions
+- Selecting language
+
+#### Blocking Images and CSS
+
+Blocking images is one of the most important configurations when scraping at scale. Blocking images can significantly: 
+- Speed up your web scraping tasks
+- Reduce bandwidth usage
+- And save money on proxies. (Best of All!)
+
+For example, a page that originally takes 4 seconds and 12 MB to load might only take one second and 100 KB after blocking images and CSS.
+
+To block images, use the `block_images` parameter:
 
 ```python
-@browser(block_resources=True) # Blocks ['.css', '.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip']
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.get("https://www.omkar.cloud/")
-    driver.prompt()
-    
-scrape_heading_task()    
+@browser(
+    block_images=True,
+)
 ```
 
-If you wish to block only images and fonts, while allowing CSS files, you can set `block_images` like this:
+To block both images and CSS, use `block_images_and_css`:
 
 ```python
-@browser(block_images=True) # Blocks ['.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip']
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.get("https://www.omkar.cloud/")
-    driver.prompt()
-
-scrape_heading_task()        
+@browser(
+    block_images_and_css=True,
+)    
 ```
 
-To block a specific set of resources, such as only JavaScript, CSS, fonts, etc., specify them in the following manner:
+#### Proxies
+
+To use proxies, simply specify the `proxy` parameter:
 
 ```python
-@browser(block_resources=['.js', '.css', '.jpg', '.jpeg', '.png', '.svg', '.gif', '.woff', '.pdf', '.zip'])
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.get("https://www.omkar.cloud/")
-    driver.prompt()
-
-scrape_heading_task()        
+@browser(
+    proxy="http://username:password@proxy-provider-domain:port"
+)    
 ```
 
-### How to Configure UserAgent, Proxy, Chrome Profile, Headless, etc.?
-
-To configure various settings such as UserAgent, Proxy, Chrome Profile, and headless mode, you can specify them in the decorator as shown below:
+You can also pass a list of proxies, and the proxy will be randomly selected:
 
 ```python
-from botasaurus import *
+@browser(
+    proxy=[
+        "http://username:password@proxy-provider-domain:port", 
+        "http://username2:password2@proxy-provider-domain:port"
+    ]
+)    
+```
+
+#### Profile
+
+Easily specify the Chrome profile using the `profile` option:
+
+```python
+@browser(
+    profile="pikachu"
+)    
+```
+
+However, each Chrome profile can become very large (e.g., 100 MB) and can eat up all your computer storage. 
+
+To solve this problem, use the `tiny_profile` option, which is a lightweight alternative to Chrome profiles. 
+
+When creating hundreds of Chrome profiles, it is highly recommended to use the `tiny_profile` option because:
+
+- Creating 1000 Chrome profiles will take at least 100 GB, whereas 1000 tiny profiles will take up only 1 MB of storage, making tiny profiles easy to store and back up.
+- Tiny profiles are cross-platform, meaning you can create profiles on a Linux server, copy the `./profiles` folder to a Windows PC, and easily run them.
+
+Under the hood, tiny profiles persist cookies from visited websites, making them extremely lightweight (around 1 KB) while providing the same session persistence.
+
+Here's how to use the tiny profile:
+
+```python
+@browser(
+    tiny_profile=True, 
+    profile="pikachu",
+)    
+```
+
+#### Headless Mode
+
+Enable headless mode with `headless=True`:
+```python
+@browser(
+    headless=True
+)    
+```
+
+Note that using headless mode makes the bot much easier to detect by services like Cloudflare and Datadome. So, use headless mode only when scraping websites that are not protected by Cloudflare, Datadome or similar services.
+
+#### Chrome Extensions
+
+Botasaurus allows the use of ANY Chrome Extension with just 1 line of code. The example below shows how to use the AdBlocker Chrome Extension:
+
+```python
+from botasaurus.browser import browser, Driver
+from chrome_extension_python import Extension
 
 @browser(
-  headless=True, 
-  profile='my-profile', 
-#   proxy="http://your_proxy_address:your_proxy_port", TODO: Replace with your own proxy
-  user_agent=bt.UserAgent.user_agent_106
+    extensions=[
+        Extension(
+            "https://chromewebstore.google.com/detail/adblock-%E2%80%94-best-ad-blocker/gighmmpiobklfepjocnamgkkbiglidom"
+        )
+    ],
 )
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.get("https://www.omkar.cloud/")
+def scrape_while_blocking_ads(driver: Driver, data):
     driver.prompt()
 
-scrape_heading_task()
+scrape_while_blocking_ads()
 ```
 
+In some cases, an extension may require additional configuration, such as API keys or credentials. For such scenarios, you can create a custom extension. Learn more about creating and configuring custom extensions [here](https://github.com/omkarcloud/chrome-extension-python).
 
-You can also pass additional parameters when calling the scraping function, as demonstrated below:
+#### Language
+
+Specify the language using the `lang` option:
 
 ```python
-@browser()
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    # ...
+from botasaurus.lang import Lang
 
-data = "https://www.omkar.cloud/"
-scrape_heading_task(
-  data, 
-  headless=True, 
-  profile='my-profile', 
-  proxy="http://your_proxy_address:your_proxy_port",
-  user_agent=bt.UserAgent.user_agent_106
+@browser(
+    lang=Lang.Hindi,
 )
 ```
 
-Furthermore, it's possible to define functions that dynamically set these parameters based on the data item. For instance, to set the profile dynamically according to the data item, you can use the following approach:
+#### User Agent and Window Size
+
+To give you the best anti-detection, Botasaurus does not change browser fingerprints by default, because Bot detectors can easily detect bots by running CSS tests to detect mismatches between the provided user agent and the actual user agent.
+
+However, if you need fingerprinting, use the `user_agent` and `window_size` options:
 
 ```python
-@browser(profile=lambda data: data["profile"], headless=True, proxy="http://your_proxy_address:your_proxy_port", user_agent=bt.UserAgent.user_agent_106)
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    # ...
+from botasaurus.user_agent import UserAgent
+from botasaurus.window_size import WindowSize
 
-data = {"link": "https://www.omkar.cloud/", "profile": "my-profile"}
-scrape_heading_task(data)
-```
-
-Additionally, if you need to pass metadata that is common across all data items, such as an API Key, you can do so by adding it as a `metadata` parameter. For example:
-
-```python
-@browser()
-def scrape_heading_task(driver: AntiDetectDriver, data, metadata):
-    print("metadata:", metadata)
-    print("data:", data)
-
-data = {"link": "https://www.omkar.cloud/", "profile": "my-profile"}
-scrape_heading_task(
-  data, 
-  metadata={"api_key": "BDEC26..."}
+@browser(
+    user_agent=UserAgent.RANDOM,
+    window_size=WindowSize.RANDOM,
 )
 ```
 
+When working with profiles, you want the fingerprints to remain consistent. You don't want the user's user agent to be Chrome 106 on the first visit and then become Chrome 102 on the second visit. 
 
-<!-- ### How Can I Save Data With a Different Name Instead of 'all.json'?
-
-To save the data with a different filename, pass the desired filename along with the data in a tuple as shown below:
+So, when using profiles, use the `HASHED` option to generate a consistent user agent and window size based on the profile's hash:
 
 ```python
-@browser(block_resources=True, cache=True)
-def scrape_article_links(driver: AntiDetectDriver, data):
-    # Visit the Omkar Cloud website
-    driver.get("https://www.omkar.cloud/blog/")
-    
-    links = driver.links("h3 a")
+from botasaurus.user_agent import UserAgent
+from botasaurus.window_size import WindowSize
 
-    filename = "links"
-    return filename, links
+@browser(
+    user_agent=UserAgent.HASHED,
+    window_size=WindowSize.HASHED,
+)
 ```
- -->
 
+#### Wait for Complete Page Load
 
+By default, Botasaurus waits for all page resources (DOM, JavaScript, CSS, images, etc.) to load before calling your scraping function with the driver.
 
+However, sometimes the DOM is ready, but JavaScript, images, etc., take forever to load. 
 
-### Do you support SSL for Authenticated Proxies?
+In such cases, you can set `wait_for_complete_page_load` to `False` to interact with the DOM as soon as the HTML is parsed and the DOM is ready:
 
-Yes, we are the first Python Library to support SSL for authenticated proxies. Proxy providers like BrightData, IPRoyal, and others typically provide authenticated proxies in the format "http://username:password@proxy-provider-domain:port". For example, "http://greyninja:awesomepassword@geo.iproyal.com:12321".
+```python
+@browser(
+    wait_for_complete_page_load=False,
+)
+```
 
-However, if you use an authenticated proxy with a library like seleniumwire to scrape a Cloudflare protected website like G2.com, you will surely be blocked because you are using a non-SSL connection. 
+#### Reuse Driver
+
+Consider the following example:
+
+```python
+from botasaurus.browser import browser, Driver
+
+@browser
+def scrape_data(driver: Driver, link):
+    driver.get(link)
+
+scrape_data(["https://www.omkar.cloud/", "https://www.omkar.cloud/blog/", "https://stackoverflow.com/"])
+```
+
+If you run this code, the browser will be recreated on each page visit, which is inefficient. 
+
+![list-demo-omkar](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/list-demo.gif)
+
+To solve this problem, use the `reuse_driver` option which is great for cases like:
+- Scraping a large number of links and reusing the same browser instance for all page visits.
+- Running your scraper in a cloud server to scrape data on demand, without recreating Chrome on each request.
+
+Here's how to use `reuse_driver` which will reuse the same Chrome instance for visiting each link.
+
+```python
+from botasaurus.browser import browser, Driver
+
+@browser(
+    reuse_driver=True
+)
+def scrape_data(driver: Driver, link):
+    driver.get(link)
+
+scrape_data(["https://www.omkar.cloud/", "https://www.omkar.cloud/blog/", "https://stackoverflow.com/"])
+```
+**Result**
+![list-demo-reuse-driver.gif](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/list-demo-reuse-driver.gif)
+ 
+---
+
+Also, by default, whenever the program ends or is canceled, Botasaurus smartly closes any open Chrome instances, leaving no instances running in the background.
+
+In rare cases, you may want to explicitly close the Chrome instance. For such scenarios, you can use the `.close()` method on the scraping function:
+
+```python
+scrape_data.close()
+```
+
+This will close any Chrome instances that remain open after the scraping function ends.
+
+### How to Configure the Browser's Chrome Profile, Language, and Proxy Dynamically Based on Data Parameters?
+
+The decorators in Botasaurus are really flexible, allowing you to pass a function that can derive the browser configuration based on the data item parameter. This is particularly useful when working with multiple Chrome profiles.
+
+You can dynamically configure the browser's Chrome profile and proxy using decorators in two ways:
+
+1. Using functions to extract configuration values from data:
+   - Define functions to extract the desired configuration values from the `data` parameter.
+   - Pass these functions as arguments to the `@browser` decorator.
+
+   Example:
+   ```python
+   from botasaurus.browser import browser, Driver
+
+   def get_profile(data):
+       return data["profile"]
+
+   def get_proxy(data):
+       return data["proxy"]
+
+   @browser(profile=get_profile, proxy=get_proxy)
+   def scrape_heading_task(driver: Driver, data):
+       profile, proxy = driver.config.profile, driver.config.proxy
+       print(profile, proxy)
+       return profile, proxy
+
+   data = [
+       {"profile": "pikachu", "proxy": "http://142.250.77.228:8000"},
+       {"profile": "shinchan", "proxy": "http://142.250.77.229:8000"},
+   ]
+
+   scrape_heading_task(data)
+   ```
+
+2. Directly passing configuration values when calling the decorated function:
+   - Pass the profile and proxy values directly as arguments to the decorated function when calling it.
+
+   Example:
+   ```python
+   from botasaurus.browser import browser, Driver
+
+   @browser
+   def scrape_heading_task(driver: Driver, data):
+       profile, proxy = driver.config.profile, driver.config.proxy
+       print(profile, proxy)
+       return profile, proxy
+
+   scrape_heading_task(
+       profile='pikachu',  # Directly pass the profile
+       proxy="http://142.250.77.228:8000",  # Directly pass the proxy
+   )
+   ```
+
+PS: Most Botasaurus decorators allow passing functions to derive configurations from data parameters. Check the decorator's argument type hint to see if it supports this functionality.
+
+### What are some common methods in Botasaurus Driver?
+
+Botasaurus Driver provides several handy methods for web automation tasks such as:
+
+- Navigate to URLs:
+  ```python
+  driver.get("https://www.example.com")
+  driver.google_get("https://www.example.com")  # Use Google as the referer [Recommended]
+  driver.get_via("https://www.example.com", referer="https://duckduckgo.com/")  # Use custom referer
+  driver.get_via_this_page("https://www.example.com")  # Use current page as referer
+  ```
+
+- For finding elements:
+  ```python
+  from botasaurus.browser import Wait
+  search_results = driver.select(".search-results", wait=Wait.SHORT)  # Wait for up to 4 seconds for the element to be present, return None if not found
+  search_results = driver.wait_for_element(".search-results", wait=Wait.LONG)  # Wait for up to 8 seconds for the element to be present, raise exception if not found
+  hello_mom = driver.get_element_with_exact_text("Hello Mom", wait=Wait.VERY_LONG)  # Wait for up to 16 seconds for an element having the exact text "Hello Mom"
+  ```
+
+- Interact with elements:
+  ```python
+  driver.type("input[name='username']", "john_doe")  # Type into an input field
+  driver.click("button.submit")  # Clicks an element
+  element = driver.select("button.submit")
+  element.click()  # Click on an element
+  ```
+
+- Retrieve element properties:
+  ```python
+  header_text = driver.get_text("h1")  # Get text content
+  error_message = driver.get_element_containing_text("Error: Invalid input")
+  image_url = driver.select("img.logo").get_attribute("src")  # Get attribute value
+  ```
+
+- Work with parent-child elements:
+  ```python
+  parent_element = driver.select(".parent")
+  child_element = parent_element.select(".child")
+  child_element.click()  # Click child element
+  ```
+
+- Execute JavaScript:
+  ```python
+  result = driver.run_js("return document.title")
+  text_content = element.run_js("(el) => el.textContent")
+  ```
+
+- Working with iframes:
+  ```python
+  driver.get("https://www.g2.com/products/github/reviews.html?page=5&product_id=github")
+  iframe = driver.select_iframe("#turnstile-wrapper iframe")
+  text_content = iframe.select("body label").text
+  ```
+
+- Miscellaneous:
+  ```python
+  form.type("input[name='password']", "secret_password")  # Type into a form field
+  container.is_element_present(".button")  # Check element presence
+  page_html = driver.page_html  # Current page HTML
+  driver.select(".footer").scroll_into_view()  # Scroll element into view
+  driver.close()  # Close the browser
+  ```
+
+### How Can I Pause the Browser to Inspect Website when Developing the Scraper?
+
+To pause the scraper and wait for user input before proceeding, use `driver.prompt()`:
+
+```python
+driver.prompt()
+```
+
+### How do I configure authenticated proxies with SSL in Botasaurus?
+
+Proxy providers like BrightData, IPRoyal, and others typically provide authenticated proxies in the format "http://username:password@proxy-provider-domain:port". For example, "http://greyninja:awesomepassword@geo.iproyal.com:12321".
+
+However, if you use an authenticated proxy with a library like seleniumwire to scrape a Cloudflare protected website like G2.com, you are GUARANTEED to be blocked because you are using a non-SSL connection.
 
 To verify this, run the following code:
 
@@ -441,320 +971,674 @@ input("Press Enter to exit...")
 driver.quit()
 ```
 
-You will definitely encounter a block by Cloudflare:
+You will DEFINITELY be blocked:
 
 ![blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/seleniumwireblocked.png)
 
-However, using proxies with Botasaurus prevents this issue. See the difference by running the following code:
+However, using proxies with Botasaurus solves this issue. See the difference by running the following code:
+
 ```python
-from botasaurus import *
+from botasaurus.browser import browser, Driver
 
 @browser(proxy="http://username:password@proxy-provider-domain:port") # TODO: Replace with your own proxy 
-def scrape_heading_task(driver: AntiDetectDriver, data):
+def scrape_heading_task(driver: Driver, data):
     driver.google_get("https://www.g2.com/products/github/reviews")
     driver.prompt()
+
 scrape_heading_task()    
 ```  
 
 Result: 
 ![not blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/botasurussuccesspage.png)
 
-NOTE: To run the code above, you will need Node.js installed.
+Important Note: To run the code above, you will need [Node.js](https://nodejs.org/en) installed.
 
-### How to Access Cloudflare-Protected Websites Using Simple HTTP Requests?
+### Why am I getting a socket connection error when using a proxy to access a website?
 
-We can access Cloudflare-protected pages using simple HTTP requests.
-
-All you need to do is specify the `use_stealth` option.
-
-Sounds too good to be true? Run the following code to see it in action:
+Certain proxy providers may block access to specific websites. To determine if this is the case, run the following code:
 
 ```python
-from botasaurus import *
+from botasaurus.browser import browser, Driver
+
+@browser(proxy="http://username:password@proxy-provider-domain:port")  # TODO: Replace with your own proxy
+def visit_ipinfo(driver: Driver, data):
+    driver.get("https://ipinfo.io/")
+    driver.prompt()
+
+visit_ipinfo()
+```
+
+If you can successfully access the ipinfo website but not the website you're attempting to scrape, it means the proxy provider is blocking access to that particular website. 
+
+In such situations, the only solution is to switch to a different proxy provider.
+
+Some good proxy providers we personally use are:
+
+- For Rotating Datacenter Proxies: **BrightData Datacenter Proxies**, which cost around $0.6 per GB on a pay-as-you-go basis. No KYC is required.
+- For Rotating Residential Proxies: **IPRoyal Royal Residential Proxies**, which cost around $7 per GB on a pay-as-you-go basis. No KYC is required.
+
+It's worth noting that BrightData will block certain websites. 
+
+Note: We are not affiliated with any of the above proxy providers.
+
+### Which country should I choose when using proxies for web scraping?
+
+The United States is often the best choice because:
+- The United States has a highly developed internet infrastructure and is home to numerous data centers, ensuring faster internet speeds.
+- Most global companies host their websites in the US, so using a US proxy will result in faster scraping speeds.
+
+### Should I use a proxy for web scraping?
+
+ONLY IF you encounter IP blocks.
+
+Sadly, most scrapers unnecessarily use proxies, even when they are not needed. Everything seems like a nail when you have a hammer.
+
+We have personally scraped hundreds of thousands of bot-protected pages using the @browser module on our home Wi-Fi without any issues.
+
+So, as a best practice scrape using the @browser module on your home Wi-Fi first. Only resort to proxies when you encounter IP blocks. 
+
+This practice will save you a considerable amount of time (as proxies are really slow) and money (as proxies are expensive as well).
+
+### How to configure the Request Decorator?
+
+The Request Decorator is used to make humane requests. Under the hood, to make anti-detect requests, it:
+- Uses browser-like headers in the correct order.
+- Makes a browser-like connection with correct ciphers.
+- Uses `google.com` referer by default to make it appear as if the user has clicked on a link on google.com to visit the page.
+
+The Request Decorator allows you to configure 2 custom options:
+
+- Setting up proxies
+- Using Stealth Mode
+
+#### Proxy 
+
+The usage is exactly the same as with the Browser Decorator.
+
+```python
+@request(
+    proxy="http://username:password@proxy-provider-domain:port"
+)    
+```
+
+#### Stealth Mode
+
+When facing a Connection Challenge (where you need to make a browser-like connection), the normal request mode will be detected by Bot Detectors like Cloudflare. 
+
+For such cases, you should use the stealth mode as follows, which will easily solve the connection challenge:
+
+```python
+from botasaurus.request import request, Request
 
 @request(use_stealth=True)
-def scrape_heading_task(request: AntiDetectRequests, data):
+def scrape_heading_task(request: Request, data):
     response = request.get('https://www.g2.com/products/github/reviews')
-    print(response.status_code)
+    print(response.status_code) # Status Code will be 200!
     return response.text
 
 scrape_heading_task()
 ```
 
-### Can you access websites protected by Cloudflare JS Challenge?
+### What Options Can I Configure in all 3 Decorators?
 
-Yes, we can. Let's learn about various challenges and the best ways to solve them.
+All 3 decorators allow you to configure the following options:
 
-*Connection Challenge*
+- Parallel Execution:
+- Caching Results
+- Passing Common Metadata
+- Asynchronous Queues
+- Asynchronous Execution
+- Handling Crashes
+- Configuring Output
+- Exception Handling
 
-This is the most popular challenge and requires making a browser-like connection with appropriate headers to the target website. It's commonly used to protect:
-- Product Pages
-- Blog Pages
-- Search Result Pages
+Let's dive into each of these options and in later sections we will see their real-world applications.
 
-Example Page: https://www.g2.com/products/github/reviews
+#### `parallel`
 
-#### What Does Not Work?
+The `parallel` option allows you to scrape data in parallel by launching multiple browser/request/task instances simultaneously. This can significantly speed up the scraping process.
 
-Using `cloudscraper` library fails because, while it sends browser-like user agents and headers, it does not establish a browser-like connection, leading to detection.
-
-#### What Works?
-
-- Use the stealth request mode and visit via Google (default behavior). [Recommended]
+Run the example below to see parallelization in action:
 ```python
-from botasaurus import *
+from botasaurus.browser import browser, Driver
 
-@request(use_stealth=True)
-def scrape_heading_task(request: AntiDetectRequests, data):
-    response = request.get('https://www.g2.com/products/github/reviews')
-    print(response.status_code)
-    return response.text
-
-scrape_heading_task()
-```
-
-- Use a real Chrome browser with Selenium and visit via Google. Example Code:
-```python
-from botasaurus import *
-
-@browser()
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.google_get("https://www.g2.com/products/github/reviews")
-    driver.prompt()
-    heading = driver.text('h1')
-    return heading
-
-scrape_heading_task()
-```
-
-*JS Challenge*
-
-This challenge requires performing JS computations that differentiates a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. 
-
-It's commonly used to protect Auth pages:
-
-Example Pages: https://nowsecure.nl/
-
-#### What Does Not Work?
-
-Bare `selenium` and `puppeteer` definitely do not work due to a lot of automation noise. `undetected-chromedriver` and `puppeteer-stealth` also fail to access sites protected by JS Challenge like https://nowsecure.nl/. 
-
-#### What Works?
-
-The Stealth Browser can easily solve JS Challenges. See the truth for yourself by running this code:
-
-```python
-from botasaurus import *
-from botasaurus.create_stealth_driver import create_stealth_driver
-
-@browser(
-    create_driver=create_stealth_driver(
-        start_url="https://nowsecure.nl/",
-    ),
-)
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.prompt()
-    heading = driver.text('h1')
+@browser(parallel=3, data=["https://www.omkar.cloud/", "https://www.omkar.cloud/blog/", "https://stackoverflow.com/"])
+def scrape_heading_task(driver: Driver, link):
+    driver.get(link)
+    heading = driver.get_text('h1')
     return heading
 
 scrape_heading_task()    
 ```
 
-*JS with Captcha Challenge*
+#### `cache`
 
-This challenge involves JS computations plus solving a Captcha. It's used to protect pages which are rarely but sometimes visited by humans, like:
-- 5th Page of G2 Reviews
-- 8th Page of Google Search Results
+The `cache` option enables caching of web scraping results to avoid re-scraping the same data. This can significantly improve performance and reduce redundant requests.
 
-Example Page: https://www.g2.com/products/github/reviews.html?page=5&product_id=github
 
-#### What Does Not Work?
-
-Again, tools like `selenium`, `puppeteer`, `undetected-chromedriver`, and `puppeteer-stealth` fail.
-
-#### What Works?
-
-The Stealth Browser can easily solve these challenges. See it in action by running this code:
-
+Run the example below to see how caching works:
 ```python
-from botasaurus import *
-from botasaurus.create_stealth_driver import create_stealth_driver
+from botasaurus.browser import browser, Driver
 
-@browser(
-    create_driver=create_stealth_driver(
-        start_url="https://www.g2.com/products/github/reviews.html?page=5&product_id=github",
-    ),
-)
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.prompt()
-    heading = driver.text('h1')
+@browser(cache=True, data=["https://www.omkar.cloud/", "https://www.omkar.cloud/blog/", "https://stackoverflow.com/"])
+def scrape_heading_task(driver: Driver, link):
+    driver.get(link)
+    heading = driver.get_text('h1')
     return heading
 
-scrape_heading_task()
+print(scrape_heading_task())
+print(scrape_heading_task())  # Data will be fetched from cache immediately 
 ```
 
-*Notes:*
-1. In stealth browser mode, we default to an 8-second wait before connecting to the browser via Selenium because connecting too early gets us detected. You can customize the wait time by using the `wait` argument. 
+Note: Caching is one of the most important features of Botasaurus.
+
+#### `metadata`
+
+The metadata option allows you to pass common information shared across all data items. This can include things like API keys, browser cookies, or any other data that remains constant throughout the scraping process.
+
+It is commonly used with caching to exclude details like API keys and browser cookies from the cache key.
+
+Here's an example of how to use the `metadata` option:
 ```python
-from botasaurus import *
-from botasaurus.create_stealth_driver import create_stealth_driver
+from botasaurus.task import task
 
-@browser(
-    create_driver=create_stealth_driver(
-        start_url="https://nowsecure.nl/",
-        wait=4, # Waits for 4 seconds before connecting to browser
-    ),
-)
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.prompt()
-    heading = driver.text('h1')
-    return heading
+@task()
+def scrape_heading_task(driver: Driver, data, metadata):
+    print("metadata:", metadata)
+    print("data:", data)
 
-scrape_heading_task()
-```
-
-Here are some recommendations for wait times:
-
-- For active development with fast internet, set the wait time to **4 seconds**. You most likely have a fast internet connection, so set the wait time to **4 seconds** when developing your Bot.
-- If during development you have a slow internet connection, then stick with the default **8 seconds**.
-<!-- - When running your bot in the cloud via proxies, increase the wait time to **20 seconds** due to longer data download times.
-- For slow proxies, set the wait time to **28 seconds**. -->
-
-2. If you get detected, try changing your IP. Let me share with you  The **fastest**, **simplest**, and best of all, the **free** way to change your IP:
-
-- **Connect your PC to the Internet via a Mobile Hotspot.**
-- **Toggle airplane mode off and on on your mobile device.** This will assign you a new IP address.
-- **Turn the hotspot back on.**
-- **Voila, you have a new, high-quality mobile IP for free!**
-
-<!-- 3. If you are running the bot in Docker on a server and experiencing detection issues, it's suggested to use residential proxies. -->
-
-3. If you are automating Cloudflare Websites with JS Challenges like https://nowsecure.nl/, then you must pass start_url to solve them like this:
-```python
-from botasaurus import *
-from botasaurus.create_stealth_driver import create_stealth_driver
-
-@browser(
-    create_driver=create_stealth_driver(
-        start_url="https://nowsecure.nl/", # Must for Websites Protected by Cloudflare JS Challenge
-    ),
+data = [
+    {"profile": "pikachu", "proxy": "http://142.250.77.228:8000"},
+    {"profile": "shinchan", "proxy": "http://142.250.77.229:8000"},
+]
+scrape_heading_task(
+  data, 
+  metadata={"api_key": "BDEC26..."}
 )
 ```
 
-However, if you are automating websites not protected by Cloudflare or protected by Cloudflare Connection Challenge, then you may pass `None` to start_url. With this, we will also not perform a wait before connecting to Chrome, saving you time.
+#### `async_queue`
 
+In the world of web scraping, there are only two types of scrapers:
+
+1. Dataset Scrapers: These extract data from websites and store it as datasets. Companies like Bright Data use them to build datasets for Crunchbase, Indeed, etc.
+
+2. Real-time Scrapers: These fetch data from sources in real-time, like SERP APIs that provide Google and DuckDuckGo search results.
+
+When building real-time scrapers, speed is paramount because customers are waiting for requests to complete. The `async_queue` feature is incredibly useful in such cases.
+
+`async_queue` allows you to run scraping tasks asynchronously in a queue and gather the results using the `.get()` method. 
+
+A great use case for `async_queue` is scraping Google Maps. Instead of scrolling through the list of places and then scraping the details of each place sequentially, you can use `async_queue` to:
+1. Scroll through the list of places.
+2. Simultaneously make HTTP requests to scrape the details of each place in the background.
+    
+By executing the scrolling and requesting tasks concurrently, you can significantly speed up the scraper.
+
+Run the code below to see browser scrolling and request scraping happening concurrently (really cool, must try!):
 ```python
-from botasaurus import *
-from botasaurus.create_stealth_driver import create_stealth_driver
+from botasaurus.browser import browser, Driver, AsyncQueueResult
+from botasaurus.request import request, Request
+import json
 
-@browser(
-    create_driver=create_stealth_driver(
-        start_url=None, # Recommended for Websites not protected by Cloudflare or protected by Cloudflare Connection Challenge
-    ),
-)
-```
+def extract_title(html):
+    return json.loads(
+        html.split(";window.APP_INITIALIZATION_STATE=")[1].split(";window.APP_FLAGS")[0]
+    )[5][3][2][1]
 
-
-4. Anti Detection Systems can detect fake randomly generated user agents. So, if you are getting detected, especially on Ubuntu with Cloudflare JS with Captcha Challenge, we recommend using your real user agent and window size, not a randomly generated one. Here's how you can do it:
-```python
-from botasaurus import *
-from botasaurus.create_stealth_driver import create_stealth_driver
-
-@browser(
-    user_agent=bt.UserAgent.REAL, 
-    window_size=bt.WindowSize.REAL,
-    create_driver=create_stealth_driver(
-        start_url="https://nowsecure.nl/",
-    ),
-)
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.prompt()
-    heading = driver.text('h1')
-    return heading
-
-scrape_heading_task()
-```
-
-If you are doing web scraping of publicly available data, then the above code is good and recommended to be used. but stealth driver is fingerprintable using tools like [fingerprint](https://fingerprint.com/).
-
-5. We expect to access Cloudflare websites 9 out of 10 times. However, in some cases, they do detect us for reasons like IP blacklisting. In such cases, you can use the following code snippet to make your scraper more robust:
-```python
-from botasaurus import *
-from botasaurus.create_stealth_driver import create_stealth_driver
-
-def get_start_url(data):
-    return data
-
-@browser(
-    # proxy="http://username:password@proxy-domain:12321" # optionally use proxy
-    # user_agent=bt.UserAgent.REAL, # Optionally use REAL User Agent
-    # window_size=bt.WindowSize.REAL, # Optionally use REAL Window Size
+@request(
+    parallel=5,
+    async_queue=True,
+    use_stealth=True,
     max_retry=5,
-    create_driver=create_stealth_driver(
-        start_url=get_start_url,
-        raise_exception=True, 
-    ),
 )
-def scrape_heading_task(driver: AntiDetectDriver, data):
-    driver.prompt()
-    heading = driver.text('h1')
-    return heading
+def scrape_place_title(request: Request, link, metadata):
+    cookies = metadata["cookies"]
+    html = request.get(link, cookies=cookies, timeout=12).text
+    title = extract_title(html)
+    print("Title:", title)
+    return title
 
-scrape_heading_task(["https://nowsecure.nl/", "https://steamdb.info/sub/363669/apps"])
-``` 
+def has_reached_end(driver):
+    return driver.select('p.fontBodyMedium > span > span') is not None
 
-The above code makes the scraper more robust by raising an exception when detected and retrying up to 5 times to visit the website.
+def extract_links(driver):
+    return driver.get_all_links('[role="feed"] > div > div > a')
 
-### How to Use Chrome Extensions?
+@browser()
+def scrape_google_maps(driver: Driver, link):
+    driver.google_get(link, accept_google_cookies=True)  # accepts google cookies popup
 
-Botasaurus allows the use of ANY Chrome Extension with just 1 Line of Code. Below is an example that uses the AdBlocker Chrome Extension:
+    scrape_place_obj: AsyncQueueResult = scrape_place_title()  # initialize the async queue for scraping places
+    cookies = driver.get_cookies_dict()  # get the cookies from the driver
 
-```python
-from botasaurus import *
-from chrome_extension_python import Extension
+    while True:
+        links = extract_links(driver)  # get the links to places
+        scrape_place_obj.put(links, metadata={"cookies": cookies})  # add the links to the async queue for scraping
 
-@browser(
-    extensions=[Extension("https://chromewebstore.google.com/detail/adblock-%E2%80%94-best-ad-blocker/gighmmpiobklfepjocnamgkkbiglidom")], # Simply pass the Extension Link
-)  
-def open_chrome(driver: AntiDetectDriver, data):
-    driver.prompt()
+        print("scrolling")
+        driver.scroll_to_bottom('[role="feed"]')  # scroll to the bottom of the feed
 
-open_chrome()
+        if has_reached_end(driver):  # we have reached the end, let's break buddy
+            break
+
+    results = scrape_place_obj.get()  # get the scraped results from the async queue
+    return results
+
+scrape_google_maps("https://www.google.com/maps/search/web+developers+in+bangalore")
 ```
 
-Also, In some cases an extension requires additional configuration like API keys or credentials, for that you can create a Custom Extension. Learn how to create and configure Custom Extension [here](https://github.com/omkarcloud/chrome-extension-python).
+#### `run_async`
 
+Similarly, the `run_async` option allows you to execute scraping tasks asynchronously, enabling concurrent execution.
 
-### I want to Scrape a large number of Links, a new selenium driver is getting created for each new link, this increases the time to scrape data. How can I reuse Drivers?
+Similar to `async_queue`, you can use the `.get()` method to retrieve the results of an asynchronous task.
 
-Utilize the `reuse_driver` option to reuse drivers, reducing the time required for data scraping:
+Code Example:
+```python
+from botasaurus.browser import browser, Driver
+from time import sleep
+
+@browser(run_async=True)
+def scrape_heading(driver: Driver, data):
+    sleep(5)
+    return {}
+
+if __name__ == "__main__":
+    result1 = scrape_heading()  # Launches asynchronously
+    result2 = scrape_heading()  # Launches asynchronously
+
+    result1.get()  # Wait for the first result
+    result2.get()  # Wait for the second result
+```
+
+#### `close_on_crash`
+
+The `close_on_crash` option determines the behavior of the scraper when an exception occurs:
+- If set to `False` (default):
+  - The scraper will make a beep sound and pause the browser.
+  - This makes debugging easier by keeping the browser open at the point of the crash.
+  - Use this setting during development and testing.
+- If set to `True`:
+  - The scraper will close the browser and continue with the rest of the data items.
+  - This is suitable for production environments when you are confident that your scraper is robust.
+  - Use this setting to avoid interruptions and ensure the scraper processes all data items.
 
 ```python
-@browser(reuse_driver=True)
-def scrape_heading_task(driver: AntiDetectDriver, data):
+from botasaurus.browser import browser, Driver
+
+@browser(
+    close_on_crash=False  # Determines whether the browser is paused (default: False) or closed when an error occurs
+)
+def scrape_heading_task(driver: Driver, data):
+    raise Exception("An error occurred during scraping.")
+
+scrape_heading_task()  
+```
+
+#### `output` and `output_formats`
+
+By default, Botasaurus saves the result of scraping in the `output/{your_scraping_function_name}.json` file. Let's learn about various ways to configure the output.
+
+1. **Change Output Filename**: Use the `output` parameter in the decorator to specify a custom filename for the output.
+```python
+from botasaurus.task import task
+
+@task(output="my-output")
+def scrape_heading_task(data): 
+    return {"heading": "Hello, Mom!"}
+
+scrape_heading_task()
+```
+
+2. **Disable Output**: If you don't want any output to be saved, set `output` to `None`.
+```python
+from botasaurus.task import task
+
+@task(output=None)
+def scrape_heading_task(data): 
+    return {"heading": "Hello, Mom!"}
+
+scrape_heading_task()
+```
+
+3. **Dynamically Write Output**: To dynamically write output based on data and result, pass a function to the `output` parameter:
+```python
+from botasaurus.task import task
+
+def write_output(data, result):
+    bt.write_json(result, 'data')
+    bt.write_excel(result, 'data')
+
+@task(output=write_output)  
+def scrape_heading_task(data): 
+    return {"heading": "Hello, Mom!"}
+
+scrape_heading_task()
+```
+
+4.**Save Outputs in Multiple Formats**: Use the `output_formats` parameter to save outputs in different formats like JSON and EXCEL.
+```python
+from botasaurus.task import task
+
+@browser(output_formats=[bt.Formats.JSON, bt.Formats.EXCEL])  
+def scrape_heading_task(data): 
+    return {"heading": "Hello, Mom!"}
+
+scrape_heading_task()
+```
+
+PRO TIP: When delivering data to customers, provide the dataset in JSON and Excel formats. Avoid CSV unless the customer asks, because Microsoft Excel has a hard time rendering CSV files with nested JSON.
+
+**CSV vs Excel**
+![csv-vs-excel](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/csv-vs-excel.png)
+
+#### Exception Handling Options
+
+Botasaurus provides various exception handling options to make your scrapers more robust:
+- `max_retry`: By default, any failed task is not retried. You can specify the maximum number of times to retry scraping when an error occurs using the `max_retry` option.
+- `retry_wait`: Specifies the waiting time between retries.
+- `raise_exception`: By default, Botasaurus does not raise an exception when an error occurs during scraping, because let's say you are keeping your PC running overnight to scrape 10,000 links. If one link fails, you really don't want to stop the entire scraping process, and ruin your morning by seeing an unfinished dataset.
+- `must_raise_exceptions`: Specifies exceptions that must be raised, even if `raise_exception` is set to `False`.
+- `create_error_logs`: Determines whether error logs should be created when exceptions occur. In production, when scraping hundreds of thousands of links, it's recommended to set `create_error_logs` to `False` to avoid using computational resources for creating error logs.
+
+```python
+@browser(
+    raise_exception=True,  # Raise an exception and halt the scraping process when an error occurs
+    max_retry=5,  # Retry scraping a failed task a maximum of 5 times
+    retry_wait=10,  # Wait for 10 seconds before retrying a failed task
+    must_raise_exceptions=[CustomException],  # Definitely raise CustomException, even if raise_exception is set to False
+    create_error_logs=False  # Disable the creation of error logs to optimize scraper performance
+)
+def scrape_heading_task(driver: Driver, data):
   # ...
+```
+
+### What are some examples of common web scraping utilities provided by Botasaurus that make scraping easier?
+
+#### bt Utility
+
+The `bt` utility provides helper functions for:
+
+- Writing and reading JSON, EXCEL, and CSV files
+- Data cleaning
+
+Some key functions are:
+
+- `bt.write_json` and `bt.read_json`: Easily write and read JSON files.
+```python
+from botasaurus import bt
+
+data = {"name": "Amit", "age": 30}
+bt.write_json(data, "output")
+loaded_data = bt.read_json("output")
+```
+
+- `bt.write_excel` and `bt.read_excel`: Easily write and read EXCEL files.
+```python
+from botasaurus import bt
+
+data = {"name": "Amit", "age": 30}
+bt.write_excel(data, "output")
+loaded_data = bt.read_excel("output")
+```
+
+- `bt.write_csv` and `bt.read_csv`: Easily write and read CSV files.
+```python
+from botasaurus import bt
+
+data = {"name": "Amit", "age": 30}
+bt.write_csv(data, "output")
+loaded_data = bt.read_csv("output")
+```
+
+- `bt.write_html` and `bt.read_html`: Write HTML content to a file.
+```python
+from botasaurus import bt
+
+html_content = "<html><body><h1>Hello, Mom!</h1></body></html>"
+bt.write_html(html_content, "output")
+```
+
+- `bt.write_temp_json`, `bt.write_temp_csv`, `bt.write_temp_html`: Write temporary JSON, CSV, or HTML files for debugging purposes.
+```python
+from botasaurus import bt
+
+data = {"name": "Amit", "age": 30}
+bt.write_temp_json(data)
+bt.write_temp_csv(data)
+bt.write_temp_html("<html><body><h1>Hello, Mom!</h1></body></html>")
+```
+
+- Data cleaning functions like `bt.extract_numbers`, `bt.extract_links`, `bt.remove_html_tags`, and more.
+```python
+text = "The price is $19.99 and the website is https://www.example.com"
+numbers = bt.extract_numbers(text)  # [19.99]
+links = bt.extract_links(text)  # ["https://www.example.com"]
+```
+
+#### Local Storage Utility
+
+The Local Storage utility allows you to store and retrieve key-value pairs, which can be useful for maintaining state between scraper runs. 
+
+Here's how to use it:
+
+```python
+from botasaurus.local_storage import LocalStorage
+
+LocalStorage.set_item("credits_used", 100)
+print(LocalStorage.get_item("credits_used", 0))
+```
+
+#### soupify Utility
+
+The `soupify` utility creates a BeautifulSoup object from a Driver, Requests response, Driver Element, or HTML string.
+
+```python
+from botasaurus.soupify import soupify
+from botasaurus.request import request, Request
+from botasaurus.browser import browser, Driver
+
+@request
+def get_heading_from_request(req: Request, data):
+   """
+   Get the heading of a web page using the request object.
+   """
+   response = req.get("https://www.example.com")
+   soup = soupify(response)
+   heading = soup.find("h1").text
+   print(f"Page Heading: {heading}")
+
+@browser
+def get_heading_from_driver(driver: Driver, data):
+   """
+   Get the heading of a web page using the driver object.
+   """
+   driver.get("https://www.example.com")
+
+   # Get the heading from the entire page
+   page_soup = soupify(driver)
+   page_heading = page_soup.find("h1").text
+   print(f"Heading from Driver's Soup: {page_heading}")
+
+   # Get the heading from the body element
+   body_soup = soupify(driver.select("body"))
+   body_heading = body_soup.find("h1").text
+   print(f"Heading from Element's Soup: {body_heading}")
+
+# Call the functions
+get_heading_from_request()
+get_heading_from_driver()
+```
+
+#### IP Utils
+
+IP Utils provide functions to get information about the current IP address, such as the IP itself, country, ISP, and more:
+
+```python
+from botasaurus.ip_utils import IPUtils
+
+# Get the current IP address
+current_ip = IPUtils.get_ip()
+print(current_ip)
+# Output: 47.31.226.180
+
+# Get detailed information about the current IP address
+ip_info = IPUtils.get_ip_info()
+print(ip_info)
+# Output: {
+#     "ip": "47.31.226.180",
+#     "country": "IN",
+#     "region": "Delhi",
+#     "city": "Delhi",
+#     "postal": "110001",
+#     "coordinates": "28.6519,77.2315",
+#     "latitude": "28.6519",
+#     "longitude": "77.2315",
+#     "timezone": "Asia/Kolkata",
+#     "org": "AS55836 Reliance Jio Infocomm Limited"
+# }
+```
+
+#### Cache Utility
+The Cache utility in Botasaurus allows you to manage cached data for your scraper. You can put, get, has, remove, and clear cache data.
+
+*Basic Usage*
+
+```python
+from botasaurus.task import task
+from botasaurus.cache import Cache
+
+# Example scraping function
+@task
+def scrape_data(data):
+    # Your scraping logic here
+    return {"processed": data}
+
+# Sample data for scraping
+input_data = {"key": "value"}
+
+# Adding data to the cache
+Cache.put('scrape_data', input_data, scrape_data(input_data))
+
+# Checking if data is in the cache
+if Cache.has('scrape_data', input_data):
+    # Retrieving data from the cache
+    cached_data = Cache.get('scrape_data', input_data)
+    print(f"Cached data: {cached_data}")
+
+# Removing specific data from the cache
+Cache.remove('scrape_data', input_data)
+
+# Clearing the complete cache for the scrape_data function
+Cache.clear('scrape_data')
+```
+
+**Advanced Usage for large-scale scraping projects**
+
+*Count Cached Items*
+
+You can count the number of items cached for a particular function, which can serve as a scraping progress bar.
+
+```python
+from botasaurus.cache import Cache
+
+Cache.print_cached_items_count('scraping_function')
+```
+
+*Filter Cached/Uncached Items*
+
+You can filter items that have been cached or not cached for a particular function.
+
+```python
+from botasaurus.cache import Cache
+
+all_items = ['1', '2', '3', '4', '5']
+
+# Get items that are cached
+cached_items = Cache.filter_items_in_cache('scraping_function', all_items)
+print(cached_items)
+
+# Get items that are not cached
+uncached_items = Cache.filter_items_not_in_cache('scraping_function', all_items)
+print(uncached_items)
+```
+
+*Delete Cache*
+The cache for a function is stored in the `cache/{your_scraping_function_name}/` folder. To delete the cache, simply delete that folder.
+
+![delete-cache](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-cache.png)
+
+
+*Delete Specific Items*
+
+You can delete specific items from the cache for a particular function.
+
+```python
+from botasaurus.cache import Cache
+
+all_items = ['1', '2', '3', '4', '5']
+deleted_count = Cache.delete_items('scraping_function', all_items)
+print(f"Deleted {deleted_count} items from the cache.")
+```
+
+*Delete Items by Filter*  
+
+In some cases, you may want to delete specific items from the cache based on a condition. For example, if you encounter honeypots (mock HTML served to dupe web scrapers) while scraping a website, you may want to delete those items from the cache.
+
+```python
+def should_delete_item(item, result):
+    if 'Honeypot Item' in result:
+        return True  # Delete the item
+    return False  # Don't delete the item
+
+all_items = ['1', '2', '3', '4', '5']
+# List of items to iterate over, it is fine if the list contains items which have not been cached, as they will be simply ignored.
+Cache.delete_items_by_filter('scraping_function', all_items, should_delete_item)
+```
+
+Importantly, be cautious and first use `delete_items_by_filter` on a small set of items which you want to be deleted. Here's an example:
+
+```python
+from botasaurus import bt
+from botasaurus.cache import Cache
+
+def should_delete_item(item, result):
+    # TODO: Update the logic
+    if 'Honeypot Item' in result:
+        return True # Delete the item
+    return False # Don't delete the item
+
+test_items = ['1', '2'] # TODO: update with target items
+scraping_function_name = 'scraping_function' # TODO:  update with target scraping function name
+Cache.delete_items_by_filter(scraping_function_name, test_items, should_delete_item)
+
+for item in test_items:
+    if Cache.has(scraping_function_name, item):
+        bt.prompt(f"Item {item} was not deleted. Please review the logic of the should_delete_item function.")
 ```
 
 ### How to Extract Links from a Sitemap?
 
 In web scraping, it is a common use case to scrape product pages, blogs, etc. But before scraping these pages, you need to get the links to these pages.
 
-Many developers unnecessarily increase their work by writing code to visit each page one by one and scrape links, which they could have easily by just looking at the Sitemap.
+Many developers unnecessarily increase their work by writing code to visit each page one by one and scrape links, which they could have easily obtained by just looking at the Sitemap.
 
 The Botasaurus Sitemap Module makes this process easy as cake by allowing you to get all links or sitemaps using:
 - The homepage URL (e.g., `https://www.omkar.cloud/`)
 - A direct sitemap link (e.g., `https://www.omkar.cloud/sitemap.xml`)
 - A `.gz` compressed sitemap
 
-For example,  to get a list of books from bookswagon.com, you can use following code:
+For example, if you're an Angel Investor seeking innovative tech startups, G2 is an ideal platform where companies showcase their products. You can run the following code to fetch over 160K+ product links from G2:
 
 ```python
 from botasaurus import *
-from botasaurus.sitemap import Sitemap, Filters
+from botasaurus.sitemap import Sitemap, Filters, Extractors
 
 links = (
-    Sitemap("https://www.bookswagon.com/googlesitemap/sitemapproducts-1.xml")
-    .filter(Filters.first_segment_equals("book"))
+    Sitemap("https://www.g2.com/sitemaps/sitemap_index.xml.gz")
+    .filter(Filters.first_segment_equals("products"))
+    .extract(Extractors.extract_link_upto_second_segment())
     .links()
 )
 bt.write_temp_json(links)
@@ -762,9 +1646,9 @@ bt.write_temp_json(links)
 
 **Output:** 
 
-![book-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/books-wagaon.png)
+![g2-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/g2-sitemap-links.png)
 
-Or, Let's say you're in the mood for some reading and looking for good stories, the following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
+Or, let's say you're in the mood for some reading and looking for good stories. The following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
 
 ```python
 from botasaurus import *
@@ -788,7 +1672,7 @@ bt.write_temp_json(links)
 
 ![moralstories26-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/moralstories26-sitemap-links.png)
 
-Also, Before scraping a site, it's useful to identify the available sitemaps. This can be easily done with the following code:
+Also, before scraping a site, it's useful to identify the available sitemaps. This can be easily done with the following code:
 
 ```python
 from botasaurus import *
@@ -802,474 +1686,232 @@ bt.write_temp_json(sitemaps)
 
 ![omkar-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/omkar-sitemap-links.png)
 
-To ensure your scrapers run super fast, we cache the Sitemap, but you may want to periodically refresh the cache, which you can do as follows:
+To ensure your scrapers run super fast, we cache the Sitemap, but you may want to periodically refresh the cache. To do so, delete the `cache/sitemap` folder. 
+![delete-sitemaps-cache](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-sitemaps-cache.png)
+
+### What is the best way to use caching in Botasaurus?
+
+Sadly, when using caching, most developers write a scraping function that scrapes the HTML and extracts the data from the HTML in the same function, like this:
 
 ```python
-from botasaurus import *
-from botasaurus.sitemap import Sitemap
-from botasaurus.cache import Cache
+from botasaurus.request import request, Request
+from botasaurus.soupify import soupify
 
-sitemap = Sitemap(
-    [
-        "https://moralstories26.com/post-sitemap.xml",
-        "https://moralstories26.com/post-sitemap2.xml",
-    ],
-    cache=Cache.REFRESH,  # Refresh the cache with up-to-date stories.
-)
-
-links = sitemap.links()
-bt.write_temp_json(links)
-```
-
-In summary, the sitemap is an awesome module for easily extracting links you want for web scraping.
-
-### Could you show me a practical example where all these Botasaurus Features Come Together to accomplish a typical web scraping project?
-
-Below is a practical example of how Botasaurus features come together in a typical web scraping project to scrape a list of links from a blog, and then visit each link to retrieve the article's heading and date:
-
-```python
-from botasaurus import *
-
-@browser(block_resources=True,
-         cache=True, 
-         parallel=bt.calc_max_parallel_browsers, 
-         reuse_driver=True)
-def scrape_articles(driver: AntiDetectDriver, link):
-    driver.get(link)
-
-    heading = driver.text("h1")
-    date = driver.text("time")
-
-    return {
-        "heading": heading, 
-        "date": date, 
-        "link": link, 
-    }
-
-@browser(block_resources=True, cache=True)
-def scrape_article_links(driver: AntiDetectDriver, data):
-    # Visit the Omkar Cloud website
-    driver.get("https://www.omkar.cloud/blog/")
+@request
+def scrape_heading_task(request: Request, data):
+    # Navigate to the Link
+    response = request.get(data["link"])
     
-    links = driver.links("h3 a")
+    # Create a BeautifulSoup object
+    soup = soupify(response)
+    
+    # Retrieve the heading element's text
+    heading = soup.find('h1').get_text()
+    
+    # Save the data as a JSON file in output/scrape_heading_task.json
+    return {"heading": heading}
 
-    return links
-
-if __name__ == "__main__":
-    # Launch the web scraping task
-    links = scrape_article_links()
-    scrape_articles(links)
-```
-
-### How to Clean Data?
-Botasaurus provides a module named `cl` that includes commonly used cleaning functions to save development time. Here are some of the most important ones:
-
-1. **`cl.select`**  
-   What `document.querySelector` is to js, is what `cl.select` is to json. This is the most used function in Botasaurus and is incredibly useful.
-
-   This powerful function is popular for safely selecting data from nested JSON.
-
-   Instead of using flaky code like this:
-   ```python
-   from botasaurus import cl
-
-   data = {
-     "person": {
-       "data": {
-         "name": "Omkar",
-         "age": 21
-       }
-     },
-     "data": {
-       "friends": [
-         {"name": "John", "age": 21},
-         {"name": "Jane", "age": 21},
-         {"name": "Bob", "age": 21}
-       ]
-     }
-   }
-
-   name = data.get('person', {}).get('data', {}).get('name', None)
-   if name:
-       name = name.upper()
-   else:
-       name = None
-   print(name)
-   ```
-
-   You can write it as:
-   ```python
-   from botasaurus import cl
-
-   data = {
-     "person": {
-       "data": {
-         "name": "Omkar",
-         "age": 21
-       }
-     },
-     "data": {
-       "friends": [
-         {"name": "John", "age": 21},
-         {"name": "Jane", "age": 21},
-         {"name": "Bob", "age": 21}
-       ]
-     }
-   }
-   print(cl.select(data, 'name', map_data=lambda x: x.upper()))
-   ```
-
-   `cl.select` returns `None` if the key is not found, instead of throwing an error.
-   ```python
-   from botasaurus import cl
-
-   print(cl.select(data, 'name'))  # Omkar
-   print(cl.select(data, 'friends', 0, 'name'))  # John
-   print(cl.select(data, 'friends', 0, 'non_existing_key'))  # None
-   ```
-
-   You can also use `map_data` like this:
-   ```python
-   from botasaurus import cl
-
-   cl.select(data, 'name', map_data=lambda x: x.upper())  # OMKAR
-   ```
-
-   And use default values like this:
-   ```python
-   from botasaurus import cl
-
-   cl.select(None, 'name', default="OMKAR")  # OMKAR
-   ```
-
-2. **`cl.extract_numbers`**
-   ```python
-   from botasaurus import cl
-
-   print(cl.extract_numbers("I can extract numbers with decimal like 4.5, or with comma like 1,000."))  # [4.5, 1000]
-   ```
-
-3. **More Functions**
-   ```python
-   from botasaurus import cl
-
-   print(cl.extract_links("I can extract links like https://www.omkar.cloud/ or https://www.omkar.cloud/blog/"))  # ['https://www.omkar.cloud/', 'https://www.omkar.cloud/blog/']
-   print(cl.rename_keys({"name": "Omkar", "age": 21}, {"name": "full_name"}))  # {"full_name": "Omkar", "age": 21}
-   print(cl.sort_object_by_keys({"age": 21, "name": "Omkar"}, "name"))  # {"name": "Omkar", "age": 21}
-   print(cl.extract_from_dict([{"name": "John", "age": 21}, {"name": "Jane", "age": 21}, {"name": "Bob", "age": 21}], "name"))  # ["John", "Jane", "Bob"]
-   # ... And many more
-   ```
-### How to Read/Write JSON and CSV Files?
-
-Botasaurus provides convenient methods for reading and writing data:
-
-```python
-# Data to write to the file
-data = [
-    {"name": "John Doe", "age": 42},
-    {"name": "Jane Smith", "age": 27},
-    {"name": "Bob Johnson", "age": 35}
+data_items = [
+    "https://www.omkar.cloud/",
+    "https://www.omkar.cloud/blog/",
+    "https://stackoverflow.com/",
 ]
 
-# Write the data to the file "data.json"
-bt.write_json(data, "data.json")
-
-# Read the contents of the file "data.json"
-print(bt.read_json("data.json"))
-
-# Write the data to the file "data.csv"
-bt.write_csv(data, "data.csv")
-
-# Read the contents of the file "data.csv"
-print(bt.read_csv("data.csv"))
+scrape_heading_task(data_items)
 ```
 
-### How Can I Pause the Scraper to Inspect Things While Developing?
+Now, let's say, after 50% of the dataset has been scraped, what if:
+- Your customer wants to add another data point (which is very likely), or
+- One of your BeautifulSoup selectors happens to be flaky and needs to be updated (which is super likely)?
 
-To pause the scraper and wait for user input before proceeding, use `bt.prompt()`:
+In such cases, you will have to scrape all the pages again, which is painful as it will take a lot of time and incur high proxy costs.
+
+To resolve this issue, you can:
+1. Write a function that only scrapes and caches the HTML.
+2. Write a separate function that calls the HTML scraping function, extracts data using BeautifulSoup, and caches the result.
+
+Here's a practical example:
 
 ```python
-bt.prompt()
+from bs4 import BeautifulSoup
+from botasaurus.task import task
+from botasaurus.request import request, Request
+from botasaurus.soupify import soupify
+
+@request(cache=True)
+def scrape_html(request: Request, url):
+    # Scrape the HTML and cache it
+    html = request.get(url).text
+    return html
+
+def extract_data(soup: BeautifulSoup):
+    # Extract the heading from the HTML
+    heading = soup.find("h1").get_text()
+    return {"heading": heading}
+
+# Cache the scrape_heading task as well
+@task(cache=True)
+def scrape_heading(url):
+    # Call the scrape_html function to get the cached HTML
+    html = scrape_html(url)
+    # Extract data from the HTML using the extract_data function
+    return extract_data(soupify(html))
+
+data_items = [
+    "https://www.omkar.cloud/",
+    "https://www.omkar.cloud/blog/",
+    "https://stackoverflow.com/",
+]
+
+scrape_heading(data_items)
 ```
 
-### How Does AntiDetectDriver Facilitate Easier Web Scraping?
+With this approach:
+- If you need to add data points or fix BeautifulSoup bugs, delete the `cache/scrape_heading` folder and re-run the scraper.
+![delete-cache](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-cache.png)
+- You only need to re-run the BeautifulSoup extraction, not the entire HTML scraping, saving time and proxy costs. Yahoo!
 
-AntiDetectDriver is a patched Version of Selenium that has been modified to avoid detection by bot protection services such as Cloudflare. 
-
-It also includes a variety of helper functions that make web scraping tasks easier.
-
-You can learn about these methods [here](https://github.com/omkarcloud/botasaurus/blob/master/anti-detect-driver.md).
-
-### What Features Does @request Support, Similar to @browser?
-
-Similar to @browser, @request supports features like 
- - asynchronous execution [Will Learn Later]
- - parallel processing
- - caching
- - user-agent customization
- - proxies, etc.
-
-Below is an example that showcases these features:
-
+**PRO TIP**: This approach also makes your `extract_data` code easier and faster to test, like this:
 
 ```python
-@request(parallel=40, cache=True, proxy="http://your_proxy_address:your_proxy_port", data=["https://www.omkar.cloud/", ...])
-def scrape_heading_task(request: AntiDetectDriver, link):
-  soup = request.bs4(link)
-  heading = soup.find('h1').get_text()
-  return {"heading": heading}
+from bs4 import BeautifulSoup
+from botasaurus import bt
+
+def extract_data(soup: BeautifulSoup):
+    heading = soup.find('h1').get_text()
+    return {"heading": heading}
+
+if __name__ == '__main__':
+    html = bt.read_html('test')  # Saved Test Page
+    result = extract_data(bt.soupify(html))
+    bt.write_temp_json(result)
 ```
+### What are the recommended settings for each decorator to build a production-ready scraper in Botasaurus?
 
-### I have an existing project into which I want to integrate the AntiDetectDriver/AntiDetectRequests.
+For websites with minimal bot protection, use the `Request` module.
 
-You can create an instance of `AntiDetectDriver` as follows:
-```python
-driver = bt.create_driver()
-# ... Code for scraping
-driver.quit()
-```
-
-You can create an instance of `AntiDetectRequests` as follows:
-```python
-anti_detect_request = bt.create_request()
-soup = anti_detect_request.bs4("https://www.omkar.cloud/")
-# ... Additional code
-```
-
---- 
-
-### How to Run Botasaurus in Docker?
-
-To run Botasaurus in Docker, use the Botasaurus Starter Template, which includes the necessary Dockerfile and Docker Compose configurations:
-
-```
-git clone https://github.com/omkarcloud/botasaurus-starter my-botasaurus-project
-cd my-botasaurus-project
-docker-compose build && docker-compose up
-```
-
-### How to Run Botasaurus in Gitpod?
-
-Botasaurus Starter Template comes with the necessary `.gitpod.yml` to easily run it in Gitpod, a browser-based development environment. Set it up in just 5 minutes by following these steps:
-
-1. Open Botasaurus Starter Template, by visiting [this link](https://gitpod.io/#https://github.com/omkarcloud/botasaurus-starter) and sign up on gitpod.
-   
-   ![Screenshot (148)](https://github.com/omkarcloud/google-maps-scraper/assets/53407137/f498dda8-5352-4f7a-9d70-c717859670d4.png)
-  
-<!-- 2. To speed up scraping, select the Large 8 Core, 16 GB Ram Machine and click the `Continue` button.   
-
-   ![16gb select](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/16gb-select.png) -->
-
-2. In the terminal, run the following command to start scraping:
-```bash
-python main.py
-```
-
-
-## Advanced Features
-
-
-### How Do I Configure the Output of My Scraping Function in Botasaurus?
-To configure the output of your scraping function in Botasaurus, you can customize the behavior in several ways:
-
-1. **Change Output Filename**: Use the `output` parameter in the decorator to specify a custom filename for the output. 
-   ```python
-   @browser(output="my-output")
-   def scrape_heading_task(driver: AntiDetectDriver, data): 
-       # Your scraping logic here
-   ```
-
-2. **Disable Output**: If you don't want any output to be saved, set `output` to `None`.
-   ```python
-   @browser(output=None)
-   def scrape_heading_task(driver: AntiDetectDriver, data): 
-       # Your scraping logic here
-   ```
-
-3. **Dynamically Write Output**: To dynamically write output based on data and result, pass a function to the `output` parameter:
-   ```python
-   def write_output(data, result):
-       bt.write_json(result, 'data')
-       bt.write_csv(result, 'data')
-
-   @browser(output=write_output)  
-   def scrape_heading_task(driver: AntiDetectDriver, data): 
-       # Your scraping logic here
-   ```
-
-4. **Save Outputs in Multiple Formats**: Use the `output_formats` parameter to save outputs in different formats like CSV and JSON.
-   ```python
-   @browser(output_formats=[bt.Formats.CSV, bt.Formats.JSON])  
-   def scrape_heading_task(driver: AntiDetectDriver, data): 
-       # Your scraping logic here
-   ```
-
-These options provide flexibility in how you handle the output of your scraping tasks with Botasaurus.
-
-### How to Run Drivers Asynchronously from the Main Process?
-
-To execute drivers asynchronously, enable the `async` option and use `.get()` when you're ready to collect the results:
+Here's a template for creating production-ready datasets using the `Request` module:
 
 ```python
-from botasaurus import * 
-from time import sleep
+from bs4 import BeautifulSoup
+from botasaurus.task import task
+from botasaurus.request import request, Request
+from botasaurus.soupify import soupify
+
+@request(
+    # use_stealth=True, # Uncomment to use stealth mode
+    # proxy='http://username:password@datacenter-proxy-domain:proxy-port', # Uncomment to use Proxy ONLY if you face IP blocking
+    cache=True,
+
+    parallel=40, # Run 40 requests in parallel, which is a good default
+    max_retry=20, # Retry up to 20 times, which is a good default
+
+    output=None,
+
+    close_on_crash=True,
+    raise_exception=True,
+    create_error_logs=False,
+)
+def scrape_html(request: Request, url):
+    # Scrape the HTML and cache it
+    html = request.get(url).text
+    return html
+
+def extract_data(soup: BeautifulSoup):
+    # Extract the heading from the HTML
+    heading = soup.find("h1").get_text()
+    return {"heading": heading}
+
+# Cache the scrape_heading task as well
+@task(
+    cache=True,
+    close_on_crash=True,
+    create_error_logs=False,
+)
+def scrape_heading(url):
+    # Call the scrape_html function to get the cached HTML
+    html = scrape_html(url)
+    # Extract data from the HTML using the extract_data function
+    return extract_data(soupify(html))
+
+data_items = [
+    "https://www.omkar.cloud/",
+    "https://www.omkar.cloud/blog/",
+    "https://stackoverflow.com/",
+]
+
+scrape_heading(data_items)
+```
+
+For scraping bot-protected websites (e.g., by Cloudflare), use the `Browser` module. 
+
+Here's a template for creating production-ready datasets using the `Browser` module:
+
+```python
+from bs4 import BeautifulSoup
+from botasaurus.task import task
+from botasaurus.browser import browser, Driver
+from botasaurus.soupify import soupify
 
 @browser(
-    run_async=True,  # Specify the Async option here
-)
-def scrape_heading(driver: AntiDetectDriver, data):
-    print("Sleeping for 5 seconds.")
-    sleep(5)
-    print("Slept for 5 seconds.")
-    return {}
+    # proxy='http://username:password@datacenter-proxy-domain:proxy-port', # Uncomment to use Proxy ONLY if you face IP blocking
 
-if __name__ == "__main__":
-    # Launch web scraping tasks asynchronously
-    result1 = scrape_heading()  # Launches asynchronously
-    result2 = scrape_heading()  # Launches asynchronously
+    # block_images_and_css=True, # Uncomment to block images and CSS, which can speed up scraping
+    # wait_for_complete_page_load=False, # Uncomment to proceed once the DOM (Document Object Model) is loaded, without waiting for all resources to finish loading. This is recommended for faster scraping of Server Side Rendered (HTML) pages. eg: https://www.g2.com/products/jenkins/reviews.html
 
-    result1.get()  # Wait for the first result
-    result2.get()  # Wait for the second result
-```
+    cache=True,
+    max_retry=5,  # Retry up to 5 times, which is a good default
 
-With this method, function calls run concurrently. The output will indicate that both function calls are executing in parallel.
-
-### How to Asynchronously Add Multiple Items and Get Results?
-
-The `async_queue` feature allows you to perform web scraping tasks in asyncronously in a queue, without waiting for each task to complete before starting the next one. To gather your results, simply use the `.get()` method when all tasks are in the queue.
-
-#### Basic Example:
-
-```python
-from botasaurus import * 
-from time import sleep
-
-@browser(async_queue=True)
-def scrape_data(driver: AntiDetectDriver, data):
-    print("Starting a task.")
-    sleep(1)  # Simulate a delay, e.g., waiting for a page to load
-    print("Task completed.")
-    return data
-
-if __name__ == "__main__":
-    # Start scraping tasks without waiting for each to finish
-    async_queue = scrape_data()  # Initializes the queue
-
-    # Add tasks to the queue
-    async_queue.put([1])
-    async_queue.put(2)
-    async_queue.put([3, 4])
-
-    # Retrieve results when ready
-    results = async_queue.get()  # Expects to receive: [1, 2, 3, 4]
-```
-
-#### Practical Application for Web Scraping:
-
-Here's how you could use `async_queue` to scrape webpage titles while scrolling through a list of links:
-
-```python
-from botasaurus import * 
-
-@browser(async_queue=True)
-def scrape_title(driver: AntiDetectDriver, link):
-    driver.get(link)  # Navigate to the link
-    return driver.title  # Scrape the title of the webpage
-
-@browser()
-def scrape_all_titles(driver: AntiDetectDriver):
-    # ... Your code to visit the initial page ...
-
-    title_queue = scrape_title()  # Initialize the asynchronous queue
+    reuse_driver= True, # Reuse the same driver for all tasks
     
-    while not end_of_page_detected(driver):  # Replace with your end-of-list condition
-        title_queue.put(driver.links('a'))  # Add each link to the queue
-        driver.scroll(".scrollable-element")
-        
+    output=None,
 
-    return title_queue.get()  # Get all the scraped titles at once
-
-if __name__ == "__main__":
-    all_titles = scrape_all_titles()  # Call the function to start the scraping process
-```
-
-**Note:** The `async_queue` will only invoke the scraping function for unique links, avoiding redundant operations and keeping the main function (`scrape_all_titles`) cleaner.
-
-### I want to repeatedly call the scraping function without creating new Selenium drivers each time. How can I achieve this?
-
-Utilize the `keep_drivers_alive` option to maintain active driver sessions. Remember to call `.close()` when you're finished to release resources:
-
-```python
-from botasaurus import *
-from botasaurus.create_stealth_driver import create_stealth_driver
-
-@browser(
-    keep_drivers_alive=True, 
-    reuse_driver=True,  # Also commonly paired with `keep_drivers_alive`
+    close_on_crash=True,
+    raise_exception=True,
+    create_error_logs=False,
 )
-def scrape_data(driver: AntiDetectDriver, link):
-    driver.get(link)
+def scrape_html(driver: Driver, url):
+    # Scrape the HTML and cache it
+    driver.google_get(
+        url,
+        bypass_cloudflare=True,  # delete this line if the website you're accessing is not protected by Cloudflare
+    )
+    return driver.page_html
 
-if __name__ == "__main__":
-    scrape_data(["https://moralstories26.com/", "https://moralstories26.com/page/2/", "https://moralstories26.com/page/3/"])
-    # After completing all scraping tasks, call .close() to close the drivers.
-    scrape_data.close()
+def extract_data(soup: BeautifulSoup):
+    # Extract the heading from the HTML
+    heading = soup.select_one('.product-head__title [itemprop="name"]').get_text()
+    return {"heading": heading}
+
+# Cache the scrape_heading task as well
+@task(
+    cache=True,
+    close_on_crash=True,
+    create_error_logs=False,
+)
+def scrape_heading(url):
+    # Call the scrape_html function to get the cached HTML
+    html = scrape_html(url)
+    # Extract data from the HTML using the extract_data function
+    return extract_data(soupify(html))
+
+data_items = [
+    "https://www.g2.com/products/stack-overflow-for-teams/reviews?page=8",
+    "https://www.g2.com/products/jenkins/reviews?page=19",
+]
+
+scrape_heading(data_items)
 ```
 
+### What Are Some Tips for accessing Bot Protected sites?
 
-### How do I manage the Cache in Botasaurus?
-
-You can use The Cache Module in Botasaurus to easily manage cached data. Here's a simple example explaining its usage:
-
-```python
-from botasaurus import *
-from botasaurus.cache import Cache
-
-# Example scraping function
-@request
-def scrape_data(data):
-    # Your scraping logic here
-    return {"processed": data}
-
-# Sample data for scraping
-input_data = {"key": "value"}
-
-# Adding data to the cache
-Cache.put(scrape_data, input_data, scrape_data(input_data))
-# Checking if data is in the cache
-if Cache.has(scrape_data, input_data):
-    # Retrieving data from the cache
-    cached_data = Cache.get(scrape_data, input_data)
-# Removing specific data from the cache
-Cache.remove(scrape_data, input_data)
-# Clearing the complete cache for the scrape_data function
-Cache.clear(scrape_data)
-```
-
-### Any Tips for Scraping Cloudflare-Protected Websites?
-- Use stealth driver
-- For large-scale scraping, opt for Data Center Proxies over Residential as Residential Proxies are really expensive. Sometimes you will get blocked; so, use retries as demonstrated in the code below:
-```python
-  from botasaurus import *
-from botasaurus.create_stealth_driver import create_stealth_driver
-
-  @browser(
-        create_driver=create_stealth_driver(
-            start_url="https://nowsecure.nl/",
-        ),
-        proxy="http://username:password@datacenter-proxy-domain:12321", 
-        max_retry=5, # A reliable default for most situations, will retry creating driver if detected.
-        block_resources=True, # Enhances efficiency and cost-effectiveness
-        )
-  def scrape_heading_task(driver: AntiDetectDriver, data):
-      heading = driver.text('h1')
-      print(heading)
-      return heading
-```
+- Use `google_get`, use `google_get`, and use `google_get`!
+- Don't use `headless` mode, it makes your scraper easily detectable by most bot detection systems.
+- Don't use Proxies, instead use your home Wi-Fi connection, even when scraping hundreds of thousands of pages.
 
 ### How Do I Close All Running Chrome Instances?
 
-While developing a scraper, multiple browser may remain open in the background. This situation can  cause your computer to hang.
+While developing a scraper, multiple browser instances may remain open in the background (because of interrupting it with CTRL + C). This situation can cause your computer to hang.
 
 ![Many Chrome processes running in Task Manager](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/chrome-running.png)
 
@@ -1278,40 +1920,135 @@ To prevent your PC from hanging, you can run the following command to close all 
 ```shell
 python -m close_chrome
 ```
----
 
-<!-- 
-### What feautres are Coming in Botasaurus 4?
-Botasaurus 4, which is currently in its beta phase, allows you to:
-  - A sms API to receive OTPs.
-  - Run bots in the cloud using a website UI and control their schedules, starting/stopping times, and view bot outputs in a web UI. 
-  - Use Kubernetes to run thousands of bots in parallel.
-  - Schedule Scraping Tasks at specific times or intervals
-  - Whatsapp/Email Alerts
-  - MySQL/PostgreSQL Integration
-  - And Many More :) -->
+### How to Run Scraper in Docker?
+
+To run a Scraper in Docker, use the Botasaurus Starter Template, which includes the necessary Dockerfile and Docker Compose configurations.
+
+Use the following commands to clone the Botasaurus Starter Template, build a Docker image from it, and execute the scraper within a Docker environment.
+
+```
+git clone https://github.com/omkarcloud/botasaurus-starter my-botasaurus-project
+cd my-botasaurus-project
+docker-compose build && docker-compose up
+```
+
+### How to Run Scraper in Gitpod?
+
+Running a scraper in Gitpod offers several benefits:
+
+- Allows your scraper to use a powerful 8-core machine with 1000 Mbps internet speed
+- Makes it easy to showcase your scraper to customers without them having to install anything, by simply sharing the Gitpod machine link
+
+In this example, we will run the Botasaurus Starter template in Gitpod:
+
+1. First, visit [this link](https://gitpod.io/#https://github.com/omkarcloud/botasaurus-starter) and sign up using your GitHub account.
+   
+   ![Screenshot (148)](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/open-in-gitpod.png)
   
-<!-- Developers are actively using Botasaurus 4 in production environments and saving hours of Development Time. To get access to Botasaurus 4, please [reach out to us](mailto:chetan@omkar.cloud?subject=Access%20Botasaurus%204&body=I%20want%20to%20use%20Botasaurus%204%20and%20gain%20access%20to%20feature%3A%20%5BTELL%20YOUR%20FEATURE%5D) and let us know which feature you would like to access. -->
- 
+2. Once signed up, open the starter project in Gitpod.   
 
-### Conclusion
+   ![gp-continue](https://raw.githubusercontent.com/omkarcloud/assets/master/images/gitpod-continue.png)
 
-Botasaurus is a powerful, flexible tool for web scraping. 
+3. In the terminal, run the following command:
+   ```bash
+   python run.py
+   ```
+4. You will see a popup notification with the heading "A service is available on port 3000". In the popup notification, click the **"Open Browser"** button to open the UI Dashboard in your browser
 
-Its various settings allow you to tailor the scraping process to your specific needs, improving both efficiency and convenience. Whether you're dealing with multiple data points, requiring parallel processing, or need to cache results, Botasaurus provides the features to streamline your scraping tasks.
+   ![open-browser.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/open-browser.png)
 
-### ❓ Need More Help or Have Additional Questions?
+5. Now, you can press the `Run` button to get the results.
+   
+   ![starter-photo.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-photo.png)
 
-For further help, ask your question in GitHub Discussions. We'll be happy to help you out.
+Note: Gitpod is not suitable for long-running tasks, as the environment will automatically shut down after a short period of inactivity. Use your local machine or a cloud VM for long-running scrapers.
 
-[![ask github](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/ask-on-github.png)](https://github.com/omkarcloud/botasaurus/discussions)
+## How to Run Scraper in Virtual Machine?
+
+To run your scraper in a Virtual Machine, we will:
+- Create a static IP
+- Create a VM with that IP
+- SSH into the VM
+- Install the scraper
+
+Now, follow these steps to run your scraper in a Virtual Machine:
+
+1. Create a Google Cloud Account if you don't have one. You will receive $300 credit to use for 3 months.
+   ![Select-your-billing-country](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/Select-your-billing-country.png)
+
+2. Click the Cloud Shell button. A terminal will open up.
+   ![click-cloud-shell-btn](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/click-cloud-shell-btn.png)
+
+3. Run the following commands in the terminal:
+
+   ```bash
+   python -m pip install bota
+   python -m bota create-ip
+   ```
+
+   You will be asked for a VM name. Enter any name you like, such as "pikachu".
+
+   > Name: pikachu
+
+   Then, you will be asked for the region for the scraper. Press Enter to go with the default, which is "us-central1", as most global companies host their websites in the US.
+
+   > Region: Default
+
+   ![Install bota](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/install-bota.gif)
+
+4. Now, visit [this link](https://console.cloud.google.com/marketplace/product/click-to-deploy-images/nodejs) and create a deployment from Google Click to Deploy with the following settings:
+   ```
+   zone: us-central1-a # Use the zone from the region you selected in the previous step.
+   Series: N1
+   Machine Type: n1-standard-2 (2 vCPU, 1 core, 7.5 GB memory)
+   Network Interface [External IP]: pikachu-ip # Use the IP name you created in the previous step.
+   ```
+   ![deploy-node](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/deploy-node.gif)
+
+5. Visit [this link](https://console.cloud.google.com/compute/instances) and click the SSH button to SSH into the VM.
+   ![ssh-vm](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/ssh-vm.png)
+
+6. Now, run the following commands in the terminal, then wait for 5 minutes for the installation to complete:
+   ```bash
+   curl -sL https://raw.githubusercontent.com/omkarcloud/botasaurus/master/vm-scripts/install-scraper.sh | bash -s -- https://github.com/omkarcloud/botasaurus-starter
+   ```
+   
+   ![install-scraper](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/install-scraper.gif)
+   Note: If you are using a different repo, replace `https://github.com/omkarcloud/botasaurus-starter` with your repo URL.
+That's it! You have successfully launched the Scraper in a Virtual Machine. When the previous commands are done, you will see a link to your scraper. Visit it to run your scraper.
+
+![vm-success](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/vm-success.gif)
+
+## How to delete the scraper and avoid incurring charges?
+
+If you are deleting a custom scraper you deployed, please ensure you have downloaded the results from it. 
+
+Next, follow these steps to delete the scraper:
+
+1. Delete the static IP by running the following command:
+
+   ```bash
+   python -m bota delete-ip
+   ```
+
+   You will be asked for the name of the VM you created in the first step. Enter the name and press Enter.
+
+   ![Delete IP](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-ip.png)
+
+   Note: If you forgot the name of the IP, you can also delete all the IPs by running `python -m bota delete-all-ips`.
+
+2. Go to [Deployment Manager](https://console.cloud.google.com/dm/deployments) and delete your deployment.
+
+   ![Delete deployment](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-deployment.gif)
+
+That's it! You have successfully deleted the scraper in the Virtual Machine.
 
 ## Thanks
 
 - Kudos to the Apify Team for creating the `got-scraping` and `proxy-chain` libraries. The implementation of stealth Anti Detect Requests and SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `got-scraping` and `proxy-chain`.
-- Shout out to zfcsoftware for developing `puppeteer-real-browser`; it helped us in creating Botasaurus Anti Detected. Show your appreciation by subscribing to their [YouTube channel](https://www.youtube.com/@zfcsoftware/videos) ⚡.
-- A special thanks to the Selenium team for creating Selenium, an invaluable tool in our toolkit.
-- Thanks to Cloudflare, DataDome, Imperva, and all bot detectors. Had you not been there, we wouldn't be either 😅.
+- Shout out to [ultrafunkamsterdam](https://github.com/ultrafunkamsterdam) for creating `nodriver`, which inspired the creation of Botasaurus Driver.
+- A special thanks to Cloudflare, DataDome, Imperva, and all bot detectors. Had you not been there, we wouldn't be either 😅.
 - Finally, a humongous thank you for choosing Botasaurus.
 
 ## Love It? [Star It! ⭐](https://github.com/omkarcloud/botasaurus)
@@ -1330,4 +2067,4 @@ It's just one click, but it means the world to me.
 
 We take the concerns of the Botasaurus Project very seriously. For any inquiries or issues, please contact Chetan Jain at [chetan@omkar.cloud](mailto:chetan@omkar.cloud). We will take prompt and necessary action in response to your emails.
 
-## Made with ❤️ in Bharat 🇮🇳 - Vande Mataram
+## Made with ❤️ in Mastastic Bharat 🇮🇳 - Vande Mataram
