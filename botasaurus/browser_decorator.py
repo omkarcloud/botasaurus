@@ -203,13 +203,11 @@ def browser(
                     if create_error_logs:
                         save_error_logs(format_exc(), driver)
                     
-
-                    if not headless:
+                    if not close_on_crash:
                         if not IS_PRODUCTION:
-                            if not close_on_crash:
-                                driver.prompt(
-                                    "We've paused the browser to help you debug. Press 'Enter' to close."
-                                )
+                            if headless:
+                                driver.open_in_devtools()
+                            driver.prompt("We've paused the browser to help you debug. Press 'Enter' to close.")
 
                     # if reuse_driver:
                     #     driver.is_new = False
