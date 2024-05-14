@@ -80,7 +80,7 @@ def download_results(results, fmt, filename):
     results = convert_nested_to_json(results)
 
     if results:
-        fieldnames = results[0].keys()
+        fieldnames = list(results[0].keys())
     else:
         fieldnames = []
     

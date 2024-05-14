@@ -181,25 +181,18 @@ def write_csv(data, filename, log=True):
     """
     import csv
 
-    if type(data) is dict:
-        data = [data]
+    data = clean_data(data)
+    data = convert_nested_to_json(data)
 
     filename_new = append_output_if_needed(filename)
 
-    data = convert_nested_to_json(remove_non_dicts(data))
 
     if not filename_new.endswith(".csv"):
         filename_new = filename_new + ".csv"
 
-    # if data is None or len(data) == 0:
-    # if log:
-    # print("No CSV File written as data list is empty.")
-    # print("Data is empty.")
-    # return
     try:
         with open(filename_new, "w", newline="", encoding="utf-8") as csvfile:
-            # fieldnames = data[0].keys()  # get the fieldnames from the first dictionary
-            fieldnames = get_fieldnames(data)
+            fieldnames = get_fields(data)
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()  # write the header row
             writer.writerows(data)  # write each row of data
@@ -270,3 +263,103 @@ def read_file(filename):
     filename = append_output_if_needed(filename)
 
     return _read_file(filename)
+
+def normalize_data(data):
+    if data is None:
+        return []
+    elif isinstance(data, (list, set, tuple)):
+        normalized_list = []
+        for item in data:
+            if item is None:
+                continue  # Skip None items
+            elif not isinstance(item, dict):
+                item = {"data": item}  # Wrap non-dict items
+            normalized_list.append(item)
+        return normalized_list
+
+    elif isinstance(data, dict):
+        return [data]
+
+    else:
+        return [{"data": data}]
+    
+def normalize_dicts_by_fieldnames(data):
+    fieldnames = get_fieldnames(data)
+    filtered_data = []
+
+    for item in data:
+        filtered_item = {key: item.get(key, None) for key in fieldnames}
+        filtered_data.append(filtered_item)
+
+    return filtered_data
+
+def clean_data(data):
+    # Then, filter the normalized data to ensure each dict contains the same set of fieldnames
+    return normalize_dicts_by_fieldnames(normalize_data(data))
+
+def fix_excel_filename(filename):
+    filename = append_output_if_needed(filename)
+
+    if not filename.endswith(".xlsx"):
+        filename = filename + ".xlsx"
+    return filename
+
+def write_excel(data, filename, log=True):
+    import openpyxl
+    data = clean_data(data)
+    data = convert_nested_to_json(data)
+    try:
+        filename = fix_excel_filename(filename)
+
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+
+        # Write headers
+        fieldnames = get_fields(data)
+        sheet.append(fieldnames)
+
+        # Write data
+        for row in data:
+            values = list(row.values())
+            # print(values)
+            sheet.append(values)
+
+        workbook.save(filename)
+
+        if log:
+            print(f"View written Excel file at {filename}")
+    except PermissionError:
+        prompt(
+            f"{filename} is currently open in another application (e.g., Excel). Please close the the Application and press 'Enter' to save."
+        )
+        write_excel(data, filename, log)
+
+def get_fields(data):
+    if len(data) == 0:
+        return []
+    return list(data[0].keys())
+
+def read_excel(filename):
+    import openpyxl
+
+    filename = fix_excel_filename(filename)
+
+    workbook = openpyxl.load_workbook(filename)
+    sheet = workbook.active
+
+    data = []
+    headers = [cell.value for cell in sheet[1]]
+
+    for row in sheet.iter_rows(min_row=2):
+        row_data = {}
+        for cell, header in zip(row, headers):
+            row_data[header] = cell.value
+        data.append(row_data)
+
+    return data
+
+def write_temp_excel(data, log=True):
+    write_excel(data, "temp.xlsx", log)
+
+def read_temp_excel():
+    return read_excel("temp.xlsx")

@@ -4,7 +4,7 @@ from .utils import write_file
 
 from .formats import Formats
 
-from .output import write_json, write_csv, fix_csv_filename, fix_json_filename
+from .output import fix_excel_filename, write_excel, write_json, write_csv, fix_csv_filename, fix_json_filename
 
 from .decorators_utils import (
     create_directory_if_not_exists,
@@ -202,6 +202,10 @@ def write_output(output, output_formats, data, result, fn_name):
                 filename = fix_csv_filename(default_filename)
                 written_filenames.append(filename)
                 write_csv(result, filename, False)
+            elif fm == Formats.EXCEL:
+                filename = fix_excel_filename(default_filename)
+                written_filenames.append(filename)
+                write_excel(result, filename, False)
 
     print_filenames(written_filenames)
 

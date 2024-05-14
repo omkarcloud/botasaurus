@@ -1,20 +1,18 @@
 import json
-from urllib.parse import urlparse, urlunparse, urlencode
-import re
-from typing import List
 
-def snakecase(string: str, keep_together: List[str] = None) -> str:
+def snakecase(string: str, keep_together: list[str] = None) -> str:
     """Convert a string into snake_case.
 
     Args:
         string (:obj:`str`):
             The string to convert to snake_case.
-        keep_together (:obj:`List[str]`, `optional`):
+        keep_together (:obj:`list[str]`, `optional`):
             (Upper) characters to not split, e.g., "HTTP".
 
     Returns:
         :obj:`str`: The snake_cased string.
     """
+    import re
     if not string:
         return ""
     leading_underscore: bool = string[0] == "_"
@@ -46,6 +44,7 @@ def camelcase(string: str) -> str:
     Returns:
         :obj:`str`: The camelCased string.
     """
+    import re
     if not string:
         return ""
     # Turn into snake_case, then remove "_" and capitalize first letter
@@ -142,6 +141,7 @@ def select(data, *keys, default=None, max_depth=None, map_data=None, filter_func
 
 
 def extract_numbers(s):
+    import re
     if isinstance(s, str):
         # Use regular expression to find all numbers in the text
         numbers = re.findall(r"\b\d+(?:\.\d+)?\b", remove_commas(s))
@@ -155,6 +155,7 @@ def extract_numbers(s):
 
 
 def extract_number(s):
+    import re
     if isinstance(s, str):
         # Use regular expression to find all numbers in the text
         numbers = re.findall(r"\b\d+(?:\.\d+)?\b", remove_commas(s))
@@ -167,6 +168,7 @@ def extract_number(s):
         return s
 
 def extract_links(s):
+    import re    
     if isinstance(s, str):
         return re.findall(
             r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
@@ -176,6 +178,7 @@ def extract_links(s):
 
 
 def extract_emails(s):
+    import re    
     if isinstance(s, str):
         email_regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
         return re.findall(email_regex, s)
@@ -183,6 +186,7 @@ def extract_emails(s):
 
 
 def extract_otps(s):
+    import re    
     if isinstance(s, str):
         return re.findall(r"\b\d{4,6}\b", s)
     return []
@@ -246,6 +250,7 @@ def extract_meta_content(soup, property_name):
 
 
 def extract_path_from_link(link):
+    from urllib.parse import urlparse, urlunparse    
     if isinstance(link, str):
         parsed = urlparse(link)
         return str(
@@ -256,6 +261,7 @@ def extract_path_from_link(link):
 
 
 def extract_domain_from_link(link):
+    from urllib.parse import urlparse    
     if isinstance(link, str):
         return urlparse(link).netloc
 
@@ -280,6 +286,7 @@ def extract_from_dict(data, *args):
 
 
 def join_link(link, path=None, query_params=None):
+    from urllib.parse import urlencode
     
     if path:
         prepend = link.rstrip("/")
@@ -334,6 +341,7 @@ def join_with_newlines(*args):
 
 
 def trim_and_collapse_spaces(s):
+    import re    
     if isinstance(s, str):
         return re.sub(r"\s+", " ", s.strip())
 

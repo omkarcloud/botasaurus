@@ -7,6 +7,7 @@ install_requires = [
     "joblib>=1.3.2",
     "beautifulsoup4>=4.11.2",
     "cloudscraper",
+    "openpyxl",
     "close_chrome",
     "botasaurus_api",
     "botasaurus_driver",

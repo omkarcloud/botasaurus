@@ -5,7 +5,7 @@ from botasaurus.decorators_common import evaluate_proxy, print_running, write_ou
 from .utils import is_errors_instance
 from .list_utils import flatten
 from .dontcache import is_dont_cache
-from botasaurus_driver import Driver
+from botasaurus_driver   import Driver
 
 def browser(
     _func: Optional[Callable] = None,
@@ -31,7 +31,6 @@ def browser(
     proxy: Optional[Union[Callable[[Any], str], str]] = None,
     user_agent: Optional[Union[Callable[[Any], str], str]] = None,
     reuse_driver: bool = False,
-    keep_drivers_alive: bool = False,
     output: Optional[Union[str, Callable]] = "default",
     output_formats: Optional[List[str]] = None,
     raise_exception: bool = False,
@@ -57,9 +56,8 @@ def browser(
                 while pool:
                     pool.pop()
             elif len(pool) > 0:
-                run_parallel(close_driver, pool, len(pool))
                 while pool:
-                    pool.pop()
+                    close_driver(pool.pop())
 
         url = None
 
@@ -70,7 +68,7 @@ def browser(
             nonlocal parallel, data, cache, block_images_and_css, block_images, window_size, metadata, add_arguments, extensions
             nonlocal tiny_profile, wait_for_complete_page_load, lang, headless, beep
             nonlocal close_on_crash, async_queue, run_async, profile
-            nonlocal proxy, user_agent, reuse_driver, keep_drivers_alive, raise_exception, must_raise_exceptions
+            nonlocal proxy, user_agent, reuse_driver, raise_exception, must_raise_exceptions
 
             nonlocal output, output_formats, max_retry, retry_wait, create_driver, create_error_logs
 
@@ -96,7 +94,7 @@ def browser(
             proxy = kwargs.get("proxy", proxy)
             user_agent = kwargs.get("user_agent", user_agent)
             reuse_driver = kwargs.get("reuse_driver", reuse_driver)
-            keep_drivers_alive = kwargs.get("keep_drivers_alive", keep_drivers_alive)
+            dont_close_driver = reuse_driver
             output = kwargs.get("output", output)
             output_formats = kwargs.get("output_formats", output_formats)
             max_retry = kwargs.get("max_retry", max_retry)
@@ -114,7 +112,7 @@ def browser(
                 _create_cache_directory_if_not_exists(func)
 
             # # Pool to hold reusable drivers
-            _driver_pool = wrapper_browser._driver_pool if keep_drivers_alive else []
+            _driver_pool = wrapper_browser._driver_pool if dont_close_driver else []
 
             def run_task(data, is_retry, retry_attempt, retry_driver=None) -> Any:
                 if cache is True:
@@ -136,7 +134,6 @@ def browser(
 
                 if evaluated_profile is not None:
                     evaluated_profile = str(evaluated_profile)
-
                 if retry_driver is not None:
                     driver = retry_driver
                 elif reuse_driver and len(_driver_pool) > 0:
@@ -214,11 +211,11 @@ def browser(
                                     "We've paused the browser to help you debug. Press 'Enter' to close."
                                 )
 
-                    if reuse_driver:
-                        driver.is_new = False
-                        _driver_pool.append(driver)  # Add back to the pool for reuse
-                    else:
-                        close_driver(driver)
+                    # if reuse_driver:
+                    #     driver.is_new = False
+                    #     _driver_pool.append(driver)  # Add back to the pool for reuse
+                    # else:
+                    close_driver(driver)
 
                     if raise_exception:
                         raise error
@@ -255,6 +252,10 @@ def browser(
                     current_result = run_task(data_item, False, 0)
                     result.append(current_result)
             else:
+                if reuse_driver or dont_close_driver:
+                    raise Exception(
+                        "Parallel mode is currently not supported with 'reuse_driver' option."
+                    )
 
                 def run(data_item):
                     current_result = run_task(data_item, False, 0)
@@ -264,9 +265,10 @@ def browser(
 
                 if callable(parallel):
                     print(f"Running {n} Browsers in Parallel")
+                
                 result = run_parallel(run, used_data, n, False)
 
-            if not keep_drivers_alive:
+            if not dont_close_driver:
                 close_driver_pool(_driver_pool)
             if return_first:
                 if not async_queue:

@@ -14,7 +14,6 @@ headless_config = {
 
 reuse_driver_config = {
     "reuse_driver": True,
-    "keep_drivers_alive": True,
 }
 
 ## MAJOR CONFIGS

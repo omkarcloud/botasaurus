@@ -692,7 +692,7 @@ DEFAULT_INSTANCE = "n1-standard-2"
 def create_ip(name):
     """Creates an IP address for a VM"""
     project_id = get_project_id()
-    name = name.strip()
+    name = name.strip().rstrip('-ip')
     region = get_region()
 
     if does_ip_exists_regional(name, project_id, region):
@@ -710,11 +710,15 @@ def create_ip(name):
 def delete_ip(name, force):
     """Deletes an IP address for a VM"""
     project_id = get_project_id()
-    name = name.strip()
+    name = name.strip().rstrip('-ip')
     region = get_region()
-
     if not does_ip_exists_regional(name, project_id, region):
-        click.echo(f"IP address {name}-ip not found.")
+        ips = list_all_ips_regional(project_id, region)
+        if ips:
+          ips = ', '.join(ips)
+          click.echo(f"IP address {name}-ip not found. Available IP addresses are: {ips}.")
+        else: 
+          click.echo(f"IP address {name}-ip not found.")
         return
 
     if not force:
@@ -732,10 +736,10 @@ def delete_ip(name, force):
 @click.option("--machine-type", prompt=f"Enter machine type. Default", default=DEFAULT_INSTANCE, help=f"Specify the GCP machine type to create. Defaults to {DEFAULT_INSTANCE}.")
 @click.option(
     "--nodes",
-    prompt="Enter the maximum number of nodes to run in the cluster (default: 3). Keep in mind that, based on the GCP quota, You may need to request a quota increase if you want to create clusters with more nodes.",
-    default=3,
+    prompt="Enter the maximum number of nodes to run in the cluster (default: 2). Keep in mind that, based on the GCP quota, You may need to request a quota increase if you want to create clusters with more nodes.",
+    default=2,
     type=int,
-    help="Maximum number of nodes for the cluster. Defaults to 3. Adjust based on requirements and GCP quota."
+    help="Maximum number of nodes for the cluster. Defaults to 2. Adjust based on requirements and GCP quota."
 )
 def create_cluster(cluster_name, machine_type, nodes):
     """Create the cluster"""
@@ -1074,6 +1078,23 @@ def delete_all_ips(force):
             click.echo(f"IP address '{ip}' not found or already deleted.")
 
     click.echo(f"Successfully deleted all IP addresses in region '{region}'.")
+
+
+@cli.command()
+def list_all_ips():
+    """Deletes all IP addresses"""
+
+    project_id = get_project_id()
+    region = get_region()  # Get the current region using the get_region function
+
+    ips = list_all_ips_regional(project_id, region)
+    if not ips:
+        click.echo(f"No IP addresses found in region '{region}'.")
+        return
+
+    click.echo(f"You have following IP addresses in region '{region}':")
+    for ip in ips:
+        click.echo(f"- {ip}")
 
 # python -m src.bota.__main__
 if __name__ == "__main__":

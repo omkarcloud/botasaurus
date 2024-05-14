@@ -3,6 +3,7 @@ import os
 from threading import Thread
 import sys
 import webbrowser
+import urllib.request
 from .env import is_vmish
 from .app import run_backend
 from .port_kill_adapter import killfrontendandbackendports, killbackendport
@@ -22,9 +23,30 @@ Commands:
   dev               Run the backend normally, and the frontend in development mode with hot reloading, allowing you to see UI changes immediately as you update the Next.js frontend code in the "frontend/src" folder.  This functionality is mostly not needed and is only useful when you need to change frontend ui's appearance. 
 """)
 
+def is_server_ready(url):
+  """Checks if the server at the given URL is reachable using a HEAD request.
+
+  Args:
+      url (str): The URL to check.
+
+  Returns:
+      bool: True if the server responds with a successful status code (2xx), False otherwise.
+  """
+  try:
+    req = urllib.request.Request(url, method='HEAD')
+
+    with urllib.request.urlopen(req, timeout=4) as response:
+      return response.getcode() > 199 and response.getcode() < 300  # Check using > and <
+  except:
+    return False
+
+
 def open_browser():
+  sleep(1)
+  while not is_server_ready('http://localhost:3000/'):
+    sleep(1)    
     # Wait for a few seconds before opening the browser
-    webbrowser.open('http://localhost:3000/')
+  webbrowser.open('http://localhost:3000/')
 
 def open_browser_in_thread():
     if not is_vmish:

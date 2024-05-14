@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 
 def soupify(item) -> BeautifulSoup:
-    # Driver
+    # Driver 
     if hasattr(item, 'page_html'):
         return BeautifulSoup(item.page_html, 'html.parser')
     # Element
@@ -14,5 +14,11 @@ def soupify(item) -> BeautifulSoup:
 
     if isinstance(item, str):
         return BeautifulSoup(item, 'html.parser')
+
+    if isinstance(item, dict):
+        raise ValueError(f"Unable to create BeautifulSoup object for dicts")
+
+    if item is None:
+        raise ValueError(f"Unable to create BeautifulSoup object for None")
 
     raise ValueError(f"Unable to create BeautifulSoup object for {item}")

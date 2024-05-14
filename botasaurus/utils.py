@@ -38,3 +38,8 @@ def read_file(path):
 def write_json(data, path,  indent=4):
     with open(path, 'w', encoding="utf-8") as fp:
         json.dump(data, fp, indent=indent)
+
+
+
+def uniquify_strings(strs):
+    return list(dict.fromkeys(strs))
