@@ -20,7 +20,7 @@ def get_description():
 
 setup(
     name="botasaurus_api",
-    version='4.0.1',
+    version='4.0.2',
     author="Chetan Jain",
     author_email="chetan@omkar.cloud",
     description="The Botasaurus API Client provides programmatic access to Botasaurus scrapers with a developer-friendly API.",
