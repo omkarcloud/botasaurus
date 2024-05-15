@@ -2051,7 +2051,7 @@ Congratulations on completing the Botasaurus Documentation! Now, you have all th
 
 You may choose to read the following questions based on your interests:
 
-1. [How to Run Scraper in Google Colab?](https://github.com/omkarcloud/google-maps-scraper/blob/master/advanced.md#-i-dont-have-python-or-im-facing-errors-when-setting-up-the-scraper-on-my-pc-how-to-solve-it)
+1. [How to Run Scraper in Google Colab?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-to-run-botasaurus-in-google-colab)
 
 
 ## Thanks

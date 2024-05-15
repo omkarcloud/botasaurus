@@ -1,6 +1,6 @@
 ## 🤔 Advanced Questions
 
-### How to Run Scraper in Google Colab?
+### How to Run Botasaurus in Google Colab?
 
 1. Run the following code snippet to install Chrome and Botasaurus:
 
