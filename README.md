@@ -2044,6 +2044,16 @@ Next, follow these steps to delete the scraper:
 
 That's it! You have successfully deleted the scraper in the Virtual Machine.
 
+
+### ❓ Advanced Questions
+
+Congratulations on completing the Botasaurus Documentation! Now, you have all the knowledge needed to effectively use Botasaurus. 
+
+You may choose to read the following questions based on your interests:
+
+1. [How to Run Scraper in Google Colab?](https://github.com/omkarcloud/google-maps-scraper/blob/master/advanced.md#-i-dont-have-python-or-im-facing-errors-when-setting-up-the-scraper-on-my-pc-how-to-solve-it)
+
+
 ## Thanks
 
 - Kudos to the Apify Team for creating the `got-scraping` and `proxy-chain` libraries. The implementation of stealth Anti Detect Requests and SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `got-scraping` and `proxy-chain`.

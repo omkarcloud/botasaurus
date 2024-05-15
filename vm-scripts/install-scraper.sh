@@ -12,6 +12,6 @@ repo_url=$1
 # Install required packages and dependencies
 sudo apt install -y python3-pip
 python3 -m pip install bota
-
+alias python=python3
 # Install the scraper using the provided repo URL
 python3 -m bota install-scraper --repo-url "$repo_url"
