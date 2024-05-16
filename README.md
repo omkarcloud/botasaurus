@@ -239,15 +239,16 @@ def scrape_heading_task(driver: Driver, data):
 scrape_heading_task()
 ```
 
-- Use the stealth request mode to make the request more stealthy. The Request Object is smart and, by default, visits any link with a Google Referrer.
+- Use the request module. The Request Object is smart and, by default, visits any link with a Google Referrer.  It works, although you will need to use retries.
 
 ```python
 from botasaurus.request import request, Request
 
-@request(use_stealth=True)
+@request(max_retry=10)
 def scrape_heading_task(request: Request, data):
     response = request.get('https://www.g2.com/products/github/reviews')
     print(response.status_code)
+    response.raise_for_status()
     return response.text
 
 scrape_heading_task()
@@ -514,7 +515,7 @@ To accomplish these goals, Botasaurus gives you 3 decorators:
 - `@browser`: For scraping web pages using a super anti-detect browser.
 - `@request`: For scraping web pages using lightweight and anti-detect HTTP requests.
 - `@task`: 
-  - For scraping web pages using third-party libraries like `hrequests`, `playwright` or `selenium`.
+  - For scraping web pages using third-party libraries like `playwright` or `selenium`.
   - or, For running non-web scraping tasks, such as data processing (e.g., converting video to audio). Botasaurus is not limited to web scraping tasks; any Python function can be made accessible with a stunning UI and user-friendly API.
 
 In practice, while developing with Botasaurus, you will spend most of your time in the following areas:
@@ -1041,19 +1042,12 @@ This practice will save you a considerable amount of time (as proxies are really
 
 ### How to configure the Request Decorator?
 
-The Request Decorator is used to make humane requests. Under the hood, to make anti-detect requests, it:
+The Request Decorator is used to make humane requests. Under the hood, it uses botasaurus-requests, a library based on hrequests, which incorporates several anti-detect features:
 - Uses browser-like headers in the correct order.
 - Makes a browser-like connection with correct ciphers.
 - Uses `google.com` referer by default to make it appear as if the user has clicked on a link on google.com to visit the page.
 
-The Request Decorator allows you to configure 2 custom options:
-
-- Setting up proxies
-- Using Stealth Mode
-
-#### Proxy 
-
-The usage is exactly the same as with the Browser Decorator.
+The Request Decorator only allows you to configure proxy as follows:
 
 ```python
 @request(
@@ -1061,23 +1055,6 @@ The usage is exactly the same as with the Browser Decorator.
 )    
 ```
 
-#### Stealth Mode
-
-When facing a Connection Challenge (where you need to make a browser-like connection), the normal request mode will be detected by Bot Detectors like Cloudflare. 
-
-For such cases, you should use the stealth mode as follows, which will easily solve the connection challenge:
-
-```python
-from botasaurus.request import request, Request
-
-@request(use_stealth=True)
-def scrape_heading_task(request: Request, data):
-    response = request.get('https://www.g2.com/products/github/reviews')
-    print(response.status_code) # Status Code will be 200!
-    return response.text
-
-scrape_heading_task()
-```
 
 ### What Options Can I Configure in all 3 Decorators?
 
@@ -1189,7 +1166,6 @@ def extract_title(html):
 @request(
     parallel=5,
     async_queue=True,
-    use_stealth=True,
     max_retry=5,
 )
 def scrape_place_title(request: Request, link, metadata):
@@ -1799,7 +1775,6 @@ from botasaurus.request import request, Request
 from botasaurus.soupify import soupify
 
 @request(
-    # use_stealth=True, # Uncomment to use stealth mode
     # proxy='http://username:password@datacenter-proxy-domain:proxy-port', # Uncomment to use Proxy ONLY if you face IP blocking
     cache=True,
 
@@ -2056,8 +2031,9 @@ You may choose to read the following questions based on your interests:
 
 ## Thanks
 
-- Kudos to the Apify Team for creating the `got-scraping` and `proxy-chain` libraries. The implementation of stealth Anti Detect Requests and SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `got-scraping` and `proxy-chain`.
+- Kudos to the Apify Team for creating the `proxy-chain` library. The implementation of SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `proxy-chain`.
 - Shout out to [ultrafunkamsterdam](https://github.com/ultrafunkamsterdam) for creating `nodriver`, which inspired the creation of Botasaurus Driver.
+- A big thank you to [daijro](https://github.com/daijro) for creating [hrequest](https://github.com/daijro/hrequests), which inspired the creation of botasaurus-requests.
 - A special thanks to Cloudflare, DataDome, Imperva, and all bot detectors. Had you not been there, we wouldn't be either 😅.
 - Finally, a humongous thank you for choosing Botasaurus.
 

@@ -121,6 +121,11 @@ class Cache:
     @staticmethod
     def get(func, key_data):
         """Read data from a cache file."""
+        
+        # resolve user errors
+        if isinstance(key_data, list):
+            return Cache.get_items(func, key_data)
+
         _create_cache_directory_if_not_exists(func)
         path = _get_cache_path(func, key_data)
         if _has(path):
@@ -130,6 +135,10 @@ class Cache:
 
     @staticmethod
     def get_items(func, items=None):
+        # resolve user errors
+        if isinstance(items, str):
+            return Cache.get_items(func, items)
+                
         hashes = Cache.get_items_hashes(func, items)
         fn_name = getfnname(func)
         paths = [relative_path(f'cache/{fn_name}/{r}.json') for r in hashes]

@@ -35,6 +35,12 @@ def request(
         if not hasattr(func, '_scraper_type'):
             func._scraper_type = "request"
 
+        if use_stealth:
+            print("The use_stealth option has been deprecated and will be removed in future releases. Botasaurus now includes best stealth protection enabled by default. To avoid this warning, please remove use_stealth=True from your code.")
+
+        if user_agent:
+            print("The user_agent option has been deprecated and will be removed in future releases.")
+
         @wraps(func)
         def wrapper_requests(*args, **kwargs) -> Any:
             print_running()
@@ -78,11 +84,8 @@ def request(
                         return _get(path)
                 evaluated_proxy = evaluate_proxy(proxy(data) if callable(proxy) else proxy)
 
-                evaluated_user_agent = (
-                    user_agent(data) if callable(user_agent) else user_agent
-                )
                 reqs = create_request(
-                    evaluated_proxy, evaluated_user_agent, use_stealth
+                    evaluated_proxy
                 )
 
                 result = None
