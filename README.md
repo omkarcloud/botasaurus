@@ -831,7 +831,7 @@ You can dynamically configure the browser's Chrome profile and proxy using decor
 
    data = [
        {"profile": "pikachu", "proxy": "http://142.250.77.228:8000"},
-       {"profile": "shinchan", "proxy": "http://142.250.77.229:8000"},
+       {"profile": "greyninja", "proxy": "http://142.250.77.229:8000"},
    ]
 
    scrape_heading_task(data)
@@ -1126,7 +1126,7 @@ def scrape_heading_task(driver: Driver, data, metadata):
 
 data = [
     {"profile": "pikachu", "proxy": "http://142.250.77.228:8000"},
-    {"profile": "shinchan", "proxy": "http://142.250.77.229:8000"},
+    {"profile": "greyninja", "proxy": "http://142.250.77.229:8000"},
 ]
 scrape_heading_task(
   data, 
@@ -1345,7 +1345,7 @@ Some key functions are:
 ```python
 from botasaurus import bt
 
-data = {"name": "Amit", "age": 30}
+data = {"name": "pikachu", "power": 101}
 bt.write_json(data, "output")
 loaded_data = bt.read_json("output")
 ```
@@ -1354,7 +1354,7 @@ loaded_data = bt.read_json("output")
 ```python
 from botasaurus import bt
 
-data = {"name": "Amit", "age": 30}
+data = {"name": "pikachu", "power": 101}
 bt.write_excel(data, "output")
 loaded_data = bt.read_excel("output")
 ```
@@ -1363,7 +1363,7 @@ loaded_data = bt.read_excel("output")
 ```python
 from botasaurus import bt
 
-data = {"name": "Amit", "age": 30}
+data = {"name": "pikachu", "power": 101}
 bt.write_csv(data, "output")
 loaded_data = bt.read_csv("output")
 ```
@@ -1380,7 +1380,7 @@ bt.write_html(html_content, "output")
 ```python
 from botasaurus import bt
 
-data = {"name": "Amit", "age": 30}
+data = {"name": "pikachu", "power": 101}
 bt.write_temp_json(data)
 bt.write_temp_csv(data)
 bt.write_temp_html("<html><body><h1>Hello, Mom!</h1></body></html>")
