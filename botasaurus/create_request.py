@@ -1,8 +1,9 @@
 from botasaurus_requests.request_class import Request
 
-def create_request(proxy=None,  ):
+def create_request(proxy=None,  user_agent=None):
     reqs = Request(
-            proxy=proxy,
+            proxy,
+            user_agent
         )
     
     if proxy is not None:

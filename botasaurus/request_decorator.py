@@ -38,14 +38,11 @@ def request(
         if use_stealth:
             print("The use_stealth option has been deprecated and will be removed in future releases. Botasaurus now includes best stealth protection enabled by default. To avoid this warning, please remove use_stealth=True from your code.")
 
-        if user_agent:
-            print("The user_agent option has been deprecated and will be removed in future releases.")
-
         @wraps(func)
         def wrapper_requests(*args, **kwargs) -> Any:
             print_running()
             nonlocal parallel, data, cache, beep, run_async, async_queue, metadata
-            nonlocal proxy, close_on_crash, output, output_formats, max_retry, retry_wait, must_raise_exceptions, raise_exception, create_error_logs
+            nonlocal proxy, user_agent, close_on_crash, output, output_formats, max_retry, retry_wait, must_raise_exceptions, raise_exception, create_error_logs
 
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
@@ -55,6 +52,7 @@ def request(
             metadata = kwargs.get("metadata", metadata)
             async_queue = kwargs.get("async_queue", async_queue)
             proxy = kwargs.get("proxy", proxy)
+            user_agent = kwargs.get("user_agent", user_agent)
             close_on_crash = kwargs.get("close_on_crash", close_on_crash)
             output = kwargs.get("output", output)
             output_formats = kwargs.get("output_formats", output_formats)
@@ -83,9 +81,12 @@ def request(
                     if _has(path):
                         return _get(path)
                 evaluated_proxy = evaluate_proxy(proxy(data) if callable(proxy) else proxy)
+                evaluated_user_agent = (
+                    user_agent(data) if callable(user_agent) else user_agent
+                )
 
                 reqs = create_request(
-                    evaluated_proxy
+                    evaluated_proxy, evaluated_user_agent
                 )
 
                 result = None
