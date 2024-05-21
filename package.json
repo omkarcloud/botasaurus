@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "upload": "python3 increment_version.py && rm -rf dist/ botasaurus.egg-info botasaurus/botasaurus_storage.json  MANIFEST  && python3 setup.py sdist && python3 -m pip install -e . && python3 -m twine upload dist/* --verbose && python3 -m pip install  -e . && npm run reload-pypi",
+    "upload": "python3 increment_version.py && rm -rf dist/ botasaurus.egg-info botasaurus/botasaurus_storage.json  MANIFEST  && python3 setup.py sdist && python3 -m pip install -e . && python3 -m twine upload dist/* --verbose",
     "local-install": "rm -rf dist/ botasaurus.egg-info botasaurus/botasaurus_storage.json MANIFEST && python3 setup.py sdist && python3 -m pip install -e .",
     "reload-pypi" : "python3 -m pip uninstall botasaurus -y && python3 -m python3 -m pip install botasaurus --upgrade && npm run local-install"
 
