@@ -9,7 +9,7 @@ from .utils import (
     write_file as _write_file,
 )
 from .beep_utils import prompt
-
+import os
 
 def is_slash_not_in_filename(filename):
     return "/" not in filename and "\\" not in filename
@@ -303,36 +303,49 @@ def fix_excel_filename(filename):
     if not filename.endswith(".xlsx"):
         filename = filename + ".xlsx"
     return filename
-
 def write_excel(data, filename, log=True):
-    import openpyxl
+
     data = clean_data(data)
     data = convert_nested_to_json(data)
+
     try:
         filename = fix_excel_filename(filename)
-
-        workbook = openpyxl.Workbook()
-        sheet = workbook.active
-
-        # Write headers
-        fieldnames = get_fields(data)
-        sheet.append(fieldnames)
-
-        # Write data
-        for row in data:
-            values = list(row.values())
-            # print(values)
-            sheet.append(values)
-
-        workbook.save(filename)
+        write_workbook(data, filename)
 
         if log:
             print(f"View written Excel file at {filename}")
+
     except PermissionError:
-        prompt(
-            f"{filename} is currently open in another application (e.g., Excel). Please close the the Application and press 'Enter' to save."
-        )
+        prompt(f"{filename} is currently open in another application (e.g., Excel). Please close the the Application and press 'Enter' to save.")
         write_excel(data, filename, log)
+
+def write_workbook(data, filename,  strings_to_urls = True):
+    import xlsxwriter
+    if strings_to_urls:
+     workbook = xlsxwriter.Workbook(filename)
+    else:
+     workbook = xlsxwriter.Workbook(filename, {'strings_to_urls': False})
+     
+    worksheet = workbook.add_worksheet()
+
+        # Write headers
+    fieldnames = get_fields(data)
+    worksheet.write_row(0, 0, fieldnames)
+
+        # Write data
+    row = 1
+    for item in data:
+        # Prevent Warnings and Handle Excel 65K Link Limit
+        if worksheet.hlink_count > 65000:
+            workbook.close()
+            if os.path.exists(filename):
+                os.remove(filename)
+            return write_workbook(data, filename,strings_to_urls = False)
+        values = list(item.values())
+        worksheet.write_row(row, 0, values)
+        row += 1
+
+    workbook.close()
 
 def get_fields(data):
     if len(data) == 0:

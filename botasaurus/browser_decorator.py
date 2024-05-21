@@ -5,7 +5,7 @@ from botasaurus.decorators_common import evaluate_proxy, print_running, write_ou
 from .utils import is_errors_instance
 from .list_utils import flatten
 from .dontcache import is_dont_cache
-from botasaurus_driver   import Driver
+from botasaurus_driver import Driver
 
 def browser(
     _func: Optional[Callable] = None,

@@ -39,7 +39,7 @@ Now, let me tell you in bullet points about Botasaurus. (Because as per the mark
 
 *So, what is Botasaurus?*
 
-Botasaurus is an all-in-one web scraping framework that enables you to build awesome scrapers in less time and code, and with more fun.
+Botasaurus is an all-in-one web scraping framework that enables you to build awesome scrapers in less time, less code, and with more fun.
 
 A Web Scraping Magician has put all his web scraping experience and best practices into Botasaurus to save you hundreds of hours of Development Time! 
 
@@ -49,7 +49,7 @@ Now, for the magical powers awaiting you after learning Botasaurus:
 
 ![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
 
-- In terms of Stealth Capabilities, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes E-V-E-R-Y) bot detection test, no need to spend time finding ways to unblock a website.
+- In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes E-V-E-R-Y) bot test, no need to spend time finding ways to access a website.
 
 ![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/solve-bot-detection.gif)
 
@@ -100,7 +100,7 @@ from botasaurus.browser import browser, Driver
 
 @browser
 def scrape_heading_task(driver: Driver, data):
-    # Navigate to the Omkar Cloud website
+    # Visit the Omkar Cloud website
     driver.get("https://www.omkar.cloud/")
     
     # Retrieve the heading element's text
@@ -123,13 +123,13 @@ Let's understand this code:
 def scrape_heading_task(driver: Driver, data):
 ```  
 
-- Botasaurus automatically provides an Anti-Detect driver to our function:
+- Botasaurus automatically provides an Humane Driver to our function:
 ```python
 def scrape_heading_task(driver: Driver, data):
 ```  
 
 - Inside the function, we:
-    - Navigate to Omkar Cloud
+    - Visit Omkar Cloud
     - Extract the heading text
     - Return the data to be automatically saved as `scrape_heading_task.json` by Botasaurus:
 ```python
@@ -146,7 +146,7 @@ scrape_heading_task()
 
 ### Step 4: Run the Scraping Task
 
-Time to run your bot:
+Time to run it:
 
 ```shell
 python main.py
@@ -154,7 +154,7 @@ python main.py
 
 After executing the script, it will:
 - Launch Google Chrome
-- Navigate to [omkar.cloud](https://www.omkar.cloud/)
+- Visit [omkar.cloud](https://www.omkar.cloud/)
 - Extract the heading text
 - Save it automatically as `output/scrape_heading_task.json`.
 
@@ -168,7 +168,7 @@ from botasaurus.soupify import soupify
 
 @request
 def scrape_heading_task(request: Request, data):
-    # Navigate to the Omkar Cloud website
+    # Visit the Omkar Cloud website
     response = request.get("https://www.omkar.cloud/")
 
     # Create a BeautifulSoup object    
@@ -187,18 +187,18 @@ scrape_heading_task()
 
 In this code:
 
-- We scrape the HTML using `request`, which is an Anti-Detect Request object specifically designed for making browser-like requests and is capable of bypassing bot detection mechanisms.
+- We scrape the HTML using `request`, which is specifically designed for making browser-like humane requests.
 - Next, we parse the HTML into a `BeautifulSoup` object using `soupify()` and extract the heading.
 
-### Step 5: Run the Scraping Task (which makes Anti-Detect HTTP Requests)
+### Step 5: Run the Scraping Task (which makes Humane HTTP Requests)
 
-Finally, run the bot again:
+Finally, run it again:
 
 ```shell
 python main.py
 ```
 
-This time, you will observe the exact same result as before, but instead of opening a whole Browser, we are using the Anti-Detect request module.
+This time, you will observe the exact same result as before, but instead of opening a whole Browser, we are making browser-like humane HTTP requests.
 
 ## 💡 Understanding Botasaurus
 
@@ -206,15 +206,15 @@ This time, you will observe the exact same result as before, but instead of open
 
 We have created a powerful web driver called `BotasaurusDriver` which provides the following benefits:
 
-- It is indistinguishable from a real browser, allowing it to pass E-V-E-R-Y bot detection challenge.
+- It is really humanane; looking and working exactly like a real browser, allowing it to access any website.
 - Compared to Selenium and Playwright, it is super fast to launch and use.
 - The API is designed by and for web scrapers, and you will love it.
 
-Cloudflare is by far the most popular bot detection system on the web. So, let's see how Botasaurus can help you access pages protected by various types of Cloudflare challenges.
+Cloudflare is the most popular protection system on the web. So, let's see how Botasaurus can help you solve various Cloudflare challenges.
 
 **Connection Challenge**
 
-This is the single most popular challenge and requires making a browser-like connection with appropriate headers to the target website. It's commonly used to protect:
+This is the single most popular challenge and requires making a browser-like connection with appropriate headers. It's commonly used for:
 - Product Pages
 - Blog Pages 
 - Search Result Pages
@@ -223,7 +223,7 @@ Example Page: https://www.g2.com/products/github/reviews
 
 #### What Works?
 
-- Visiting the website via Google Referrer (which makes the website think that you are coming from Google Search Results, and allows you).
+- Visiting the website via Google Referrer (which makes is seems as if the user has arrived from google search).
 
 ```python
 from botasaurus.browser import browser, Driver
@@ -239,7 +239,7 @@ def scrape_heading_task(driver: Driver, data):
 scrape_heading_task()
 ```
 
-- Use the request module. The Request Object is smart and, by default, visits any link with a Google Referrer.  It works, although you will need to use retries.
+- Use the request module. The Request Object is smart and, by default, visits any link with a Google Referrer. Although it works, you will need to use retries.
 
 ```python
 from botasaurus.request import request, Request
@@ -256,8 +256,8 @@ scrape_heading_task()
 
 **JS with Captcha Challenge**
 
-This challenge requires performing JS computations that differentiate a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. It also involves solving a Captcha. It's used to protect pages which are rarely but sometimes visited by humans, like:
-- 5th Page of G2 Reviews
+This challenge requires performing JS computations that differentiate a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. It also involves solving a Captcha. It's used to for pages which are rarely but sometimes visited by people, like:
+- 5th Review page
 - Auth pages
 
 Example Page: https://www.g2.com/products/github/reviews.html?page=5&product_id=github
@@ -266,7 +266,7 @@ Example Page: https://www.g2.com/products/github/reviews.html?page=5&product_id=
 Using `@request` does not work because although it can make browser-like HTTP requests, it cannot run JavaScript to solve the challenge.
 
 #### What Works?
-Pass the `bypass_cloudflare=True` argument to the `google_get` method to solve the Cloudflare challenge.
+Pass the `bypass_cloudflare=True` argument to the `google_get` method.
 
 ```python
 from botasaurus.browser import browser, Driver
@@ -360,7 +360,7 @@ from botasaurus.soupify import soupify
 
 @request
 def scrape_heading_task(request: Request, data):
-    # Navigate to the Link
+    # Visit the Link
     response = request.get(data["link"])
 
     # Create a BeautifulSoup object    
@@ -512,8 +512,8 @@ Botasaurus is an all-in-one web scraping framework designed to achieve two main 
 2. Offer a user interface to make it easy for your non-technical customers to run web scrapers.
 
 To accomplish these goals, Botasaurus gives you 3 decorators:
-- `@browser`: For scraping web pages using a super anti-detect browser.
-- `@request`: For scraping web pages using lightweight and anti-detect HTTP requests.
+- `@browser`: For scraping web pages using a humane browser.
+- `@request`: For scraping web pages using lightweight and humane HTTP requests.
 - `@task`: 
   - For scraping web pages using third-party libraries like `playwright` or `selenium`.
   - or, For running non-web scraping tasks, such as data processing (e.g., converting video to audio). Botasaurus is not limited to web scraping tasks; any Python function can be made accessible with a stunning UI and user-friendly API.
@@ -672,7 +672,7 @@ Enable headless mode with `headless=True`:
 )    
 ```
 
-Note that using headless mode makes the bot much easier to detect by services like Cloudflare and Datadome. So, use headless mode only when scraping websites that are not protected by Cloudflare, Datadome or similar services.
+Note that using headless mode makes the browser much easier to identify by services like Cloudflare and Datadome. So, use headless mode only when scraping websites that don't use such services.
 
 #### Chrome Extensions
 
@@ -711,7 +711,7 @@ from botasaurus.lang import Lang
 
 #### User Agent and Window Size
 
-To give you the best anti-detection, Botasaurus does not change browser fingerprints by default, because Bot detectors can easily detect bots by running CSS tests to detect mismatches between the provided user agent and the actual user agent.
+To make the browser really humane, Botasaurus does not change browser fingerprints by default, because using fingerprints makes the browser easily identifiable by running CSS tests to find mismatches between the provided user agent and the actual user agent.
 
 However, if you need fingerprinting, use the `user_agent` and `window_size` options:
 
@@ -862,7 +862,7 @@ PS: Most Botasaurus decorators allow passing functions to derive configurations 
 
 Botasaurus Driver provides several handy methods for web automation tasks such as:
 
-- Navigate to URLs:
+- Visiting URLs:
   ```python
   driver.get("https://www.example.com")
   driver.google_get("https://www.example.com")  # Use Google as the referer [Recommended]
@@ -934,7 +934,7 @@ driver.prompt()
 
 Proxy providers like BrightData, IPRoyal, and others typically provide authenticated proxies in the format "http://username:password@proxy-provider-domain:port". For example, "http://greyninja:awesomepassword@geo.iproyal.com:12321".
 
-However, if you use an authenticated proxy with a library like seleniumwire to scrape a Cloudflare protected website like G2.com, you are GUARANTEED to be blocked because you are using a non-SSL connection.
+However, if you use an authenticated proxy with a library like seleniumwire to visit a website using Cloudflare like G2.com, you are GUARANTEED to be identified because you are using a non-SSL connection.
 
 To verify this, run the following code:
 
@@ -960,7 +960,7 @@ proxy_options = {
 driver_path = install()
 driver = webdriver.Chrome(driver_path, seleniumwire_options=proxy_options)
 
-# Navigate to the desired URL
+# Visit the desired URL
 link = 'https://www.g2.com/products/github/reviews'
 driver.get("https://www.google.com/")
 driver.execute_script(f'window.location.href = "{link}"')
@@ -972,9 +972,9 @@ input("Press Enter to exit...")
 driver.quit()
 ```
 
-You will DEFINITELY be blocked:
+You will SURELY be identified:
 
-![blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/seleniumwireblocked.png)
+![identified](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/seleniumwireblocked.png)
 
 However, using proxies with Botasaurus solves this issue. See the difference by running the following code:
 
@@ -990,13 +990,13 @@ scrape_heading_task()
 ```  
 
 Result: 
-![not blocked](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/botasurussuccesspage.png)
+![not identified](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/botasurussuccesspage.png)
 
 Important Note: To run the code above, you will need [Node.js](https://nodejs.org/en) installed.
 
 ### Why am I getting a socket connection error when using a proxy to access a website?
 
-Certain proxy providers may block access to specific websites. To determine if this is the case, run the following code:
+Certain proxy providers might block access to specific websites. To determine if this is the case, run the following code:
 
 ```python
 from botasaurus.browser import browser, Driver
@@ -1018,7 +1018,7 @@ Some good proxy providers we personally use are:
 - For Rotating Datacenter Proxies: **BrightData Datacenter Proxies**, which cost around $0.6 per GB on a pay-as-you-go basis. No KYC is required.
 - For Rotating Residential Proxies: **IPRoyal Royal Residential Proxies**, which cost around $7 per GB on a pay-as-you-go basis. No KYC is required.
 
-It's worth noting that BrightData will block certain websites. 
+Also, It's worth noting that BrightData will block certain websites. 
 
 Note: We are not affiliated with any of the above proxy providers.
 
@@ -1034,7 +1034,7 @@ ONLY IF you encounter IP blocks.
 
 Sadly, most scrapers unnecessarily use proxies, even when they are not needed. Everything seems like a nail when you have a hammer.
 
-We have personally scraped hundreds of thousands of bot-protected pages using the @browser module on our home Wi-Fi without any issues.
+We have seen scrapers which can easily access hundreds of thousands of protected pages using the @browser module on home Wi-Fi without any issues.
 
 So, as a best practice scrape using the @browser module on your home Wi-Fi first. Only resort to proxies when you encounter IP blocks. 
 
@@ -1042,12 +1042,12 @@ This practice will save you a considerable amount of time (as proxies are really
 
 ### How to configure the Request Decorator?
 
-The Request Decorator is used to make humane requests. Under the hood, it uses botasaurus-requests, a library based on hrequests, which incorporates several anti-detect features:
-- Uses browser-like headers in the correct order.
+The Request Decorator is used to make humane requests. Under the hood, it uses botasaurus-requests, a library based on hrequests, which incorporates important features like:
+- Using browser-like headers in the correct order.
 - Makes a browser-like connection with correct ciphers.
-- Uses `google.com` referer by default to make it appear as if the user has clicked on a link on google.com to visit the page.
+- Uses `google.com` referer by default to make it appear as if the user has arrived from google search.
 
-The Request Decorator only allows you to configure proxy as follows:
+Also, The Request Decorator allows you to configure proxy as follows:
 
 ```python
 @request(
@@ -1598,14 +1598,14 @@ for item in test_items:
 
 In web scraping, it is a common use case to scrape product pages, blogs, etc. But before scraping these pages, you need to get the links to these pages.
 
-Many developers unnecessarily increase their work by writing code to visit each page one by one and scrape links, which they could have easily obtained by just looking at the Sitemap.
+Sadly, Many developers unnecessarily increase their work by writing code to visit each page one by one and scrape links, which they could have easily obtained by just looking at the Sitemap.
 
 The Botasaurus Sitemap Module makes this process easy as cake by allowing you to get all links or sitemaps using:
 - The homepage URL (e.g., `https://www.omkar.cloud/`)
 - A direct sitemap link (e.g., `https://www.omkar.cloud/sitemap.xml`)
 - A `.gz` compressed sitemap
 
-For example, if you're an Angel Investor seeking innovative tech startups, G2 is an ideal platform where companies showcase their products. You can run the following code to fetch over 160K+ product links from G2:
+For example, if you're an Angel Investor seeking innovative tech startups to invest, G2 is an ideal platform to find such startups. You can run the following code to fetch over 160K+ product links from G2:
 
 ```python
 from botasaurus import *
@@ -1675,7 +1675,7 @@ from botasaurus.soupify import soupify
 
 @request
 def scrape_heading_task(request: Request, data):
-    # Navigate to the Link
+    # Visit the Link
     response = request.get(data["link"])
     
     # Create a BeautifulSoup object
@@ -1764,7 +1764,7 @@ if __name__ == '__main__':
 ```
 ### What are the recommended settings for each decorator to build a production-ready scraper in Botasaurus?
 
-For websites with minimal bot protection, use the `Request` module.
+For websites with minimal protection, use the `Request` module.
 
 Here's a template for creating production-ready datasets using the `Request` module:
 
@@ -1818,7 +1818,7 @@ data_items = [
 scrape_heading(data_items)
 ```
 
-For scraping bot-protected websites (e.g., by Cloudflare), use the `Browser` module. 
+For visiting well protected websites, use the `Browser` module. 
 
 Here's a template for creating production-ready datasets using the `Browser` module:
 
@@ -1878,10 +1878,10 @@ data_items = [
 scrape_heading(data_items)
 ```
 
-### What Are Some Tips for accessing Bot Protected sites?
+### What Are Some Tips for accessing Protected sites?
 
 - Use `google_get`, use `google_get`, and use `google_get`!
-- Don't use `headless` mode, it makes your scraper easily detectable by most bot detection systems.
+- Don't use `headless` mode, else you will surely be identified by Cloudflare, Datadome, Imperva.
 - Don't use Proxies, instead use your home Wi-Fi connection, even when scraping hundreds of thousands of pages.
 
 ### How Do I Close All Running Chrome Instances?
@@ -2034,7 +2034,7 @@ You may choose to read the following questions based on your interests:
 - Kudos to the Apify Team for creating the `proxy-chain` library. The implementation of SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `proxy-chain`.
 - Shout out to [ultrafunkamsterdam](https://github.com/ultrafunkamsterdam) for creating `nodriver`, which inspired the creation of Botasaurus Driver.
 - A big thank you to [daijro](https://github.com/daijro) for creating [hrequest](https://github.com/daijro/hrequests), which inspired the creation of botasaurus-requests.
-- A special thanks to Cloudflare, DataDome, Imperva, and all bot detectors. Had you not been there, we wouldn't be either 😅.
+- A special thanks to Cloudflare, DataDome, Imperva, and all bot recognition systems. Had you not been there, we wouldn't be either 😅.
 - Finally, a humongous thank you for choosing Botasaurus.
 
 ## Love It? [Star It! ⭐](https://github.com/omkarcloud/botasaurus)

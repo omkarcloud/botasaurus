@@ -8,7 +8,7 @@ from typing import Union, List
 
 from .list_utils import flatten
 from .cl import join_link
-from .request import request
+from .request_decorator import request
 
 default_request_options = {
     # "use_stealth": True,
