@@ -139,10 +139,12 @@ def browser(
                 elif reuse_driver and len(_driver_pool) > 0:
                     driver = _driver_pool.pop()
                 else:
-                    args = []
-                    
-                    if add_arguments:
-                        add_arguments(data, args)
+                    if callable(add_arguments):
+                        args  = add_arguments(data)
+                        if not isinstance(args, list):
+                            raise Exception("add_arguments must return a list of arguments")
+                    else:
+                        args = add_arguments
 
                     driver = Driver(headless=evaluated_headless, proxy=evaluated_proxy, profile=evaluated_profile, tiny_profile=tiny_profile, block_images=block_images, block_images_and_css=block_images_and_css, wait_for_complete_page_load=wait_for_complete_page_load, extensions=evaluated_extensions, arguments=args, user_agent=evaluated_user_agent, window_size=evaluated_window_size, lang=evaluated_lang, beep=beep)
 
