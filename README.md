@@ -585,6 +585,7 @@ The Browser Decorator allows you to easily configure various aspects of the brow
 - Specifying profiles
 - Enabling headless mode
 - Using Chrome extensions
+- Captcha Solving
 - Selecting language
 
 #### Blocking Images and CSS
