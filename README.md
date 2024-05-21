@@ -2074,7 +2074,7 @@ It's just one click, but it means the world to me.
 
 ## Sponsors
 
-<a href="https://www.capsolver.com/?utm_source=github&utm_medium=banner_github&utm_campaign=botsaurus">
+<a target="_blank" href="https://capsolver.com/?utm_source=github&utm_medium=github_banner&utm_campaign=botasaurus">
     <img src="https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/capsolver.png" style="width: 70%;" alt="capsolver">
 </a>
 
