@@ -2059,7 +2059,7 @@ Also, We would be happy to help you by:
 
 If you're interested in creating videos about Botasaurus, feel free to reach out to us via WhatsApp
 
-[![Contact Us on WhatsApp about Google Maps Scraper](https://raw.githubusercontent.com/omkarcloud/assets/master/images/whatsapp-us.png)](https://api.whatsapp.com/send?phone=918295042963&text=Hi)
+[![Contact Us on WhatsApp](https://raw.githubusercontent.com/omkarcloud/assets/master/images/whatsapp-us.png)](https://api.whatsapp.com/send?phone=918295042963&text=Hi)
 
 ### Do you have a Discord community?
 
