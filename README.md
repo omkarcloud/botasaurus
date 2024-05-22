@@ -2057,7 +2057,7 @@ You may choose to read the following questions based on your interests:
 
 1. [How to Run Scraper in Google Colab?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-to-run-botasaurus-in-google-colab)
 
-2. [How to Run Scraper in Google Colab?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-to-run-botasaurus-in-google-colab)
+2. [I am a Youtuber, Should I create YouTube videos about Botasaurus? If so, how can you help me?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#i-am-a-youtuber-should-i-create-youtube-videos-about-botasaurus-if-so-how-can-you-help-me)
 
 
 ## Thanks
