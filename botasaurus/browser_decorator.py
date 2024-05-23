@@ -7,6 +7,21 @@ from .list_utils import flatten
 from .dontcache import is_dont_cache
 from botasaurus_driver import Driver
 
+def close_driver(driver: Driver):
+            try:
+                driver.close()
+            except Exception as e:
+                raise
+
+def close_driver_pool(pool: list):
+            if len(pool) == 1:
+                close_driver(pool[0])
+                while pool:
+                    pool.pop()
+            elif len(pool) > 0:
+                while pool:
+                    close_driver(pool.pop())
+
 def browser(
     _func: Optional[Callable] = None,
     *,
@@ -43,21 +58,6 @@ def browser(
     def decorator_browser(func: Callable) -> Callable:
         if not hasattr(func, '_scraper_type'):
             func._scraper_type = "browser"
-
-        def close_driver(driver):
-            try:
-                driver.close()
-            except Exception as e:
-                raise
-
-        def close_driver_pool(pool: list):
-            if len(pool) == 1:
-                close_driver(pool[0])
-                while pool:
-                    pool.pop()
-            elif len(pool) > 0:
-                while pool:
-                    close_driver(pool.pop())
 
         url = None
 
@@ -187,6 +187,7 @@ def browser(
                         and is_errors_instance(must_raise_exceptions, error)[0]
                     ):
                         save_error_logs(format_exc(), driver)
+                        close_driver(driver)
                         raise
 
                     if max_retry is not None and (max_retry) > (retry_attempt):

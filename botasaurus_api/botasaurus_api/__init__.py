@@ -1,6 +1,7 @@
 import requests
 from requests.exceptions import ConnectionError
 from .utils import get_filename_from_response_headers, write_json_response, write_file_response, remove_after_first_slash
+from typing import Optional
 
 class ApiException(Exception):
      pass
@@ -20,7 +21,7 @@ def _raise_for_status(response):
             response.raise_for_status()
 
 class Api:
-    def __init__(self, api_url: str | None = None, create_response_files: bool = True) -> None:
+    def __init__(self, api_url: Optional[str] = None, create_response_files: bool = True) -> None:
         """
         Initializes the API client with a specified server URL and an option to create response files.
         
