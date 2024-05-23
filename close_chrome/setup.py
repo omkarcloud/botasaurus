@@ -52,7 +52,7 @@ setup(
     #
     # This field corresponds to the "Description" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#description-optional
-    version='4.0.44',
+    version='4.0.46',
     author="Chetan Jain",
     author_email="chetan@omkar.cloud",
     description="CLI for botasaurus.",

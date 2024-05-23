@@ -1,3 +1,4 @@
+import os
 from .env import IS_VM_OR_DOCKER
 from .env import IS_PRODUCTION as _IS_PRODUCTION
 from .utils import write_file
@@ -210,6 +211,22 @@ def write_output(output, output_formats, data, result, fn_name):
     print_filenames(written_filenames)
 
 
+def clean_error_logs(error_logs_dir):
+    from datetime import datetime
+    import shutil
+
+    # Get list of all folders in the error_logs directory
+    folders = [folder for folder in os.listdir(error_logs_dir)]
+
+    # Sort folders based on the timestamp in the folder name
+    sorted_folders = sorted(folders, key=lambda x: datetime.strptime(x, '%Y-%m-%d_%H-%M-%S'), reverse=True)
+
+    # Keep the recent 10 folders and delete the rest
+    folders_to_delete = sorted_folders[10:]
+    for folder in folders_to_delete:
+        folder_path = os.path.join(error_logs_dir, folder)
+        shutil.rmtree(folder_path)
+
 def save_error_logs(exception_log, driver):
     from datetime import datetime
     # TODO: print logs and rotate as well
@@ -234,7 +251,7 @@ def save_error_logs(exception_log, driver):
             driver.save_screenshot(screenshot_filename)
         except Exception as e:
             print(f"Error saving screenshot: {e}")
-
+    clean_error_logs("error_logs")
 def evaluate_proxy(proxy):
                     import random
                     if isinstance(proxy, list):
