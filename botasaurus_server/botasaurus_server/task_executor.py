@@ -83,7 +83,7 @@ class TaskExecutor:
     def execute_pending_tasks(self, task_filter, current, limit, scraper_type):
             with Session() as session:
                 query = (
-                    session.query(Task).filter(task_filter).order_by(Task.sort_id.desc()).order_by(Task.is_sync.desc()) # Prioritize syncronous tasks
+                    session.query(Task).filter(task_filter).order_by(Task.sort_id.desc(), Task.is_sync.desc()) # Prioritize syncronous tasks
                 )
                 if limit != inf:
                     remaining = limit - current
