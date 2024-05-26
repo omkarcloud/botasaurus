@@ -179,10 +179,7 @@ spec:
 def create_gke_content(cluster_name):
     return r"""name: Build and Deploy to GKE
 
-on:
-  push:
-    branches:
-      - master
+on: push
 
 env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
@@ -329,11 +326,11 @@ def get_project_ids():
     return get_all_lines(result.stdout)
 
 def set_get_region():
+      get_package_storage().remove_item("region")
       all_regions = ["us-central1","us-east1","us-east4","us-east5","us-south1","us-west1","us-west2","us-west3","us-west4","africa-south1","asia-east1","asia-east2","asia-northeast1","asia-northeast2","asia-northeast3","asia-south1","asia-south2","asia-southeast1","asia-southeast2","australia-southeast1","australia-southeast2","europe-central2","europe-north1","europe-southwest1","europe-west1","europe-west10","europe-west12","europe-west2","europe-west3","europe-west4","europe-west6","europe-west8","europe-west9","me-central1","me-central2","me-west1","northamerica-northeast1","northamerica-northeast2","southamerica-east1","southamerica-west1"]
       click.echo("Please choose datacenter region:")
       for i, region in enumerate(all_regions, start=1):
           click.echo(f"{i}. {region}")
-        
       while True:
           selection = click.prompt("Enter the number of the region to use. Defaults to us-central1", type=int, default=1)
           if 1 <= selection <= len(all_regions):
@@ -396,6 +393,35 @@ def get_cluster_status(cluster_name, zone, project_id):
     )
     return get_first_line(result.stdout)
 
+def format_clusters(clusters):
+    formatted_clusters = []
+    for cluster in clusters:
+        name, location = cluster.split()
+        formatted_clusters.append({"name": name, "location": location})
+    return formatted_clusters
+
+def get_cluster_zone(cluster_name, project_id):
+    result = subprocess.run(
+        [
+            "gcloud",
+            "container",
+            "clusters",
+            "list",
+            "--format=value(name,locations[0])",
+            "--project",
+            project_id,
+            "--limit=unlimited",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    ls =  format_clusters(get_all_lines(result.stdout))
+    for x in ls:
+        if x['name']  == cluster_name:
+            return x['location']
+    raise Exception("Cluster not found.")
+
 
 def get_cluster_names(project_id):
     result = subprocess.run(
@@ -438,7 +464,7 @@ def list_all_ips_regional(project_id, region):
 
 def create_cluster_command_string(cluster_name, rgn, zone, project_id, max_nodes, machine_type):
     num_nodes = max_nodes
-    command = f"""gcloud beta container --project "{project_id}" clusters create "{cluster_name}" --no-enable-basic-auth --cluster-version "1.27.8-gke.1067004" --release-channel "regular" --machine-type "{machine_type}" --image-type "COS_CONTAINERD" --disk-type "pd-balanced" --disk-size "30" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "{num_nodes}" --logging=SYSTEM,WORKLOAD --monitoring=SYSTEM --enable-ip-alias --network "projects/{project_id}/global/networks/default" --subnetwork "projects/{project_id}/regions/{rgn}/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --security-posture=standard --workload-vulnerability-scanning=disabled --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --binauthz-evaluation-mode=DISABLED --enable-managed-prometheus --enable-shielded-nodes --node-locations {zone} --zone {zone}"""
+    command = f"""gcloud beta container --project "{project_id}" clusters create "{cluster_name}" --no-enable-basic-auth --release-channel "regular" --machine-type "{machine_type}" --image-type "COS_CONTAINERD" --disk-type "pd-balanced" --disk-size "30" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "{num_nodes}" --logging=SYSTEM,WORKLOAD --monitoring=SYSTEM --enable-ip-alias --network "projects/{project_id}/global/networks/default" --subnetwork "projects/{project_id}/regions/{rgn}/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --security-posture=standard --workload-vulnerability-scanning=disabled --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --binauthz-evaluation-mode=DISABLED --enable-managed-prometheus --enable-shielded-nodes --node-locations {zone} --zone {zone}"""
     return command
 
 def perform_create_cluster_commands(cluster_name, rgn,zone, project_id, max_nodes, machine_type):
@@ -544,7 +570,7 @@ def run_create_cluster_commands(cluster_name, max_nodes, machine_type):
     if cluster_exists(cluster_name, project_id):
         click.echo(f"Cluster '{cluster_name}' already exists.")
         if click.confirm("Do you want to delete the existing cluster and create a new one?"):
-            delete_cluster(cluster_name, force=True)
+            perform_cluster_deletion(cluster_name, True)
         else:
             click.echo("Skipping cluster creation.")
             skipped = True
@@ -735,16 +761,16 @@ def delete_ip(name, force):
 @click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
 @click.option("--machine-type", prompt=f"Enter machine type. Default", default=DEFAULT_INSTANCE, help=f"Specify the GCP machine type to create. Defaults to {DEFAULT_INSTANCE}.")
 @click.option(
-    "--nodes",
-    prompt="Enter the maximum number of nodes to run in the cluster (default: 2). Keep in mind that, based on the GCP quota, You may need to request a quota increase if you want to create clusters with more nodes.",
+    "--number-of-machines",
+    prompt="Enter the maximum number of machines to run in the cluster (default: 2). Keep in mind that, based on the GCP quota, You may need to request a quota increase if you want to create clusters with more machines.",
     default=2,
     type=int,
-    help="Maximum number of nodes for the cluster. Defaults to 2. Adjust based on requirements and GCP quota."
+    help="Maximum number of machines in the cluster. Defaults to 2. Adjust based on requirements and GCP quota."
 )
-def create_cluster(cluster_name, machine_type, nodes):
+def create_cluster(cluster_name, machine_type, number_of_machines):
     """Create the cluster"""
-    if nodes <= 0:
-        click.echo("The number of nodes must be greater than 0.")
+    if number_of_machines <= 0:
+        click.echo("The number of machines must be greater than 0.")
         return
     
     cluster_name = cluster_name.strip()
@@ -752,11 +778,11 @@ def create_cluster(cluster_name, machine_type, nodes):
 
     click.echo("------------")
     click.echo(f"Creating cluster '{cluster_name}' with the following components:")
-    click.echo(f"    - {nodes} nodes running on {machine_type}")
+    click.echo(f"    - {number_of_machines} machines of type {machine_type}")
     click.echo(f"    - A static IP address")
     click.echo("------------")
 
-    ip_address = run_create_cluster_commands(cluster_name, nodes, machine_type)
+    ip_address = run_create_cluster_commands(cluster_name, number_of_machines, machine_type)
     click.echo(f"Hurray! You have successfully created the cluster.")
 
     click.echo("Your Next steps are as follows:")
@@ -769,9 +795,9 @@ def create_cluster(cluster_name, machine_type, nodes):
 @click.option(
     "--workers",
     prompt="Enter the number of workers to run. Default",
-    default=3,
+    default=1,
     type=int,
-     help="The number of worker for the Kubernetes deployment. Defaults to 3."
+     help="The number of worker for the Kubernetes deployment. Defaults to 1."
 )
 @click.option(
     "--use-browser",
@@ -950,16 +976,36 @@ roleRef:
     create_file_with_content(f"{workflows_dir}/gke.yaml", gke_content)
 
     click.echo(f"Successfully created manifest files.")
+def get_region_from_zone(zone):
+    """
+    Returns the region for a given GCP zone.
+
+    Args:
+        zone (str): The GCP zone, e.g. "us-central1-a".
+
+    Returns:
+        str: The corresponding region, e.g. "us-central1".
+    """
+    # Split the zone string on the hyphen
+    zone_parts = zone.split('-')
+
+    # The region is everything except the last part (the zone)
+    region = '-'.join(zone_parts[:-1])
+
+    return region
 
 def run_delete_cluster_commands(cluster_name):
     project_id = get_project_id()
     region = get_region()
-    zone =get_zone()
+    zone = get_zone()
 
     has_cluster = cluster_exists(cluster_name, project_id)
     if has_cluster:
-        get_cluster_credentials(cluster_name, zone, project_id)
-        delete_pvc_if_exists("master-db")
+        zone = get_cluster_zone(cluster_name, project_id)
+        region = get_region_from_zone(zone)
+        if get_cluster_status(cluster_name, zone, project_id) == "RUNNING":
+          get_cluster_credentials(cluster_name, zone, project_id)
+          delete_pvc_if_exists("master-db")
 
     if has_images(project_id):
       click.echo("Deleting Images...")
@@ -1004,6 +1050,9 @@ def run_delete_cluster_commands(cluster_name):
 )
 def delete_cluster(cluster_name, force):
     """Deletes the cluster"""
+    perform_cluster_deletion(cluster_name, force)
+
+def perform_cluster_deletion(cluster_name, force):
     cluster_name = cluster_name.strip()
     if not force:  # Ask for confirmation if --force is not used
         if not click.confirm(
@@ -1082,7 +1131,7 @@ def delete_all_ips(force):
 
 @cli.command()
 def list_all_ips():
-    """Deletes all IP addresses"""
+    """Lists all IP addresses"""
 
     project_id = get_project_id()
     region = get_region()  # Get the current region using the get_region function
