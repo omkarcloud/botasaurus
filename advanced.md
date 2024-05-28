@@ -64,10 +64,10 @@ def scrape_product_data(data):
 
 Now, let's say you want to add filters to allow users to:
 - Search for products by name
-- Set a minimum number of reviews
+- Filter by minimum number of reviews
 - Filter by product category
 - Filter by product tags
-- Check if a product is available or not
+- Filter by product availability
 
 ![filters](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/filters.png)
 
@@ -111,38 +111,38 @@ With these filters added, you'll see them in the UI Scraper, allowing users to f
 
 Also, you can add a lot of other filters as shown below:
 
-- **MinNumberInput**: Filters items with a numeric field greater than or equal to the specified value.
+- **MinNumberInput**: Show items where target field is greater than or equal to the specified value.
   ```python
   filters.MinNumberInput("price")
   ```
-- **MaxNumberInput**: Filters items with a numeric field less than or equal to the specified value.
+- **MaxNumberInput**: Show items where target field is less than or equal to the specified value.
   ```python
   filters.MaxNumberInput("price")
   ```
-- **IsTrueCheckbox**: Filters items where a field is `True`.
+- **IsTrueCheckbox**: Show items where target field is `True`.
   ```python
   filters.IsTrueCheckbox("is_available")
   ```
-- **IsFalseCheckbox**: Filters items where a field is `False`.
+- **IsFalseCheckbox**: Show items where target field is `False`.
   ```python
-  filters.IsFalseCheckbox("discounted")
+  filters.IsFalseCheckbox("is_available")
   ```
-- **IsNullCheckbox**: Filters items where a field is `None`.
+- **IsNullCheckbox**: Show items where target field is `None`.
   ```python
   filters.IsNullCheckbox("description")
   ```
-- **IsNotNullCheckbox**: Filters items where a field is not `None`.
+- **IsNotNullCheckbox**: Show items where target field is not `None`.
   ```python
   filters.IsNotNullCheckbox("description")
   ```
 - **SingleSelectDropdown**: Allows the user to select a single option from a dropdown list. 
 
-The selected option is matched against the target data field, which can be:
+The selected option is matched against the target field, which can be:
 
 - a string  
 - or a list of strings
 
-If the target data field is a list of strings, it checks if the selected option is one of the values in the list.
+If the target field is a list of strings, it checks if the `selected option` is one of the values in that list.
 
 ```python
 filters.SingleSelectDropdown(
@@ -155,17 +155,17 @@ filters.SingleSelectDropdown(
 ```
 - **MultiSelectDropdown**: Exactly same as SingleSelectDropdown but allows user to select multiple options from a dropdown list.
   ```python
-    filters.MultiSelectDropdown(
-        "tags",
-        options=[
-            {"value": "cotton", "label": "Cotton"},
-            {"value": "casual", "label": "Casual"},
-            {"value": "computer", "label": "Computer"},
-            {"value": "portable", "label": "Portable"}
-        ]
-    )
+  filters.MultiSelectDropdown(
+      "tags",
+      options=[
+          {"value": "cotton", "label": "Cotton"},
+          {"value": "casual", "label": "Casual"},
+          {"value": "computer", "label": "Computer"},
+          {"value": "portable", "label": "Portable"}
+      ]
+  )
   ```
-- **SearchTextInput**: Filters items where the specified text field contains the search term.
+- **SearchTextInput**: Show items where the target field contains the `search` term.
   ```python
   filters.SearchTextInput("name")
   ```

@@ -904,6 +904,67 @@ You can dynamically configure the browser's Chrome profile and proxy using decor
 
 PS: Most Botasaurus decorators allow passing functions to derive configurations from data parameters. Check the decorator's argument type hint to see if it supports this functionality.
 
+### What is the best way to manage profile-specific data like name, age across multiple profiles?
+
+To store data related to the active profile, use `driver.profile`. Here's an example:
+
+```python
+from botasaurus.browser import browser, Driver
+
+def get_profile(data):
+    return data["profile"]
+
+@browser(profile=get_profile)
+def run_profile_task(driver: Driver, data):
+    # Set profile data
+    driver.profile = {
+        'name': 'Amit Sharma',
+        'age': 30
+    }
+
+    # Update the name in the profile
+    driver.profile['name'] = 'Amit Verma'
+
+    # Delete the age from the profile
+    del driver.profile['age']
+
+    # Print the updated profile
+    print(driver.profile)  # Output: {'name': 'Amit Verma'}
+
+    # Delete the entire profile
+    driver.profile = None
+
+run_profile_task([{"profile": "amit"}])
+```
+
+For managing all profiles, use the `Profiles` utility. Here's an example:
+
+```python
+from botasaurus.profiles import Profiles
+
+# Set profiles
+Profiles.set_profile('amit', {'name': 'Amit Sharma', 'age': 30})
+Profiles.set_profile('rahul', {'name': 'Rahul Verma', 'age': 30})
+
+# Get a profile
+profile = Profiles.get_profile('amit')
+print(profile)  # Output: {'name': 'Amit Sharma', 'age': 30}
+
+# Get all profiles
+all_profiles = Profiles.get_profiles()
+print(all_profiles)  # Output: [{'name': 'Amit Sharma', 'age': 30}, {'name': 'Rahul Verma', 'age': 30}]
+
+# Get all profiles in random order
+random_profiles = Profiles.get_profiles(random=True)
+print(random_profiles)  # Output: [{'name': 'Rahul Verma', 'age': 30}, {'name': 'Amit Sharma', 'age': 30}] in random order
+
+# Delete a profile
+Profiles.delete_profile('amit')
+```
+
+Note: All profile data is stored in the `profiles.json` file in the current working directory.
+![profiles](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/profiles.png)
+
 ### What are some common methods in Botasaurus Driver?
 
 Botasaurus Driver provides several handy methods for web automation tasks such as:
@@ -976,68 +1037,6 @@ To pause the scraper and wait for user input before proceeding, use `driver.prom
 ```python
 driver.prompt()
 ```
-
-### What is the best way to manage profile-specific data like name, age across multiple profiles?
-
-To store data related to the active profile, use `driver.profile`. Here's an example:
-
-```python
-from botasaurus.browser import browser, Driver
-
-def get_profile(data):
-    return data["profile"]
-
-@browser(profile=get_profile)
-def run_profile_task(driver: Driver, data):
-    # Set profile data
-    driver.profile = {
-        'name': 'Amit Sharma',
-        'age': 30
-    }
-
-    # Update the name in the profile
-    driver.profile['name'] = 'Amit Verma'
-
-    # Delete the age from the profile
-    del driver.profile['age']
-
-    # Print the updated profile
-    print(driver.profile)  # Output: {'name': 'Amit Verma'}
-
-    # Delete the entire profile
-    driver.profile = None
-
-run_profile_task([{"profile": "amit"}])
-```
-
-For managing all profiles, use the `Profiles` utility. Here's an example:
-
-```python
-from botasaurus.profiles import Profiles
-
-# Set profiles
-Profiles.set_profile('amit', {'name': 'Amit Sharma', 'age': 30})
-Profiles.set_profile('rahul', {'name': 'Rahul Verma', 'age': 30})
-
-# Get a profile
-profile = Profiles.get_profile('amit')
-print(profile)  # Output: {'name': 'Amit Sharma', 'age': 30}
-
-# Get all profiles
-all_profiles = Profiles.get_profiles()
-print(all_profiles)  # Output: [{'name': 'Amit Sharma', 'age': 30}, {'name': 'Rahul Verma', 'age': 30}]
-
-# Get all profiles in random order
-random_profiles = Profiles.get_profiles(random=True)
-print(random_profiles)  # Output: [{'name': 'Rahul Verma', 'age': 30}, {'name': 'Amit Sharma', 'age': 30}] in random order
-
-# Delete a profile
-Profiles.delete_profile('amit')
-```
-
-Note: All profile data is stored in the `profiles.json` file in the current working directory.
-![profiles](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/profiles.png)
-
 
 ### How do I configure authenticated proxies with SSL in Botasaurus?
 
