@@ -173,7 +173,9 @@ Note: When you make any changes to the filters, sorts, or views, you need to sto
 
 ### How can I allow the user to sort the scraped data?
 
-To do so, similar to filters, you need to specify sorts when adding the Scraper in `backend/scrapers.py`. Below is an example illustrating how to add the following sorts:
+To do so, similar to filters, you need to specify sorts when adding the Scraper in `backend/scrapers.py`. 
+
+Below is an example illustrating how to add the following sorts:
 
 - Sort by name in ascending order
 - Sort by name in ascending order, reviews in descending order, and availability by true first, and making this sort to be applied by default
@@ -207,35 +209,35 @@ Server.add_scraper(
 
 Also, you can add a lot of other sorts as shown below:
 
-- **NumericAscendingSort**: Sorts items by a numeric field in ascending order.
+- **NumericAscendingSort**: Sorts items by target field in ascending order.
   ```python
   sorts.NumericAscendingSort("price")
   ```
-- **NumericDescendingSort**: Sorts items by a numeric field in descending order.
+- **NumericDescendingSort**: Sorts items by target field in descending order.
   ```python
   sorts.NumericDescendingSort("price")
   ```
-- **TrueFirstSort**: Sorts items where a boolean field is `True` first.
+- **TrueFirstSort**: Sorts items where target field is `True` first.
   ```python
   sorts.TrueFirstSort("is_available")
   ```
-- **FalseFirstSort**: Sorts items where a boolean field is `False` first.
+- **FalseFirstSort**: Sorts items where target field is `False` first.
   ```python
   sorts.FalseFirstSort("discounted")
   ```
-- **TruthyFirstSort**: Sorts items where a field has a truthy value first.
+- **TruthyFirstSort**: Sorts items where target field has a truthy value first.
   ```python
   sorts.TruthyFirstSort("description")
   ```
-- **FalsyFirstSort**: Sorts items where a field has a falsy value first.
+- **FalsyFirstSort**: Sorts items where target field has a falsy value first.
   ```python
   sorts.FalsyFirstSort("description")
   ```
-- **NullsFirstSort**: Sorts items where a field is `None` first.
+- **NullsFirstSort**: Sorts items where target field is `None` first.
   ```python
   sorts.NullsFirstSort("end_date")
   ```
-- **NullsLastSort**: Sorts items where a field is `None` last.
+- **NullsLastSort**: Sorts items where target field is `None` last.
   ```python
   sorts.NullsLastSort("end_date")
   ```
@@ -247,20 +249,20 @@ Also, you can add a lot of other sorts as shown below:
   ```python
   sorts.OldestDateFirstSort("created_at")
   ```
-- **AlphabeticAscendingSort**: Sorts items by a string field in ascending alphabetical order.
+- **AlphabeticAscendingSort**: Sorts items by target field in ascending alphabetical order.
   ```python
   sorts.AlphabeticAscendingSort("name")
   ```
-- **AlphabeticDescendingSort**: Sorts items by a string field in descending alphabetical order.
+- **AlphabeticDescendingSort**: Sorts items by target field in descending alphabetical order.
   ```python
   sorts.AlphabeticDescendingSort("name")
   ```
-- **Sort**: Allows sorting based on multiple sorting criteria. Really Awesome.
+- **Sort**: Allows sorting based on multiple sorting criteria. (Really Awesome 😎)
 
   Example:
   ```python
   sorts.Sort(
-    label="Multiple Sort Example",
+    label="Top Products",
     sorts=[
         sorts.AlphabeticAscendingSort("name"),
         sorts.NumericDescendingSort("reviews"),
