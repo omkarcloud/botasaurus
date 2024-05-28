@@ -144,15 +144,15 @@ The selected option is matched against the target field, which can be:
 
 If the target field is a list of strings, it checks if the `selected option` is one of the values in that list.
 
-```python
-filters.SingleSelectDropdown(
-    "category",
-    options=[
-        {"value": "apparel", "label": "Apparel"},
-        {"value": "electronics", "label": "Electronics"}
-    ]
-)
-```
+    ```python
+    filters.SingleSelectDropdown(
+        "category",
+        options=[
+            {"value": "apparel", "label": "Apparel"},
+            {"value": "electronics", "label": "Electronics"}
+        ]
+    )
+    ```
 - **MultiSelectDropdown**: Exactly same as SingleSelectDropdown but allows user to select multiple options from a dropdown list.
   ```python
   filters.MultiSelectDropdown(
