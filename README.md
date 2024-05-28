@@ -742,6 +742,7 @@ To make the browser really humane, Botasaurus does not change browser fingerprin
 However, if you need fingerprinting, use the `user_agent` and `window_size` options:
 
 ```python
+from botasaurus.browser import browser, Driver
 from botasaurus.user_agent import UserAgent
 from botasaurus.window_size import WindowSize
 
@@ -749,6 +750,11 @@ from botasaurus.window_size import WindowSize
     user_agent=UserAgent.RANDOM,
     window_size=WindowSize.RANDOM,
 )
+def visit_whatsmyua(driver: Driver, data):
+    driver.get("https://www.whatsmyua.info/")
+    driver.prompt()
+
+visit_whatsmyua()
 ```
 
 When working with profiles, you want the fingerprints to remain consistent. You don't want the user's user agent to be Chrome 106 on the first visit and then become Chrome 102 on the second visit. 
@@ -756,13 +762,23 @@ When working with profiles, you want the fingerprints to remain consistent. You 
 So, when using profiles, use the `HASHED` option to generate a consistent user agent and window size based on the profile's hash:
 
 ```python
+from botasaurus.browser import browser, Driver
 from botasaurus.user_agent import UserAgent
 from botasaurus.window_size import WindowSize
 
 @browser(
+    profile="pikachu",
     user_agent=UserAgent.HASHED,
     window_size=WindowSize.HASHED,
 )
+def visit_whatsmyua(driver: Driver, data):
+    driver.get("https://www.whatsmyua.info/")
+    driver.prompt()
+    
+visit_whatsmyua()
+
+# Everytime Same UserAgent and WindowSize
+visit_whatsmyua()
 ```
 #### Passing Arguments to Chrome
 
