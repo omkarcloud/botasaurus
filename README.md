@@ -587,6 +587,7 @@ The Browser Decorator allows you to easily configure various aspects of the brow
 - Using Chrome extensions
 - Captcha Solving
 - Selecting language
+- Passing Arguments to Chrome
 
 #### Blocking Images and CSS
 
@@ -763,6 +764,26 @@ from botasaurus.window_size import WindowSize
     window_size=WindowSize.HASHED,
 )
 ```
+#### Passing Arguments to Chrome
+
+To pass arguments to Chrome, use the `add_arguments` option:
+
+```python
+@browser(
+    add_arguments=['--headless=new'],
+)
+```
+
+To dynamically generate arguments based on the `data` parameter, pass a function:
+
+```python
+def get_arguments(data):
+    return ['--headless=new']
+
+@browser(
+    add_arguments=get_arguments,
+)
+```
 
 #### Wait for Complete Page Load
 
@@ -899,6 +920,7 @@ Botasaurus Driver provides several handy methods for web automation tasks such a
   ```python
   from botasaurus.browser import Wait
   search_results = driver.select(".search-results", wait=Wait.SHORT)  # Wait for up to 4 seconds for the element to be present, return None if not found
+  all_links = driver.select_all("a")  # Get all elements matching the selector
   search_results = driver.wait_for_element(".search-results", wait=Wait.LONG)  # Wait for up to 8 seconds for the element to be present, raise exception if not found
   hello_mom = driver.get_element_with_exact_text("Hello Mom", wait=Wait.VERY_LONG)  # Wait for up to 16 seconds for an element having the exact text "Hello Mom"
   ```
@@ -954,6 +976,68 @@ To pause the scraper and wait for user input before proceeding, use `driver.prom
 ```python
 driver.prompt()
 ```
+
+### What is the best way to manage profile-specific data like name, age across multiple profiles?
+
+To store data related to the active profile, use `driver.profile`. Here's an example:
+
+```python
+from botasaurus.browser import browser, Driver
+
+def get_profile(data):
+    return data["profile"]
+
+@browser(profile=get_profile)
+def run_profile_task(driver: Driver, data):
+    # Set profile data
+    driver.profile = {
+        'name': 'Amit Sharma',
+        'age': 30
+    }
+
+    # Update the name in the profile
+    driver.profile['name'] = 'Amit Verma'
+
+    # Delete the age from the profile
+    del driver.profile['age']
+
+    # Print the updated profile
+    print(driver.profile)  # Output: {'name': 'Amit Verma'}
+
+    # Delete the entire profile
+    driver.profile = None
+
+run_profile_task([{"profile": "amit"}])
+```
+
+For managing all profiles, use the `Profiles` utility. Here's an example:
+
+```python
+from botasaurus.profiles import Profiles
+
+# Set profiles
+Profiles.set_profile('amit', {'name': 'Amit Sharma', 'age': 30})
+Profiles.set_profile('rahul', {'name': 'Rahul Verma', 'age': 30})
+
+# Get a profile
+profile = Profiles.get_profile('amit')
+print(profile)  # Output: {'name': 'Amit Sharma', 'age': 30}
+
+# Get all profiles
+all_profiles = Profiles.get_profiles()
+print(all_profiles)  # Output: [{'name': 'Amit Sharma', 'age': 30}, {'name': 'Rahul Verma', 'age': 30}]
+
+# Get all profiles in random order
+random_profiles = Profiles.get_profiles(random=True)
+print(random_profiles)  # Output: [{'name': 'Rahul Verma', 'age': 30}, {'name': 'Amit Sharma', 'age': 30}] in random order
+
+# Delete a profile
+Profiles.delete_profile('amit')
+```
+
+Note: All profile data is stored in the `profiles.json` file in the current working directory.
+![profiles](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/profiles.png)
+
 
 ### How do I configure authenticated proxies with SSL in Botasaurus?
 
@@ -1974,10 +2058,10 @@ To run your scraper in a Virtual Machine, we will:
 
 Now, follow these steps to run your scraper in a Virtual Machine:
 
-1. Create a Google Cloud Account if you don't have one. You will receive $300 credit to use for 3 months.
+1. 1. If you don't already have one, create a Google Cloud Account. You'll receive a $300 credit to use over 3 months.
    ![Select-your-billing-country](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/Select-your-billing-country.png)
 
-2. Click the Cloud Shell button. A terminal will open up.
+2. Visit [Google Cloud Console](https://console.cloud.google.com/) and click the Cloud Shell button. A terminal will open up.
    ![click-cloud-shell-btn](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/click-cloud-shell-btn.png)
 
 3. Run the following commands in the terminal:
@@ -2042,8 +2126,11 @@ Next, follow these steps to delete the scraper:
 
    ![Delete deployment](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-deployment.gif)
 
-That's it! You have successfully deleted the scraper in the Virtual Machine.
+That's it! You have successfully deleted the scraper, and you will not incur any furthur charges.
 
+
+### How to Run Scraper in Kubernetes?
+Visit [this link](https://github.com/omkarcloud/botasaurus/blob/master/run-scraper-in-kubernetes.md) to learn how to run scraper at scale using Kubernetes.
 
 ### Do you have a Discord community?
 
@@ -2060,13 +2147,14 @@ You may choose to read the following questions based on your interests:
 2. [I am a Youtuber, Should I create YouTube videos about Botasaurus? If so, how can you help me?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#i-am-a-youtuber-should-i-create-youtube-videos-about-botasaurus-if-so-how-can-you-help-me)
 
 
-## Thanks
-
+## Thank You
+- I didn't make Botasaurus for fame or to earn good karma. I created it because I would be really happy if you could use it to successfully complete your project. So, Thank you for using Botasaurus!
 - Kudos to the Apify Team for creating the `proxy-chain` library. The implementation of SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `proxy-chain`.
 - Shout out to [ultrafunkamsterdam](https://github.com/ultrafunkamsterdam) for creating `nodriver`, which inspired the creation of Botasaurus Driver.
 - A big thank you to [daijro](https://github.com/daijro) for creating [hrequest](https://github.com/daijro/hrequests), which inspired the creation of botasaurus-requests.
-- A special thanks to Cloudflare, DataDome, Imperva, and all bot recognition systems. Had you not been there, we wouldn't be either 😅.
-- Finally, a humongous thank you for choosing Botasaurus.
+- A humongous thank you to Cloudflare, DataDome, Imperva, and all bot recognition systems. Had you not been there, we wouldn't be either 😅.
+
+*Now, what are you waiting for? 🤔 Go and make something mastastic! 🚀*
 
 ## Love It? [Star It! ⭐](https://github.com/omkarcloud/botasaurus)
 
