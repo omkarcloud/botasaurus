@@ -225,11 +225,11 @@ Also, you can add a lot of other sorts as shown below:
   ```python
   sorts.FalseFirstSort("discounted")
   ```
-- **TruthyFirstSort**: Sorts items where target field has a truthy value first.
+- **TruthyFirstSort**: Sorts items where target field has a `truthy` value first.
   ```python
   sorts.TruthyFirstSort("description")
   ```
-- **FalsyFirstSort**: Sorts items where target field has a falsy value first.
+- **FalsyFirstSort**: Sorts items where target field has a `falsy` value first.
   ```python
   sorts.FalsyFirstSort("description")
   ```
@@ -333,9 +333,7 @@ def scrape_product_data(data):
     ]
 ```
 
-The returned data is a list of dictionaries, each representing a product with its details.
-
-To provide your Customer with the best experience, you can present this data in multiple views like:
+Now, To provide your Customer with the best experience, you should present this data in multiple views like:
 
 - **"Overview"** view shows the most important fields:
   - id
@@ -359,7 +357,7 @@ To provide your Customer with the best experience, you can present this data in 
 
 ![Reviews view](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/reviews.png)
 
-To create these views, you need to specify them when adding the Scraper in `backend/scrapers.py`:
+To create these views, you need to specify them when adding the Scraper in `backend/scrapers.py` as follows:
 
 ```python
 from botasaurus_server.server import Server
@@ -432,13 +430,14 @@ Each View requires a list of fields. The available field types are:
 
 - **Field**: Used to display a single field from the data.
   - You can provide an `output_key` to alias the field name.
-  - You can provide a `map` function to calculate a new field based on the existing field value and data item.
+  - You can provide a `map` function to calculate a new field based on the existing field value and record.
 
 ```python
 # value is the reviews_per_rating dictionary
 # record is the entire product record
 def calculate_average_rating(value, record):
-    return sum(value.values()) / 5
+    total_reviews = sum(value.values())
+    # ...
 
 Field("average_rating", map=calculate_average_rating)  # Calculates the average rating using the provided map function
 ```
@@ -451,7 +450,7 @@ CustomField("full_name", map=lambda record: f"{record['first_name']} {record['la
 
 - **ExpandDictField**: This field is used expand a dictionary into separate fields.
   - You can provide a `map` function to transform the values.
-  - You can provide an `output_key` to alias the field names.
+  - You can provide an `output_key` to alias the field name.
 
 ```python
 ExpandDictField(
@@ -470,7 +469,7 @@ ExpandDictField(
 
 - **ExpandListField**: This field is used to display all the items in a list as separate rows.
   - You can provide a `map` function to transform the values.
-  - You can provide an `output_key` to alias the field names.
+  - You can provide an `output_key` to alias the field name.
 
 ```python
 ExpandListField(
@@ -484,11 +483,11 @@ ExpandListField(
 
 ![Expand List Field](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/expand-list-field.png)
 
-### When building a large dataset, customers often request data in different formats like overview and review. How can I do that?
+### When creating large datasets, customers often request data in different formats like overview and review. How can I do that?
 
-When working with large datasets, customers often request the data in different formats, such as an overview view or a review view. 
+When building big datasets, customers will likely request the data in different formats, such as an overview view or a review view. 
 
-Now, Instead of manually picking and flattening fields, you can apply pre-defined views to the data. Here's an example:
+Now to meet this requirement, instead of manually picking and flattening fields, you can apply pre-defined views to the data. Here's an example:
 
 ```python
 from botasaurus_server.ui import View, Field, ExpandDictField
@@ -687,7 +686,7 @@ Let's explore each of these options in detail:
 By default, the task name shown on the `output` page is generated based on the task id. 
 ![](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/task-name.png)
 
-However, you can use `get_task_name` to generate a custom task name based on your input data.
+However, you can use `get_task_name` to generate a custom task name based on your input data as follows:
 ```python
 from botasaurus_server.server import Server
 
@@ -699,7 +698,7 @@ Server.add_scraper(
     get_task_name=get_task_name,
 )
 ```
-`Result`
+**Result**
 ![](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/get_task_name-result.png)
 
 #### `split_task`
@@ -721,6 +720,8 @@ Server.add_scraper(
 )
 
 ```
+**Result**
+
 ![](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/multi-task-spitted.png)
 
 #### `create_all_task`
@@ -742,7 +743,7 @@ Server.add_scraper(
 
 ### How to control the maximum number of browsers and requests running at any point of time?
 
-To control the maximum number of browsers and requests running simultaneously, open `backend/scrapers.py` and use the `Server.set_rate_limit` method as follows:
+To control the maximum number of browsers and requests running simultaneously, open `backend/scrapers.py` and call the `Server.set_rate_limit` method as follows:
 
 
 ```python
@@ -752,7 +753,7 @@ Server.set_rate_limit(browsers=1, requests=30) # Allows 1 browser and 30 request
 Also, If there are more scraping tasks than the specified limit, the extra tasks will be queued and processed in the order they were received.
 
 ### How do I change the title, header title, and description of the scraper?
-To change the title, header title, and description of the scraper, open `backend/scrapers.py` and use the `Server.configure` method as follows:
+To change the title, header title, and description of the scraper, open `backend/scrapers.py` and call the `Server.configure` method as follows:
 ```python
 Server.configure(
     title="My Scraper",
@@ -793,7 +794,7 @@ For local development, we highly recommend using the free tier of Supabase becau
   - It is super easy to set up.
   - most importantly, it offers a free tier with 0.5 GB of storage, which is enough for local development purposes.
 
-However, Supabase is unsuitable for production web scraping because even the Pro Plan, costing $24/month, only provides 8 GB of storage, which is really really less for most web scraping projects.
+However, don't use Supabase for production web scraping because even the Pro Plan, costing $24/month, only provides 8 GB of storage, which is really really less for web scraping projects.
 
 **For Production Use:**
 

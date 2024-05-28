@@ -7,7 +7,7 @@
 ![New supabase Project](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/new-supabase-project.png)
 
 3. Enter the following settings, then click the "Create New Project" button:
-```
+```yaml
 Name: Pikachu # Choose any name
 Database Password: greyninja1234_A # For testing, use "greyninja1234_A". In production, use a strong password.
 Region: West US (North California) # Select the region closest to your server for best performance.

@@ -25,19 +25,19 @@ To achieve this, we will:
    python -m bota create-cluster
    ```
 
-    You will be prompted for the following information:
+   You will be prompted for the following information:
 
-    > name: Enter a cluster name of your choice, for example, "pikachu".
+   > name: Enter a cluster name of your choice, for example, "pikachu".
 
-    > machine: Press Enter to accept the default machine type, which is "us-central1".
+   > machine: Press Enter to accept the default machine type, which is "us-central1".
 
-    > number of machines: Press Enter to accept the default number of machines, which is 2.
+   > number of machines: Press Enter to accept the default number of machines, which is 2.
 
-    > region: Press Enter to accept the default region, which is "us-central1". (This is asked the first time only)
+   > region: Press Enter to accept the default region, which is "us-central1". (This is asked the first time only)
 
    ![Install bota cluster](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/install-bota-cluster.gif)
 
-    After the command completes, note the IP of the Kubernetes Cluster, as we will later visit this IP to use the scraper.
+   After the command completes, note the IP of the Kubernetes Cluster, as we will later visit this IP to use the scraper.
 
 ### Step 2: Create a GitHub Repository
 
@@ -69,15 +69,15 @@ You will be prompted for the following information:
 
 4. In your local machine, run the following commands to push the code to GitHub, remember to replace `USERNAME` with your GitHub username:
 
-```bash
-rm -rf .git # remove the existing git repository
-git init
-git add .
-git commit -m "Initial Commit"
-git remote add origin https://github.com/USERNAME/kubernetes-scraper # TODO: replace USERNAME with your GitHub username
-git branch -M main
-git push -u origin main
-```
+   ```bash
+   rm -rf .git # remove the existing git repository
+   git init
+   git add .
+   git commit -m "Initial Commit"
+   git remote add origin https://github.com/USERNAME/kubernetes-scraper # TODO: replace USERNAME with your GitHub username
+   git branch -M main
+   git push -u origin main
+   ```
 
 ### Step 3: Add Deployment Secrets to the GitHub Repository
 1. Visit [this link](https://console.cloud.google.com/iam-admin/serviceaccounts) and click the "CREATE SERVICE ACCOUNT" button.
