@@ -2142,10 +2142,31 @@ Congratulations on completing the Botasaurus Documentation! Now, you have all th
 
 You may choose to read the following questions based on your interests:
 
-1. [How to Run Scraper in Google Colab?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-to-run-botasaurus-in-google-colab)
+1. [How to Run Botasaurus in Google Colab?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-to-run-botasaurus-in-google-colab)
 
-2. [I am a Youtuber, Should I create YouTube videos about Botasaurus? If so, how can you help me?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#i-am-a-youtuber-should-i-create-youtube-videos-about-botasaurus-if-so-how-can-you-help-me)
+2. [How can I allow users to filter the scraped data?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-can-i-allow-users-to-filter-the-scraped-data)
 
+3. [How can I allow the user to sort the scraped data?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-can-i-allow-the-user-to-sort-the-scraped-data)
+
+4. [How can I present the scraped data in different views?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-can-i-present-the-scraped-data-in-different-views)
+
+5. [When building a large dataset, customers often request data in different formats like overview and review. How can I do that?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#when-building-a-large-dataset-customers-often-request-data-in-different-formats-like-overview-and-review-how-can-i-do-that)
+
+6. [What more can I configure when adding a scraper?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#what-more-can-i-configure-when-adding-a-scraper)
+
+7. [How to control the maximum number of browsers and requests running at any point of time?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-to-control-the-maximum-number-of-browsers-and-requests-running-at-any-point-of-time)
+
+8. [How do I change the title, header title, and description of the scraper?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-do-i-change-the-title-header-title-and-description-of-the-scraper)
+
+9. [How can I use a database like PostgreSQL with UI Scraper?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-can-i-use-a-database-like-postgresql-with-ui-scraper)
+
+10. [Which PostgreSQL provider should I choose among Supabase, Google Cloud SQL, Heroku, and Amazon RDS?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#which-postgresql-provider-should-i-choose-among-supabase-google-cloud-sql-heroku-and-amazon-rds)
+
+11. [How to create a PostgreSQL database on Supabase?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-to-create-a-postgresql-database-on-supabase)
+
+12. [How to create a PostgreSQL database on Google Cloud?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#how-to-create-a-postgresql-database-on-google-cloud)
+
+13. [I am a Youtuber, Should I create YouTube videos about Botasaurus? If so, how can you help me?](https://github.com/omkarcloud/botasaurus/blob/master/advanced.md#i-am-a-youtuber-should-i-create-youtube-videos-about-botasaurus-if-so-how-can-you-help-me)
 
 ## Thank You
 - I didn't make Botasaurus for fame or to earn good karma. I created it because I would be really happy if you could use it to successfully complete your project. So, Thank you for using Botasaurus!
