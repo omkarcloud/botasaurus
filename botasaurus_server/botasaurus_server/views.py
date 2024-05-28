@@ -105,6 +105,9 @@ class View:
                                     )
 
 
+    def apply(self, data: list):
+        return perform_apply_view(data, self) 
+
     def to_json(self):
         flat_fields = self._flatten_fields(self.fields)
         return {

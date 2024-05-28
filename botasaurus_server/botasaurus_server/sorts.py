@@ -30,6 +30,9 @@ class BaseSort:
         return sorting_key
 
     def apply(self, data: list):
+        return sorted(data, key=self.get_sort_key(), reverse=self.reverse)
+
+    def apply_in_place(self, data: list):
         data.sort(key=self.get_sort_key(), reverse=self.reverse)
 
     def to_json(self):
@@ -227,7 +230,7 @@ def apply_sorts(data, sort_data, sort_objects):
     # Iterate through sort_objects to find a match
     for s in sort_objects:
         if s.id == sort_data:
-            s.apply(data)
+            s.apply_in_place(data)
             break  # Exit the loop once a matching sort is found
 
     return data

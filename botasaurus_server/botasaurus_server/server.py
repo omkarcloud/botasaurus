@@ -26,7 +26,7 @@ def get_readme():
 class _Server:
     def __init__(self):
         self.scrapers = {}
-        self.rate_limit = {"browser": 1, "request": 30, "task": 0}
+        self.rate_limit = {"browser": 1, "request": 30, "task": 30}
         self.controls_cache = {}  # Cache to store Controls instances
         self.cache = False
         self.config = None
