@@ -42,16 +42,16 @@ To achieve this, we will:
 ### Step 2: Create a GitHub Repository
 
 1. Clone the Botasaurus starter template to your machine by running the following commands:
-   ```
+   ```bash
    git clone https://github.com/omkarcloud/botasaurus-starter kubernetes-scraper
    cd kubernetes-scraper
    code .
    ```
 2. Create Github Actions Workflow YAML and Kubernetes deployment YAML files by running the following command:
 
-```bash
-python -m bota create-manifests
-```
+   ```bash
+   python -m bota create-manifests
+   ```
 
 You will be prompted for the following information:
 
@@ -69,7 +69,7 @@ You will be prompted for the following information:
 
 4. In your local machine, run the following commands to push the code to GitHub, remember to replace `USERNAME` with your GitHub username:
 
-```
+```bash
 rm -rf .git # remove the existing git repository
 git init
 git add .
