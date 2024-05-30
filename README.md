@@ -2076,7 +2076,7 @@ Now, follow these steps to run your scraper in a Virtual Machine:
 1. 1. If you don't already have one, create a Google Cloud Account. You'll receive a $300 credit to use over 3 months.
    ![Select-your-billing-country](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/Select-your-billing-country.png)
 
-2. Visit [Google Cloud Console](https://console.cloud.google.com/) and click the Cloud Shell button. A terminal will open up.
+2. Visit the [Google Cloud Console](https://console.cloud.google.com/welcome?cloudshell=true) and click the Cloud Shell button. A terminal will open up.
    ![click-cloud-shell-btn](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/click-cloud-shell-btn.png)
 
 3. Run the following commands in the terminal:
@@ -2146,6 +2146,13 @@ That's it! You have successfully deleted the scraper, and you will not incur any
 
 ### How to Run Scraper in Kubernetes?
 Visit [this link](https://github.com/omkarcloud/botasaurus/blob/master/run-scraper-in-kubernetes.md) to learn how to run scraper at scale using Kubernetes.
+
+
+### I have a suggestion for Botasaurus.
+
+We'd love hear it! Share them on [GitHub Discussions](https://github.com/omkarcloud/botasaurus/discussions). 
+
+[![Make](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/ask-on-github.png)](https://github.com/omkarcloud/google-maps-scraper/discussions)
 
 ### Do you have a Discord community?
 
