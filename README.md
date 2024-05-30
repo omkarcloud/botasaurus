@@ -624,7 +624,7 @@ To use proxies, simply specify the `proxy` parameter:
 )    
 ```
 
-You can also pass a list of proxies, and the proxy will be randomly selected:
+You can also pass a list of proxies, and the proxy will be automatically rotated:
 
 ```python
 @browser(

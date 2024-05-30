@@ -110,6 +110,11 @@ def browser(
                 from .cache import Cache,_get,_has,_get_cache_path,_create_cache_directory_if_not_exists
 
                 _create_cache_directory_if_not_exists(func)
+            if isinstance(proxy, list):
+                from itertools import cycle       
+                cycled_proxy = cycle(proxy)         
+            else:
+                cycled_proxy = None
 
             # # Pool to hold reusable drivers
             _driver_pool = wrapper_browser._driver_pool if dont_close_driver else []
@@ -126,7 +131,10 @@ def browser(
                 evaluated_user_agent = (
                     user_agent(data) if callable(user_agent) else user_agent
                 )
-                evaluated_proxy = evaluate_proxy(proxy(data) if callable(proxy) else proxy)
+                if cycled_proxy:
+                    evaluated_proxy = next(cycled_proxy)
+                else:
+                    evaluated_proxy = evaluate_proxy(proxy(data) if callable(proxy) else proxy)
                 evaluated_profile = profile(data) if callable(profile) else profile
                 evaluated_lang = lang(data) if callable(lang) else lang
                 evaluated_headless = headless(data) if callable(headless) else headless

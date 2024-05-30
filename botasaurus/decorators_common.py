@@ -250,7 +250,7 @@ def save_error_logs(exception_log, driver):
             print(f"Error saving screenshot: {e}")
     clean_error_logs("error_logs", lambda x: datetime.strptime(x, '%Y-%m-%d_%H-%M-%S'))
 def evaluate_proxy(proxy):
-                    import random
                     if isinstance(proxy, list):
+                        import random
                         return  random.choice(proxy)
                     return proxy            

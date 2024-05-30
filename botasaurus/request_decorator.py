@@ -70,7 +70,11 @@ def request(
             if cache:
                 from .cache import Cache,_get,_has,_get_cache_path,_create_cache_directory_if_not_exists
                 _create_cache_directory_if_not_exists(func)
-
+            if isinstance(proxy, list):
+                from itertools import cycle       
+                cycled_proxy = cycle(proxy)         
+            else:
+                cycled_proxy = None
             def run_task(
                 data,
                 is_retry,
@@ -80,7 +84,10 @@ def request(
                     path = _get_cache_path(func, data)
                     if _has(path):
                         return _get(path)
-                evaluated_proxy = evaluate_proxy(proxy(data) if callable(proxy) else proxy)
+                if cycled_proxy:
+                    evaluated_proxy = next(cycled_proxy)
+                else:
+                    evaluated_proxy = evaluate_proxy(proxy(data) if callable(proxy) else proxy)
                 evaluated_user_agent = (
                     user_agent(data) if callable(user_agent) else user_agent
                 )
