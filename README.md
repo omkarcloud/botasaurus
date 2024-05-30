@@ -2148,7 +2148,7 @@ That's it! You have successfully deleted the scraper, and you will not incur any
 Visit [this link](https://github.com/omkarcloud/botasaurus/blob/master/run-scraper-in-kubernetes.md) to learn how to run scraper at scale using Kubernetes.
 
 
-### I have a suggestion for Botasaurus.
+### I have a feature request!
 
 We'd love hear it! Share them on [GitHub Discussions](https://github.com/omkarcloud/botasaurus/discussions). 
 
