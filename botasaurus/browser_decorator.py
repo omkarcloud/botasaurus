@@ -5,7 +5,7 @@ from botasaurus.decorators_common import evaluate_proxy, print_running, write_ou
 from .utils import is_errors_instance
 from .list_utils import flatten
 from .dontcache import is_dont_cache
-from botasaurus_driver import Driver
+from botasaurus_driver.driver import Driver
 
 def close_driver(driver: Driver):
             try:
@@ -253,10 +253,6 @@ def browser(
                     current_result = run_task(data_item, False, 0)
                     result.append(current_result)
             else:
-                if reuse_driver or dont_close_driver:
-                    raise Exception(
-                        "Parallel mode is currently not supported with 'reuse_driver' option."
-                    )
 
                 def run(data_item):
                     current_result = run_task(data_item, False, 0)
@@ -267,7 +263,7 @@ def browser(
                 if callable(parallel):
                     print(f"Running {n} Browsers in Parallel")
                 
-                result = run_parallel(run, used_data, n, False)
+                result = run_parallel(run, used_data, n, True)
 
             if not dont_close_driver:
                 close_driver_pool(_driver_pool)
