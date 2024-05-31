@@ -15,7 +15,7 @@ def dynamically_import_postgres():
     try:
         import psycopg2
     except ImportError:
-        install('psycopg2')
+        install('psycopg2-binary')
 def get_sqlite_url():
     def relative_path_backend():
         """Determines the relative path to the database file, prioritizing 'backend/db.sqlite3'."""
