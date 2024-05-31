@@ -9,7 +9,7 @@
 3. Choose PostgreSQL as your database engine.
    ![Select PostgreSQL](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/select-postgres.png)
 
-4. Enter the following settings, **BUT DO NOT AND YES DO NOT** click the "Create Instance" button **YET!**:
+4. Enter the following settings, **BUT DO NOT AND YES DO NOT** click the "Create Instance" button **YET!** (We'll do that after the next step.)
    ```
    Instance ID: pikachu # Choose any name for your instance.
    Password: pikachu # For testing purposes, we're using a simple password "pikachu". In a production environment, use a strong password.
