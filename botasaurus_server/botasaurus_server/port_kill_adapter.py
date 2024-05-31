@@ -1,5 +1,5 @@
 import subprocess
-import re
+
 import os
 
 def catch_lsof_not_found_error(func):
@@ -39,6 +39,7 @@ def kill_process_on_port(port, method='tcp'):
         lines_with_local_port = [line for line in lines if targetport in line]
         # print(lines_with_local_port)
         pids = []
+        import re
         for line in lines_with_local_port:
             match = re.search(r'(\d+)\s*\w*$', line)
             if match:

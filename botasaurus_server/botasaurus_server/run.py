@@ -77,6 +77,8 @@ def run_frontend(is_dev):
     except subprocess.CalledProcessError as e:
         if e.stderr:
             print(e.stderr.decode('utf-8'))
+        from .check_node import check_node
+        check_node()
         # Resolve Errors, When user forgets to install frontend
         install()
         print_frontend_run_message()
