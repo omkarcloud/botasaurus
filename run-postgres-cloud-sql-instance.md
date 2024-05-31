@@ -9,7 +9,7 @@
 3. Choose PostgreSQL as your database engine.
    ![Select PostgreSQL](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/select-postgres.png)
 
-4. Enter the following settings, but do not click the "Create Instance" button yet:
+4. Enter the following settings, **BUT DO NOT AND YES DO NOT** click the "Create Instance" button **YET!**:
    ```
    Instance ID: pikachu # Choose any name for your instance.
    Password: pikachu # For testing purposes, we're using a simple password "pikachu". In a production environment, use a strong password.
@@ -29,7 +29,7 @@
 
    ![Add Network](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/add-network.png)
 
-6. Click the "Create Instance" button. The instance creation will take approximately 20 minutes.
+6. Click the "Create Instance" button now. The instance creation will take approximately 20 minutes.
    ![Create Instance](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/create-instance.png)
 
 7. In Vscode, create a new file `main.py` and paste the following code to test the connection:
