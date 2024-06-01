@@ -132,17 +132,18 @@ def created_nested_field_values(record, field):
     nested_dict = record.get(field.key, {})  # Use .get() for safer access
     nested_field_values = {}
     for nested_field in field.fields:
-        value = nested_dict.get(nested_field.key)  # Use .get() for safer access
-
-        if isinstance(nested_field, Field):
-            processed_value = (
-                nested_field.map(value, nested_dict, record)
-                if nested_field.map
-                else value
-            )
-        elif isinstance(nested_field, CustomField):
-            processed_value = nested_field.map(nested_dict, record)
-
+        if isinstance(nested_dict, dict):
+            value = nested_dict.get(nested_field.key)  # Use .get() for safer access
+            if isinstance(nested_field, Field):
+                processed_value = (
+                    nested_field.map(value, nested_dict, record)
+                    if nested_field.map
+                    else value
+                )
+            elif isinstance(nested_field, CustomField):
+                processed_value = nested_field.map(nested_dict, record)
+        else:
+            processed_value = None
         nested_field_values[nested_field.output_key] = processed_value
     return nested_field_values
 

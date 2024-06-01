@@ -31,11 +31,11 @@ def check_node():
         MIN_VER = 14
         if major_version < MIN_VER:
             print(
-                f"Your Node.js version is {major_version}, which is less than {MIN_VER}. To use the Botasaurus via a User Interface, you need Node.js {MIN_VER}+, Kindly install it by visiting https://nodejs.org/."
+                f"Your Node.js version is {major_version}, which is less than {MIN_VER}. To use Botasaurus via a User Interface, you need Node.js {MIN_VER}+, Kindly install it by visiting https://nodejs.org/."
             )
             sys.exit(1)
     except Exception as e:
         print(
-            "To use the Botasaurus via a User Interface, you need to have Node.js installed on your system. You do not have Node.js installed on your system, Kindly install it by visiting https://nodejs.org/. After installation, please restart your PC."
+            "To use Botasaurus via a User Interface, you need to have Node.js installed on your system. You do not have Node.js installed on your system, Kindly install it by visiting https://nodejs.org/. After installation, please restart your PC."
         )
         sys.exit(1)
