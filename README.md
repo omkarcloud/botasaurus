@@ -26,9 +26,6 @@
 </p>
 
 
-
-## Botasaurus has released a new version, causing previous Botasaurus scrapers to break. If you have come here because you have been affected, then simply set the Botasaurus version to 4.0.14 to use the old version of Botasaurus by running `python -m pip install botasaurus==4.0.14`.
-
 ## 🐿️ Botasaurus In a Nutshell
 
 How wonderful that of all the web scraping tools out there, you chose to learn about Botasaurus. Congratulations! 
