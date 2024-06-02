@@ -31,12 +31,15 @@ class _Server:
         self.cache = False
         self.config = None
         self.database_url = None
+        self.database_options = None
         self._is_database_initialized = False
 
-    def set_database_url(self, database_url):
+    def set_database_url(self, database_url=None, database_options=None):
         if self._is_database_initialized:
             raise Exception('The database has already been initialized. To resolve this error, ensure that the line ("from botasaurus_server.run import run") comes after the line ("import backend.scrapers") in the "run.py" file.')
         self.database_url = database_url
+        self.database_options = database_options
+
 
     def get_config(self):
         if not self.config:

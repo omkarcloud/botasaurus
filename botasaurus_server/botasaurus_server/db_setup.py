@@ -38,7 +38,7 @@ def clean_database_url(url):
 
 db_url = clean_database_url(Server.database_url) if Server.database_url else get_sqlite_url()
 Server._is_database_initialized = True
-engine = create_engine(db_url)
+engine = create_engine(db_url, **(Server.database_options or {}))
 Session = sessionmaker(bind=engine)
 
 def create_database():
