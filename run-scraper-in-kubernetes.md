@@ -38,6 +38,7 @@ To achieve this, we will:
    ![Install bota cluster](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/install-bota-cluster.gif)
 
    After the command completes, note the IP of the Kubernetes Cluster, as we will later visit this IP to use the scraper.
+   ![k8 ip](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/k8-ip.png)
 
 ### Step 2: Create a GitHub Repository
 
