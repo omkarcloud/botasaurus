@@ -9,7 +9,7 @@ It provides a simple and convenient way to create, fetch, download, abort, and d
 To install the API client, use pip:
 
 ```bash
-python -m pip install botasaurus_api
+python -m pip install botasaurus-api
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ python -m pip install botasaurus_api
 First, import the `Api` class from the library:
 
 ```python
-from botasaurus_api import Api
+from botasaurus-api import Api
 ```
 
 Then, create an instance of the `Api` class:

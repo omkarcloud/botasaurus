@@ -1402,10 +1402,12 @@ scrape_heading_task()
 3. **Dynamically Write Output**: To dynamically write output based on data and result, pass a function to the `output` parameter:
 ```python
 from botasaurus.task import task
+from botasaurus import bt
 
 def write_output(data, result):
-    bt.write_json(result, 'data')
-    bt.write_excel(result, 'data')
+    json_filename = bt.write_json(result, 'data')
+    excel_filename = bt.write_excel(result, 'data')
+    bt.zip_files([json_filename, excel_filename]) # Zip the JSON and Excel files for easy delivery to the customer
 
 @task(output=write_output)  
 def scrape_heading_task(data): 

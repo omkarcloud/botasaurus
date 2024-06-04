@@ -42,9 +42,9 @@ def is_server_ready(url):
 
 
 def open_browser():
-  sleep(1)
+#   sleep(1)
   while not is_server_ready('http://localhost:3000/'):
-    sleep(1)    
+    sleep(0.1)    
     # Wait for a few seconds before opening the browser
   webbrowser.open('http://localhost:3000/')
 
@@ -86,7 +86,7 @@ def run_frontend(is_dev):
         start_frontend(is_dev)
 
 def run_backend_in_thread():
-    sleep(1)
+    # sleep(1)
     Thread(target=run_backend, daemon=True).start()
 
 def run():

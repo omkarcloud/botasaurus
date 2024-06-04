@@ -56,9 +56,9 @@ def write_temp_json(data, log=True):
         prompt(
             f"{filename} is currently open in another application. Please close the the Application and press 'Enter' to save."
         )
-        write_json(data, filename, log)
+        return write_json(data, filename, log)
 
-
+    return filename
 def read_temp_json():
     filename = fix_json_filename("temp")
     return _read_json(filename)
@@ -91,14 +91,15 @@ def write_json(data, filename, log=True):
 
         if log:
             print(f"View written JSON file at {filename}")
+        
     except PermissionError:
         prompt(
             f"{filename} is currently open in another application. Please close the the Application and press 'Enter' to save."
         )
-        write_json(data, filename, log)
-
+        return write_json(data, filename, log)
+    return filename
 def write_temp_csv(data, log=True):
-    write_csv(data, "temp.csv", log)
+    return write_csv(data, "temp.csv", log)
 
 
 def read_temp_csv():
@@ -203,8 +204,8 @@ def write_csv(data, filename, log=True):
         prompt(
             f"{filename_new} is currently open in another application (e.g., Excel). Please close the the Application and press 'Enter' to save."
         )
-        write_csv(data, filename, log)
-
+        return write_csv(data, filename, log)
+    return filename
 
 def save_image(url, filename=None):
     import requests
@@ -232,7 +233,7 @@ def write_html(data, filename, log=True):
     _write_html(data, filename)
     if log:
         print(f"View written HTML file at {filename}")
-
+    return filename
 
 def read_html(filename):
     filename = append_output_if_needed(filename)
@@ -244,7 +245,7 @@ def read_html(filename):
 
 
 def write_temp_html(data, log=True):
-    write_html(data, "temp.csv", log)
+   return write_html(data, "temp.csv", log)
 
 
 def read_temp_html():
@@ -258,7 +259,7 @@ def write_file(data, filename, log=True):
     if log:
         print(f"View written file at {filename}")
 
-
+    return filename
 def read_file(filename):
     filename = append_output_if_needed(filename)
 
@@ -314,11 +315,10 @@ def write_excel(data, filename, log=True):
 
         if log:
             print(f"View written Excel file at {filename}")
-
     except PermissionError:
         prompt(f"{filename} is currently open in another application (e.g., Excel). Please close the the Application and press 'Enter' to save.")
-        write_excel(data, filename, log)
-
+        return write_excel(data, filename, log)
+    return filename
 def write_workbook(data, filename,  strings_to_urls = True):
     import xlsxwriter
     if strings_to_urls:
@@ -346,7 +346,7 @@ def write_workbook(data, filename,  strings_to_urls = True):
         row += 1
 
     workbook.close()
-
+    return filename
 def get_fields(data):
     if len(data) == 0:
         return []
@@ -372,7 +372,52 @@ def read_excel(filename):
     return data
 
 def write_temp_excel(data, log=True):
-    write_excel(data, "temp.xlsx", log)
+    return write_excel(data, "temp.xlsx", log)
 
 def read_temp_excel():
     return read_excel("temp.xlsx")
+
+def zip_files(filenames, output_filename="data", log=True):
+    import zipfile
+
+    # Ensure filenames is a list
+    if not isinstance(filenames, list):
+        filenames = [filenames]
+
+    # Filter out any None or empty string filenames
+    filenames = [f for f in filenames if f]
+
+    # If no valid filenames, return early
+    if not filenames:
+        print("No files to zip.")
+        return None
+
+    # Prepare the output filename
+    output_filename = append_output_if_needed(output_filename)
+    if not output_filename.endswith(".zip"):
+        output_filename += ".zip"
+
+    try:
+        with zipfile.ZipFile(output_filename, 'w') as zipf:
+            for file in filenames:
+                file = append_output_if_needed(file)
+                if os.path.exists(file):
+                    # Get the file name without the "output/" prefix
+                    arcname =  os.path.basename(file) 
+                    zipf.write(file, arcname=arcname)
+                else:
+                    print(f"Warning: File not found: {file}")
+
+        if log:
+            print(f"View written ZIP file at {output_filename}")
+        return output_filename
+
+    except PermissionError:
+        prompt(f"{output_filename} is currently open in another application. Please close the application and press 'Enter' to retry.")
+        return zip_files(filenames, output_filename, log)
+    except zipfile.BadZipFile:
+        print(f"Error: Unable to create zip file {output_filename}. It may be corrupted.")
+        return None
+    except Exception as e:
+        print(f"Error while zipping files: {e}")
+        return None

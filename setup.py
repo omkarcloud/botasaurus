@@ -8,8 +8,8 @@ install_requires = [
     "beautifulsoup4>=4.11.2",
     "openpyxl",
     "close_chrome",
-    "botasaurus_api",
-    "botasaurus_driver",
+    "botasaurus-api",
+    "botasaurus-driver",
     "bota",
     "botasaurus-proxy-authentication",
     "botasaurus-requests"

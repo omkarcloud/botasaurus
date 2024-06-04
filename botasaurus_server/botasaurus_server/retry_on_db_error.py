@@ -1,9 +1,10 @@
 from functools import wraps
+import os
+import signal
 from time import sleep
 import traceback
 from typing import Callable, Optional
 from sqlalchemy.exc import OperationalError
-
 
 def is_errors_instance(instances, error):
     for i in range(len(instances)):
@@ -13,7 +14,7 @@ def is_errors_instance(instances, error):
     return False, -1
 
 ANY = 'any'
-def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=True, on_failed_after_retry_exhausted=None):
+def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=True, on_failed_after_retry_exhausted=None,on_error=None):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -25,6 +26,8 @@ def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=
                     created_result = func(*args, **kwargs)
                     return created_result
                 except Exception as e:
+                    if on_error:
+                        on_error(e)
                     if instances != ANY:
                         errors_only_instances = list(map(lambda el: el[0] if isinstance(el, tuple) else el, instances)) if instances else []
                     if instances != ANY:
@@ -41,7 +44,7 @@ def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=
                             instances[index][1]()
 
                     if tries == retries:
-                        if on_failed_after_retry_exhausted is not None:
+                        if on_failed_after_retry_exhausted:
                             on_failed_after_retry_exhausted(e)
                         if raise_exception:
                             raise e
@@ -54,12 +57,20 @@ def retry_if_is_error(instances=ANY, retries=3, wait_time=None, raise_exception=
     return decorator
 
 def retry_on_db_error(_func: Optional[Callable] = None, *, retries=5, wait_time=5, raise_exception=True):
+    def on_failed_after_retry_exhausted(e):
+        if os.environ.get("VM"):
+            print("Exiting due to SQL Error")
+            os.kill(os.getpid(), signal.SIGINT)
+
+
     def decorator(func):
         @retry_if_is_error(
             instances=[OperationalError],
             retries=retries,
             wait_time=wait_time,
-            raise_exception=raise_exception
+            raise_exception=raise_exception,
+            on_failed_after_retry_exhausted=on_failed_after_retry_exhausted,
+            on_error=on_failed_after_retry_exhausted,
         )
         @wraps(func)  # Use functools.wraps
         def wrapper(*args, **kwargs):
@@ -71,3 +82,9 @@ def retry_on_db_error(_func: Optional[Callable] = None, *, retries=5, wait_time=
     else:
         return decorator(_func)
 
+# python -m botasaurus_server.retry_on_db_error
+if __name__ == "__main__":
+    @retry_on_db_error
+    def aa():
+        raise Exception()
+    aa()

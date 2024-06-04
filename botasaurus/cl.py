@@ -1,12 +1,13 @@
 import json
+from typing import List
 
-def snakecase(string: str, keep_together: list[str] = None) -> str:
+def snakecase(string: str, keep_together: List[str] = None) -> str:
     """Convert a string into snake_case.
 
     Args:
         string (:obj:`str`):
             The string to convert to snake_case.
-        keep_together (:obj:`list[str]`, `optional`):
+        keep_together (:obj:`List[str]`, `optional`):
             (Upper) characters to not split, e.g., "HTTP".
 
     Returns:

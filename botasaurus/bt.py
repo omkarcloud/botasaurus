@@ -22,6 +22,7 @@ from .output import (
     write_excel,
     read_temp_excel,
     write_temp_excel,
+    zip_files,
 )
 from .formats import Formats
 from .beep_utils import prompt
