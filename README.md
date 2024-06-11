@@ -199,13 +199,13 @@ This time, you will observe the exact same result as before, but instead of open
 
 ## 💡 Understanding Botasaurus
 
+### What is Botasaurus Driver, And Why should I use it over Selenium and Playwright?
+
+Botasaurus Driver is a web automation driver like Selenium, and the single most important reason to use it is because it is truly humane, and you will not, and I repeat NOT, have any issues with accessing any website.
+
+Plus, it is super fast to launch and use, and the API is designed by and for web scrapers, and you will love it.
+
 ### How do I access Cloudflare-protected pages using Botasaurus?
-
-We have created a powerful web driver called `BotasaurusDriver` which provides the following benefits:
-
-- It is really humane; looking and working exactly like a real browser, allowing it to access any website.
-- Compared to Selenium and Playwright, it is super fast to launch and use.
-- The API is designed by and for web scrapers, and you will love it.
 
 Cloudflare is the most popular protection system on the web. So, let's see how Botasaurus can help you solve various Cloudflare challenges.
 
@@ -277,6 +277,7 @@ def scrape_heading_task(driver: Driver, data):
 
 scrape_heading_task()
 ```
+
 
 ### What are the benefits of a UI Scraper?
 
@@ -619,6 +620,11 @@ To use proxies, simply specify the `proxy` parameter:
 @browser(
     proxy="http://username:password@proxy-provider-domain:port"
 )    
+def visit_ipinfo(driver: Driver, data):
+    driver.get("https://ipinfo.io/")
+    driver.prompt()
+
+visit_ipinfo()
 ```
 
 You can also pass a list of proxies, and the proxy will be automatically rotated:
@@ -629,7 +635,12 @@ You can also pass a list of proxies, and the proxy will be automatically rotated
         "http://username:password@proxy-provider-domain:port", 
         "http://username2:password2@proxy-provider-domain:port"
     ]
-)    
+)
+def visit_ipinfo(driver: Driver, data):
+    driver.get("https://ipinfo.io/")
+    driver.prompt()
+
+visit_ipinfo() 
 ```
 
 #### Profile
@@ -1141,7 +1152,7 @@ Some good proxy providers we personally use are:
 
 Also, It's worth noting that BrightData will block certain websites. 
 
-Note: We are not affiliated with any of the above proxy providers.
+Note: BrightData and IPRoyal have not paid us. We are recommending them based on our personal experience.
 
 ### Which country should I choose when using proxies for web scraping?
 
