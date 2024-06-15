@@ -1128,7 +1128,7 @@ Important Note: To run the code above, you will need [Node.js](https://nodejs.or
 
 ### Why am I getting a socket connection error when using a proxy to access a website?
 
-Certain proxy providers might block access to specific websites. To determine if this is the case, run the following code:
+Certain proxy providers like BrightData will block access to specific websites. To determine if this is the case, run the following code:
 
 ```python
 from botasaurus.browser import browser, Driver
@@ -1150,7 +1150,9 @@ Some good proxy providers we personally use are:
 - For Rotating Datacenter Proxies: **BrightData Datacenter Proxies**, which cost around $0.6 per GB on a pay-as-you-go basis. No KYC is required.
 - For Rotating Residential Proxies: **IPRoyal Royal Residential Proxies**, which cost around $7 per GB on a pay-as-you-go basis. No KYC is required.
 
-Also, It's worth noting that BrightData will block certain websites. 
+As always, nothing good in life comes free. Proxies are expensive, and will take up almost all of your scraping costs. 
+
+So, use proxies only when you need them, and prefer request-based scrapers over browser-based scrapers to save bandwidth.
 
 Note: BrightData and IPRoyal have not paid us. We are recommending them based on our personal experience.
 
@@ -2162,7 +2164,7 @@ Visit [this link](https://github.com/omkarcloud/botasaurus/blob/master/run-scrap
 
 We'd love hear it! Share them on [GitHub Discussions](https://github.com/omkarcloud/botasaurus/discussions). 
 
-[![Make](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/ask-on-github.png)](https://github.com/omkarcloud/google-maps-scraper/discussions)
+[![Make](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/ask-on-github.png)](https://www.omkar.cloud/l/botasaurus-make-discussions/)
 
 ### Do you have a Discord community?
 

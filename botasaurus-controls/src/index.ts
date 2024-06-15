@@ -315,13 +315,13 @@ class Controls {
   }
 
   // Method to add a number control that must be greater than or equal to zero
-  greaterThanOrEqualToZero(id: string, props: NumberControlInput<number> = {}) {
+  numberGreaterThanOrEqualToZero(id: string, props: NumberControlInput<number> = {}) {
     // Ensure the minimum value is set to 0
     return this.number(id, { ...props, min: 0 })
   }
 
   // Method to add a number control that must be greater than or equal to one
-  greaterThanOrEqualToOne(id: string, props: NumberControlInput<number> = {}) {
+  numberGreaterThanOrEqualToOne(id: string, props: NumberControlInput<number> = {}) {
     // Ensure the minimum value is set to 1
     return this.number(id, { ...props, min: 1 })
   }

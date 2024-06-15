@@ -245,11 +245,11 @@ def read_html(filename):
 
 
 def write_temp_html(data, log=True):
-   return write_html(data, "temp.csv", log)
+   return write_html(data, "temp.html", log)
 
 
 def read_temp_html():
-    return read_html("temp.csv")
+    return read_html("temp.html")
 
 def write_file(data, filename, log=True):
 

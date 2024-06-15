@@ -1,6 +1,6 @@
 {
     "name": "botasaurus-controls",
-    "version": "6.0.16",
+    "version": "6.0.17",
     "description": "controls adder for botasaurus.",
     "main": "dist/index.js",
     "engines": {
