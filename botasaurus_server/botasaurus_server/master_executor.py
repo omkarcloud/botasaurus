@@ -47,7 +47,7 @@ class MasterExecutor(TaskExecutor):
         self.decrement_master_capacity(node, task_type)
 
         # Further processing of task_result can be done here
-        self.mark_task_as_success(task_id, task_result)
+        self.mark_task_as_success(task_id, task_result, Server.cache)
         self.update_parent_task(task_id)
     
     def on_failure(self, task_id, task_type, task_result, node_name):

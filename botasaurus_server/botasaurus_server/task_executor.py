@@ -10,6 +10,7 @@ from .server import Server
 from .models import Task, TaskStatus, TaskHelper, create_cache
 from .scraper_type import ScraperType
 from .retry_on_db_error import retry_on_db_error
+from botasaurus.dontcache import is_dont_cache
 
 class TaskExecutor:
 
@@ -153,11 +154,21 @@ class TaskExecutor:
                     raise_exception=True,
                     close_on_crash=True,
                     output=None,
-                    create_error_logs=False
+                    create_error_logs=False,
+                    return_dont_cache_as_is=True
                 )
+                if is_dont_cache(result):
+                    is_result_dont_cached = True
+                    # unpack
+                    result = result.data
+                else: 
+                    is_result_dont_cached = False
 
                 result = clean_data(result)
-                self.mark_task_as_success(task_id, result)
+                if is_result_dont_cached:
+                    self.mark_task_as_success(task_id, result, False)
+                else:
+                    self.mark_task_as_success(task_id, result, Server.cache)
                 self.decrement_capcity(scraper_type)
             except:
                 self.decrement_capcity(scraper_type)
@@ -225,7 +236,7 @@ class TaskExecutor:
             session.commit()
     
     @retry_on_db_error
-    def mark_task_as_success(self, task_id, result):
+    def mark_task_as_success(self, task_id, result, cache_task):
         with Session() as session:
             TaskHelper.update_task(
                     session,
@@ -239,7 +250,7 @@ class TaskExecutor:
                     [TaskStatus.IN_PROGRESS],
                 )
             
-            if Server.cache:
+            if cache_task:
                 task = TaskHelper.get_task(session, task_id)
                 scraper_name = task.scraper_name
                 data = task.data

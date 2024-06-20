@@ -99,6 +99,8 @@ def browser(
             output_formats = kwargs.get("output_formats", output_formats)
             max_retry = kwargs.get("max_retry", max_retry)
             retry_wait = kwargs.get("retry_wait", retry_wait)
+            # A Special Option passed by botasaurus server which prevents caching at database level
+            return_dont_cache_as_is = kwargs.get("return_dont_cache_as_is", False)
             create_error_logs = kwargs.get("create_error_logs", create_error_logs)
 
             raise_exception = kwargs.get("raise_exception", raise_exception)
@@ -182,7 +184,8 @@ def browser(
                             Cache.put(func, data, result)
 
                     if is_dont_cache(result):
-                        result = result.data
+                        if not return_dont_cache_as_is:
+                            result = result.data
 
                     return result
                 except Exception as error:
