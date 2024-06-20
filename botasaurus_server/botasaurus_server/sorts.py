@@ -11,7 +11,7 @@ class BaseSort:
         self.id = f"{field}_{class_name}"
 
     def get_sort_key(self):
-        # none's be at last always
+        # ensure none's be at last always
         if self.reverse:
             none_value = (0,)
         else:
@@ -23,7 +23,8 @@ class BaseSort:
 
             if value is None:
                 return none_value
-
+            # ascending => ints, str, none
+            # descending => str, ints, none
             # Return a tuple with type indicator and value
             return (1, value) if isinstance(value, int) else (2, value)
 
@@ -234,3 +235,9 @@ def apply_sorts(data, sort_data, sort_objects):
             break  # Exit the loop once a matching sort is found
 
     return data
+
+# python -m 
+if __name__ == "__main__":
+    c = NumericAscendingSort("age")
+
+    print(c.apply([{"age": 30}, {"age": 20}, {"age": 10}]))

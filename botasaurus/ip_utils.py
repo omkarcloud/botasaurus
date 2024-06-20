@@ -9,9 +9,14 @@ def _create_proxy_dict(proxy_url: str) -> dict:
     return {"http": proxy_url, "https": proxy_url}
 
 
-def _find_ip(attempts=5, proxy=None) -> str:
+def _find_ip(attempts=5, proxy=None, is_retry = False) -> str:
     """Finds the public IP address of the current connection."""
-    url = "https://checkip.amazonaws.com/"
+    # Server may be down so check this
+    if is_retry:
+        url = "https://api.ipify.org"
+    else:
+        url = "https://checkip.amazonaws.com/"
+    
     proxies = _create_proxy_dict(proxy) if proxy else None
 
     try:
@@ -21,12 +26,12 @@ def _find_ip(attempts=5, proxy=None) -> str:
     except ReadTimeout:
         if attempts > 1:
             print("ReadTimeout occurred. Retrying...")
-            return _find_ip(attempts - 1, proxy)
+            return _find_ip(attempts - 1, proxy, True)
         else:
             print("Max attempts reached. Failed to get IP address.")
             return None
 
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
         return None
 

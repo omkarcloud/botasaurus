@@ -194,7 +194,8 @@ def browser(
                         must_raise_exceptions
                         and is_errors_instance(must_raise_exceptions, error)[0]
                     ):
-                        save_error_logs(format_exc(), driver)
+                        if create_error_logs:
+                            save_error_logs(format_exc(), driver)
                         close_driver(driver)
                         raise
 

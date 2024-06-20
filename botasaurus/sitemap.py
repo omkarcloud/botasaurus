@@ -1,10 +1,10 @@
 from random import shuffle
 import re
 import functools
-import xml.etree.ElementTree as ET
 from urllib.parse import urlparse, unquote_plus, urlunparse
 from gzip import decompress
 from typing import Union, List
+from bs4 import BeautifulSoup
 
 from .list_utils import flatten
 from .cl import join_link
@@ -427,18 +427,10 @@ def get_sitemaps_urls(request_options, urls):
         visited.add(url)
 
         content = clean_sitemap_response(fetch_content(url))
-
         if not content:
             return []
 
-        root = ET.fromstring(content)
-
-        namespaces = {"sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-
-        locs = [
-            sm.find("sitemap:loc", namespaces).text
-            for sm in root.findall("sitemap:sitemap", namespaces)
-        ]
+        locs = find_the_sitemaps(content)
 
         links = [url]
 
@@ -449,6 +441,18 @@ def get_sitemaps_urls(request_options, urls):
 
         return links
 
+
+    def find_the_sitemaps(content):
+        root = BeautifulSoup(content, 'lxml-xml')
+
+        locs = []
+        # Look for sitemap entries, which indicate nested sitemaps
+        for sm in root.select("sitemap"):
+            el = sm.select_one("loc")
+            if el is not None:
+                locs.append(el.text.strip())
+
+        return locs
     return sitemap(
         wrap_in_sitemap(urls)
     )
@@ -473,22 +477,7 @@ def get_urls(request_options, urls):
         if not content:
             return []
 
-        root = ET.fromstring(content)
-
-        # Namespace handling, as sitemap XMLs often define namespaces
-        namespaces = {"sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-
-        links = []
-        # Look for URL entries, which indicate actual page links
-        for url_entry in root.findall("sitemap:url", namespaces):
-            loc = url_entry.find("sitemap:loc", namespaces).text
-            links.append(loc)
-
-        # Look for sitemap entries, which indicate nested sitemaps
-        locs = [
-            sm.find("sitemap:loc", namespaces).text
-            for sm in root.findall("sitemap:sitemap", namespaces)
-        ]
+        links, locs = get_links_sitemaps(content)
 
         parsed = sitemap(locs)
 
@@ -496,6 +485,25 @@ def get_urls(request_options, urls):
             links.extend(x)
 
         return links
+
+
+    def get_links_sitemaps(content):
+        root = BeautifulSoup(content, 'lxml-xml')
+
+        links = []
+        # Look for URL entries, which indicate actual page links
+        for url_entry in root.select("url"):
+            loc = url_entry.select_one("loc")
+            if loc is not None:
+                links.append(loc.text.strip())
+        # Look for sitemap entries, which indicate nested sitemaps
+        locs = []
+        for sm in root.select("sitemap"):
+            el = sm.select_one("loc")
+            if el is not None:
+                locs.append(el.text.strip())
+
+        return links, locs
 
     return sitemap(
         urls,
@@ -725,7 +733,7 @@ class Sitemap:
         self.sort_links = False  # Ensure sort is not set if randomize is called
         return self  # Allow chaining
 
-    def links(self):
+    def links(self) -> List[str]:
         request_options = self._create_request_options()
 
         # This function should be defined or imported in your code
@@ -747,7 +755,7 @@ class Sitemap:
 
         return result
 
-    def sitemaps(self):
+    def sitemaps(self) -> List[str]:
         request_options = self._create_request_options()
 
         # This function should be defined or imported in your code

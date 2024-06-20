@@ -59,3 +59,22 @@ def flatten(array):
         Removed ``is_deep`` option. Use :func:`flatten_deep` instead.
     """
     return flatten_depth(array, depth=1)
+
+def flatten_deep(array):
+    """
+    Flattens an array recursively.
+
+    Args:
+        array (list): List to flatten.
+
+    Returns:
+        list: Flattened list.
+
+    Example:
+
+        >>> flatten_deep([[1], [2, [3]], [[4]]])
+        [1, 2, 3, 4]
+
+    .. versionadded:: 2.0.0
+    """
+    return flatten_depth(array, depth=-1)

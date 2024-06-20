@@ -104,3 +104,6 @@ def killfrontendandbackendports():
         # kill first else causes installation errors
         killbackendport()
         killfrontendport()   
+# python -m botasaurus_server.port_kill_adapter
+if __name__ == "__main__":
+    kill_process_on_port(5000)

@@ -96,7 +96,8 @@ def task(
                         must_raise_exceptions
                         and is_errors_instance(must_raise_exceptions, error)[0]
                     ):
-                        save_error_logs(format_exc(), None)
+                        if create_error_logs:
+                            save_error_logs(format_exc(), None)
                         raise
 
                     if max_retry is not None and (max_retry) > (retry_attempt):
