@@ -584,7 +584,6 @@ The Browser Decorator allows you to easily configure various aspects of the brow
 - Specifying profiles
 - Enabling headless mode
 - Using Chrome extensions
-- Captcha Solving
 - Selecting language
 - Passing Arguments to Chrome
 
@@ -707,30 +706,6 @@ scrape_while_blocking_ads()
 ```
 
 In some cases, an extension may require additional configuration, such as API keys or credentials. For such scenarios, you can create a custom extension. Learn more about creating and configuring custom extensions [here](https://github.com/omkarcloud/chrome-extension-python).
-
-#### Captcha Solving
-
-Facing captchas is really common and annoying hurdle in web scraping. Fortunately, CapSolver can be used to automatically solve captchas, saving both time and effort. Here's how you can use it:
-
-```python
-from botasaurus import *
-from capsolver_extension_python import Capsolver
-
-@browser(
-    extensions=[Capsolver(api_key="CAP-MY_KEY")],  # Replace "CAP-MY_KEY" with your actual CapSolver Key
-)  
-def solve_captcha(driver: AntiDetectDriver, data):
-    driver.get("https://recaptcha-demo.appspot.com/recaptcha-v2-checkbox.php")
-    driver.prompt()
-
-solve_captcha()
-```
-
-To solve captcha's with CapSolver, you will need Capsolver API Key. If you do not have a CapSolver API Key, follow the instructions [here](https://github.com/omkarcloud/botasaurus/blob/master/capsolver-sign-up.md) to create a CapSolver account and obtain one.
-
-Also, when you use the Capsolver Extension, we integrate our own app ID into the extension if you haven't provided one. This allows us to earn a small commission from each captcha you solve, at no extra cost to you.
-
-These funds supports us in our efforts to make awesome projects like botasaurus and make your life easier.
 
 #### Language
 
@@ -2222,11 +2197,6 @@ It's just one click, but it means the world to me.
     <img src="https://bytecrank.com/nastyox/reporoster/php/stargazersSVG.php?user=omkarcloud&repo=botasaurus" alt="Stargazers for @omkarcloud/botasaurus">
 </a>
 
-## Sponsors
-
-<a target="_blank" href="https://capsolver.com/?utm_source=github&utm_medium=github_banner&utm_campaign=botasaurus">
-    <img src="https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/capsolver.png" style="width: 70%;" alt="capsolver">
-</a>
 
 ## Disclaimer for Botasaurus Project
 
