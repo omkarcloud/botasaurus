@@ -303,7 +303,8 @@ Let's run the Botasaurus Starter Template (the recommended template for greenfie
 
 2. Install dependencies (will take a few minutes):
    ```
-   python -m pip install -r requirements.txt && python run.py install
+   python -m pip install -r requirements.txt
+python run.py install
    ```
 
 3. Run the scraper:

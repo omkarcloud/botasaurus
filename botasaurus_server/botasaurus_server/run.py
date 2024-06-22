@@ -104,6 +104,9 @@ def run():
             open_browser_in_thread()
             run_frontend(False)
         elif sys.argv[1] == "install":
+            from .check_node import check_node
+            check_node()
+
             install()
         elif sys.argv[1] == "backend":
             # Argument "backend" provided, run only backend

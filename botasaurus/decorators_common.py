@@ -223,7 +223,7 @@ def clean_error_logs(error_logs_dir, sort_key):
     folders_to_delete = sorted_folders[10:]
     for folder in folders_to_delete:
         folder_path = os.path.join(error_logs_dir, folder)
-        rmtree(folder_path)
+        rmtree(folder_path, ignore_errors=True)
 
 def save_error_logs(exception_log, driver):
     from datetime import datetime
