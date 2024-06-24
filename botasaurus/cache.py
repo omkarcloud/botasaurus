@@ -4,8 +4,11 @@ from hashlib import md5
 from shutil import rmtree
 from json.decoder import JSONDecodeError
 from .decorators_utils import create_cache_directory_if_not_exists, create_directory_if_not_exists
-from .utils import read_json, relative_path, write_json
-from .dontcache import DontCache
+from .utils import read_json, relative_path
+
+def write_json(data, path):
+    with open(path, 'w', encoding="utf-8") as fp:
+        json.dump(data, fp)
 
 def getfnname(func):
     return func if isinstance(func, str) else func.__name__

@@ -109,7 +109,7 @@ def browser(
             fn_name = func.__name__
 
             if cache:
-                from .cache import Cache,_get,_has,_get_cache_path,_create_cache_directory_if_not_exists
+                from .cache import Cache,_get,_has,_get_cache_path,_create_cache_directory_if_not_exists, _put,_remove
 
                 _create_cache_directory_if_not_exists(func)
             if isinstance(proxy, list):
@@ -126,6 +126,9 @@ def browser(
                     path = _get_cache_path(func, data)
                     if _has(path):
                         return _get(path)
+                elif cache == 'REFRESH' :
+                    path = _get_cache_path(func, data)
+                    
 
                 evaluated_window_size = (
                     window_size(data) if callable(window_size) else window_size
@@ -179,9 +182,9 @@ def browser(
 
                     if cache is True or cache == 'REFRESH' :
                         if is_dont_cache(result):
-                            Cache.delete(func, data)
+                            _remove(path)
                         else:
-                            Cache.put(func, data, result)
+                            _put(result, path)
 
                     if is_dont_cache(result):
                         if not return_dont_cache_as_is:
