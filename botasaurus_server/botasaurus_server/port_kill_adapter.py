@@ -9,6 +9,10 @@ def catch_lsof_not_found_error(func):
         except FileNotFoundError as e:
             print("""To use Botasaurus, it is recommended to install lsof by running the following command:
 sudo apt-get update && sudo apt-get install -y lsof""")
+        except subprocess.TimeoutExpired:
+            print("""Timed Out using lsof""")
+
+
     return wrapper
 
 @catch_lsof_not_found_error
@@ -84,7 +88,7 @@ def kill_process_on_port(port, method='tcp'):
 
 @catch_lsof_not_found_error
 def get_lsof_text():
-    return subprocess.run(['lsof', '-i', '-P'], capture_output=True, text=True)
+    return subprocess.run(['lsof', '-i', '-P'], capture_output=True, text=True, timeout=5)
 
 # kill_process_on_port(8000)        
 # def kill(port):

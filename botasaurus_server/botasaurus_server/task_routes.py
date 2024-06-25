@@ -241,7 +241,7 @@ def create_tasks(scraper, data, metadata, is_sync):
         else:
             print(f'{cached_tasks_len} out of {tasklen} Results are Returned from cache')
         if all_task_id:
-            perform_complete_task(all_task_id)
+            perform_complete_task(all_task_id, Server.get_remove_duplicates_by(scraper_type))
 
     tasks_with_all_task = tasks
     if all_task_id:
@@ -250,9 +250,12 @@ def create_tasks(scraper, data, metadata, is_sync):
     return tasks_with_all_task, tasks, split_task
 
 @retry_on_db_error
-def perform_complete_task(all_task_id):
+def perform_complete_task(all_task_id
+                          ,remove_duplicates_by=None
+
+                          ):
     with Session() as session:
-        executor.complete_parent_task_if_possible(session, all_task_id)
+        executor.complete_parent_task_if_possible(session, all_task_id,remove_duplicates_by)
         session.commit()
 
 @retry_on_db_error
@@ -824,7 +827,7 @@ def perform_download_task_results(task_id):
         results = task.result
     return scraper_name,results
 
-def delete_task(session, task_id, is_all_task, parent_id):
+def delete_task(session, task_id, is_all_task, parent_id,remove_duplicates_by):
     if is_all_task:
         TaskHelper.delete_child_tasks(session, task_id)
     else:
@@ -855,12 +858,12 @@ def delete_task(session, task_id, is_all_task, parent_id):
                         if failed_children_count:
                             TaskHelper.fail_task(session, parent_id)
                         else:
-                            TaskHelper.success_all_task(session, parent_id, task_id)
+                            TaskHelper.success_all_task(session, parent_id, task_id, remove_duplicates_by)
 
     TaskHelper.delete_task(session, task_id)
 
 
-def abort_task(session, task_id, is_all_task, parent_id):
+def abort_task(session, task_id, is_all_task, parent_id, remove_duplicates_by):
 
     if is_all_task:
         TaskHelper.abort_child_tasks(session, task_id)
@@ -891,7 +894,7 @@ def abort_task(session, task_id, is_all_task, parent_id):
                         if failed_children_count:
                             TaskHelper.fail_task(session, parent_id)
                         else:
-                            TaskHelper.success_all_task(session, parent_id, task_id)
+                            TaskHelper.success_all_task(session, parent_id, task_id, remove_duplicates_by)
 
     TaskHelper.abort_task(session, task_id)
 
@@ -918,12 +921,13 @@ def validate_patch_task(json_data):
 @retry_on_db_error
 def perform_patch_task(action, task_id):
     with Session() as session:
-        task = session.query(Task.id, Task.is_all_task, Task.parent_task_id).filter(Task.id == task_id).first()
+        task = session.query(Task.id, Task.is_all_task, Task.parent_task_id, Task.scraper_name, ).filter(Task.id == task_id).first()
         if task:
+            y = Server.get_remove_duplicates_by(task.pop())
             if action == "delete":
-                delete_task(session, *task)
+                delete_task(session, *task, y)
             elif action == "abort":
-                abort_task(session, *task)
+                abort_task(session, *task, y)
             session.commit()
 
 @route("/api/tasks/<task_id:int>/abort", method="PATCH")

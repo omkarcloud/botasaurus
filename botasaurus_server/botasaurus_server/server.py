@@ -124,6 +124,7 @@ class _Server:
         filters=[],
         sorts=[],
         views=[],
+        remove_duplicates_by=None,
     ):
         if not hasattr(scraper_function, "_scraper_type"):
             raise ValueError(
@@ -146,6 +147,11 @@ class _Server:
             raise ValueError(
                 "split_task function must be provided when create_all_task is True."
             )
+
+        # if not create_all_task and remove_duplicates_by:
+        #     raise ValueError(
+        #         "create_all_task must be True when remove_duplicates_by is provided."
+        #     )        
 
         # Check for duplicate views
         view_ids = [view.id for view in views]
@@ -201,6 +207,7 @@ class _Server:
         "sorts": sorts,
         "views": views,
         "default_sort": default_sort,  
+        "remove_duplicates_by":remove_duplicates_by,
     }
 
     def get_scrapers_config(self):
@@ -243,6 +250,9 @@ class _Server:
 
     def get_scraping_function(self, scraper_name):
         return self.scrapers[scraper_name]["function"]
+
+    def get_remove_duplicates_by(self, scraper_name):
+        return self.scrapers[scraper_name]["remove_duplicates_by"]
 
     def get_scrapers_names(self):
         return list(self.scrapers.keys())

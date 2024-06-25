@@ -16,6 +16,24 @@ class TaskStatus:
     FAILED = "failed"
     ABORTED = "aborted"
 
+def remove_duplicates_by_key(dict_list, key):
+    """
+    Removes duplicates from a list of dictionaries based on a specified key.
+    
+    :param dict_list: List of dictionaries from which duplicates will be removed.
+    :param key: The key based on which duplicates are identified and removed.
+    :return: A list of dictionaries with duplicates removed.
+    """
+    seen = set()
+    new_dict_list = []
+    for d in dict_list:
+        if key in d:
+            if d[key] not in seen:
+                seen.add(d[key])
+                new_dict_list.append(d)
+        else: 
+            new_dict_list.append(d)
+    return new_dict_list
 
 def calculate_duration(obj):
     if obj.started_at:
@@ -172,7 +190,7 @@ def create_cache(session, scraper_type, data, result):
 
 class TaskHelper:
     @staticmethod
-    def get_completed_children_results(session, parent_id, except_task_id=None):
+    def get_completed_children_results(session, parent_id, except_task_id=None, remove_duplicates_by=None):
         query = session.query(Task).filter(
             Task.parent_task_id == parent_id, Task.status == TaskStatus.COMPLETED
         )
@@ -183,7 +201,11 @@ class TaskHelper:
         all_results = []
         for child in query:
             all_results.extend(child.result)
-        return normalize_dicts_by_fieldnames(all_results)
+        rs = normalize_dicts_by_fieldnames(all_results)
+        
+        if remove_duplicates_by:
+           rs = remove_duplicates_by_key(rs, remove_duplicates_by)
+        return rs
 
     @staticmethod
     def is_parents_last_task(session, parent_id, except_task_id=None):
@@ -324,9 +346,10 @@ class TaskHelper:
         )
 
     @staticmethod
-    def success_all_task(session, parent_id, except_task_id=None):
+    def success_all_task(session, parent_id, except_task_id=None,remove_duplicates_by=None
+):
         all_results = TaskHelper.get_completed_children_results(
-            session, parent_id, except_task_id
+            session, parent_id, except_task_id,remove_duplicates_by
         )
 
         return TaskHelper.update_task(
@@ -341,9 +364,9 @@ class TaskHelper:
         )
 
     @staticmethod
-    def update_parent_task_results(session, parent_id, except_task_id=None):
+    def update_parent_task_results(session, parent_id, except_task_id=None,remove_duplicates_by=None):
         all_results = TaskHelper.get_completed_children_results(
-            session, parent_id, except_task_id
+            session, parent_id, except_task_id, remove_duplicates_by
         )
 
         return TaskHelper.update_task(

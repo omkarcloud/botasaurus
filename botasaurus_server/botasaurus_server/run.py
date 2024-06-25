@@ -6,9 +6,12 @@ import webbrowser
 import urllib.request
 from .env import is_vmish
 from .app import run_backend
-from .port_kill_adapter import killfrontendandbackendports, killbackendport
+
 from .server import Server
 from time import sleep
+# skip for now, not really big issue user complains and makes thing quite fast
+# from .port_kill_adapter import killfrontendandbackendports, killbackendport
+
 def show_help():
     print("""
 Botasaurus Server CLI
@@ -98,7 +101,7 @@ def run():
         
         if len(sys.argv) == 1:
             print_frontend_run_message()
-            killfrontendandbackendports()
+            # killfrontendandbackendports()
             # No arguments provided, run both backend and frontend
             run_backend_in_thread()
             open_browser_in_thread()
@@ -110,11 +113,11 @@ def run():
             install()
         elif sys.argv[1] == "backend":
             # Argument "backend" provided, run only backend
-            killbackendport()
+            # killbackendport()
             run_backend()
         elif sys.argv[1] == "dev":
             print_frontend_run_message()
-            killfrontendandbackendports()
+            # killfrontendandbackendports()
             # No arguments provided, run both backend and frontend
             run_backend_in_thread()
             open_browser_in_thread()

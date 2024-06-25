@@ -7,7 +7,7 @@ import traceback
 from .cleaners import clean_data
 from .db_setup import Session
 from .server import Server
-from .models import Task, TaskStatus, TaskHelper, create_cache
+from .models import Task, TaskStatus, TaskHelper, create_cache, remove_duplicates_by_key
 from .scraper_type import ScraperType
 from .retry_on_db_error import retry_on_db_error
 from botasaurus.dontcache import is_dont_cache
@@ -165,6 +165,11 @@ class TaskExecutor:
                     is_result_dont_cached = False
 
                 result = clean_data(result)
+
+                remove_duplicates_by = Server.get_remove_duplicates_by(scraper_name)
+                if remove_duplicates_by:
+                   result = remove_duplicates_by_key(result, remove_duplicates_by)
+
                 if is_result_dont_cached:
                     self.mark_task_as_success(task_id, result, False)
                 else:
@@ -186,9 +191,9 @@ class TaskExecutor:
             task_to_update = session.get(Task, task_id)
             parent_id = task_to_update.parent_task_id
             if task_to_update and parent_id:
-                self.complete_parent_task_if_possible(session, parent_id)
+                self.complete_parent_task_if_possible(session, parent_id, Server.get_remove_duplicates_by(task_to_update.scraper_name))
 
-    def complete_parent_task_if_possible(self, session,  parent_id):
+    def complete_parent_task_if_possible(self, session,  parent_id,remove_duplicates_by=None):
                     # ensures it is in valid pending state
             parent_task = TaskHelper.get_task(
                         session,
@@ -210,13 +215,15 @@ class TaskExecutor:
                                     parent_id,
                                 )
                     else:
-                        TaskHelper.success_all_task(session, parent_id)
+                        TaskHelper.success_all_task(session, parent_id, None, remove_duplicates_by)
 
                     session.commit()
                 else: 
                     TaskHelper.update_parent_task_results(
                                         session,
                                         parent_id,
+                                        None,
+                                        remove_duplicates_by
                                     )
                     session.commit()
 

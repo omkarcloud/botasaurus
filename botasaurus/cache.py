@@ -5,6 +5,7 @@ from shutil import rmtree
 from json.decoder import JSONDecodeError
 from .decorators_utils import create_cache_directory_if_not_exists, create_directory_if_not_exists
 from .utils import read_json, relative_path
+from .dontcache import DontCache
 
 def write_json(data, path):
     with open(path, 'w', encoding="utf-8") as fp:
