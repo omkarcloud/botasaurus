@@ -135,6 +135,7 @@ Also, you can add a lot of other filters as shown below:
   ```python
   filters.IsNotNullCheckbox("description")
   ```
+
 - **SingleSelectDropdown**: Allows the user to select a single option from a dropdown list. 
 
 The selected option is matched against the target field, which can be:
@@ -165,6 +166,12 @@ filters.SingleSelectDropdown(
       ]
   )
   ```
+- **BoolSelectDropdown**: Allows the user to make a binary choice between Yes or No. The behavior is as follows:
+    - If the user selects Yes, the component displays items where the target value is Truthy.
+    - If the user selects No, the component displays items where the target value is Falsy.
+  ```python
+  filters.BoolSelectDropdown("is_available")
+  ```    
 - **SearchTextInput**: Show items where the target field contains the `search` term.
   ```python
   filters.SearchTextInput("name")

@@ -9,6 +9,7 @@ from .filters import (
     IsTruthyCheckbox,
     IsFalsyCheckbox,
     SingleSelectDropdown,
+    BoolSelectDropdown,
     MultiSelectDropdown,
     SearchTextInput,
 )

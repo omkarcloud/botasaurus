@@ -194,6 +194,41 @@ class SingleSelectDropdown(_DropdownFilterBase):
         return f"{title_cased_field} Is"
 
 
+class BoolSelectDropdown(_DropdownFilterBase):
+
+    def __init__(self, field,  label=None, prioritize_no=False):
+        super().__init__(field, label)
+
+        if prioritize_no:
+            self.options =[{"value":"no","label":"No"},{"value":"yes","label":"Yes"},]
+        else:
+            self.options =[{"value":"yes","label":"Yes"},{"value":"no","label":"No"}]
+
+        # todo remove
+        self.validate_options(self.options)
+
+    def filter(self, filter_value, data_value):
+        if filter_value == "yes":
+            if data_value:
+                return True
+            else:
+                return False
+        elif filter_value == "no":
+            if not data_value:
+                return True
+            else:
+                return False
+
+        return False
+
+    def should_filter(self, filter_value):
+        return isinstance(filter_value, str) and filter_value.strip()
+
+    def get_label(self):
+        title_cased_field = titlecase(self.field)
+        return f"Has {title_cased_field}"
+
+
 class MultiSelectDropdown(_DropdownFilterBase):
     def filter(self, filter_value, data_value):
         if isinstance(data_value, str):

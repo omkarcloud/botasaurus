@@ -923,11 +923,13 @@ def perform_patch_task(action, task_id):
     with Session() as session:
         task = session.query(Task.id, Task.is_all_task, Task.parent_task_id, Task.scraper_name, ).filter(Task.id == task_id).first()
         if task:
-            y = Server.get_remove_duplicates_by(task.pop())
+
+            remove_duplicates_by = Server.get_remove_duplicates_by(task[-1])
+            task = task[0:3]
             if action == "delete":
-                delete_task(session, *task, y)
+                delete_task(session, *task, remove_duplicates_by)
             elif action == "abort":
-                abort_task(session, *task, y)
+                abort_task(session, *task, remove_duplicates_by)
             session.commit()
 
 @route("/api/tasks/<task_id:int>/abort", method="PATCH")
