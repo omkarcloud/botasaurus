@@ -303,7 +303,8 @@ Let's run the Botasaurus Starter Template (the recommended template for greenfie
 
 2. Install dependencies (will take a few minutes):
    ```
-   python -m pip install -r requirements.txt && python run.py install
+   python -m pip install -r requirements.txt
+   python run.py install
    ```
 
 3. Run the scraper:
@@ -2016,7 +2017,8 @@ Use the following commands to clone the Botasaurus Starter Template, build a Doc
 ```
 git clone https://github.com/omkarcloud/botasaurus-starter my-botasaurus-project
 cd my-botasaurus-project
-docker-compose build && docker-compose up
+docker-compose build
+docker-compose up
 ```
 
 ### How to Run Scraper in Gitpod?
