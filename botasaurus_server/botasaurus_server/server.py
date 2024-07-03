@@ -148,6 +148,17 @@ class _Server:
                 "split_task function must be provided when create_all_task is True."
             )
 
+        if not isinstance(filters, list):
+            filters = [filters]
+            
+
+        if not isinstance(sorts, list):
+            sorts = [sorts]
+
+
+        if not isinstance(views, list):
+            views = [views]
+                                    
         # if not create_all_task and remove_duplicates_by:
         #     raise ValueError(
         #         "create_all_task must be True when remove_duplicates_by is provided."
@@ -185,6 +196,8 @@ class _Server:
         default_sort = default_sort if default_sort is not None else nosort.id
         nosort.is_default = default_sort == nosort.id
         sorts.insert(0, nosort)
+        
+
         # Check for duplicate filters
         filter_ids = [filter_.id for filter_ in filters]
         if len(filter_ids) != len(set(filter_ids)):

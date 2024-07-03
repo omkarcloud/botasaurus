@@ -13,3 +13,4 @@ README.txt
 !.gitlab-ci.yml
 Pipfile
 Pipfile.lock
+todo.md

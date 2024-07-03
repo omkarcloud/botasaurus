@@ -10,7 +10,7 @@ from .app import run_backend
 from .server import Server
 from time import sleep
 # skip for now, not really big issue user complains and makes thing quite fast
-# from .port_kill_adapter import killfrontendandbackendports, killbackendport
+from .port_kill_adapter import killfrontendandbackendports, killbackendport, killfrontendport
 
 def show_help():
     print("""
@@ -84,13 +84,32 @@ def run_frontend(is_dev):
         check_node()
         # Resolve Errors, When user forgets to install frontend
         install()
+
         print_frontend_run_message()
+        killfrontendport()
+        
         open_browser_in_thread()
         start_frontend(is_dev)
 
+def run_backend_catch_exceptions():
+        try:
+          run_backend()
+        except OSError as e:
+          if "address" not in str(e).lower():
+              raise
+          killbackendport()
+          run_backend()
+
 def run_backend_in_thread():
     # sleep(1)
-    Thread(target=run_backend, daemon=True).start()
+
+    Thread(target=run_backend_catch_exceptions, daemon=True).start()
+
+def is_direct_run(args):
+    for i in args:
+        if not i.startswith("-"):
+            return False
+    return True
 
 def run():
     if "--help" in sys.argv:
@@ -99,30 +118,39 @@ def run():
         if not Server.get_scrapers_names():
             raise RuntimeError("No scrapers found. Please add a scraper using Server.add_scraper.")
         
-        if len(sys.argv) == 1:
-            print_frontend_run_message()
-            # killfrontendandbackendports()
-            # No arguments provided, run both backend and frontend
-            run_backend_in_thread()
-            open_browser_in_thread()
-            run_frontend(False)
-        elif sys.argv[1] == "install":
+        main_arg =  sys.argv[1] if len(sys.argv) >=2 else None
+        if main_arg == "install":
             from .check_node import check_node
             check_node()
 
             install()
-        elif sys.argv[1] == "backend":
+        elif main_arg == "backend":
             # Argument "backend" provided, run only backend
+            if "--force" in sys.argv:
+                killbackendport()
+
             # killbackendport()
             run_backend()
-        elif sys.argv[1] == "dev":
+        elif main_arg == "dev":
             print_frontend_run_message()
+            if "--force" in sys.argv:
+                killfrontendandbackendports()
+
             # killfrontendandbackendports()
             # No arguments provided, run both backend and frontend
             run_backend_in_thread()
             open_browser_in_thread()
             run_frontend(True)
+        elif is_direct_run(sys.argv[1:]):
+            print_frontend_run_message()
+            if "--force" in sys.argv:
+                killfrontendandbackendports()
+            # No arguments provided, run both backend and frontend
+            run_backend_in_thread()
+            open_browser_in_thread()
+            run_frontend(False)            
         else:
-            print(f"Error: No such command: {sys.argv[1]}")
+            dd = " ".join(sys.argv[1:])
+            print(f"Error: No such command: {dd}")
             print("Try '--help' for help.")
             sys.exit(1) 
