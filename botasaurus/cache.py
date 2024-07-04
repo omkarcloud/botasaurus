@@ -55,7 +55,9 @@ def _read_json_files(file_paths):
 def _remove(cache_path):
     if os.path.exists(cache_path):
         os.remove(cache_path)
-
+# used by decorators 
+def _put(result, cache_path):
+    write_json(result, cache_path)
 def _delete_items(file_paths):
     from joblib import Parallel, delayed
     Parallel(n_jobs=-1)(delayed(_remove)(file_path) for file_path in file_paths)

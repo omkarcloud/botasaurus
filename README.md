@@ -1720,7 +1720,7 @@ The Botasaurus Sitemap Module makes this process easy as cake by allowing you to
 For example, if you're an Angel Investor seeking innovative tech startups to invest, G2 is an ideal platform to find such startups. You can run the following code to fetch over 160K+ product links from G2:
 
 ```python
-from botasaurus import *
+from botasaurus import bt
 from botasaurus.sitemap import Sitemap, Filters, Extractors
 
 links = (
@@ -1739,7 +1739,7 @@ bt.write_temp_json(links)
 Or, let's say you're in the mood for some reading and looking for good stories. The following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
 
 ```python
-from botasaurus import *
+from botasaurus import bt
 from botasaurus.sitemap import Sitemap, Filters
 
 links = (
@@ -1763,7 +1763,7 @@ bt.write_temp_json(links)
 Also, before scraping a site, it's useful to identify the available sitemaps. This can be easily done with the following code:
 
 ```python
-from botasaurus import *
+from botasaurus import bt
 from botasaurus.sitemap import Sitemap
 
 sitemaps = Sitemap("https://www.omkar.cloud/").sitemaps()
