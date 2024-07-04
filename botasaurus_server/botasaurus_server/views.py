@@ -172,15 +172,10 @@ def created_nested_field_values_listed(item, field, parent_record):
         nested_field_values[nested_field.output_key] = processed_value
     return nested_field_values
 
-
-def perform_apply_view(results: list, view_obj:View, input_data):
-
-
-    if input_data is not None:
-        hidden_fields = []
-        def get_fields(fields):
+def get_fields(fields, input_data, hidden_fields):
             ls = []
             for f in fields:
+                # Check if instance is Field or CustomField
                 if isinstance(f, (Field, CustomField)):
                     if f.show_if:
                         if f.show_if(input_data):
@@ -189,33 +184,40 @@ def perform_apply_view(results: list, view_obj:View, input_data):
                             hidden_fields.append(f.output_key)
                     else: 
                         ls.append(f)
+                # Check if instance is ExpandDictField
                 elif isinstance(f, (ExpandDictField)):
                     if f.show_if:
                         if f.show_if(input_data):
-                            ls.append(ExpandDictField(f.key, fields=get_fields(f.fields)))
+                            ls.append(ExpandDictField(f.key, fields=get_fields(f.fields, input_data, hidden_fields)))
                         else:
                             for i in f.fields:
                                 hidden_fields.append(i.output_key)
                     else: 
-                        ls.append(ExpandDictField(f.key, fields=get_fields(f.fields)))
+                        ls.append(ExpandDictField(f.key, fields=get_fields(f.fields, input_data, hidden_fields)))
+                # Check if instance is ExpandListField
                 elif isinstance(f, (ExpandListField)):
                     if f.show_if:
                         if f.show_if(input_data):
-                            ls.append(ExpandListField(f.key, fields=get_fields(f.fields)))
+                            ls.append(ExpandListField(f.key, fields=get_fields(f.fields, input_data, hidden_fields)))
                         else:
                             for i in f.fields:
-                                if isinstance(f, (Field, CustomField)):
+                                # Corrected the condition to check the instance of i instead of f
+                                if isinstance(i, (Field, CustomField)):
                                     hidden_fields.append(i.output_key)
                                 else: 
-                                    for n in i:
+                                    for n in i.fields:  # Assuming i has a fields attribute
                                         hidden_fields.append(n.output_key)
                     else: 
-                        ls.append(ExpandListField(f.key, fields=get_fields(f.fields)))
-                    
+                        ls.append(ExpandListField(f.key, fields=get_fields(f.fields, input_data, hidden_fields)))
             return ls
+def perform_apply_view(results: list, view_obj:View, input_data):
 
-        target_fields = get_fields(view_obj.fields)
 
+    if input_data is not None:
+        
+
+        hidden_fields = []
+        target_fields = get_fields(view_obj.fields, input_data, hidden_fields)
     else: 
         hidden_fields = []
         target_fields = view_obj.fields
