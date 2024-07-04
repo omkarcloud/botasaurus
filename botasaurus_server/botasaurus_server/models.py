@@ -1,11 +1,13 @@
 from hashlib import sha256
 import json
+import traceback
 from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 from datetime import datetime, timezone
 from .cleaners import normalize_dicts_by_fieldnames
-
+from .task_results import TaskResults
+from botasaurus import bt
 Base = declarative_base()
 
 
@@ -80,16 +82,27 @@ def serialize_ui_display_task(obj):
     }
 
 
+
 def serialize_task(obj, with_result):
+    task_id = obj.id
+    status = obj.status
     if with_result:
-        result = {"result": obj.result}
+        if status == TaskStatus.PENDING:
+            result = {"result": None}
+        elif status != TaskStatus.IN_PROGRESS or obj.is_all_task:
+            # set in cache
+            if not hasattr(obj, "result"):
+                result = {"result": TaskResults.get_task(task_id)}
+            else:
+                result = obj.result
+        else:
+            result = {"result": None}
     else:
         result = {}
 
-    task_id = obj.id
     return {
         "id": task_id,
-        "status": obj.status,
+        "status": status,
         "task_name": obj.task_name if obj.task_name is not None else f"Task {task_id}",
         "scraper_name": obj.scraper_name,
         "scraper_type": obj.scraper_type,
@@ -133,7 +146,7 @@ class Task(Base):
     # Data fields
     data = Column(JSON)  # JSON field for storing task data
     meta_data = Column(JSON)  # JSON field for storing meta data
-    result = Column(JSON)  # JSON field for storing result data
+    # result = Column(JSON)  # JSON field for storing result data
     result_count = Column(
         Integer, default=0
     )  # Integer field for storing result count, default 0
@@ -144,63 +157,20 @@ class Task(Base):
 
     def to_json(self):
         """Serializes all properties of the Task object into a JSON dictionary."""
+        print(self, type(self))
         return serialize_task(self, with_result=True)
-
-
-class Cache(Base):
-    __tablename__ = "caches"
-
-    id = Column(Integer, primary_key=True)
-    key = Column(String, index=True, unique=True)
-    result = Column(JSON)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-    def to_json(self):
-        return {
-            "id": self.id,
-            "key": self.key,
-            "result": self.result,
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
-        }
-
-
-def create_cache_key(scraper_type, data):
-    return (
-        scraper_type
-        + "-"
-        + sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
-    )
-
-
-def check_cache_exists(session, key):
-    return session.query(Cache.id).filter(Cache.key == key).first() is not None
-
-
-def create_cache(session, scraper_type, data, result):
-    key = create_cache_key(scraper_type, data)
-
-    if check_cache_exists(session, key):
-        session.query(Cache).filter(Cache.key == key).update({"result": result})
-    else:
-        cache = Cache(key=key, result=result)
-        session.add(cache)
-
 
 class TaskHelper:
     @staticmethod
     def get_completed_children_results(session, parent_id, except_task_id=None, remove_duplicates_by=None):
-        query = session.query(Task).filter(
+        query = session.query(Task.id).filter(
             Task.parent_task_id == parent_id, Task.status == TaskStatus.COMPLETED
         )
         if except_task_id:
             query = query.filter(Task.id != except_task_id)
         query = query.all()
-
-        all_results = []
-        for child in query:
-            all_results.extend(child.result)
+        query = [q[0] for q in query]
+        all_results = bt.flatten(TaskResults.get_tasks(query))
         rs = normalize_dicts_by_fieldnames(all_results)
         
         if remove_duplicates_by:
@@ -288,11 +258,17 @@ class TaskHelper:
 
     @staticmethod
     def delete_task(session, task_id):
-        return session.query(Task).filter(Task.id == task_id).delete()
+        session.query(Task).filter(Task.id == task_id).delete()
+        TaskResults.delete_task(task_id)
 
     @staticmethod
     def delete_child_tasks(session, task_id):
-        return session.query(Task).filter(Task.parent_task_id == task_id).delete()
+        query = session.query(Task.id).filter(Task.parent_task_id == task_id)
+        ids = query.all()
+        ids = [q[0] for q in ids] 
+        
+        session.query(Task).filter(Task.parent_task_id == task_id).delete()
+        TaskResults.delete_tasks(ids)
 
     @staticmethod
     def update_task(session, task_id, data, in_status=None):
@@ -351,12 +327,11 @@ class TaskHelper:
         all_results = TaskHelper.get_completed_children_results(
             session, parent_id, except_task_id,remove_duplicates_by
         )
-
+        TaskResults.save_task(parent_id, all_results)
         return TaskHelper.update_task(
             session,
             parent_id,
             {
-                "result": all_results,
                 "result_count": len(all_results),
                 "status": TaskStatus.COMPLETED,
                 "finished_at": datetime.now(timezone.utc),
@@ -368,12 +343,11 @@ class TaskHelper:
         all_results = TaskHelper.get_completed_children_results(
             session, parent_id, except_task_id, remove_duplicates_by
         )
-
+        TaskResults.save_task(parent_id, all_results)
         return TaskHelper.update_task(
             session,
             parent_id,
             {
-                "result": all_results,
                 "result_count": len(all_results),
             },
         )
