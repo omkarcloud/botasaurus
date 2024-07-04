@@ -438,7 +438,7 @@ Each View requires a list of fields. The available field types are:
 - **Field**: Used to display a single field from the data.
   - You can provide an `output_key` to alias the field name.
   - You can provide a `map` function to calculate a new field based on the existing field value and record.
-
+  - You can provide a `show_if` function to conditionally display the field, based on the *input data*. This input data is determined based on user input.
 ```python
 # value is the reviews_per_rating dictionary
 # record is the entire product record
@@ -446,7 +446,10 @@ def calculate_average_rating(value, record):
     total_reviews = sum(value.values())
     # ...
 
-Field("average_rating", map=calculate_average_rating)  # Calculates the average rating using the provided map function
+def show_if(input_data):
+    return bool(input_data["scrape_average_rating"])
+
+Field("average_rating", map=calculate_average_rating, show_if=show_if)  # Calculates the average rating using the provided map function
 ```
 
 - **CustomField**: Use this field to derive a new field from multiple existing fields in a record.
@@ -458,7 +461,7 @@ CustomField("full_name", map=lambda record: f"{record['first_name']} {record['la
 - **ExpandDictField**: This field is used expand a dictionary into separate fields.
   - You can provide a `map` function to transform the values.
   - You can provide an `output_key` to alias the field name.
-
+  - You can provide a `show_if` function to conditionally display the field, based on the *input data*. This input data is determined based on user input.
 ```python
 ExpandDictField(
     "reviews_per_rating",
@@ -477,7 +480,7 @@ ExpandDictField(
 - **ExpandListField**: This field is used to display all the items in a list as separate rows.
   - You can provide a `map` function to transform the values.
   - You can provide an `output_key` to alias the field name.
-
+  - You can provide a `show_if` function to conditionally display the field, based on the *input data*. This input data is determined based on user input.
 ```python
 ExpandListField(
     "featured_reviews",
