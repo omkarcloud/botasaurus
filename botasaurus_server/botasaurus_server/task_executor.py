@@ -7,9 +7,10 @@ import traceback
 from .cleaners import clean_data
 from .db_setup import Session
 from .server import Server
-from .models import Task, TaskStatus, TaskHelper, create_cache, remove_duplicates_by_key
+from .models import Task, TaskStatus, TaskHelper, remove_duplicates_by_key
 from .scraper_type import ScraperType
 from .retry_on_db_error import retry_on_db_error
+from .task_results import TaskResults
 from botasaurus.dontcache import is_dont_cache
 
 class TaskExecutor:
@@ -183,6 +184,7 @@ class TaskExecutor:
             finally:
                 self.update_parent_task(task_id)
         except Exception as e:
+          traceback.print_exc()
           print("Error in run_task ", e)
     
     @retry_on_db_error
@@ -229,12 +231,12 @@ class TaskExecutor:
 
     @retry_on_db_error
     def mark_task_as_failure(self, task_id, exception_log):
+        TaskResults.save_task(task_id, exception_log)
         with Session() as session:
             TaskHelper.update_task(
                     session,
                     task_id,
                     {
-                        "result": exception_log,
                         "status": TaskStatus.FAILED,
                         "finished_at": datetime.now(timezone.utc),
                     },
@@ -244,12 +246,19 @@ class TaskExecutor:
     
     @retry_on_db_error
     def mark_task_as_success(self, task_id, result, cache_task):
+        TaskResults.save_task(task_id, result)
+        
         with Session() as session:
+            if cache_task:
+                task = TaskHelper.get_task(session, task_id)
+                scraper_name = task.scraper_name
+                data = task.data
+                TaskResults.save_cached_task(scraper_name, data, result)
+
             TaskHelper.update_task(
                     session,
                     task_id,
                     {
-                        "result": result,
                         "result_count": len(result),
                         "status": TaskStatus.COMPLETED,
                         "finished_at": datetime.now(timezone.utc),
@@ -257,10 +266,5 @@ class TaskExecutor:
                     [TaskStatus.IN_PROGRESS],
                 )
             
-            if cache_task:
-                task = TaskHelper.get_task(session, task_id)
-                scraper_name = task.scraper_name
-                data = task.data
-                create_cache(session,scraper_name  , data, result)
             
             session.commit()

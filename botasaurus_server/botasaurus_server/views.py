@@ -171,7 +171,6 @@ def created_nested_field_values_listed(item, field, parent_record):
 
         nested_field_values[nested_field.output_key] = processed_value
     return nested_field_values
-
 def get_fields(fields, input_data, hidden_fields):
             ls = []
             for f in fields:
@@ -185,7 +184,7 @@ def get_fields(fields, input_data, hidden_fields):
                     else: 
                         ls.append(f)
                 # Check if instance is ExpandDictField
-                elif isinstance(f, (ExpandDictField)):
+                elif isinstance(f, ExpandDictField):
                     if f.show_if:
                         if f.show_if(input_data):
                             ls.append(ExpandDictField(f.key, fields=get_fields(f.fields, input_data, hidden_fields)))
@@ -195,7 +194,7 @@ def get_fields(fields, input_data, hidden_fields):
                     else: 
                         ls.append(ExpandDictField(f.key, fields=get_fields(f.fields, input_data, hidden_fields)))
                 # Check if instance is ExpandListField
-                elif isinstance(f, (ExpandListField)):
+                elif isinstance(f, ExpandListField):
                     if f.show_if:
                         if f.show_if(input_data):
                             ls.append(ExpandListField(f.key, fields=get_fields(f.fields, input_data, hidden_fields)))
@@ -214,8 +213,6 @@ def perform_apply_view(results: list, view_obj:View, input_data):
 
 
     if input_data is not None:
-        
-
         hidden_fields = []
         target_fields = get_fields(view_obj.fields, input_data, hidden_fields)
     else: 
@@ -277,10 +274,18 @@ def perform_apply_view(results: list, view_obj:View, input_data):
         processed_results.extend(expanded_records)
     return processed_results,hidden_fields
 
-def apply_view(results:list, view:str, views, input_data):
+def _apply_view_for_ui(results:list, view:str, views, input_data):
     if not view:
         return results, []
     # Iterate through sort_objects to find a match
     for v in views:
         if v.id == view:
             return perform_apply_view(results, v, input_data)
+
+def apply_view(results:list, view:str, views,):
+    if not view:
+        return results
+    # Iterate through sort_objects to find a match
+    for v in views:
+        if v.id == view:
+            return perform_apply_view(results, v, None)[0]

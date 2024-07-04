@@ -1,4 +1,4 @@
-def apply_pagination(data, page, per_page):
+def apply_pagination(data, page, per_page, hidden_fields=None):
     """
     Paginate the data based on page and per_page, providing detailed pagination information.
 
@@ -33,12 +33,17 @@ def apply_pagination(data, page, per_page):
     previous_info = {"page": previous_page, "per_page": per_page} if previous_page is not None else None
 
     # Construct the response dictionary
+    
+    
     pagination_info = {
         "count": count,
         "total_pages": total_pages,
         "next": next_info,
         "previous": previous_info,
-        "results": results,
+        "results": results,        
     }
+
+    if hidden_fields is not None:
+        pagination_info["hidden_fields"] =hidden_fields
 
     return pagination_info

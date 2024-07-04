@@ -51,20 +51,14 @@ def _read_json_files(file_paths):
     results = Parallel(n_jobs=-1)(delayed(_get)(file_path) for file_path in file_paths)
     return results
 
-def _delete_item_by_path(cache_path):
-    os.remove(cache_path)
-
-def _delete_items(file_paths):
-    from joblib import Parallel, delayed
-    Parallel(n_jobs=-1)(delayed(_delete_item_by_path)(file_path) for file_path in file_paths)
-
-def _put(result, cache_path):
-    write_json(result, cache_path)
 
 def _remove(cache_path):
     if os.path.exists(cache_path):
         os.remove(cache_path)
 
+def _delete_items(file_paths):
+    from joblib import Parallel, delayed
+    Parallel(n_jobs=-1)(delayed(_remove)(file_path) for file_path in file_paths)
 
 def get_files_without_json_extension(directory_path):
     # Get a list of all files in the directory
@@ -110,7 +104,7 @@ class Cache:
         """Write data to a cache file in JSON format."""
         _create_cache_directory_if_not_exists(func)
         path = _get_cache_path(func, key_data)
-        _put(data, path)
+        write_json(data, path)
 
     @staticmethod
     def hash(data):

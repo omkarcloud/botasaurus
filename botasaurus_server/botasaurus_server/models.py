@@ -1,6 +1,4 @@
 from hashlib import sha256
-import json
-import traceback
 from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
@@ -8,6 +6,7 @@ from datetime import datetime, timezone
 from .cleaners import normalize_dicts_by_fieldnames
 from .task_results import TaskResults
 from botasaurus import bt
+
 Base = declarative_base()
 
 
@@ -82,7 +81,6 @@ def serialize_ui_display_task(obj):
     }
 
 
-
 def serialize_task(obj, with_result):
     task_id = obj.id
     status = obj.status
@@ -94,7 +92,7 @@ def serialize_task(obj, with_result):
             if not hasattr(obj, "result"):
                 result = {"result": TaskResults.get_task(task_id)}
             else:
-                result = obj.result
+                result = {"result": obj.result}
         else:
             result = {"result": None}
     else:
@@ -146,7 +144,6 @@ class Task(Base):
     # Data fields
     data = Column(JSON)  # JSON field for storing task data
     meta_data = Column(JSON)  # JSON field for storing meta data
-    # result = Column(JSON)  # JSON field for storing result data
     result_count = Column(
         Integer, default=0
     )  # Integer field for storing result count, default 0
@@ -157,7 +154,6 @@ class Task(Base):
 
     def to_json(self):
         """Serializes all properties of the Task object into a JSON dictionary."""
-        print(self, type(self))
         return serialize_task(self, with_result=True)
 
 class TaskHelper:
@@ -190,7 +186,7 @@ class TaskHelper:
 
     @staticmethod
     def get_all_children_count(session, parent_id, except_task_id=None):
-        query = session.query(Task).filter(Task.parent_task_id == parent_id)
+        query = session.query(Task.id).filter(Task.parent_task_id == parent_id)
         if except_task_id:
             query = query.filter(Task.id != except_task_id)
 
@@ -198,7 +194,7 @@ class TaskHelper:
 
     @staticmethod
     def get_done_children_count(session, parent_id, except_task_id=None):
-        query = session.query(Task).filter(
+        query = session.query(Task.id).filter(
             Task.parent_task_id == parent_id,
             Task.status.in_(
                 [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.ABORTED]
@@ -209,9 +205,10 @@ class TaskHelper:
 
         return query.count()
 
+    @staticmethod
     def is_task_completed_or_failed(session, task_id):
         return (
-            session.query(Task.id)  # Select only the id column for efficiency
+            session.query(Task.id)
             .filter(
                 Task.id == task_id,
                 Task.status.in_(
@@ -222,12 +219,12 @@ class TaskHelper:
                 ),
             )
             .first()
-            is not None  # Use .first() to check existence, which is more efficient than .count()
+            is not None
         )
 
     @staticmethod
     def get_pending_or_executing_child_count(session, parent_id, except_task_id=None):
-        query = session.query(Task).filter(
+        query = session.query(Task.id).filter(
             Task.parent_task_id == parent_id,
             Task.status.in_([TaskStatus.PENDING, TaskStatus.IN_PROGRESS]),
         )
@@ -238,7 +235,7 @@ class TaskHelper:
 
     @staticmethod
     def get_failed_children_count(session, parent_id, except_task_id=None):
-        query = session.query(Task).filter(
+        query = session.query(Task.id).filter(
             Task.parent_task_id == parent_id, Task.status == TaskStatus.FAILED
         )
         if except_task_id:
@@ -248,7 +245,7 @@ class TaskHelper:
 
     @staticmethod
     def get_aborted_children_count(session, parent_id, except_task_id=None):
-        query = session.query(Task).filter(
+        query = session.query(Task.id).filter(
             Task.parent_task_id == parent_id, Task.status == TaskStatus.ABORTED
         )
         if except_task_id:
@@ -264,8 +261,7 @@ class TaskHelper:
     @staticmethod
     def delete_child_tasks(session, task_id):
         query = session.query(Task.id).filter(Task.parent_task_id == task_id)
-        ids = query.all()
-        ids = [q[0] for q in ids] 
+        ids = [q[0] for q in query.all()]
         
         session.query(Task).filter(Task.parent_task_id == task_id).delete()
         TaskResults.delete_tasks(ids)
@@ -322,10 +318,9 @@ class TaskHelper:
         )
 
     @staticmethod
-    def success_all_task(session, parent_id, except_task_id=None,remove_duplicates_by=None
-):
+    def success_all_task(session, parent_id, except_task_id=None, remove_duplicates_by=None):
         all_results = TaskHelper.get_completed_children_results(
-            session, parent_id, except_task_id,remove_duplicates_by
+            session, parent_id, except_task_id, remove_duplicates_by
         )
         TaskResults.save_task(parent_id, all_results)
         return TaskHelper.update_task(
@@ -339,7 +334,7 @@ class TaskHelper:
         )
 
     @staticmethod
-    def update_parent_task_results(session, parent_id, except_task_id=None,remove_duplicates_by=None):
+    def update_parent_task_results(session, parent_id, except_task_id=None, remove_duplicates_by=None):
         all_results = TaskHelper.get_completed_children_results(
             session, parent_id, except_task_id, remove_duplicates_by
         )
@@ -372,7 +367,6 @@ class TaskHelper:
             .first()
         )
 
-    # session.query(Task).with_entities(*ets)
     @staticmethod
     def get_tasks_by_ids(session, task_ids):
         return session.query(Task).filter(Task.id.in_(task_ids)).all()
