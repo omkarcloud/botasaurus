@@ -2,15 +2,17 @@ from casefy import snakecase
 import inspect
 
 class Field:
-    def __init__(self, key, output_key=None, map=None):
+    def __init__(self, key, output_key=None, map=None, show_if=None):
         self.key = key
         self.output_key = output_key or key
+        self.show_if = show_if
+
         if map and not callable(map):
             raise ValueError(f"map function must be callable for Field '{self.key}'")
         self.map = map
 
 class CustomField:
-    def __init__(self, key, map):
+    def __init__(self, key, map, show_if=None):
         self.key = key
         if not callable(map):
             raise ValueError(
@@ -18,11 +20,14 @@ class CustomField:
             )
         self.output_key = key
         self.map = map
+        self.show_if = show_if
 
 class ExpandDictField:
-    def __init__(self, key, fields):
+    def __init__(self, key, fields, show_if=None):
         self.key = key
         self.fields = fields
+        self.show_if = show_if
+
         for field in fields:
             if not isinstance(field, (Field, CustomField)):
                 raise ValueError(
@@ -31,9 +36,10 @@ class ExpandDictField:
 
 
 class ExpandListField:
-    def __init__(self, key, fields):
+    def __init__(self, key, fields, show_if=None):
         self.key = key
         self.fields = fields
+        self.show_if = show_if
         for field in fields:
             if not isinstance(field, (Field, CustomField, ExpandDictField)):
                 raise ValueError(
@@ -167,12 +173,57 @@ def created_nested_field_values_listed(item, field, parent_record):
     return nested_field_values
 
 
-def perform_apply_view(results: list, view_obj:View):
+def perform_apply_view(results: list, view_obj:View, input_data):
 
+
+    if input_data is not None:
+        hidden_fields = []
+        def get_fields(fields):
+            ls = []
+            for f in fields:
+                if isinstance(f, (Field, CustomField)):
+                    if f.show_if:
+                        if f.show_if(input_data):
+                            ls.append(f)
+                        else:
+                            hidden_fields.append(f.output_key)
+                    else: 
+                        ls.append(f)
+                elif isinstance(f, (ExpandDictField)):
+                    if f.show_if:
+                        if f.show_if(input_data):
+                            ls.append(ExpandDictField(f.key, fields=get_fields(f.fields)))
+                        else:
+                            for i in f.fields:
+                                hidden_fields.append(i.output_key)
+                    else: 
+                        ls.append(ExpandDictField(f.key, fields=get_fields(f.fields)))
+                elif isinstance(f, (ExpandListField)):
+                    if f.show_if:
+                        if f.show_if(input_data):
+                            ls.append(ExpandListField(f.key, fields=get_fields(f.fields)))
+                        else:
+                            for i in f.fields:
+                                if isinstance(f, (Field, CustomField)):
+                                    hidden_fields.append(i.output_key)
+                                else: 
+                                    for n in i:
+                                        hidden_fields.append(n.output_key)
+                    else: 
+                        ls.append(ExpandListField(f.key, fields=get_fields(f.fields)))
+                    
+            return ls
+
+        target_fields = get_fields(view_obj.fields)
+
+    else: 
+        hidden_fields = []
+        target_fields = view_obj.fields
     processed_results = []
     for record in results:
         expanded_records = [{}]
-        for field in view_obj.fields:
+        
+        for field in target_fields:
             if isinstance(field, Field):
                 value = record.get(field.key)  # Use .get() for safer access
                 result = field.map(value, record) if field.map else value
@@ -222,14 +273,12 @@ def perform_apply_view(results: list, view_obj:View):
 
                 expanded_records = new_expanded_records
         processed_results.extend(expanded_records)
-    return processed_results
+    return processed_results,hidden_fields
 
-def apply_view(results:list, view:str, views):
+def apply_view(results:list, view:str, views, input_data):
     if not view:
-        return results
+        return results, []
     # Iterate through sort_objects to find a match
     for v in views:
         if v.id == view:
-            return perform_apply_view(results, v)
-
-    return results
+            return perform_apply_view(results, v, input_data)
