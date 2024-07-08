@@ -1,5 +1,6 @@
 from json import dumps
-from bottle import HTTPResponse
+
+from botasaurus_server.errors import DownloadResponse
 
 def convert_nested_to_json(input_list):
     """
@@ -75,7 +76,7 @@ def download_results(results, fmt, filename):
 
         headers["Content-Type"] = "application/json"
         headers["Content-Disposition"] = f'attachment; filename="{filename}.json"'
-        return HTTPResponse(body=dumps(results), status=200, headers=headers)
+        return DownloadResponse(body=dumps(results), status=200, headers=headers)
     
     results = convert_nested_to_json(results)
 
@@ -90,7 +91,7 @@ def download_results(results, fmt, filename):
 
         # Return the buffer's content as bytes
         body = make_csv(fieldnames, results)
-        return HTTPResponse(body=body, status=200, headers=headers)
+        return DownloadResponse(body=body, status=200, headers=headers)
     elif fmt == "excel":
         headers["Content-Type"] = (
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -98,4 +99,4 @@ def download_results(results, fmt, filename):
         headers["Content-Disposition"] = f'attachment; filename="{filename}.xlsx"'
 
         body = make_excel(fieldnames, results)
-        return HTTPResponse(body=body, status=200, headers=headers)
+        return DownloadResponse(body=body, status=200, headers=headers)

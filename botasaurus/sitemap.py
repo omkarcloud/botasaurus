@@ -5,7 +5,10 @@ from urllib.parse import urlparse, unquote_plus, urlunparse
 from gzip import decompress
 from typing import Union, List
 from bs4 import BeautifulSoup
+import traceback
 
+from botasaurus.dontcache import is_dont_cache
+from .cache import DontCache
 from .list_utils import flatten
 from .cl import join_link
 from .request_decorator import request
@@ -82,21 +85,10 @@ def isgzip(url, response):
 
     else:
         return False
-
-
-@request(
-    **default_request_options,
-)
-def fetch_content(request, url: str):
-    """Fetch content from a URL, handling gzip if necessary."""
-    response = request.get(url, timeout=30)
-    status_code = response.status_code
-
-    if status_code == 404:
-
+def handle_response(url, response):
+    if response.status_code == 404:
         if url.endswith("robots.txt"):
             print("robots.txt not found (404) at the following URL: " + response.url)
-
         else:
             print("Sitemap not found (404) at the following URL: " + response.url)
         return None
@@ -108,6 +100,30 @@ def fetch_content(request, url: str):
     else:
         return response.text
 
+@request(
+    **default_request_options,
+)
+def fetch_content(request, url: str):
+    """Fetch content from a URL, handling gzip if necessary."""
+    try:
+        response = request.get(url, timeout=60)
+        return handle_response(url, response)
+
+    except Exception as e:
+        print(f"failed for {url} due to {str(e)}. Retrying")
+
+        try:
+            response = request.get(url, timeout=60)
+            
+            result =  handle_response(url, response)
+            if result is not None:
+                print(f"succeeded for {url}")
+            return result
+        except Exception as e:
+            print(f"skipping {url} as it failed after retry")
+            traceback.print_exc()
+
+        return None
 
 def extractor_decorator(func):
     @functools.wraps(func)
@@ -400,6 +416,9 @@ def wrap_in_sitemap(urls):
 
 def clean_sitemap_response(s, char='<'):
     # Find the index of the given character
+    if not s:
+        return s
+    
     char_index = s.find(char)
     
     # If the character is not found, return the original string
@@ -428,16 +447,24 @@ def get_sitemaps_urls(request_options, urls):
 
         content = clean_sitemap_response(fetch_content(url))
         if not content:
-            return []
+            return DontCache([])
 
         locs = find_the_sitemaps(content)
 
         links = [url]
 
-        parsed = sitemap(wrap_in_sitemap(locs))
+        parsed = sitemap(wrap_in_sitemap(locs), return_dont_cache_as_is=True)
 
+        isdn_cache = False
         for x in parsed:
-            links.extend(x)
+            if is_dont_cache(x):
+                isdn_cache = True
+                links.extend(x.data)
+            else:
+                links.extend(x)
+
+        if isdn_cache:
+            return DontCache(links)
 
         return links
 
@@ -475,17 +502,24 @@ def get_urls(request_options, urls):
         content = clean_sitemap_response(fetch_content(url))
 
         if not content:
-            return []
+            return DontCache([])
 
         links, locs = get_links_sitemaps(content)
 
-        parsed = sitemap(locs)
+        parsed = sitemap(locs, return_dont_cache_as_is=True)
 
+        isdn_cache = False
         for x in parsed:
-            links.extend(x)
+            if is_dont_cache(x):
+                isdn_cache = True
+                links.extend(x.data)
+            else:
+                links.extend(x)
+
+        if isdn_cache:
+            return DontCache(links)
 
         return links
-
 
     def get_links_sitemaps(content):
         root = BeautifulSoup(content, 'lxml-xml')
@@ -535,7 +569,7 @@ def get_sitemaps_from_robots(request_options, urls):
         content = fetch_content(url)
 
         if not content:
-            return []
+            return DontCache([])
 
         return parse_sitemaps_from_robots_txt(
             extract_link_upto_nth_segment(0, url), content

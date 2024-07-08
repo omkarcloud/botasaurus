@@ -265,6 +265,11 @@ def read_file(filename):
 
     return _read_file(filename)
 
+def write_temp_file(data, log=True):
+   return write_file(data, "temp.txt", log)
+
+def read_temp_file():
+    return read_file("temp.txt")
 def normalize_data(data):
     if data is None:
         return []

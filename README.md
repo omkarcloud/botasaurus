@@ -1786,9 +1786,9 @@ from botasaurus.request import request, Request
 from botasaurus.soupify import soupify
 
 @request
-def scrape_heading_task(request: Request, data):
+def scrape_data(request: Request, data):
     # Visit the Link
-    response = request.get(data["link"])
+    response = request.get(data)
     
     # Create a BeautifulSoup object
     soup = soupify(response)
@@ -1796,7 +1796,7 @@ def scrape_heading_task(request: Request, data):
     # Retrieve the heading element's text
     heading = soup.find('h1').get_text()
     
-    # Save the data as a JSON file in output/scrape_heading_task.json
+    # Save the data as a JSON file in output/scrape_data.json
     return {"heading": heading}
 
 data_items = [
@@ -1805,7 +1805,7 @@ data_items = [
     "https://stackoverflow.com/",
 ]
 
-scrape_heading_task(data_items)
+scrape_data(data_items)
 ```
 
 Now, let's say, after 50% of the dataset has been scraped, what if:
@@ -1837,9 +1837,9 @@ def extract_data(soup: BeautifulSoup):
     heading = soup.find("h1").get_text()
     return {"heading": heading}
 
-# Cache the scrape_heading task as well
+# Cache the scrape_data task as well
 @task(cache=True)
-def scrape_heading(url):
+def scrape_data(url):
     # Call the scrape_html function to get the cached HTML
     html = scrape_html(url)
     # Extract data from the HTML using the extract_data function
@@ -1851,11 +1851,11 @@ data_items = [
     "https://stackoverflow.com/",
 ]
 
-scrape_heading(data_items)
+scrape_data(data_items)
 ```
 
 With this approach:
-- If you need to add data points or fix BeautifulSoup bugs, delete the `cache/scrape_heading` folder and re-run the scraper.
+- If you need to add data points or fix BeautifulSoup bugs, delete the `cache/scrape_data` folder and re-run the scraper.
 ![delete-cache](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-cache.png)
 - You only need to re-run the BeautifulSoup extraction, not the entire HTML scraping, saving time and proxy costs. Yahoo!
 
@@ -1870,9 +1870,8 @@ def extract_data(soup: BeautifulSoup):
     return {"heading": heading}
 
 if __name__ == '__main__':
-    html = bt.read_html('test')  # Saved Test Page
-    result = extract_data(bt.soupify(html))
-    bt.write_temp_json(result)
+    # Will use the cached HTML and run the extract_data function again.
+    bt.write_temp_json(scrape_data("https://www.omkar.cloud/", cache=False))
 ```
 ### What are the recommended settings for each decorator to build a production-ready scraper in Botasaurus?
 
@@ -1890,7 +1889,6 @@ from botasaurus.soupify import soupify
     # proxy='http://username:password@datacenter-proxy-domain:proxy-port', # Uncomment to use Proxy ONLY if you face IP blocking
     cache=True,
 
-    parallel=40, # Run 40 requests in parallel, which is a good default
     max_retry=20, # Retry up to 20 times, which is a good default
 
     output=None,
@@ -1901,21 +1899,23 @@ from botasaurus.soupify import soupify
 )
 def scrape_html(request: Request, url):
     # Scrape the HTML and cache it
-    html = request.get(url).text
-    return html
+    response = request.get(url)
+    response.raise_for_status()
+    return response.text
 
 def extract_data(soup: BeautifulSoup):
     # Extract the heading from the HTML
     heading = soup.find("h1").get_text()
     return {"heading": heading}
 
-# Cache the scrape_heading task as well
+# Cache the scrape_data task as well
 @task(
     cache=True,
     close_on_crash=True,
     create_error_logs=False,
+    parallel=40, # Run 40 requests in parallel, which is a good default
 )
-def scrape_heading(url):
+def scrape_data(url):
     # Call the scrape_html function to get the cached HTML
     html = scrape_html(url)
     # Extract data from the HTML using the extract_data function
@@ -1927,7 +1927,7 @@ data_items = [
     "https://stackoverflow.com/",
 ]
 
-scrape_heading(data_items)
+scrape_data(data_items)
 ```
 
 For visiting well protected websites, use the `Browser` module. 
@@ -1970,13 +1970,13 @@ def extract_data(soup: BeautifulSoup):
     heading = soup.select_one('.product-head__title [itemprop="name"]').get_text()
     return {"heading": heading}
 
-# Cache the scrape_heading task as well
+# Cache the scrape_data task as well
 @task(
     cache=True,
     close_on_crash=True,
     create_error_logs=False,
 )
-def scrape_heading(url):
+def scrape_data(url):
     # Call the scrape_html function to get the cached HTML
     html = scrape_html(url)
     # Extract data from the HTML using the extract_data function
@@ -1987,7 +1987,7 @@ data_items = [
     "https://www.g2.com/products/jenkins/reviews?page=19",
 ]
 
-scrape_heading(data_items)
+scrape_data(data_items)
 ```
 
 ### What Are Some Tips for accessing Protected sites?

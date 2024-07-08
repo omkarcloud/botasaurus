@@ -31,11 +31,36 @@ from .models import (
 )
 from .db_setup import Session
 from .task_results import TaskResults, create_cache_key
-from .errors import JsonHTTPResponse, JsonHTTPResponseWithMessage
+from .errors import JsonHTTPResponse, JsonHTTPResponseWithMessage, add_cors_headers
 from .retry_on_db_error import retry_on_db_error
 
+import bottle
 
 OK_MESSAGE = {"message": "OK"}
+
+def ok():
+    # add_cors_headers(response.headers)
+    return OK_MESSAGE
+
+@route('/<:path>', method='OPTIONS')
+def enable_cors_generic_route():
+    """
+    This route takes priority over all others. So any request with an OPTIONS
+    method will be handled by this function.
+
+    See: https://github.com/bottlepy/bottle/issues/402
+
+    NOTE: This means we won't 404 any invalid path that is an OPTIONS request.
+    """
+    add_cors_headers(response.headers)
+
+@bottle.hook('after_request')
+def enable_cors_after_request_hook():
+    """
+    This executes after every route. We use it to attach CORS headers when
+    applicable.
+    """
+    add_cors_headers(response.headers)
 
 
 def serialize(data):

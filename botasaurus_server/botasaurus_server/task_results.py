@@ -1,10 +1,35 @@
 from json.decoder import JSONDecodeError
+import shutil
+import sys
 from .errors import JsonHTTPResponseWithMessage
 from hashlib import sha256
 import json
 import os
-from botasaurus.cache import   read_json, _has,_remove,write_json, _delete_items
+from botasaurus.cache import   read_json, _has,_remove, _delete_items
 from .utils import path_task_results_tasks,path_task_results_cache
+
+
+def safe_json_write(data, target_file):
+
+    # Convert data to JSON string
+    json_data = json.dumps(data)
+    
+    # Check the size of the JSON data
+    size_in_bytes = sys.getsizeof(json_data)
+    size_in_mb = size_in_bytes / (1024 * 1024)
+    if size_in_mb > 10:
+        # If greater than 10 MB, write to a temporary file then move it
+        temp_file = target_file.rstrip('.json')  + "-temp.json"
+        with open(temp_file, 'w', encoding="utf-8") as f:
+            f.write(json_data)
+        # Move the temp file to the target location, overwrite if exists
+        shutil.move(temp_file, target_file)
+    else:
+        # If not greater than 10 MB, write directly to the target file
+        # This will overwrite the file if it already exists
+        with open(target_file, 'w', encoding="utf-8") as f:
+            f.write(json_data)
+
 
 def _get(cache_path):
     try:
@@ -60,7 +85,7 @@ class TaskResults:
     @staticmethod
     def save_cached_task(scraper_name, data, result):
         task_path = generate_cached_task_path(scraper_name, data)
-        write_json(result, task_path)
+        safe_json_write(result, task_path)
     
     @staticmethod
     def get_cached_items(scraper_name, items):
@@ -76,7 +101,7 @@ class TaskResults:
     @staticmethod
     def save_task(id, data):
         task_path = os.path.join(path_task_results_tasks, str(id) + ".json")
-        write_json(data, task_path)
+        safe_json_write(data, task_path)
     
     @staticmethod
     def get_task(id):
