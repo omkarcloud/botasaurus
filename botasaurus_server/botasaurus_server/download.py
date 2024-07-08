@@ -45,12 +45,16 @@ def make_csv(fieldnames, results):
     return buffer.getvalue()
 
 
-def make_excel(fieldnames, results):
+def make_excel(fieldnames, results,  strings_to_urls = True):
     import io
     import xlsxwriter
 
     buffer = io.BytesIO()
-    workbook = xlsxwriter.Workbook(buffer)
+    if strings_to_urls:
+     workbook = xlsxwriter.Workbook(buffer)
+    else:
+     workbook = xlsxwriter.Workbook(buffer, {'strings_to_urls': False})
+    
     worksheet = workbook.add_worksheet("Sheet1")  # Specify the sheet name as "Sheet1"
 
     if results:
@@ -58,15 +62,24 @@ def make_excel(fieldnames, results):
         for col, header in enumerate(fieldnames):
             worksheet.write(0, col, header)
 
-        # Write the data rows
-        for row, data in enumerate(results, start=1):
-            for col, (key, value) in enumerate(data.items()):
-                worksheet.write(row, col, value)
+        row = 1
+        for item in results:
+            # Prevent Warnings and Handle Excel 65K Link Limit
+            if worksheet.hlink_count > 65000:
+                workbook.close()
+                buffer.close()
+                
+                return make_excel(fieldnames, results, strings_to_urls=False)
+            values = list(item.values())
+            worksheet.write_row(row, 0, values)
+            row += 1
 
     workbook.close()
     buffer.seek(0)
 
-    return buffer.getvalue()
+    value = buffer.getvalue()
+    buffer.close()
+    return value
 
 
 def download_results(results, fmt, filename):
