@@ -171,8 +171,8 @@ def create_tasks(scraper, data, metadata, is_sync):
     scraper_type = scraper["scraper_type"]
     get_task_name = scraper["get_task_name"]
 
-    
-    all_task_sort_id  =  int(datetime.now(timezone.utc).timestamp())
+    # create enough space
+    all_task_sort_id  =  int(datetime.now(timezone.utc).timestamp()) * 10000
     all_task = None
     all_task_id = None
     if create_all_tasks:
