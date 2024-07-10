@@ -1727,16 +1727,15 @@ links = (
     Sitemap("https://www.g2.com/sitemaps/sitemap_index.xml.gz")
     .filter(Filters.first_segment_equals("products"))
     .extract(Extractors.extract_link_upto_second_segment())
-    .links()
+    .write_links('g2-products')
 )
-bt.write_temp_json(links)
 ```
 
 **Output:** 
 
 ![g2-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/g2-sitemap-links.png)
 
-Or, let's say you're in the mood for some reading and looking for good stories. The following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
+Or, let's say you're in the mood for some reading and looking for good stories. The following code will get you over 1000+  from [moralstories26.com](https://moralstories26.com/):
 
 ```python
 from botasaurus import bt
@@ -1750,10 +1749,8 @@ links = (
             ["about", "privacy-policy", "akbar-birbal", "animal", "education", "fables", "facts", "family", "famous-personalities", "folktales", "friendship", "funny", "heartbreaking", "inspirational", "life", "love", "management", "motivational", "mythology", "nature", "quotes", "spiritual", "uncategorized", "zen"]
         ),
     )
-    .links()
+    .write_links('moral-stories')
 )
-
-bt.write_temp_json(links)
 ```
 
 **Output:** 
@@ -1766,16 +1763,53 @@ Also, before scraping a site, it's useful to identify the available sitemaps. Th
 from botasaurus import bt
 from botasaurus.sitemap import Sitemap
 
-sitemaps = Sitemap("https://www.omkar.cloud/").sitemaps()
-bt.write_temp_json(sitemaps)
+sitemaps = Sitemap("https://www.omkar.cloud/").write_sitemaps('omkar-sitemaps')
 ```
 
 **Output:** 
 
 ![omkar-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/omkar-sitemap-links.png)
 
-To ensure your scrapers run super fast, we cache the Sitemap, but you may want to periodically refresh the cache. To do so, delete the `cache/sitemap` folder. 
-![delete-sitemaps-cache](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-sitemaps-cache.png)
+To ensure your scrapers run super fast, we cache the Sitemap, but you may want to periodically refresh the cache. To do so, pass the Cache.REFRESH parameter. 
+
+```python
+from botasaurus import bt
+from botasaurus.sitemap import Sitemap, Filters, Extractors
+from botasaurus.cache import Cache
+
+links = (
+    Sitemap("https://www.g2.com/sitemaps/sitemap_index.xml.gz", cache=Cache.REFRESH) # Refresh the cache
+    .filter(Filters.first_segment_equals("products"))
+    .extract(Extractors.extract_link_upto_second_segment())
+    .write_links('g2-products')
+)
+```
+### How can I filter a list of links, similar to working with Sitemaps?
+
+Filtering links from a webpage is a common requirement in web scraping. For example, you might want to filter out all non-product pages.
+
+
+Botasaurus's `Links` module simplifies link filtering and extraction:
+
+```python
+from botasaurus.links import Links, Filters, Extractors
+
+# Sample list of links
+links = [
+    "https://www.g2.com/categories/project-management",
+    "https://www.g2.com/categories/payroll", 
+    "https://www.g2.com/products/jenkins/reviews", 
+    "https://www.g2.com/products/redis-software/pricing"
+]
+
+# Filter and extract links
+filtered_links = (
+    Links(links)
+    .filter(Filters.first_segment_equals("products"))
+    .extract(Extractors.extract_link_upto_second_segment())
+    .write('g2-products')
+)
+```
 
 ### What is the best way to use caching in Botasaurus?
 

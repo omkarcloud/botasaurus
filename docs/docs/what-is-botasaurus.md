@@ -53,7 +53,7 @@ code .  # This will open the project in VSCode if you have it installed
 Now, create a Python script named `main.py` in your project directory and insert the following code:
 
 ```python
-from botasaurus import *
+from botasaurus import bt
 
 @browser
 def scrape_heading_task(driver: AntiDetectDriver, data):

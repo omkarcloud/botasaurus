@@ -290,7 +290,7 @@ Now, it's time to launch the bot and see it in action!
 
 1. In the repository cloned earlier, open `task.py` and paste the following code.
 ```python
-from botasaurus import *
+import botasaurus as bt
 import urllib.parse
 
 @browser(
