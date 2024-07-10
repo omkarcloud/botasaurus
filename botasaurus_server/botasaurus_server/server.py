@@ -117,7 +117,7 @@ class _Server:
     def add_scraper(
         self,
         scraper_function,
-        scraper_name=None,
+        display_name=None,
         get_task_name=None,
         create_all_task=False,
         split_task=None,
@@ -139,9 +139,6 @@ class _Server:
             raise ValueError(
                 f"Invalid scraper type: {scraper_function._scraper_type}. Must be 'browser', 'request' or 'task'."
             )
-
-        if scraper_name is None:
-            scraper_name = titlecase(scraper_function.__name__)
 
         if create_all_task and not callable(split_task):
             raise ValueError(
@@ -204,14 +201,18 @@ class _Server:
             duplicate_filter_ids = [id for id in filter_ids if filter_ids.count(id) > 1]
             raise ValueError(f"Duplicate filters found: {duplicate_filter_ids}")
 
-        scraper_name = scraper_function.__name__
+        scraper_function_name = scraper_function.__name__
+        if display_name is None:
+            display_name = titlecase(scraper_function_name)
+        else:
+            display_name = display_name
 
-        input_js = self.get_input_js(scraper_name)
-        self.scrapers[scraper_name] = {
-        "name": scraper_name,
+        input_js = self.get_input_js(scraper_function_name)
+        self.scrapers[scraper_function_name] = {
+        "name": display_name,
         "input_js": input_js,
         "function": scraper_function,
-        "scraper_name": scraper_name,
+        "scraper_name": scraper_function_name,
         "scraper_type": scraper_function._scraper_type,
         "get_task_name": get_task_name,
         "create_all_task": create_all_task,
