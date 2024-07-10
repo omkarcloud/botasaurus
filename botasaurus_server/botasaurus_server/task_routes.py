@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from casefy import snakecase
+from casefy import kebabcase
 from time import sleep
 from bottle import (
     request,
@@ -829,23 +829,26 @@ def validate_download_params(json_data, allowed_sorts, allowed_views, default_so
 
     return fmt, filters, sort, view, convert_to_english
 
-
-def generate_filename(task_id, view, scraper_name):
-    scraper_name = snakecase(Server.get_scraper(scraper_name)["name"])
-
-    filename = f"task_{task_id}"
-
+def generate_filename(task_id, view, is_all_task, task_name):
     if view:
-        # Assuming view has already been validated and converted to lowercase
-        filename = f"{view}_task_{task_id}"
+        view = kebabcase(view)
 
-    return filename
-
+    if is_all_task:
+        if view:
+            return f"all-task-{task_id}-{view}"  # Fixed missing f-string prefix
+        else: 
+            return f"all-task-{task_id}"  # Fixed missing f-string prefix
+    else:
+        task_name = kebabcase(task_name)
+        if view:
+            return f"{task_name}-{view}"
+        else: 
+            return f"{task_name}"
 
 @post("/api/tasks/<task_id:int>/download")
 def download_task_results(task_id):
 
-    scraper_name, results,task_data = perform_download_task_results(task_id)
+    scraper_name, results,task_data,is_all_task,task_name = perform_download_task_results(task_id)
     validate_scraper_name(scraper_name)
     if not isinstance(results, list):
         raise JsonHTTPResponse('No Results')
@@ -865,21 +868,23 @@ def download_task_results(task_id):
     if convert_to_english:
         results = convert_unicode_dict_to_ascii_dict(results)
 
-    filename = generate_filename(task_id, view, scraper_name)
+    filename = generate_filename(task_id, view, is_all_task,task_name)
 
     return download_results(results, fmt, filename)
 
 @retry_on_db_error
 def perform_download_task_results(task_id):
     with Session() as session:
-        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.data ])
+        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.data, Task.is_all_task , Task.task_name,])
         if not task:
             raise create_task_not_found_error(task_id)
 
         scraper_name = task.scraper_name
         task_data = task.data
+        is_all_task = task.is_all_task
+        task_name = task.task_name
         results = TaskResults.get_task(task_id)
-    return scraper_name,results,task_data
+    return scraper_name,results,task_data,is_all_task,task_name
 
 def delete_task(session, task_id, is_all_task, parent_id,remove_duplicates_by):
     if is_all_task:

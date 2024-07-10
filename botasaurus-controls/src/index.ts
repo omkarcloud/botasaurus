@@ -47,17 +47,29 @@ function sentenceCase(string: string) {
     .trim()
     .replace(/^\w/, (c: string) => c.toUpperCase())
 }
-function isValidHttpUrl(string: any) {
-  let url: any
+
+
+// @ts-ignore
+function findLink(inputString) {
+  const regex = /http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+/;
+  const match = inputString.match(regex);
+  return match ? match[0] : null;
+}
+// @ts-ignore
+function getLink(string) {
+  let url
 
   try {
     url = new URL(string)
+    if (url.protocol === "http:" || url.protocol === "https:"){
+      return string
+    }
+    return findLink(string)
   } catch (_) {
-    return false
-  }
-
-  return url.protocol === "http:" || url.protocol === "https:"
+    return findLink(string)
+  }  
 }
+
 
 function ensureListOfStrings(value: any, id: string): string[] {
   if (!Array.isArray(value)) {
@@ -463,7 +475,7 @@ class Controls {
       }
       // Filter valid URLs for listOfLinks
       else if (control.type === "listOfLinks") {
-        value = value.filter(isValidHttpUrl)
+        value = value.filter(isNotEmpty).map(getLink).filter((x:any)=>x!== null).map((x:any)=>x.trim())
       }
 
       if (control.isMetadata) {
@@ -529,7 +541,7 @@ class Controls {
               errorMessages.push("This field is required.")
             } else {
               // Ensure at least one valid URL for 'listOfLinks' type
-              if (!value.some(isValidHttpUrl)) {
+              if (!value.some((x:any)=> !!getLink(x))) {
                 errorMessages.push(
                   "This field must have at least 1 valid link. Example: https://example.com/"
                 )
@@ -542,7 +554,7 @@ class Controls {
         if (
           !errorMessages.length && type === "link" &&
           isNotEmpty(value) &&
-          !isValidHttpUrl(value)
+          !getLink(value)
         ) {
           errorMessages.push(
             "This field must be a valid URL. Example: https://example.com/"
@@ -553,7 +565,7 @@ class Controls {
           !errorMessages.length && type === "listOfLinks"
         ) {
           const xs = value.filter(isNotEmpty)
-          if (xs.length && xs.some((x: string) => !isValidHttpUrl(x))) {
+          if (xs.length && xs.some((x: string) => !getLink(x))) {
             errorMessages.push(
               "Each non empty field must be a valid URL. Example: https://example.com"
             )
