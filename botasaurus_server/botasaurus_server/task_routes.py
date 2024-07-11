@@ -25,10 +25,11 @@ from .models import (
     Task,
     TaskStatus,
     serialize_task,
-    TaskHelper,
+    
     serialize_ui_display_task,
     serialize_ui_output_task,
 )
+from .task_helper import TaskHelper
 from .db_setup import Session
 from .task_results import TaskResults, create_cache_key
 from .errors import JsonHTTPResponse, JsonHTTPResponseWithMessage, add_cors_headers
@@ -282,9 +283,7 @@ def perform_complete_task(all_task_id
                           ,remove_duplicates_by=None
 
                           ):
-    with Session() as session:
-        executor.complete_parent_task_if_possible(session, all_task_id,remove_duplicates_by)
-        session.commit()
+    executor.complete_parent_task_if_possible(all_task_id,remove_duplicates_by)
 
 
 
@@ -777,8 +776,7 @@ def perform_get_task_results(task_id):
 
         scraper_name = task.scraper_name
         task_data = task.data
-        results = TaskResults.get_task(task_id)
-    return scraper_name,results,task_data
+    return scraper_name,TaskResults.get_task(task_id),task_data
 @post("/api/tasks/<task_id:int>/results")
 def get_task_results(task_id):
     scraper_name, results, task_data = perform_get_task_results(task_id)
@@ -883,79 +881,89 @@ def perform_download_task_results(task_id):
         task_data = task.data
         is_all_task = task.is_all_task
         task_name = task.task_name
-        results = TaskResults.get_task(task_id)
-    return scraper_name,results,task_data,is_all_task,task_name
+        
+    return scraper_name,TaskResults.get_task(task_id),task_data,is_all_task,task_name
 
-def delete_task(session, task_id, is_all_task, parent_id,remove_duplicates_by):
-    if is_all_task:
-        TaskHelper.delete_child_tasks(session, task_id)
-    else:
-
-        if parent_id:
-            all_children_count = TaskHelper.get_all_children_count(
-                session, parent_id, task_id
-            )
-
-            if all_children_count == 0:
-                TaskHelper.delete_task(session, parent_id)
-            else:
-                has_executing_tasks = TaskHelper.get_pending_or_executing_child_count(
+def delete_task( task_id, is_all_task, parent_id,remove_duplicates_by):
+    fn = None
+    with Session() as session:
+        if is_all_task:
+            TaskHelper.delete_child_tasks(session, task_id)
+        else:
+            if parent_id:
+                all_children_count = TaskHelper.get_all_children_count(
                     session, parent_id, task_id
                 )
 
-                if not has_executing_tasks:
-                    aborted_children_count = TaskHelper.get_aborted_children_count(
+                if all_children_count == 0:
+                    TaskHelper.delete_task(session, parent_id)
+                else:
+                    has_executing_tasks = TaskHelper.get_pending_or_executing_child_count(
                         session, parent_id, task_id
                     )
 
-                    if aborted_children_count == all_children_count:
-                        TaskHelper.abort_task(session, parent_id)
-                    else:
-                        failed_children_count = TaskHelper.get_failed_children_count(
+                    if not has_executing_tasks:
+                        aborted_children_count = TaskHelper.get_aborted_children_count(
                             session, parent_id, task_id
                         )
-                        if failed_children_count:
-                            TaskHelper.fail_task(session, parent_id)
+
+                        if aborted_children_count == all_children_count:
+                            TaskHelper.abort_task(session, parent_id)
                         else:
-                            TaskHelper.success_all_task(session, parent_id, task_id, remove_duplicates_by)
+                            failed_children_count = TaskHelper.get_failed_children_count(
+                                session, parent_id, task_id
+                            )
+                            if failed_children_count:
+                                TaskHelper.fail_task(session, parent_id)
+                            else:
+                                fn = lambda: TaskHelper.success_all_task(parent_id, task_id, remove_duplicates_by)
+        session.commit()
+    if fn:
+        fn()
+    with Session() as session:
+        TaskHelper.delete_task(session, task_id)
+        session.commit()
 
-    TaskHelper.delete_task(session, task_id)
 
-
-def abort_task(session, task_id, is_all_task, parent_id, remove_duplicates_by):
-
-    if is_all_task:
-        TaskHelper.abort_child_tasks(session, task_id)
-    else:
-        if parent_id:
-            all_children_count = TaskHelper.get_all_children_count(
-                session, parent_id, task_id
-            )
-
-            if all_children_count == 0:
-                TaskHelper.abort_task(session, parent_id)
-            else:
-                has_executing_tasks = TaskHelper.get_pending_or_executing_child_count(
+def abort_task( task_id, is_all_task, parent_id, remove_duplicates_by):
+    fn = None    
+    with Session() as session:
+        if is_all_task:
+            TaskHelper.abort_child_tasks(session, task_id)
+        else:
+            if parent_id:
+                all_children_count = TaskHelper.get_all_children_count(
                     session, parent_id, task_id
                 )
 
-                if not has_executing_tasks:
-                    aborted_children_count = TaskHelper.get_aborted_children_count(
+                if all_children_count == 0:
+                    TaskHelper.abort_task(session, parent_id)
+                else:
+                    has_executing_tasks = TaskHelper.get_pending_or_executing_child_count(
                         session, parent_id, task_id
                     )
 
-                    if aborted_children_count == all_children_count:
-                        TaskHelper.abort_task(session, parent_id)
-                    else:
-                        failed_children_count = TaskHelper.get_failed_children_count(
+                    if not has_executing_tasks:
+                        aborted_children_count = TaskHelper.get_aborted_children_count(
                             session, parent_id, task_id
                         )
-                        if failed_children_count:
-                            TaskHelper.fail_task(session, parent_id)
-                        else:
-                            TaskHelper.success_all_task(session, parent_id, task_id, remove_duplicates_by)
 
-    TaskHelper.abort_task(session, task_id)
+                        if aborted_children_count == all_children_count:
+                            TaskHelper.abort_task(session, parent_id)
+                        else:
+                            failed_children_count = TaskHelper.get_failed_children_count(
+                                session, parent_id, task_id
+                            )
+                            if failed_children_count:
+                                TaskHelper.fail_task(session, parent_id)
+                            else:
+                                fn = lambda: TaskHelper.success_all_task(parent_id, task_id, remove_duplicates_by)
+        session.commit()
+    if fn:
+        fn()    
+    with Session() as session:
+        TaskHelper.abort_task(session, task_id)
+        session.commit()
 
 
 def is_list_of_integers(obj):
@@ -979,17 +987,16 @@ def validate_patch_task(json_data):
 
 @retry_on_db_error
 def perform_patch_task(action, task_id):
+    
     with Session() as session:
         task = session.query(Task.id, Task.is_all_task, Task.parent_task_id, Task.scraper_name, ).filter(Task.id == task_id).first()
-        if task:
-
-            remove_duplicates_by = Server.get_remove_duplicates_by(task[-1])
-            task = task[0:3]
-            if action == "delete":
-                delete_task(session, *task, remove_duplicates_by)
-            elif action == "abort":
-                abort_task(session, *task, remove_duplicates_by)
-            session.commit()
+    if task:
+        remove_duplicates_by = Server.get_remove_duplicates_by(task[-1])
+        task = task[0:3]
+        if action == "delete":
+            delete_task( *task, remove_duplicates_by)
+        elif action == "abort":
+            abort_task( *task, remove_duplicates_by)
 
 @route("/api/tasks/<task_id:int>/abort", method="PATCH")
 def abort_single_task(task_id):
@@ -1189,9 +1196,10 @@ def perform_get_ui_task_results(task_id):
 
         scraper_name = task.scraper_name
         task_data = task.data
-        results =  TaskResults.get_task(task_id)
+        
         serialized_task = serialize_ui_display_task(task)
-    return scraper_name,results,serialized_task,task_data
+    
+    return scraper_name, TaskResults.get_task(task_id),serialized_task,task_data
 
 @post("/api/ui/tasks/<task_id:int>/results")
 def get_ui_task_results(task_id):

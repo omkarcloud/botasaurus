@@ -4,7 +4,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from os import path, getcwd
 from os import makedirs
-from shutil import rmtree
 from .env import is_master
 from .models import Base  # Assuming Task is one of your models
 from .server import Server  # Assuming Task is one of your models
