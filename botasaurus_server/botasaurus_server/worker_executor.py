@@ -62,7 +62,7 @@ class WorkerExecutor():
                 create_error_logs=False
             )
             result = clean_data(result)
-            make_request_with_retry(lambda: requests.post('http://master-srv:8000/k8s/success', json={"task_id": task_id, "task_type" : scraper_type,  "task_result": result , "node_name": node_name}))
+            make_request_with_retry(lambda: requests.post('http://master-srv:8000/k8s/success', json={"task_id": task_id, "task_type" : scraper_type,  "data": task_data ,  "scraper_name": scraper_name ,  "task_result": result , "node_name": node_name}))
         except Exception:
             exception_log = traceback.format_exc()
             traceback.print_exc()

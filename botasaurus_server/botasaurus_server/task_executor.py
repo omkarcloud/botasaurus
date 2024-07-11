@@ -172,9 +172,9 @@ class TaskExecutor:
                    result = remove_duplicates_by_key(result, remove_duplicates_by)
 
                 if is_result_dont_cached:
-                    self.mark_task_as_success(task_id, result, False)
+                    self.mark_task_as_success(task_id, result, False, scraper_name, task_data)
                 else:
-                    self.mark_task_as_success(task_id, result, Server.cache)
+                    self.mark_task_as_success(task_id, result, Server.cache, scraper_name, task_data)
                 self.decrement_capcity(scraper_type)
             except:
                 self.decrement_capcity(scraper_type)
@@ -245,15 +245,11 @@ class TaskExecutor:
             session.commit()
     
     @retry_on_db_error
-    def mark_task_as_success(self, task_id, result, cache_task):
+    def mark_task_as_success(self, task_id, result, cache_task, scraper_name, data):
         TaskResults.save_task(task_id, result)
-        
+        if cache_task:
+            TaskResults.save_cached_task(scraper_name, data, result)
         with Session() as session:
-            if cache_task:
-                task = TaskHelper.get_task(session, task_id)
-                scraper_name = task.scraper_name
-                data = task.data
-                TaskResults.save_cached_task(scraper_name, data, result)
 
             TaskHelper.update_task(
                     session,

@@ -42,12 +42,12 @@ class MasterExecutor(TaskExecutor):
         replicas = len(self.k8s.nodes)
         return {"request": limit["request"] * replicas,"task": limit["task"] * replicas, "browser": limit["browser"] * replicas}
 
-    def on_success(self, task_id, task_type, task_result, node_name):
+    def on_success(self, task_id, task_type, task_result, node_name,scraper_name, data):
         node = self.k8s.get_node(node_name)
         self.decrement_master_capacity(node, task_type)
 
         # Further processing of task_result can be done here
-        self.mark_task_as_success(task_id, task_result, Server.cache)
+        self.mark_task_as_success(task_id, task_result, Server.cache,scraper_name, data)
         self.update_parent_task(task_id)
     
     def on_failure(self, task_id, task_type, task_result, node_name):

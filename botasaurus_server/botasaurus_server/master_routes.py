@@ -11,9 +11,11 @@ def k8s_success():
     task_id = request.json["task_id"]
     task_type = request.json["task_type"]
     task_result = request.json["task_result"]
+    scraper_name = request.json["scraper_name"]
+    data = request.json["data"]
     node_name = request.json["node_name"]
 
-    executor.on_success(task_id, task_type, task_result, node_name)
+    executor.on_success(task_id, task_type, task_result, node_name,scraper_name, data)
 
     return OK_MESSAGE
 
