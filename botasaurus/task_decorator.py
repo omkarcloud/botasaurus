@@ -122,6 +122,9 @@ def task(
 
                     
                     if not IS_PRODUCTION:
+                        if raise_exception:
+                            print_exc()
+
                         if not close_on_crash:
                             beep_input(
                                 "We've paused the browser to help you debug. Press 'Enter' to close.",

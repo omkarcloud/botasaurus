@@ -141,19 +141,25 @@ def select(data, *keys, default=None, max_depth=None, map_data=None, filter_func
 #     return args
 
 
+
+def _handle_0(new_var):
+    # 0.0 fix
+    if new_var == 0:
+        return 0
+    return new_var
+
 def extract_numbers(s):
     import re
     if isinstance(s, str):
         # Use regular expression to find all numbers in the text
         numbers = re.findall(r"\b\d+(?:\.\d+)?\b", remove_commas(s))
         # Convert the extracted strings to floats or integers
-        return [float(num) if "." in num else int(num) for num in numbers]
+        return [_handle_0(float(num)) if "." in num else int(num) for num in numbers]
 
     if isinstance(s, int) or isinstance(s, float):
-        return [s]
+        return [_handle_0(s)]
 
     return []
-
 
 def extract_number(s):
     import re
@@ -162,11 +168,12 @@ def extract_number(s):
         numbers = re.findall(r"\b\d+(?:\.\d+)?\b", remove_commas(s))
         # Convert the extracted strings to floats or integers
         return select(
-            [float(num) if "." in num else int(num) for num in numbers], 0, max_depth=1
+            [_handle_0(float(num)) if "." in num else int(num) for num in numbers], 0, max_depth=1
         )
 
     if isinstance(s, int) or isinstance(s, float):
-        return s
+        return _handle_0(s)
+
 
 def extract_links(s):
     import re    

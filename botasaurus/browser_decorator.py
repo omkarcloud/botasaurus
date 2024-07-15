@@ -225,6 +225,8 @@ def browser(
                         if not IS_PRODUCTION:
                             if headless:
                                 driver.open_in_devtools()
+                            if raise_exception:
+                                print_exc()
                             driver.prompt("We've paused the browser to help you debug. Press 'Enter' to close.")
 
                     # if reuse_driver:

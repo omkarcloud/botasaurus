@@ -220,7 +220,14 @@ class Filters:
         def filter_func(url):
             path = urlparse(url).path.strip("/")
             segments = path.split("/") if path else []
-            return segments[-1] != value if segments else True
+            if segments:
+                if isinstance(value, list):  # Check if value is a list
+                    return (
+                        segments[-1] not in value
+                    )  # Return True if nth segment matches any string in the list
+                return segments[-1] != value
+            else:
+                return True
 
         return filter_func
 

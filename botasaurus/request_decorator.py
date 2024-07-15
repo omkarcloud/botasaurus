@@ -147,6 +147,9 @@ def request(
                         save_error_logs(format_exc(), None)
                     if not IS_PRODUCTION:
                         if not close_on_crash:
+                            if raise_exception:
+                                print_exc()
+
                             beep_input(
                                 "We've paused the browser to help you debug. Press 'Enter' to close.",
                                 beep,
