@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-
+from sqlalchemy import update
 from botasaurus_server.db_setup import Session
 from .cleaners import normalize_dicts_by_fieldnames
 from .task_results import TaskResults
@@ -10,7 +10,7 @@ from .db_setup import Session
 
 class TaskHelper:
     @staticmethod
-    def get_completed_children_results(parent_id, except_task_id=None, remove_duplicates_by=None):
+    def get_completed_children_results(parent_id, except_task_id, remove_duplicates_by):
         with Session() as session:
             query = session.query(Task.id).filter(
                 Task.parent_task_id == parent_id, Task.status == TaskStatus.COMPLETED
@@ -28,12 +28,12 @@ class TaskHelper:
         return rs
 
     @staticmethod
-    def is_parents_last_task(session, parent_id, except_task_id=None):
+    def are_all_child_task_done(session, parent_id):
         done_children_count = TaskHelper.get_done_children_count(
-            session, parent_id, except_task_id
+            session, parent_id, 
         )
         child_count = TaskHelper.get_all_children_count(
-            session, parent_id, except_task_id
+            session, parent_id,
         )
 
         return done_children_count == child_count
@@ -108,9 +108,13 @@ class TaskHelper:
         return query.count()
 
     @staticmethod
-    def delete_task(session, task_id):
+    def delete_task(session, task_id, is_all_task):
         session.query(Task).filter(Task.id == task_id).delete()
-        TaskResults.delete_task(task_id)
+        if is_all_task:
+            TaskResults.delete_all_task(task_id)
+        else:
+            TaskResults.delete_task(task_id)
+
 
     @staticmethod
     def delete_child_tasks(session, task_id):
@@ -128,16 +132,6 @@ class TaskHelper:
 
         return query.update(data)
 
-    @staticmethod
-    def fail_task(session, task_id):
-        return TaskHelper.update_task(
-            session,
-            task_id,
-            {
-                "status": TaskStatus.FAILED,
-                "finished_at": datetime.now(timezone.utc),
-            },
-        )
 
     @staticmethod
     def abort_task(session, task_id):
@@ -172,11 +166,11 @@ class TaskHelper:
         )
 
     @staticmethod
-    def success_all_task(parent_id, except_task_id=None, remove_duplicates_by=None):
+    def collect_and_save_all_task(parent_id, except_task_id, remove_duplicates_by, status):
         all_results = TaskHelper.get_completed_children_results(
             parent_id, except_task_id, remove_duplicates_by
         )
-        TaskResults.save_task(parent_id, all_results)
+        TaskResults.save_all_task(parent_id, all_results)
         
         with Session() as session:
             TaskHelper.update_task(
@@ -184,27 +178,43 @@ class TaskHelper:
                 parent_id,
                 {
                     "result_count": len(all_results),
-                    "status": TaskStatus.COMPLETED,
+                    "status": status,
                     "finished_at": datetime.now(timezone.utc),
                 },
             )
             session.commit()
 
     @staticmethod
-    def update_parent_task_results(parent_id, except_task_id=None, remove_duplicates_by=None):
-        all_results = TaskHelper.get_completed_children_results(
-            parent_id, except_task_id, remove_duplicates_by
-        )
-        TaskResults.save_task(parent_id, all_results)
+    def read_clean_save_task(parent_id,  remove_duplicates_by, status):
+        
+        rs = normalize_dicts_by_fieldnames(TaskResults.get_all_task(parent_id))
+        
+        if remove_duplicates_by:
+           rs = remove_duplicates_by_key(rs, remove_duplicates_by)
+        TaskResults.save_all_task(parent_id, rs)
+        
         with Session() as session:
             TaskHelper.update_task(
                 session,
                 parent_id,
                 {
-                    "result_count": len(all_results),
+                    "result_count": len(rs),  # Fixed to correctly update with rs length after removing duplicates
+                    "status": status,
+                    "finished_at": datetime.now(timezone.utc),
                 },
             )
             session.commit()
+
+    @staticmethod
+    def update_parent_task_results(parent_id, result):
+        if result:
+            TaskResults.append_all_task(parent_id, result)
+
+            with Session() as session:
+                session.execute(
+                    update(Task).where(Task.id == parent_id).values(result_count=Task.result_count + len(result))
+                )
+                session.commit()
 
     @staticmethod
     def get_task(session, task_id, in_status=None):

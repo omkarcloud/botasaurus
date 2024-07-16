@@ -81,21 +81,20 @@ def serialize_ui_display_task(obj):
 
 def serialize_task(obj, with_result):
     task_id = obj.id
-    status = obj.status
+    status = obj.status    
     if with_result:
         if status == TaskStatus.PENDING:
             result = {"result": None}
         elif status != TaskStatus.IN_PROGRESS or obj.is_all_task:
             # set in cache
             if not hasattr(obj, "result"):
-                result = {"result": TaskResults.get_task(task_id)}
+                result = {"result":  TaskResults.get_all_task(task_id) if obj.is_all_task else TaskResults.get_task(task_id)}
             else:
                 result = {"result": obj.result}
         else:
             result = {"result": None}
     else:
         result = {}
-
     return {
         "id": task_id,
         "status": status,

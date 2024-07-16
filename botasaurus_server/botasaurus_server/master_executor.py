@@ -48,7 +48,7 @@ class MasterExecutor(TaskExecutor):
 
         # Further processing of task_result can be done here
         self.mark_task_as_success(task_id, task_result, Server.cache,scraper_name, data)
-        self.update_parent_task(task_id)
+        self.update_parent_task(task_id, task_result)
     
     def on_failure(self, task_id, task_type, task_result, node_name):
         node = self.k8s.get_node(node_name)
@@ -56,4 +56,4 @@ class MasterExecutor(TaskExecutor):
         
         # Further processing of task_result can be done here
         self.mark_task_as_failure(task_id, task_result)
-        self.update_parent_task(task_id)
+        self.update_parent_task(task_id, [])

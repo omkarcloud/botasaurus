@@ -279,11 +279,8 @@ def create_tasks(scraper, data, metadata, is_sync):
     return tasks_with_all_task, tasks, split_task
 
 @retry_on_db_error
-def perform_complete_task(all_task_id
-                          ,remove_duplicates_by=None
-
-                          ):
-    executor.complete_parent_task_if_possible(all_task_id,remove_duplicates_by)
+def perform_complete_task(all_task_id,remove_duplicates_by):
+    executor.complete_as_much_all_task_as_possible(all_task_id,remove_duplicates_by)
 
 
 
@@ -770,13 +767,14 @@ def clean_results(scraper_name, results, forceApplyFirstView,input_data):
 @retry_on_db_error
 def perform_get_task_results(task_id):
     with Session() as session:
-        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.data ])
+        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.is_all_task,Task.data ])
         if not task:
             raise create_task_not_found_error(task_id)
 
         scraper_name = task.scraper_name
         task_data = task.data
-    return scraper_name,TaskResults.get_task(task_id),task_data
+        is_all_task = task.is_all_task
+    return scraper_name,TaskResults.get_all_task(task_id) if is_all_task else TaskResults.get_task(task_id),task_data
 @post("/api/tasks/<task_id:int>/results")
 def get_task_results(task_id):
     scraper_name, results, task_data = perform_get_task_results(task_id)
@@ -873,7 +871,7 @@ def download_task_results(task_id):
 @retry_on_db_error
 def perform_download_task_results(task_id):
     with Session() as session:
-        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.data, Task.is_all_task , Task.task_name,])
+        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.is_all_task,Task.data, Task.is_all_task , Task.task_name,])
         if not task:
             raise create_task_not_found_error(task_id)
 
@@ -881,8 +879,9 @@ def perform_download_task_results(task_id):
         task_data = task.data
         is_all_task = task.is_all_task
         task_name = task.task_name
+        is_all_task = task.is_all_task
         
-    return scraper_name,TaskResults.get_task(task_id),task_data,is_all_task,task_name
+    return scraper_name,TaskResults.get_all_task(task_id) if is_all_task else TaskResults.get_task(task_id),task_data,is_all_task,task_name
 
 def delete_task( task_id, is_all_task, parent_id,remove_duplicates_by):
     fn = None
@@ -896,7 +895,7 @@ def delete_task( task_id, is_all_task, parent_id,remove_duplicates_by):
                 )
 
                 if all_children_count == 0:
-                    TaskHelper.delete_task(session, parent_id)
+                    TaskHelper.delete_task(session, parent_id, True)
                 else:
                     has_executing_tasks = TaskHelper.get_pending_or_executing_child_count(
                         session, parent_id, task_id
@@ -914,14 +913,14 @@ def delete_task( task_id, is_all_task, parent_id,remove_duplicates_by):
                                 session, parent_id, task_id
                             )
                             if failed_children_count:
-                                TaskHelper.fail_task(session, parent_id)
+                                fn = lambda:TaskHelper.collect_and_save_all_task(parent_id, task_id, remove_duplicates_by, TaskStatus.FAILED)
                             else:
-                                fn = lambda: TaskHelper.success_all_task(parent_id, task_id, remove_duplicates_by)
+                                fn = lambda:TaskHelper.collect_and_save_all_task(parent_id, task_id, remove_duplicates_by, TaskStatus.COMPLETED)
         session.commit()
     if fn:
         fn()
     with Session() as session:
-        TaskHelper.delete_task(session, task_id)
+        TaskHelper.delete_task(session, task_id, is_all_task)
         session.commit()
 
 
@@ -955,9 +954,9 @@ def abort_task( task_id, is_all_task, parent_id, remove_duplicates_by):
                                 session, parent_id, task_id
                             )
                             if failed_children_count:
-                                TaskHelper.fail_task(session, parent_id)
+                                fn =lambda: TaskHelper.collect_and_save_all_task(parent_id, task_id, remove_duplicates_by, TaskStatus.FAILED)
                             else:
-                                fn = lambda: TaskHelper.success_all_task(parent_id, task_id, remove_duplicates_by)
+                                fn = lambda:TaskHelper.collect_and_save_all_task(parent_id, task_id, remove_duplicates_by, TaskStatus.COMPLETED)
         session.commit()
     if fn:
         fn()    
@@ -1190,16 +1189,16 @@ def patch_task():
 @retry_on_db_error
 def perform_get_ui_task_results(task_id):
     with Session() as session:
-        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.data,Task.updated_at, Task.status ])
+        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.is_all_task,Task.data,Task.updated_at, Task.status ])
         if not task:
             raise create_task_not_found_error(task_id)
 
         scraper_name = task.scraper_name
         task_data = task.data
-        
+        is_all_task = task.is_all_task
         serialized_task = serialize_ui_display_task(task)
     
-    return scraper_name, TaskResults.get_task(task_id),serialized_task,task_data
+    return scraper_name, TaskResults.get_all_task(task_id) if is_all_task else TaskResults.get_task(task_id),serialized_task,task_data
 
 @post("/api/ui/tasks/<task_id:int>/results")
 def get_ui_task_results(task_id):
@@ -1214,3 +1213,4 @@ def get_ui_task_results(task_id):
     results = clean_results(scraper_name, results, foreceApplyFirstView, task_data)
     results["task"] = serialized_task
     return jsonify(results)
+

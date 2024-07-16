@@ -4,31 +4,11 @@ import sys
 from .errors import JsonHTTPResponseWithMessage
 from hashlib import sha256
 import json
+import ndjson
 import os
-from botasaurus.cache import   read_json, _has,_remove, _delete_items
+from botasaurus.cache import   read_json, _has,_remove, _delete_items, write_json
 from .utils import path_task_results_tasks,path_task_results_cache
 
-
-def safe_json_write(data, target_file):
-
-    # Convert data to JSON string
-    json_data = json.dumps(data)
-    
-    # Check the size of the JSON data
-    size_in_bytes = sys.getsizeof(json_data)
-    size_in_mb = size_in_bytes / (1024 * 1024)
-    if size_in_mb > 10:
-        # If greater than 10 MB, write to a temporary file then move it
-        temp_file = target_file.rstrip('.json')  + "-temp.json"
-        with open(temp_file, 'w', encoding="utf-8") as f:
-            f.write(json_data)
-        # Move the temp file to the target location, overwrite if exists
-        shutil.move(temp_file, target_file)
-    else:
-        # If not greater than 10 MB, write directly to the target file
-        # This will overwrite the file if it already exists
-        with open(target_file, 'w', encoding="utf-8") as f:
-            f.write(json_data)
 
 
 def _get(cache_path):
@@ -85,7 +65,7 @@ class TaskResults:
     @staticmethod
     def save_cached_task(scraper_name, data, result):
         task_path = generate_cached_task_path(scraper_name, data)
-        safe_json_write(result, task_path)
+        write_json(result, task_path)
     
     @staticmethod
     def get_cached_items(scraper_name, items):
@@ -101,7 +81,7 @@ class TaskResults:
     @staticmethod
     def save_task(id, data):
         task_path = os.path.join(path_task_results_tasks, str(id) + ".json")
-        safe_json_write(data, task_path)
+        write_json(data, task_path)
     
     @staticmethod
     def get_task(id):
@@ -121,3 +101,43 @@ class TaskResults:
     def delete_tasks(ids):
         paths = [os.path.join(path_task_results_tasks, str(id) + ".json") for id in ids]
         return _delete_items(paths)
+    
+    @staticmethod
+    def get_all_task(id, limit=None):
+        task_path = os.path.join(path_task_results_tasks, str(id) + ".ndjson")
+        if not _has(task_path):
+            return None
+        if limit:
+            items = []
+            with open(task_path, 'r', encoding="utf-8") as file:
+                reader = ndjson.reader(file)
+                for i, item in enumerate(reader):
+                    if i >= limit:
+                        break
+                    items.append(item)
+            return items
+        else:
+            with open(task_path, 'r') as file:
+                data = ndjson.load(file)
+            
+            return data
+    @staticmethod
+    def append_all_task(id, data):
+        task_path = os.path.join(path_task_results_tasks, str(id) + ".ndjson")
+        
+        with open(task_path, 'a', encoding="utf-8") as file:
+                writer = ndjson.writer(file)
+                
+                for item in data:
+                    writer.writerow(item)
+    @staticmethod
+    def save_all_task(id, data):
+        task_path = os.path.join(path_task_results_tasks, str(id) + ".ndjson")
+        with open(task_path, 'w', encoding="utf-8") as file:
+            ndjson.dump(data, file)
+
+
+    @staticmethod
+    def delete_all_task(id):
+        task_path = os.path.join(path_task_results_tasks, str(id) + ".ndjson")
+        _remove(task_path)

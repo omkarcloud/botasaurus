@@ -139,10 +139,12 @@ class TaskExecutor:
         scraper_type = task["scraper_type"]
         task_id = task["id"]
         scraper_name = task["scraper_name"]
+        parent_task_id = task["parent_task_id"]
         metadata = {"metadata": task["metadata"]} if task["metadata"] != {} else {}
         task_data = task["data"]
 
         fn = Server.get_scraping_function(scraper_name)
+        exception_log = None
         try:
             try:
                 result = fn(
@@ -183,24 +185,26 @@ class TaskExecutor:
                 traceback.print_exc()
                 self.mark_task_as_failure(task_id, exception_log)
             finally:
-                self.update_parent_task(task_id)
+                if parent_task_id:
+                    if exception_log:
+                        self.update_parent_task(task_id, [])
+                    else:
+                        self.update_parent_task(task_id, result)
         except Exception as e:
           traceback.print_exc()
           print("Error in run_task ", e)
     
     @retry_on_db_error
-    def update_parent_task(self, task_id):
+    def update_parent_task(self, task_id, result):
         with Session() as session:
             task_to_update = session.get(Task, task_id)
             parent_id = task_to_update.parent_task_id
-            do_update = task_to_update and parent_id
             scraper_name = task_to_update.scraper_name
         
-        if do_update:
-                self.complete_parent_task_if_possible(parent_id, Server.get_remove_duplicates_by(scraper_name))
+        if parent_id:
+            self.complete_parent_task_if_possible(parent_id, Server.get_remove_duplicates_by(scraper_name), result)
 
-    def complete_parent_task_if_possible(self,parent_id,remove_duplicates_by=None):
-                    # ensures it is in valid pending state
+    def complete_parent_task_if_possible(self,parent_id, remove_duplicates_by, result):
             fn = None
             with Session() as session:
                 parent_task = TaskHelper.get_task(
@@ -209,32 +213,36 @@ class TaskExecutor:
                             [TaskStatus.PENDING, TaskStatus.IN_PROGRESS],
                         )
 
+                # MAY BE DELETED SO CHECK
                 if parent_task:
-                    is_last_task = TaskHelper.is_parents_last_task(
+                    # is fast no worry
+                    TaskHelper.update_parent_task_results(parent_id,result,)
+                    is_done = TaskHelper.are_all_child_task_done(
                                 session, parent_id
                             )
-                    if is_last_task:
-                        failed_children_count = (
-                                    TaskHelper.get_failed_children_count(session, parent_id)
-                                )
-                        if failed_children_count:
-                            TaskHelper.fail_task(
-                                        session,
-                                        parent_id,
-                                    )
-                        else:
-                            fn = lambda: TaskHelper.success_all_task(parent_id, None, remove_duplicates_by)
-
-                        session.commit()
-                    else:
-                        fn =lambda:  TaskHelper.update_parent_task_results(
-                                            parent_id,
-                                            None,
-                                            remove_duplicates_by
-                                        )
+                    if is_done:
+                        failed_children_count = TaskHelper.get_failed_children_count(session, parent_id)
+                        
+                        status = TaskStatus.FAILED if failed_children_count else TaskStatus.COMPLETED
+                        fn = lambda: TaskHelper.read_clean_save_task(parent_id, remove_duplicates_by, status)
+                        
             if fn:
                 fn()          
-                    
+
+    def complete_as_much_all_task_as_possible(self,parent_id, remove_duplicates_by):
+            fn = None
+            with Session() as session:
+                    is_done = TaskHelper.are_all_child_task_done(
+                                session, parent_id
+                            )
+                    if is_done:
+                        failed_children_count = TaskHelper.get_failed_children_count(session, parent_id)
+                        status = TaskStatus.FAILED if failed_children_count else TaskStatus.COMPLETED
+                        fn = lambda: TaskHelper.collect_and_save_all_task(parent_id, None, remove_duplicates_by, status)
+                    else:
+                        fn = lambda: TaskHelper.collect_and_save_all_task(parent_id, None, remove_duplicates_by, TaskStatus.IN_PROGRESS)
+            if fn:
+                fn()  
 
     @retry_on_db_error
     def mark_task_as_failure(self, task_id, exception_log):
@@ -258,7 +266,7 @@ class TaskExecutor:
             TaskResults.save_cached_task(scraper_name, data, result)
         with Session() as session:
 
-            TaskHelper.update_task(
+            update_result = TaskHelper.update_task(
                     session,
                     task_id,
                     {
@@ -268,6 +276,8 @@ class TaskExecutor:
                     },
                     [TaskStatus.IN_PROGRESS],
                 )
-            
-            
+            if not update_result:
+                # if the task is aborted in progress, there should be no results
+                TaskResults.delete_task(task_id)
+
             session.commit()
