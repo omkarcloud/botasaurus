@@ -1,4 +1,4 @@
-def apply_pagination(data, page, per_page, hidden_fields=None):
+def apply_pagination(data, page, per_page, hidden_fields, count):
     """
     Paginate the data based on page and per_page, providing detailed pagination information.
 
@@ -7,8 +7,6 @@ def apply_pagination(data, page, per_page, hidden_fields=None):
     :param per_page: The maximum number of items to return per page. Can be None to return all items.
     :return: A dictionary containing the count, total_pages, next, previous, and results.
     """
-    count = len(data)
-    
     # Handle the case where per_page is None - return all items
     if per_page is None:
         per_page = 1 if count == 0 else count 

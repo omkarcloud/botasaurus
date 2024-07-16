@@ -15,7 +15,7 @@ from .executor import executor
 from .apply_pagination import apply_pagination
 from .filters import apply_filters
 from .sorts import apply_sorts
-from .views import _apply_view_for_ui
+from .views import _apply_view_for_ui, find_view
 
 from .download import download_results
 from .server import Server
@@ -743,46 +743,45 @@ def get_first_view(scraper_name):
         return views[0]
     return None
 
-def clean_results(scraper_name, results, forceApplyFirstView,input_data):
-    filters, sort, view, page, per_page = validate_results_request(
-        request.json,
-        Server.get_sort_ids(scraper_name),
-        Server.get_view_ids(scraper_name),
-        Server.get_default_sort(scraper_name),
-    )
-    
-    if forceApplyFirstView:
-        view = get_first_view(scraper_name)
+def clean_results(scraper_name, results,input_data, filters, sort, view, page, per_page, result_count, contains_list_field):
 
     # Apply sorts, filters, and view
     results = apply_sorts(results, sort, Server.get_sorts(scraper_name))
     results = apply_filters(results, filters, Server.get_filters(scraper_name))
     results, hidden_fields = _apply_view_for_ui(results, view, Server.get_views(scraper_name),input_data )
-    
-    
-    results = apply_pagination(results, page, per_page, hidden_fields)
+    if contains_list_field:
+        result_count = len(results)
+    results = apply_pagination(results, page, per_page, hidden_fields, result_count)
     return results
 
 
 @retry_on_db_error
 def perform_get_task_results(task_id):
     with Session() as session:
-        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.is_all_task,Task.data ])
+        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.result_count,Task.is_all_task,Task.data ])
         if not task:
             raise create_task_not_found_error(task_id)
 
         scraper_name = task.scraper_name
         task_data = task.data
         is_all_task = task.is_all_task
-    return scraper_name,TaskResults.get_all_task(task_id) if is_all_task else TaskResults.get_task(task_id),task_data
+        result_count= task.result_count
+    return scraper_name,is_all_task,task_data,result_count
 @post("/api/tasks/<task_id:int>/results")
 def get_task_results(task_id):
-    scraper_name, results, task_data = perform_get_task_results(task_id)
+    scraper_name,is_all_task,task_data,result_count = perform_get_task_results(task_id)
     validate_scraper_name(scraper_name)
+    filters, sort, view, page, per_page = validate_results_request(
+            request.json,
+            Server.get_sort_ids(scraper_name),
+            Server.get_view_ids(scraper_name),
+            Server.get_default_sort(scraper_name),
+    )
+    contains_list_field, results = retrieve_task_results(task_id, scraper_name, is_all_task, view, filters, sort, page, per_page)
     if not isinstance(results, list):
         return jsonify({**empty, "results":results})
 
-    results = clean_results(scraper_name, results, False, task_data)
+    results = clean_results(scraper_name, results, task_data, filters, sort, view, page, per_page, result_count, contains_list_field)
     del results['hidden_fields']
     return jsonify(results)
 
@@ -1189,28 +1188,53 @@ def patch_task():
 @retry_on_db_error
 def perform_get_ui_task_results(task_id):
     with Session() as session:
-        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name ,Task.is_all_task,Task.data,Task.updated_at, Task.status ])
+        task = TaskHelper.get_task_with_entities(session, task_id, [Task.scraper_name,Task.result_count ,Task.is_all_task,Task.data,Task.updated_at, Task.status ])
         if not task:
             raise create_task_not_found_error(task_id)
 
         scraper_name = task.scraper_name
         task_data = task.data
         is_all_task = task.is_all_task
+        result_count= task.result_count
         serialized_task = serialize_ui_display_task(task)
     
-    return scraper_name, TaskResults.get_all_task(task_id) if is_all_task else TaskResults.get_task(task_id),serialized_task,task_data
+    return scraper_name,is_all_task,serialized_task,task_data,result_count
 
 @post("/api/ui/tasks/<task_id:int>/results")
 def get_ui_task_results(task_id):
-    scraper_name, results, serialized_task, task_data = perform_get_ui_task_results(task_id)
+    forceApplyFirstView = request.query.get("force_apply_first_view","none").lower() == "true"
+    scraper_name, is_all_task, serialized_task, task_data,result_count = perform_get_ui_task_results(task_id)
     validate_scraper_name(scraper_name)
-    foreceApplyFirstView = request.query.get("force_apply_first_view","none").lower() == "true"
+    if forceApplyFirstView:
+        view = get_first_view(scraper_name)
+    filters, sort, view, page, per_page = validate_results_request(
+            request.json,
+            Server.get_sort_ids(scraper_name),
+            Server.get_view_ids(scraper_name),
+            Server.get_default_sort(scraper_name),
+    )
     
+    contains_list_field, results = retrieve_task_results(task_id, scraper_name, is_all_task, view, filters, sort, page, per_page)
+
     
     if not isinstance(results, list):
         return jsonify({**empty, "results": results, "task":serialized_task })
 
-    results = clean_results(scraper_name, results, foreceApplyFirstView, task_data)
+    results = clean_results(scraper_name, results, task_data, filters, sort, view, page, per_page, result_count, contains_list_field)
     results["task"] = serialized_task
     return jsonify(results)
+
+def retrieve_task_results(task_id, scraper_name, is_all_task, view, filters, sort, page, per_page):
+    contains_list_field = view and find_view(Server.get_views(scraper_name),view).contains_list_field
+    if is_all_task:
+        if sort or filters or contains_list_field:
+            # get all tasks we need to apply
+            results = TaskResults.get_all_task(task_id)
+        else:
+            # if is listish view
+            limit = page * per_page if per_page else None
+            results = TaskResults.get_all_task(task_id, limit=limit)
+    else:
+        results = TaskResults.get_task(task_id)
+    return contains_list_field,results
 

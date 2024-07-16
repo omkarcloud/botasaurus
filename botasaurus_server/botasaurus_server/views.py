@@ -51,6 +51,7 @@ class View:
         self.name = name
         self.fields = fields
         self.id = snakecase(name)
+        self.contains_list_field = False
 
         expand_list_count = 0
         for field in self.fields:
@@ -86,6 +87,7 @@ class View:
                                 f"CustomField '{field.key}' map function must accept 2 argument"
                             )
             elif isinstance(field, ExpandListField):
+                self.contains_list_field = True
                 for field in field.fields:
                     if isinstance(field, Field) and field.map:
                         if len(inspect.signature(field.map).parameters) != 3:
@@ -274,6 +276,11 @@ def perform_apply_view(results: list, view_obj:View, input_data):
         processed_results.extend(expanded_records)
     return processed_results,hidden_fields
 
+def find_view(views, view) -> View:
+    for v in views:
+        if v.id == view:
+            return v
+        
 def _apply_view_for_ui(results:list, view:str, views, input_data):
     if not view:
         return results, []
