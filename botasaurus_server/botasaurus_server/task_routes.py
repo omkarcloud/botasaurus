@@ -1202,17 +1202,18 @@ def perform_get_ui_task_results(task_id):
 
 @post("/api/ui/tasks/<task_id:int>/results")
 def get_ui_task_results(task_id):
-    forceApplyFirstView = request.query.get("force_apply_first_view","none").lower() == "true"
+    
     scraper_name, is_all_task, serialized_task, task_data,result_count = perform_get_ui_task_results(task_id)
     validate_scraper_name(scraper_name)
-    if forceApplyFirstView:
-        view = get_first_view(scraper_name)
     filters, sort, view, page, per_page = validate_results_request(
             request.json,
             Server.get_sort_ids(scraper_name),
             Server.get_view_ids(scraper_name),
             Server.get_default_sort(scraper_name),
     )
+    forceApplyFirstView = request.query.get("force_apply_first_view","none").lower() == "true"
+    if forceApplyFirstView:
+        view = get_first_view(scraper_name)
     
     contains_list_field, results = retrieve_task_results(task_id, scraper_name, is_all_task, view, filters, sort, page, per_page)
 

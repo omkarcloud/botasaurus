@@ -4,6 +4,7 @@ __author__ = "Chetan Jain <chetan@omkar.cloud>"
 
 install_requires = [
     "Unidecode",
+    "ndjson",
     "casefy",
     "bottle",
     "kubernetes",
@@ -25,7 +26,7 @@ def get_description():
 
 setup(
     name="botasaurus_server",
-    version='4.0.47',
+    version='4.0.49',
     author="Chetan Jain",
     author_email="chetan@omkar.cloud",
     description="Botasaurus Server allows you to transform your scrapers into APIs or scale them using Kubernetes.",
