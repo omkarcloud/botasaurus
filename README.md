@@ -25,6 +25,7 @@
   </a>
 </p>
 
+## A new version has been released, with performance boost, and no breaking changes. To update please run `python -m pip install bota botasaurus botasaurus-api botasaurus-requests botasaurus-driver bota botasaurus-proxy-authentication botasaurus-server --upgrade`.
 
 ## 🐿️ Botasaurus In a Nutshell
 
