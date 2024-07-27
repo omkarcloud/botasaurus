@@ -205,7 +205,7 @@ def write_csv(data, filename, log=True):
             f"{filename_new} is currently open in another application (e.g., Excel). Please close the the Application and press 'Enter' to save."
         )
         return write_csv(data, filename, log)
-    return filename
+    return filename_new
 
 def save_image(url, filename=None):
     import requests
@@ -403,7 +403,7 @@ def zip_files(filenames, output_filename="data", log=True):
         output_filename += ".zip"
 
     try:
-        with zipfile.ZipFile(output_filename, 'w') as zipf:
+        with zipfile.ZipFile(output_filename, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
             for file in filenames:
                 file = append_output_if_needed(file)
                 if os.path.exists(file):
@@ -411,7 +411,7 @@ def zip_files(filenames, output_filename="data", log=True):
                     arcname =  os.path.basename(file) 
                     zipf.write(file, arcname=arcname)
                 else:
-                    print(f"Warning: File not found: {file}")
+                    raise Exception(f"{file}' not found. Unable to add to zip archive.")
 
         if log:
             print(f"View written ZIP file at {output_filename}")
@@ -426,3 +426,83 @@ def zip_files(filenames, output_filename="data", log=True):
     except Exception as e:
         print(f"Error while zipping files: {e}")
         return None
+
+
+def get_metadata(file_name):
+    """
+    Determine metadata based on file extension.
+    
+    :param file_name: The file name or path
+    :return: A dictionary with appropriate metadata
+    """
+    extension = os.path.splitext(file_name)[1].lower()
+    if extension == '.csv':
+        return {'Content-Type': 'text/csv'}
+    elif extension == '.json':
+        return {'Content-Type': 'application/json'}
+    elif extension == '.zip':
+        return {'Content-Type': 'application/zip'}
+    elif extension == '.xlsx':
+        return {'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
+    elif extension == '.html':
+        return {'Content-Type': 'text/html'}
+    elif extension == '.txt':
+        return {'Content-Type': 'text/plain'}
+    else:
+        return None
+
+def install(package):
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+def dynamically_import_boto3():
+    try:
+        import boto3
+    except ImportError:
+        install('boto3')
+
+def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key ):
+    """
+    Upload a file to an S3 bucket with automatically determined metadata.
+
+    :param access_key_id: AWS Access Key ID
+    :param secret_access_key: AWS Secret Access Key
+    :param file_name: Local file path to upload
+    :param bucket_name: S3 bucket name (default is 'specter-customers-dv0725')
+    :return: True if file was uploaded, else False
+    """
+
+    if not os.path.exists(file_name):
+        if not os.path.exists(append_output_if_needed(file_name)):
+            raise FileNotFoundError(f"{file_name} not found. Unable to upload to S3.")
+        else:
+            file_name = append_output_if_needed(file_name)
+    
+    dynamically_import_boto3()
+    import boto3
+
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=access_key_id,
+        aws_secret_access_key=secret_access_key
+    )
+
+    # Extract the file name to use as the S3 object name
+    object_name = os.path.basename(file_name)
+    metadata = get_metadata(file_name)
+
+    with open(file_name, 'rb') as file:
+        if metadata:
+            s3_client.upload_fileobj(
+                file,
+                bucket_name,
+                object_name,
+                ExtraArgs={'Metadata': metadata}
+            )
+        else:
+            s3_client.upload_fileobj(
+                file,
+                bucket_name,
+                object_name,
+            )

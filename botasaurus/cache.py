@@ -239,4 +239,10 @@ class Cache:
         cached_items_count  = len(get_cached_files(func))
         nm = getfnname(func)
         print(f"Number of cached items for {nm}: {cached_items_count}")
-                                        
+        return cached_items_count
+
+    @staticmethod
+    def get_cached_items_count(func):
+        cached_items_count  = len(get_cached_files(func))
+        return cached_items_count
+                                                                                

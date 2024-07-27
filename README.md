@@ -50,6 +50,8 @@ Now, for the magical powers awaiting you after learning Botasaurus:
 
 ![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/solve-bot-detection.gif)
 
+- Save up to 97% on browser proxy costs by using browser-based fetch requests.
+
 - Easily save hours of Development Time with easy parallelization, profiles, extensions, and proxy configuration. Botasaurus makes asynchronous, parallel scraping a child's play.
 
 - Use Caching, Sitemap, Data cleaning, and other utilities to save hours of time spent in writing and debugging code.
@@ -904,6 +906,61 @@ You can dynamically configure the browser's Chrome profile and proxy using decor
 
 PS: Most Botasaurus decorators allow passing functions to derive configurations from data parameters. Check the decorator's argument type hint to see if it supports this functionality.
 
+### How to Significantly Reduce Proxy Costs When Scraping at Scale?
+
+Recently, we had a project requiring access to around 100,000 pages from a well-protected website, necessitating the use of Residential Proxies.
+
+Even after blocking images, we still required 250GB of proxy bandwidth, costing approximately $1050 (at $4.2 per GB with IP Royal). 
+
+This was beyond our budget :(
+
+To solve this, we implemented a smart strategy:
+- We first visited the website normally.
+- We then made requests for subsequent pages using the browser's `fetch` API.
+
+Since we were only requesting the HTML, which was well compressed by the browser, we reduced our proxy bandwidth needs to just 5GB, costing only $30.
+
+This resulted in savings of around $1000!
+
+Here's an example of how you can do something similar in Botasaurus:
+
+```python
+from botasaurus.browser import browser, Driver
+from botasaurus.soupify import soupify
+
+@browser(
+    reuse_driver=True,  # Reuse the browser
+    max_retry=5,        # Retry up to 5 times on failure
+)
+def scrape_data(driver: Driver, link):
+    # If the browser is newly opened, first visit the link
+    if driver.config.is_new:
+        driver.google_get(link, bypass_cloudflare=True)
+    
+    # Make requests using the browser fetch API
+    response = driver.requests.get(link)
+    response.raise_for_status()  # Ensure the request was successful
+    html = response.text
+
+    # Parse the HTML to extract the desired data
+    heading = soupify(html).select_one('.product-head__title [itemprop="name"]').get_text()
+    
+    return {
+        "heading": heading,
+    }
+
+# List of URLs to scrape
+links = [
+    "https://www.g2.com/products/stack-overflow-for-teams/reviews",
+    "https://www.g2.com/products/jenkins/reviews",
+    "https://www.g2.com/products/docker-inc-docker/reviews",
+]
+
+# Execute the scraping function for the list of links
+scrape_data(links)
+```
+
+
 ### What is the best way to manage profile-specific data like name, age across multiple profiles?
 
 To store data related to the active profile, use `driver.profile`. Here's an example:
@@ -1405,11 +1462,27 @@ def scrape_heading_task(data):
 scrape_heading_task()
 ```
 
-4.**Save Outputs in Multiple Formats**: Use the `output_formats` parameter to save outputs in different formats like JSON and EXCEL.
+4. **Upload File to S3**: Use `bt.upload_to_s3` to upload file to S3 bucket.
+```python
+from botasaurus.task import task
+from botasaurus import bt
+
+def write_output(data, result):
+    json_filename = bt.write_json(result, 'data')
+    bt.upload_to_s3(json_filename, 'my-magical-bucket', "AWS_ACCESS_KEY", "AWS_SECRET_KEY")
+
+@task(output=write_output)  
+def scrape_heading_task(data): 
+    return {"heading": "Hello, Mom!"}
+
+scrape_heading_task()
+```
+
+5.**Save Outputs in Multiple Formats**: Use the `output_formats` parameter to save outputs in different formats like JSON and EXCEL.
 ```python
 from botasaurus.task import task
 
-@browser(output_formats=[bt.Formats.JSON, bt.Formats.EXCEL])  
+@task(output_formats=[bt.Formats.JSON, bt.Formats.EXCEL])  
 def scrape_heading_task(data): 
     return {"heading": "Hello, Mom!"}
 
@@ -1861,9 +1934,9 @@ from botasaurus.request import request, Request
 from botasaurus.soupify import soupify
 
 @request(cache=True)
-def scrape_html(request: Request, url):
+def scrape_html(request: Request, link):
     # Scrape the HTML and cache it
-    html = request.get(url).text
+    html = request.get(link).text
     return html
 
 def extract_data(soup: BeautifulSoup):
@@ -1873,9 +1946,9 @@ def extract_data(soup: BeautifulSoup):
 
 # Cache the scrape_data task as well
 @task(cache=True)
-def scrape_data(url):
+def scrape_data(link):
     # Call the scrape_html function to get the cached HTML
-    html = scrape_html(url)
+    html = scrape_html(link)
     # Extract data from the HTML using the extract_data function
     return extract_data(soupify(html))
 
@@ -1916,7 +1989,7 @@ Here's a template for creating production-ready datasets using the `Request` mod
 ```python
 from bs4 import BeautifulSoup
 from botasaurus.task import task
-from botasaurus.request import request, Request
+from botasaurus.request import request, Request,NotFoundException
 from botasaurus.soupify import soupify
 
 @request(
@@ -1931,9 +2004,12 @@ from botasaurus.soupify import soupify
     raise_exception=True,
     create_error_logs=False,
 )
-def scrape_html(request: Request, url):
+def scrape_html(request: Request, link):
     # Scrape the HTML and cache it
-    response = request.get(url)
+    response = request.get(link)
+    if response.status_code == 404:
+        # A Special Exception to skip retrying this link
+        raise NotFoundException(link)
     response.raise_for_status()
     return response.text
 
@@ -1949,9 +2025,9 @@ def extract_data(soup: BeautifulSoup):
     create_error_logs=False,
     parallel=40, # Run 40 requests in parallel, which is a good default
 )
-def scrape_data(url):
+def scrape_data(link):
     # Call the scrape_html function to get the cached HTML
-    html = scrape_html(url)
+    html = scrape_html(link)
     # Extract data from the HTML using the extract_data function
     return extract_data(soupify(html))
 
@@ -1971,7 +2047,7 @@ Here's a template for creating production-ready datasets using the `Browser` mod
 ```python
 from bs4 import BeautifulSoup
 from botasaurus.task import task
-from botasaurus.browser import browser, Driver
+from botasaurus.browser import browser, Driver, NotFoundException
 from botasaurus.soupify import soupify
 
 @browser(
@@ -1991,13 +2067,22 @@ from botasaurus.soupify import soupify
     raise_exception=True,
     create_error_logs=False,
 )
-def scrape_html(driver: Driver, url):
+def scrape_html(driver: Driver, link):
     # Scrape the HTML and cache it
-    driver.google_get(
-        url,
-        bypass_cloudflare=True,  # delete this line if the website you're accessing is not protected by Cloudflare
-    )
-    return driver.page_html
+    if driver.config.is_new:
+        driver.google_get(
+            link,
+            bypass_cloudflare=True,  # delete this line if the website you're accessing is not protected by Cloudflare
+        )
+    response = driver.requests.get(link)
+    
+    if response.status_code == 404:
+        # A Special Exception to skip retrying this link
+        raise NotFoundException(link)
+    response.raise_for_status()
+    
+    html = response.text        
+    return html
 
 def extract_data(soup: BeautifulSoup):
     # Extract the heading from the HTML
@@ -2010,9 +2095,9 @@ def extract_data(soup: BeautifulSoup):
     close_on_crash=True,
     create_error_logs=False,
 )
-def scrape_data(url):
+def scrape_data(link):
     # Call the scrape_html function to get the cached HTML
-    html = scrape_html(url)
+    html = scrape_html(link)
     # Extract data from the HTML using the extract_data function
     return extract_data(soupify(html))
 

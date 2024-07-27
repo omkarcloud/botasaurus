@@ -1,1 +1,1 @@
-from .task_decorator import task
+from .task_decorator import task, NotFoundException

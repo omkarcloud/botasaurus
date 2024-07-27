@@ -2,7 +2,7 @@ from functools import wraps
 from traceback import print_exc, format_exc
 from typing import Any, Callable, Optional, Union, List
 from botasaurus.decorators_common import evaluate_proxy, print_running, write_output, IS_PRODUCTION, AsyncQueueResult, AsyncResult,  run_parallel, save_error_logs
-from .utils import is_errors_instance
+from .utils import is_errors_instance, NotFoundException
 from .list_utils import flatten
 from .dontcache import is_dont_cache
 from botasaurus_driver.driver import Driver
@@ -195,8 +195,13 @@ def browser(
                     if isinstance(error, KeyboardInterrupt):
                         close_driver_pool(_driver_pool)
                         raise  # Re-raise the KeyboardInterrupt to stop execution
-
-                    if (
+                    elif isinstance(error, NotFoundException) and not error.raised_once:
+                        if error.raise_maximum_1_time:
+                            error.raised_once = True
+                        if not reuse_driver:
+                            close_driver(driver)
+                        raise
+                    elif (
                         must_raise_exceptions
                         and is_errors_instance(must_raise_exceptions, error)[0]
                     ):

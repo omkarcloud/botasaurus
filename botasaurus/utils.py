@@ -1,6 +1,18 @@
 import json
 import os
 
+class NotFoundException(Exception):
+    def __init__(self, link=None, raise_maximum_1_time=True):
+        self.link = link
+
+        self.raised_once = False
+        self.raise_maximum_1_time = raise_maximum_1_time
+        if link:
+            message = f"Not found for link: {link}"
+        else:
+            message = "Not Found"
+        super().__init__(message)
+
 def is_errors_instance(instances, error):
     for i in range(len(instances)):
         ins = instances[i]

@@ -1,7 +1,7 @@
 from functools import wraps
 from traceback import print_exc, format_exc
 from typing import Any, Callable, Optional, Union, List
-from .utils import is_errors_instance
+from .utils import is_errors_instance, NotFoundException
 from .beep_utils import beep_input
 from .list_utils import flatten
 
@@ -96,8 +96,11 @@ def task(
                 except Exception as error:
                     if isinstance(error, KeyboardInterrupt):
                         raise  # Re-raise the KeyboardInterrupt to stop execution
-
-                    if (
+                    elif isinstance(error, NotFoundException) and not error.raised_once:
+                        if error.raise_maximum_1_time:
+                            error.raised_once = True
+                        raise
+                    elif (
                         must_raise_exceptions
                         and is_errors_instance(must_raise_exceptions, error)[0]
                     ):
