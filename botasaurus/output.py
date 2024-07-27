@@ -462,15 +462,14 @@ def dynamically_import_boto3():
     except ImportError:
         install('boto3')
 
-def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key ):
+def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key):
     """
-    Upload a file to an S3 bucket with automatically determined metadata.
+    Upload a file to an S3 bucket
 
+    :param file_name: Local file path to upload
     :param access_key_id: AWS Access Key ID
     :param secret_access_key: AWS Secret Access Key
-    :param file_name: Local file path to upload
-    :param bucket_name: S3 bucket name (default is 'specter-customers-dv0725')
-    :return: True if file was uploaded, else False
+    :param bucket_name: S3 bucket name
     """
 
     if not os.path.exists(file_name):
