@@ -852,60 +852,6 @@ scrape_data.close()
 
 This will close any Chrome instances that remain open after the scraping function ends.
 
-### How to Configure the Browser's Chrome Profile, Language, and Proxy Dynamically Based on Data Parameters?
-
-The decorators in Botasaurus are really flexible, allowing you to pass a function that can derive the browser configuration based on the data item parameter. This is particularly useful when working with multiple Chrome profiles.
-
-You can dynamically configure the browser's Chrome profile and proxy using decorators in two ways:
-
-1. Using functions to extract configuration values from data:
-   - Define functions to extract the desired configuration values from the `data` parameter.
-   - Pass these functions as arguments to the `@browser` decorator.
-
-   Example:
-   ```python
-   from botasaurus.browser import browser, Driver
-
-   def get_profile(data):
-       return data["profile"]
-
-   def get_proxy(data):
-       return data["proxy"]
-
-   @browser(profile=get_profile, proxy=get_proxy)
-   def scrape_heading_task(driver: Driver, data):
-       profile, proxy = driver.config.profile, driver.config.proxy
-       print(profile, proxy)
-       return profile, proxy
-
-   data = [
-       {"profile": "pikachu", "proxy": "http://142.250.77.228:8000"},
-       {"profile": "greyninja", "proxy": "http://142.250.77.229:8000"},
-   ]
-
-   scrape_heading_task(data)
-   ```
-
-2. Directly passing configuration values when calling the decorated function:
-   - Pass the profile and proxy values directly as arguments to the decorated function when calling it.
-
-   Example:
-   ```python
-   from botasaurus.browser import browser, Driver
-
-   @browser
-   def scrape_heading_task(driver: Driver, data):
-       profile, proxy = driver.config.profile, driver.config.proxy
-       print(profile, proxy)
-       return profile, proxy
-
-   scrape_heading_task(
-       profile='pikachu',  # Directly pass the profile
-       proxy="http://142.250.77.228:8000",  # Directly pass the proxy
-   )
-   ```
-
-PS: Most Botasaurus decorators allow passing functions to derive configurations from data parameters. Check the decorator's argument type hint to see if it supports this functionality.
 
 ### How to Significantly Reduce Proxy Costs When Scraping at Scale?
 
@@ -960,6 +906,61 @@ links = [
 # Execute the scraping function for the list of links
 scrape_data(links)
 ```
+
+### How to Configure the Browser's Chrome Profile, Language, and Proxy Dynamically Based on Data Parameters?
+
+The decorators in Botasaurus are really flexible, allowing you to pass a function that can derive the browser configuration based on the data item parameter. This is particularly useful when working with multiple Chrome profiles.
+
+You can dynamically configure the browser's Chrome profile and proxy using decorators in two ways:
+
+1. Using functions to extract configuration values from data:
+   - Define functions to extract the desired configuration values from the `data` parameter.
+   - Pass these functions as arguments to the `@browser` decorator.
+
+   Example:
+   ```python
+   from botasaurus.browser import browser, Driver
+
+   def get_profile(data):
+       return data["profile"]
+
+   def get_proxy(data):
+       return data["proxy"]
+
+   @browser(profile=get_profile, proxy=get_proxy)
+   def scrape_heading_task(driver: Driver, data):
+       profile, proxy = driver.config.profile, driver.config.proxy
+       print(profile, proxy)
+       return profile, proxy
+
+   data = [
+       {"profile": "pikachu", "proxy": "http://142.250.77.228:8000"},
+       {"profile": "greyninja", "proxy": "http://142.250.77.229:8000"},
+   ]
+
+   scrape_heading_task(data)
+   ```
+
+2. Directly passing configuration values when calling the decorated function:
+   - Pass the profile and proxy values directly as arguments to the decorated function when calling it.
+
+   Example:
+   ```python
+   from botasaurus.browser import browser, Driver
+
+   @browser
+   def scrape_heading_task(driver: Driver, data):
+       profile, proxy = driver.config.profile, driver.config.proxy
+       print(profile, proxy)
+       return profile, proxy
+
+   scrape_heading_task(
+       profile='pikachu',  # Directly pass the profile
+       proxy="http://142.250.77.228:8000",  # Directly pass the proxy
+   )
+   ```
+
+PS: Most Botasaurus decorators allow passing functions to derive configurations from data parameters. Check the decorator's argument type hint to see if it supports this functionality.
 
 
 ### What is the best way to manage profile-specific data like name, age across multiple profiles?
