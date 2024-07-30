@@ -907,6 +907,28 @@ links = [
 scrape_data(links)
 ```
 
+Note:
+1. **Dealing with 429 (Too Many Requests) Errors**
+
+   If you encounter a 429 error, add a delay before making another request. Most websites using Nginx, setting a rate limit of 1 request per second. To respect this limit, a delay of 1.13 seconds is recommended.
+
+   ```python
+   driver.sleep(1.13)  # Delay to respect the rate limit
+   response = driver.requests.get(link)
+   ```
+
+2. **Handling 400 Errors Due to Large Cookies**
+
+   If you encounter a 400 error with a "cookie too large" message, delete the cookies and retry the request.
+
+   ```python
+   response = driver.requests.get(link)
+
+   if response.status_code == 400:
+       driver.delete_cookies()  # Delete cookies to resolve the error
+       driver.short_random_sleep()  # Short delay before retrying
+       response = driver.requests.get(link)
+   ```
 ### How to Configure the Browser's Chrome Profile, Language, and Proxy Dynamically Based on Data Parameters?
 
 The decorators in Botasaurus are really flexible, allowing you to pass a function that can derive the browser configuration based on the data item parameter. This is particularly useful when working with multiple Chrome profiles.
