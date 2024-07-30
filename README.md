@@ -51,7 +51,7 @@ Now, for the magical powers awaiting you after learning Botasaurus:
 
 ![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/solve-bot-detection.gif)
 
-- Save up to 97% on browser proxy costs by using browser-based fetch requests.
+- Save up to 97%, yes 97% on browser proxy costs by using [browser-based fetch requests.](https://github.com/omkarcloud/botasaurus#how-to-significantly-reduce-proxy-costs-when-scraping-at-scale)
 
 - Easily save hours of Development Time with easy parallelization, profiles, extensions, and proxy configuration. Botasaurus makes asynchronous, parallel scraping a child's play.
 
@@ -1075,9 +1075,11 @@ Botasaurus Driver provides several handy methods for web automation tasks such a
 
 - Working with iframes:
   ```python
-  driver.get("https://www.g2.com/products/github/reviews.html?page=5&product_id=github")
-  iframe = driver.select_iframe("#turnstile-wrapper iframe")
-  text_content = iframe.select("body label").text
+  driver.get("https://www.freecodecamp.org/news/using-entity-framework-core-with-mongodb/")
+  iframe = driver.get_iframe_by_link("www.youtube.com/embed") 
+  # OR following works as well
+  # iframe = driver.select(".embed-wrapper iframe") 
+  freecodecamp_youtube_subscribers_count = iframe.select(".ytp-title-expanded-subtitle").text
   ```
 
 - Miscellaneous:
