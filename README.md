@@ -2287,10 +2287,10 @@ Visit [this link](https://github.com/omkarcloud/botasaurus/blob/master/run-scrap
 We'd love hear it! Share them on [GitHub Discussions](https://github.com/omkarcloud/botasaurus/discussions). 
 
 [![Make](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/ask-on-github.png)](https://www.omkar.cloud/l/botasaurus-make-discussions/)
-
+<!-- 
 ### Do you have a Discord community?
 
-Yes, we have a Discord community where you can connect with other developers, ask questions, and share your experiences. Join our Discord community [here](https://discord.com/invite/rw9VeyuSM8).
+Yes, we have a Discord community where you can connect with other developers, ask questions, and share your experiences. Join our Discord community [here](https://discord.com/invite/rw9VeyuSM8). -->
 
 ### ❓ Advanced Questions
 
