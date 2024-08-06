@@ -261,6 +261,9 @@ def get_urls(request_options, urls):
 def clean_robots_txt_url(url):
     return extract_link_upto_nth_segment(0, url) + "robots.txt"
 
+def clean_sitemap_url(url):
+    return extract_link_upto_nth_segment(0, url) + "sitemap.xml"
+
 
 def is_empty_path(url):
     return not urlparse(url).path.strip("/")
@@ -279,15 +282,22 @@ def get_sitemaps_from_robots(request_options, urls):
             return []
 
         visited.add(url)
-
         content = fetch_content(url)
 
         if not content:
             return DontCache([])
 
-        return parse_sitemaps_from_robots_txt(
+        result = parse_sitemaps_from_robots_txt(
             extract_link_upto_nth_segment(0, url), content
         )
+        if not result:
+            sm_url = clean_sitemap_url(url)
+            content = fetch_content(sm_url)
+            if content:
+                return [sm_url]
+            return []
+
+        return result
     ls = []
     
     for url in urls:

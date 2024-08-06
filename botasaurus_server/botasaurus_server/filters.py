@@ -138,7 +138,6 @@ class _DropdownFilterBase(BaseFilter):
 
         self.options = options if options else []
         self.case_insensitive = case_insensitive
-
         if self.options:
             self.validate_options(self.options)
 
@@ -193,33 +192,44 @@ class SingleSelectDropdown(_DropdownFilterBase):
         title_cased_field = titlecase(self.field)
         return f"{title_cased_field} Is"
 
-
 class BoolSelectDropdown(_DropdownFilterBase):
-
-    def __init__(self, field,  label=None, prioritize_no=False):
-        super().__init__(field, label)
-
+    def __init__(self, field, label=None, prioritize_no=False, invert_filter=False):
+        self.invert_filter = invert_filter
         if prioritize_no:
             self.options =[{"value":"no","label":"No"},{"value":"yes","label":"Yes"},]
         else:
             self.options =[{"value":"yes","label":"Yes"},{"value":"no","label":"No"}]
 
-        # todo remove
-        self.validate_options(self.options)
+        super().__init__(field, self.options, label=label)
+
 
     def filter(self, filter_value, data_value):
-        if filter_value == "yes":
-            if data_value:
-                return True
-            else:
-                return False
-        elif filter_value == "no":
-            if not data_value:
-                return True
-            else:
-                return False
+        
+        if self.invert_filter:
+            if filter_value == "yes":
+                if data_value:
+                    return False
+                else:
+                    return True
+            elif filter_value == "no":
+                if not data_value:
+                    return False
+                else:
+                    return True
+            return False
+        else:
+            if filter_value == "yes":
+                if data_value:
+                    return True
+                else:
+                    return False
+            elif filter_value == "no":
+                if not data_value:
+                    return True
+                else:
+                    return False
 
-        return False
+            return False
 
     def should_filter(self, filter_value):
         return isinstance(filter_value, str) and filter_value.strip()

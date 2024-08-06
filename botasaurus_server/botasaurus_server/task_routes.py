@@ -164,6 +164,20 @@ def validate_task_request(json_data):
     data = result["data"]
     metadata = result["metadata"]
     return scraper_name, data, metadata
+def deep_clone_dict(original_dict):
+    if not isinstance(original_dict, dict):
+        return original_dict
+    
+    new_dict = {}
+    for key, value in original_dict.items():
+        if isinstance(value, dict):
+            new_dict[key] = deep_clone_dict(value)
+        elif isinstance(value, list):
+            new_dict[key] = [deep_clone_dict(item) for item in value]
+        else:
+            new_dict[key] = value
+    
+    return new_dict
 
 def create_tasks(scraper, data, metadata, is_sync):
     create_all_tasks = scraper["create_all_task"]
@@ -176,15 +190,15 @@ def create_tasks(scraper, data, metadata, is_sync):
     all_task_sort_id  =  int(datetime.now(timezone.utc).timestamp()) * 10000
     all_task = None
     all_task_id = None
-    if create_all_tasks:
-        all_task, all_task_id = perform_create_all_task(data, metadata, is_sync, scraper_name, scraper_type, all_task_sort_id)
 
     if split_task:
-        tasks_data = split_task(data)
+        tasks_data = split_task(deep_clone_dict(data))
         if len(tasks_data) == 0:
             return [], [], split_task
     else:
         tasks_data = [data]
+    if create_all_tasks:
+        all_task, all_task_id = perform_create_all_task(data, metadata, is_sync, scraper_name, scraper_type, all_task_sort_id)
             
     def createTask(task_data, sort_id):
                 task_name = get_task_name(task_data) if get_task_name else None
@@ -749,7 +763,7 @@ def clean_results(scraper_name, results,input_data, filters, sort, view, page, p
     results = apply_sorts(results, sort, Server.get_sorts(scraper_name))
     results = apply_filters(results, filters, Server.get_filters(scraper_name))
     results, hidden_fields = _apply_view_for_ui(results, view, Server.get_views(scraper_name),input_data )
-    if contains_list_field:
+    if contains_list_field or filters:
         result_count = len(results)
     results = apply_pagination(results, page, per_page, hidden_fields, result_count)
     return results
