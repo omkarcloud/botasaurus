@@ -2332,12 +2332,12 @@ You may choose to read the following questions based on your interests:
 - A humongous thank you to Cloudflare, DataDome, Imperva, and all bot recognition systems. Had you not been there, we wouldn't be either 😅.
 
 *Now, what are you waiting for? 🤔 Go and make something mastastic! 🚀*
-
+<!-- 
 ## Need Help with a Tough Project?
 
 If you're tackling a challenging web scraping project and seek guidance from an expert web scraper who himself has done many tough projects, I can provide you with an effective plan that will significantly reduce your project implementation time. You can book a planning call with me for $240/hr [here](https://www.omkar.cloud/consultation/).
 
-If you're not satisfied with the plan, you can request a full refund within 30 days. I will send the refund via PayPal within 24 hours of receiving your request.
+If you're not satisfied with the plan, you can request a full refund within 30 days. I will send the refund via PayPal within 24 hours of receiving your request. -->
 
 ## Love It? [Star It! ⭐](https://github.com/omkarcloud/botasaurus)
 
