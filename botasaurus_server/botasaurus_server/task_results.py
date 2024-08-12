@@ -117,7 +117,7 @@ class TaskResults:
                     items.append(item)
             return items
         else:
-            with open(task_path, 'r') as file:
+            with open(task_path, 'r', encoding="utf-8") as file:
                 data = ndjson.load(file)
             
             return data
@@ -135,7 +135,8 @@ class TaskResults:
         task_path = os.path.join(path_task_results_tasks, str(id) + ".ndjson")
         with open(task_path, 'w', encoding="utf-8") as file:
             ndjson.dump(data, file)
-
+            # fix the file
+            file.write("\n")
 
     @staticmethod
     def delete_all_task(id):
