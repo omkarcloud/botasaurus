@@ -380,7 +380,7 @@ class Controls {
   select(id: string, props: ControlInput<string, WithOptions> = {}) {
     if (!props.options || !props.options.length) {
       throw new Error(
-        `Select control with id  "${id}" requires at least one option`
+        `Select control with id "${id}" requires at least one option`
       )
     }
 
@@ -389,7 +389,28 @@ class Controls {
       defaultValue: props.defaultValue ?? null as any,
     })
   }
+  
+  multiSelect(id: string, props: ControlInput<string[], WithOptions> = {}) {
+    if (!props.options || !props.options.length) {
+      throw new Error(
+        `MultiSelect control with id "${id}" requires at least one option`
+      )
+    }
+    props.defaultValue = props.defaultValue ?? []
 
+    if (props.defaultValue) {
+        if (!Array.isArray(props.defaultValue) || !props.defaultValue.every(x => typeof x === "string")) {
+            throw new Error(
+              `The Default Value of MultiSelect control with id "${id}" must be a list of strings. Received: ${JSON.stringify(props.defaultValue)}`
+            );
+        }
+    }
+
+    return this.add<string[]>(id, "multiSelect", {
+      ...props,
+      defaultValue: props.defaultValue,
+    })
+  }
 
   addLangSelect({
     languages = getDefaultLanguages(),
@@ -597,7 +618,7 @@ class Controls {
         // Custom validation
         if (validate && !errorMessages.length) {
           // Only proceed if no type or required errors
-          let validationResult = validate(value, data)
+          let validationResult = runValidation(id, validate, value, data)
 
           // Handle string result from validator
           if (
@@ -693,6 +714,15 @@ class Controls {
   }
 }
 
+
+function runValidation(id:any, validate: (value: any, otherData: any) => string | string[] | undefined, value: any, data: any) {
+  try {
+    return validate(value, data)
+  } catch (error) {
+    // console.log("aassa")
+    throw new Error(`The custom validation function for ID: ${id} encountered an error. Please review the validate function of ${id}.`)
+  }
+}
 
 function createControls(input_js: string) {
   // Create a new instance of Controls

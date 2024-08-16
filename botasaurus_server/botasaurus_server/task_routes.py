@@ -24,6 +24,7 @@ from .convert_to_english import convert_unicode_dict_to_ascii_dict
 from .models import (
     Task,
     TaskStatus,
+    isoformat,
     serialize_task,
     
     serialize_ui_display_task,
@@ -212,8 +213,7 @@ def create_tasks(scraper, data, metadata, is_sync):
                 parent_task_id=all_task_id,
                 data=task_data,
                 meta_data=metadata,
-                sort_id=sort_id,  # Set the sort_id for the child task
-
+                sort_id=sort_id, # Set the sort_id for the child task
             )
 
     def create_cached_tasks(task_datas):
@@ -280,6 +280,20 @@ def create_tasks(scraper, data, metadata, is_sync):
     if cached_tasks_len > 0:
         tasklen = len(tasks)
         if tasklen == cached_tasks_len:
+            if all_task_id:
+                first_started_at = cached_tasks[0].started_at
+                with Session() as session:
+                    TaskHelper.update_task(
+                        session,
+                        all_task_id,
+                        {
+                            "started_at": first_started_at,
+                            "finished_at": first_started_at,
+                        },
+                    )
+                    session.commit()
+                all_task["started_at"] = isoformat(first_started_at)
+                all_task["finished_at"] = isoformat(first_started_at)
             print('All Tasks Results are Returned from cache')
         else:
             print(f'{cached_tasks_len} out of {tasklen} Results are Returned from cache')
@@ -1231,7 +1245,6 @@ def get_ui_task_results(task_id):
     
     contains_list_field, results = retrieve_task_results(task_id, scraper_name, is_all_task, view, filters, sort, page, per_page)
 
-    
     if not isinstance(results, list):
         return jsonify({**empty, "results": results, "task":serialized_task })
 

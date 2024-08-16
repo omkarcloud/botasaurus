@@ -505,3 +505,52 @@ def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key):
                 bucket_name,
                 object_name,
             )
+        print(f'Successfully uploaded file')
+
+
+def download_from_s3(file_name, object_name, bucket_name,  access_key_id, secret_access_key, region_name='us-east-1'):
+    """
+    Download an object from an S3 bucket
+
+    :param file_name: Local file path to save the downloaded object (can be relative or absolute)
+    :param bucket_name: S3 bucket name
+    :param object_name: S3 object name to download
+    :param access_key_id: AWS Access Key ID
+    :param secret_access_key: AWS Secret Access Key
+    :param region_name: AWS region name (default is 'us-east-1')
+    """
+    
+    dynamically_import_boto3()
+    import boto3
+    from botocore.exceptions import ClientError
+
+    # Convert file_name to an absolute path
+    file_name = os.path.abspath(file_name)
+    
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(file_name), exist_ok=True)
+
+    # Create an S3 client
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=access_key_id,
+        aws_secret_access_key=secret_access_key,
+        region_name=region_name
+    )
+
+    try:
+        # Download the file
+        s3_client.download_file(bucket_name, object_name, file_name)
+        print(f'Successfully downloaded object "{object_name}" to {file_name}')
+        
+    except ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            print("The object does not exist.")
+        else:
+            print(f"An error occurred: {e}")
+        return False
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return False
+
+    return True
