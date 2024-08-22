@@ -4,7 +4,7 @@ import traceback
 from time import sleep, time
 from .utils import is_errors_instance
 
-from .cache import Cache, _get, _has, _get_cache_path, _create_cache_directory_if_not_exists
+from .cache import Cache, _get,CacheMissException, _has, _get_cache_path, _create_cache_directory_if_not_exists
 from .dontcache import is_dont_cache
 
 def cache(_func=None, *, cache=True):
@@ -22,7 +22,10 @@ def cache(_func=None, *, cache=True):
                 if cache is True:
                     path = _get_cache_path(func, [args, kwargs])
                     if _has(path):
-                        return _get(path)
+                        try:
+                            return _get(path)
+                        except CacheMissException:
+                            pass
 
                 result = func(*args, **kwargs)
 

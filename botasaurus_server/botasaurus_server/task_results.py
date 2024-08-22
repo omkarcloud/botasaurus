@@ -1,12 +1,10 @@
 from json.decoder import JSONDecodeError
-import shutil
-import sys
 from .errors import JsonHTTPResponseWithMessage
 from hashlib import sha256
 import json
 import ndjson
 import os
-from botasaurus.cache import   read_json, _has,_remove, _delete_items, write_json
+from botasaurus.cache import read_json, _has,_remove, _delete_items, write_json
 from .utils import path_task_results_tasks,path_task_results_cache
 
 

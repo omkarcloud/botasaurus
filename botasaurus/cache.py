@@ -3,9 +3,16 @@ import os
 from hashlib import md5
 from shutil import rmtree
 from json.decoder import JSONDecodeError
-from .decorators_utils import create_cache_directory_if_not_exists, create_directory_if_not_exists
+from .decorators_utils import create_directory_if_not_exists
 from .utils import read_json, relative_path
 from .dontcache import DontCache
+
+class CacheMissException(Exception):
+    """Exception raised when an item is not found in the cache."""
+    def __init__(self, key):
+        self.key = key
+        super().__init__(f"Cache miss for key: '{key}'")
+
 
 def write_json(data, path):
     with open(path, 'w', encoding="utf-8") as fp:
@@ -16,14 +23,17 @@ def getfnname(func):
 
 def _get_cache_path(func, data):
     fn_name = getfnname(func)
-    fn_cache_dir = f'cache/{fn_name}/'
+    fn_cache_dir = f'{Cache.cache_directory}{fn_name}/'
 
     # Serialize the data to a JSON string and encode to bytes
     serialized_data = json.dumps(data).encode('utf-8')
     
     # Generate a hash from the serialized data
     data_hash = md5(serialized_data).hexdigest()
-
+    if Cache.cache_directory == "cache/":
+      cache_path = os.path.join(fn_cache_dir, data_hash + ".json")
+    else:
+      cache_path = os.path.join(relative_path(fn_cache_dir), data_hash + ".json")
     # Create a unique cache file path with a .json extension
     cache_path = os.path.join(fn_cache_dir, data_hash + ".json")
     return cache_path
@@ -43,12 +53,21 @@ def _get(cache_path):
     try:
         return read_json(cache_path)
     except JSONDecodeError:
-        return None
+        # These are files which are corrupted, likely as user paused when files were being written.
+        _remove(cache_path)
+        raise CacheMissException(cache_path)
 
+def safe_get(cache_path):
+    try:
+        return read_json(cache_path)
+    except JSONDecodeError:
+        _remove(cache_path)
+        # These are files which are corrupted, likely as user paused when files were being written.
+        return None
 
 def _read_json_files(file_paths):
     from joblib import Parallel, delayed
-    results = Parallel(n_jobs=-1)(delayed(_get)(file_path) for file_path in file_paths)
+    results = Parallel(n_jobs=-1)(delayed(safe_get)(file_path) for file_path in file_paths)
     return results
 
 
@@ -80,27 +99,33 @@ def _create_cache_directory_if_not_exists(func=None):
         global cache_check_done
         if not cache_check_done:
             cache_check_done = True
-            create_cache_directory_if_not_exists()
+            create_directory_if_not_exists(Cache.cache_directory)
 
         if func is not None: 
             fn_name = getfnname(func)
             
             if fn_name not in created_fns:
                 created_fns.add(fn_name)
-                fn_cache_dir = f'cache/{fn_name}/'
+                fn_cache_dir = f'{Cache.cache_directory}{fn_name}/'
                 create_directory_if_not_exists(fn_cache_dir)
 
 def get_cached_files(func):
         fn_name = getfnname(func)
-        fn_cache_dir = f'cache/{fn_name}/'
+        fn_cache_dir = f'{Cache.cache_directory}{fn_name}/'
         cache_dir = relative_path(fn_cache_dir)
         results =  get_files_without_json_extension(cache_dir)
         return results
 
 class Cache:
+    cache_directory = 'cache/'  # Default cache folder
 
     REFRESH = "REFRESH"
     
+    @staticmethod
+    def set_cache_directory(folder):
+        """Set the cache folder for all cache operations."""
+        Cache.cache_directory = str(folder).rstrip('/') + '/'
+
     @staticmethod
     def put(func, key_data, data):
         """Write data to a cache file in JSON format."""
@@ -119,7 +144,7 @@ class Cache:
         return _has(path)
 
     @staticmethod
-    def get(func, key_data):
+    def get(func, key_data, raise_exception=True):
         """Read data from a cache file."""
         
         # resolve user errors
@@ -129,9 +154,14 @@ class Cache:
         _create_cache_directory_if_not_exists(func)
         path = _get_cache_path(func, key_data)
         if _has(path):
-            return _get(path)
+            try:
+              return _get(path)
+            except CacheMissException:
+              return None
+        
+        if raise_exception:
+            raise CacheMissException(path)
         return None
-
 
     @staticmethod
     def get_items(func, items=None):
@@ -141,7 +171,7 @@ class Cache:
                 
         hashes = Cache.get_items_hashes(func, items)
         fn_name = getfnname(func)
-        paths = [relative_path(f'cache/{fn_name}/{r}.json') for r in hashes]
+        paths = [relative_path(f'{Cache.cache_directory}{fn_name}/{r}.json') for r in hashes]
         return _read_json_files(paths)
 
     @staticmethod
@@ -164,11 +194,10 @@ class Cache:
 
     @staticmethod
     def delete_items(func, items):
-
         """Remove a specific cache file."""
         hashes = Cache.get_items_hashes(func, items)
-        fn_name =getfnname(func)
-        paths = [relative_path(f'cache/{fn_name}/{r}.json') for r in hashes]
+        fn_name = getfnname(func)
+        paths = [relative_path(f'{Cache.cache_directory}{fn_name}/{r}.json') for r in hashes]
         _delete_items(paths)
         return len(hashes)
            
@@ -181,19 +210,18 @@ class Cache:
 
         if func is not None:
             fn_name = getfnname(func)
-            fn_cache_dir = f'cache/{fn_name}/'
+            fn_cache_dir = f'{Cache.cache_directory}{fn_name}/'
             cache_dir = relative_path(fn_cache_dir)
             if os.path.exists(cache_dir):
                 rmtree(cache_dir, ignore_errors=True)
             if fn_name in created_fns:
                 created_fns.remove(fn_name)
         else:
-            cache_dir = relative_path('cache/')
+            cache_dir = relative_path(Cache.cache_directory)
             if os.path.exists(cache_dir):
                 rmtree(cache_dir, ignore_errors=True)
             cache_check_done = False
             created_fns = set()
-             
 
     @staticmethod
     def delete_items_by_filter(func, items, should_delete_item):
@@ -221,19 +249,16 @@ class Cache:
         # Return the number of collected honeypots
         return len(collected_honeypots)
          
-
     @staticmethod
     def filter_items_in_cache(func, items):
         cached_items  = set(Cache.get_items_hashes(func))
         return [item for item in items if Cache.hash(item) in cached_items]
-
       
     @staticmethod
     def filter_items_not_in_cache(func, items):
         cached_items  = set(Cache.get_items_hashes(func))
         return [item for item in items if Cache.hash(item) not in cached_items]
                             
-
     @staticmethod
     def print_cached_items_count(func):
         cached_items_count  = len(get_cached_files(func))
@@ -245,4 +270,3 @@ class Cache:
     def get_cached_items_count(func):
         cached_items_count  = len(get_cached_files(func))
         return cached_items_count
-                                                                                

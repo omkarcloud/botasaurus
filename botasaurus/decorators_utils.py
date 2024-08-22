@@ -10,8 +10,8 @@ def create_directory_if_not_exists(passed_path):
     if not path.exists(dir_path):
         makedirs(dir_path)
 
-def create_cache_directory_if_not_exists():
-    create_directory_if_not_exists('cache/')
+def create_cache_directory_if_not_exists(folder):
+    create_directory_if_not_exists(folder)
 
 output_check_done = False
 def create_output_directory_if_not_exists():

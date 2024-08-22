@@ -62,7 +62,7 @@ def task(
             fn_name = func.__name__
 
             if cache:
-                from .cache import Cache,_get,_has,_get_cache_path,_create_cache_directory_if_not_exists, _put,_remove
+                from .cache import CacheMissException, _get,_has,_get_cache_path,_create_cache_directory_if_not_exists, _put,_remove
                 _create_cache_directory_if_not_exists(func)
 
             def run_task(
@@ -73,7 +73,10 @@ def task(
                 if cache is True:
                     path = _get_cache_path(func, data)
                     if _has(path):
-                        return _get(path)
+                        try:
+                          return _get(path)
+                        except CacheMissException:
+                          pass
                 elif cache == 'REFRESH' :
                     path = _get_cache_path(func, data)
                     
