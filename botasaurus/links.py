@@ -335,10 +335,10 @@ class Extractors:
 def apply_filters_maps_sorts_randomize(
     request_options,
     urls,
-    filters,
-    extractors,
-    sort_links,
-    randomize_links,
+    _filters,
+    _extractors,
+    _sort_links,
+    _randomize_links,
 ):
 
     @request(**request_options)
@@ -348,7 +348,7 @@ def apply_filters_maps_sorts_randomize(
         filtered_urls = []
         for url in urls:
             passes_filters = True
-            for filter_info in filters:
+            for filter_info in _filters:
                 filter_func = filter_info["function"]
                 if not filter_func(url):
                     passes_filters = False
@@ -359,7 +359,7 @@ def apply_filters_maps_sorts_randomize(
         extracted_urls = []
         for url in filtered_urls:
             transformed_url = url
-            for map_info in extractors:
+            for map_info in _extractors:
                 extract_func = map_info["function"]
                 transformed_url = extract_func(
                     transformed_url
@@ -372,20 +372,20 @@ def apply_filters_maps_sorts_randomize(
 
         all_urls = unique_keys(urls)
 
-        if sort_links:
+        if _sort_links:
             all_urls.sort()
-        elif randomize_links:
+        elif _randomize_links:
             shuffle(all_urls)
         return all_urls
 
-    filters_without_function = remove_function_key(filters)
-    extractors_without_function = remove_function_key(extractors)
+    filters_without_function = remove_function_key(_filters)
+    extractors_without_function = remove_function_key(_extractors)
 
     data = {
-        "filters": filters_without_function,
-        "extractors": extractors_without_function,
-        "sort_links": sort_links,
-        "randomize_links": randomize_links,
+        "_filters": filters_without_function,
+        "_extractors": extractors_without_function,
+        "_sort_links": _sort_links,
+        "_randomize_links": _randomize_links,
         "urls": urls,
     }
 
@@ -403,9 +403,9 @@ class _Base:
                     f"Kindly check the filter '{func.__name__}' and see if you forgot to call it."
                 )
 
-        self.filters.extend(
+        self._filters.extend(
             filter_funcs
-        )  # Extend the filters list only if all checks pass
+        )  # Extend the _filters list only if all checks pass
 
         return self  # Allow chaining
 
@@ -417,20 +417,20 @@ class _Base:
                     f"Kindly check the extractor '{func.__name__}' and see if you forgot to call it."
                 )
 
-        self.extractors.extend(
+        self._extractors.extend(
             extractor_funcs
-        )  # Extend the extractors list only if all checks pass
+        )  # Extend the _extractors list only if all checks pass
 
-        return self  # Allow chaining for extractors
+        return self  # Allow chaining for _extractors
 
     def sort(self):
-        self.sort_links = True
-        self.randomize_links = False  # Ensure randomize is not set if sort is called
+        self._sort_links = True
+        self._randomize_links = False  # Ensure randomize is not set if sort is called
         return self  # Allow chaining
 
     def randomize(self):
-        self.randomize_links = True
-        self.sort_links = False  # Ensure sort is not set if randomize is called
+        self._randomize_links = True
+        self._sort_links = False  # Ensure sort is not set if randomize is called
         return self  # Allow chaining
 
 
@@ -440,10 +440,10 @@ class Links(_Base):
         self,
         urls,
     ):
-        self.filters = []  # Existing filters list
-        self.extractors = []  # New list for extractors
-        self.sort_links = False  # Flag for sorting links
-        self.randomize_links = False  # Flag for randomizing links
+        self._filters = []  # Existing _filters list
+        self._extractors = []  # New list for _extractors
+        self._sort_links = False  # Flag for sorting links
+        self._randomize_links = False  # Flag for randomizing links
 
         urls = urls if isinstance(urls, list) else [urls]
 
@@ -458,10 +458,10 @@ class Links(_Base):
                 "cache": False,
             },
             self.urls,
-            self.filters,
-            self.extractors,
-            self.sort_links,
-            self.randomize_links,
+            self._filters,
+            self._extractors,
+            self._sort_links,
+            self._randomize_links,
         )
 
         return result

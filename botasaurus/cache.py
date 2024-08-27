@@ -4,7 +4,7 @@ from hashlib import md5
 from shutil import rmtree
 from json.decoder import JSONDecodeError
 from .decorators_utils import create_directory_if_not_exists
-from .utils import read_json, relative_path
+from .utils import read_json, relative_path, write_json as format_write_json
 from .dontcache import DontCache
 
 class CacheMissException(Exception):
@@ -92,6 +92,25 @@ def get_files_without_json_extension(directory_path):
     files_without_json_extension = [file.rstrip('.json') for file in files]
     
     return files_without_json_extension
+def is_affirmative(input_string):
+    # List of affirmative representations
+    affirmative_values = {"true", "yes", "y", "1", "yeah", "yep", "sure", "ok", "okay", "affirmative", "t"}
+
+    # Normalize the input string to lowercase and strip any extra whitespace
+    normalized_string = input_string.strip().lower()
+
+    # Check if the normalized string is in the set of affirmative values
+    return normalized_string in affirmative_values
+
+def is_negative(input_string):
+    # List of negative representations
+    negative_values = {"false", "no", "n", "0", "nah", "nope", "never", "negative", "f"}
+
+    # Normalize the input string to lowercase and strip any extra whitespace
+    normalized_string = input_string.strip().lower()
+
+    # Check if the normalized string is in the set of negative values
+    return normalized_string in negative_values
 
 created_fns = set()
 cache_check_done = False
@@ -223,32 +242,75 @@ class Cache:
             cache_check_done = False
             created_fns = set()
 
+    # @staticmethod
+    # def delete_items_by_filter(func, items, should_delete_item):
+    #     # Filter items to be tested from cache
+    #     testitems = Cache.filter_items_in_cache(func, items)
+        
+    #     # Retrieve data for the test items from cache
+    #     testitems_data = Cache.get_items(func, testitems)
+        
+    #     # List to collect detected honeypots
+    #     collected_honeypots = []
+        
+    #     # Iterate over each test item and its corresponding data
+    #     for i in range(len(testitems_data)):
+    #         # Check if the item is a honeypot based on the provided function
+    #         if should_delete_item(testitems[i], testitems_data[i]):
+    #             # If it's a honeypot, add it to the collected honeypots list
+    #             collected_honeypots.append(testitems[i])
+
+    #     if collected_honeypots:
+    #         print(f"Deleting {len(collected_honeypots)} honeypots...")
+    #         # Remove detected honeypots from cache
+    #         Cache.delete_items(func, collected_honeypots)
+            
+    #     # Return the number of collected honeypots
+    #     return len(collected_honeypots)
+
+
     @staticmethod
     def delete_items_by_filter(func, items, should_delete_item):
         # Filter items to be tested from cache
         testitems = Cache.filter_items_in_cache(func, items)
         
         # Retrieve data for the test items from cache
-        testitems_data = Cache.get_items(func, testitems)
+        # testitems_data = Cache.get_items(func, testitems)
         
         # List to collect detected honeypots
         collected_honeypots = []
-        
+        # print(len(testitems))
         # Iterate over each test item and its corresponding data
-        for i in range(len(testitems_data)):
+        for i in range(len(testitems)):
             # Check if the item is a honeypot based on the provided function
-            if should_delete_item(testitems[i], testitems_data[i]):
+            key = testitems[i]
+            try:
+              data = Cache.get(func, key)
+            except CacheMissException:
+              continue
+            
+            if should_delete_item(key, data):
                 # If it's a honeypot, add it to the collected honeypots list
                 collected_honeypots.append(testitems[i])
 
         if collected_honeypots:
-            print(f"Deleting {len(collected_honeypots)} honeypots...")
-            # Remove detected honeypots from cache
-            Cache.delete_items(func, collected_honeypots)
-            
+            path = "./output/items_to_be_deleted.json"
+            format_write_json(collected_honeypots, path)
+            while True:
+                result = input(f"Should we delete {len(collected_honeypots)} items in {path}? (Y/n): ")
+
+                if is_affirmative(result):
+                    print(f"Deleting {len(collected_honeypots)} items...")
+                    Cache.delete_items(func, collected_honeypots)
+                    break
+                elif is_negative(result):
+                    print("No items were deleted")
+                    break
+                    
+        else:
+            print("No items were deleted")
         # Return the number of collected honeypots
-        return len(collected_honeypots)
-         
+        return len(collected_honeypots)         
     @staticmethod
     def filter_items_in_cache(func, items):
         cached_items  = set(Cache.get_items_hashes(func))

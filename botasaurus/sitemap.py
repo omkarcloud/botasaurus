@@ -376,10 +376,10 @@ def parse_sitemaps_from_robots_txt(base_url, robots_txt_content):
 class Sitemap(_Base):
     def __init__(self, urls, cache=True):
         self.cache = cache
-        self.filters = []  # Existing filters list
-        self.extractors = []  # New list for extractors
-        self.sort_links = False  # Flag for sorting links
-        self.randomize_links = False  # Flag for randomizing links
+        self._filters = []  # Existing _filters list
+        self._extractors = []  # New list for _extractors
+        self._sort_links = False  # Flag for sorting links
+        self._randomize_links = False  # Flag for randomizing links
 
         urls = urls if isinstance(urls, list) else [urls]
 
@@ -400,10 +400,10 @@ class Sitemap(_Base):
         result = apply_filters_maps_sorts_randomize(
             request_options,
             all_urls,
-            self.filters,
-            self.extractors,
-            self.sort_links,
-            self.randomize_links,
+            self._filters,
+            self._extractors,
+            self._sort_links,
+            self._randomize_links,
         )
 
         return result
@@ -422,10 +422,10 @@ class Sitemap(_Base):
         result = apply_filters_maps_sorts_randomize(
             request_options,
             all_urls,
-            self.filters,
-            self.extractors,
-            self.sort_links,
-            self.randomize_links,
+            self._filters,
+            self._extractors,
+            self._sort_links,
+            self._randomize_links,
         )
 
         return result
