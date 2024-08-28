@@ -7,7 +7,7 @@ import os
 from botasaurus.cache import read_json, _has,_remove, _delete_items, write_json
 from .utils import path_task_results_tasks,path_task_results_cache
 
-
+# :163941919
 
 def _get(cache_path):
     try:
@@ -51,7 +51,6 @@ def _read_json_files_dict(file_paths):
             from joblib import Parallel, delayed
             results = Parallel(n_jobs=-1)(delayed(lambda item: {"key":item, "result": _get( os.path.join(path_task_results_cache, item )) })(file_path) for file_path in file_paths)
             return results
-
 class TaskResults:
 
     @staticmethod
@@ -102,32 +101,61 @@ class TaskResults:
     
     @staticmethod
     def get_all_task(id, limit=None):
+        # task_path = os.path.join("./", str(id) + ".ndjson")
         task_path = os.path.join(path_task_results_tasks, str(id) + ".ndjson")
         if not _has(task_path):
             return None
-        if limit:
-            items = []
-            with open(task_path, 'r', encoding="utf-8") as file:
-                reader = ndjson.reader(file)
-                for i, item in enumerate(reader):
-                    if i >= limit:
+        items = []
+
+        with open(task_path, 'r', encoding="utf-8") as file:
+            line_number = 0
+            while True:
+                try:
+                    line = next(file)
+                    line_number += 1
+                except StopIteration:
+                    break
+                
+                line = line.strip()
+                if line != "":
+                    try:
+                        item = json.loads(line)
+                        items.append(item)
+                    except json.JSONDecodeError:
+                        # Handle potential malformed JSON
+                        split_lines = line.split("}{")
+                        
+                        for i, split_line in enumerate(split_lines):
+                            try:
+                                if i % 2 == 0:  # Even index (including 0)
+                                    split_line = split_line + "}"
+                                else:  # Odd index
+                                    split_line = "{" + split_line
+                                
+                                parsed_item = json.loads(split_line)
+                                items.append(parsed_item)
+                            except json.JSONDecodeError:
+                                print(f"Failed to parse line {line_number}, part: {split_line}")
+                    
+                    if limit and len(items) >= limit:
                         break
-                    items.append(item)
-            return items
-        else:
-            with open(task_path, 'r', encoding="utf-8") as file:
-                data = ndjson.load(file)
-            
-            return data
+
+        if limit and len(items) > limit:
+            return items[:limit]
+        
+        return items
     @staticmethod
     def append_all_task(id, data):
         task_path = os.path.join(path_task_results_tasks, str(id) + ".ndjson")
+        if not data:
+            if not _has(task_path):
+                with open(task_path, 'a', encoding="utf-8") as file:
+                    file.write("")
+            return
         
+        result = "\n".join(json.dumps(i) for i in data) + "\n"
         with open(task_path, 'a', encoding="utf-8") as file:
-                writer = ndjson.writer(file)
-                
-                for item in data:
-                    writer.writerow(item)
+            file.write(result)
     @staticmethod
     def save_all_task(id, data):
         task_path = os.path.join(path_task_results_tasks, str(id) + ".ndjson")
