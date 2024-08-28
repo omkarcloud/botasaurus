@@ -929,6 +929,8 @@ Note:
        driver.short_random_sleep()  # Short delay before retrying
        response = driver.requests.get(link)
    ```
+3. You can also use `driver.requests.get_mank(links)` to make multiple requests in parallel, which is faster than making them sequentially.
+
 ### How to Configure the Browser's Chrome Profile, Language, and Proxy Dynamically Based on Data Parameters?
 
 The decorators in Botasaurus are really flexible, allowing you to pass a function that can derive the browser configuration based on the data item parameter. This is particularly useful when working with multiple Chrome profiles.
