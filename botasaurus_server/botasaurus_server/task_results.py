@@ -7,8 +7,6 @@ import os
 from botasaurus.cache import read_json, _has,_remove, _delete_items, write_json
 from .utils import path_task_results_tasks,path_task_results_cache
 
-# :163941919
-
 def _get(cache_path):
     try:
         return read_json(cache_path)
