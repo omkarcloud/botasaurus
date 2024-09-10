@@ -102,7 +102,7 @@ def validateRepository(git_repo_url):
     """Checks if a GitHub repository exists. Raises an exception if not."""
     try:
         response = requests.head(git_repo_url)
-        response.raise_for_status()  
+        response.raise_for_status()
     except requests.exceptions.RequestException as e:
         if "Not Found" in str(e):
             raise Exception(f"No repository found with URL: {git_repo_url}. Kindly check the URL.")
@@ -143,8 +143,64 @@ def write_file_sudo( data, path,):
 
 def create_clone_commands(git_repo_url, folder_name):
     clone_commands = "" if has_folder(folder_name) else f"git clone {git_repo_url} {folder_name}"
+    return clone_commands.strip()
+
+def safe_download(url: str, folder_name: str):
+        import zipfile
+        import shutil
+        from io import BytesIO
+    
+        # Download the file
+        response = requests.get(url)
+
+        # Check if the URL returns a valid zip file
+        content_type = response.headers.get('Content-Type')
+        meta_content_type = response.headers.get('x-amz-meta-content-type')
+
+        if response.status_code == 200 and ('application/zip' in [content_type, meta_content_type]):    
+            try:
+                os.makedirs(folder_name, exist_ok=True)
+                
+                # Read the zip file from the response content
+                with zipfile.ZipFile(BytesIO(response.content)) as zip_file:
+                    # Extract all contents to the folder
+                    zip_file.extractall(folder_name)
+
+                    # Get the list of files and directories in the extracted folder
+                    extracted_items = os.listdir(folder_name)
+                    
+                    # If there is exactly one folder inside, move its contents up
+                    if len(extracted_items) == 1 and os.path.isdir(os.path.join(folder_name, extracted_items[0])):
+                        inner_folder = os.path.join(folder_name, extracted_items[0])
+                        
+                        # Move all files from the inner folder to the main folder
+                        for item in os.listdir(inner_folder):
+                            shutil.move(os.path.join(inner_folder, item), folder_name)
+                        
+                        # Remove the now-empty inner folder
+                        os.rmdir(inner_folder)   
+                    print("Ignore previous error as we have successfully installed repository")
+                    
+            except Exception:
+                # Clean up the folder if there was an error
+                if os.path.exists(folder_name):
+                    shutil.rmtree(folder_name)
+                raise
+                                 
+        else:
+            raise Exception("The URL does not point to a valid git repository or zip file.")
+    
+
+def run_clone_repository_commands(git_repo_url, folder_name):
+    clone_commands = create_clone_commands(git_repo_url, folder_name)
+    if clone_commands:
+        try:
+          subprocess.run(remove_empty_lines(clone_commands), shell=True, check=True, stderr=subprocess.STDOUT,)
+        except Exception as e:
+          safe_download(git_repo_url, folder_name)
+
+def create_install_commands(folder_name):
     return  f"""
-{clone_commands}    
 cd {folder_name}
 python3 -m pip install -r requirements.txt && python3 run.py install"""
     
@@ -239,12 +295,12 @@ sudo systemctl restart apache2
     subprocess.run(remove_empty_lines(install_dependencies),     shell=True, 
             check=True,
             stderr=subprocess.STDOUT,)
+    run_clone_repository_commands(git_repo_url, folder_name)
 
-    clone_commands = create_clone_commands(git_repo_url, folder_name)
-    subprocess.run(remove_empty_lines(clone_commands),     shell=True, 
+    install_commands = create_install_commands(folder_name)
+    subprocess.run(remove_empty_lines(install_commands),     shell=True, 
             check=True,
             stderr=subprocess.STDOUT,)
-    
     write_file(launch_backend_sh, f"/home/{uname}/{folder_name}/launch-backend.sh")
     write_file(launch_frontend_sh, f"/home/{uname}/{folder_name}/launch-frontend.sh")
 
@@ -267,5 +323,6 @@ def install_scraper_in_vm(git_repo_url, folder_name):
     wait_till_up(ip)
     click.echo(create_visit_ip_text(ip))
 
+# python -m bota.vm 
 if __name__ == "__main__":
     pass
