@@ -1105,6 +1105,11 @@ Botasaurus Driver provides several handy methods for web automation tasks such a
   # iframe = driver.select(".embed-wrapper iframe") 
   freecodecamp_youtube_subscribers_count = iframe.select(".ytp-title-expanded-subtitle").text
   ```
+- Execute CDP Command:
+  ```python
+  from botasaurus.browser import browser, Driver, cdp
+  driver.run_cdp_command(cdp.page.navigate(url='https://stackoverflow.com/'))
+  ```
 
 - Miscellaneous:
   ```python
