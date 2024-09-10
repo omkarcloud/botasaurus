@@ -52,7 +52,7 @@ def _has(cache_path):
 def _get(cache_path):
     try:
         return read_json(cache_path)
-    except JSONDecodeError:
+    except (JSONDecodeError, FileNotFoundError):
         # These are files which are corrupted, likely as user paused when files were being written.
         _remove(cache_path)
         raise CacheMissException(cache_path)
@@ -60,7 +60,7 @@ def _get(cache_path):
 def safe_get(cache_path):
     try:
         return read_json(cache_path)
-    except JSONDecodeError:
+    except (JSONDecodeError, FileNotFoundError):
         _remove(cache_path)
         # These are files which are corrupted, likely as user paused when files were being written.
         return None
@@ -73,7 +73,10 @@ def _read_json_files(file_paths):
 
 def _remove(cache_path):
     if os.path.exists(cache_path):
-        os.remove(cache_path)
+        try:
+            os.remove(cache_path)
+        except FileNotFoundError:
+            pass
 # used by decorators 
 def _put(result, cache_path):
     write_json(result, cache_path)

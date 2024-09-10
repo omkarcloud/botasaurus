@@ -10,6 +10,7 @@
         "dist"
     ],
     "devDependencies": {
+        "@apify/eslint-config-ts": "^0.2.3",
         "@apify/tsconfig": "^0.1.0",
         "@types/node": "^16.4.13",
         "@typescript-eslint/eslint-plugin": "^4.29.1",
