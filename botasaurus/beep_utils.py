@@ -1,4 +1,3 @@
-
 from os import name
 
 def play_beep():

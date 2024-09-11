@@ -132,7 +132,6 @@ def read_csv(filename):
             data.append(row)
     return data
 
-
 def get_fieldnames(data_list):
     fieldnames_dict = {}  # Initialize an empty dictionary
     for item in data_list:
@@ -167,10 +166,8 @@ def convert_nested_to_json(input_list):
 
     return output_list
 
-
 def remove_non_dicts(data):
     return [x for x in data if isinstance(x, dict)]
-
 
 def write_csv(data, filename, log=True):
     """
