@@ -197,7 +197,7 @@ def validate_results_request(json_data, allowed_sorts, allowed_views, default_so
             per_page = int(per_page)
         except ValueError:
             raise JsonHTTPResponseWithMessage("per_page must be an integer")
-        if per_page <= 0:
+        if not is_valid_positive_integer(per_page):
             raise JsonHTTPResponseWithMessage(
                 "per_page must be greater than or equal to 1"
             )
