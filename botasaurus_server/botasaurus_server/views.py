@@ -288,6 +288,7 @@ def _apply_view_for_ui(results:list, view:str, views, input_data):
     for v in views:
         if v.id == view:
             return perform_apply_view(results, v, input_data)
+    return results, []
 
 def apply_view(results:list, view:str, views,):
     if not view:
@@ -296,3 +297,4 @@ def apply_view(results:list, view:str, views,):
     for v in views:
         if v.id == view:
             return perform_apply_view(results, v, None)[0]
+    return results

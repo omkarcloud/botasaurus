@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from threading import Thread, Lock
 import time
-from math import inf
 from sqlalchemy import and_
 import traceback
 from .cleaners import clean_data
@@ -88,7 +87,7 @@ class TaskExecutor:
                 query = (
                     session.query(Task).filter(task_filter).order_by(Task.sort_id.desc(), Task.is_sync.desc()) # Prioritize syncronous tasks
                 )
-                if limit != inf:
+                if limit is not None:
                     remaining = limit - current
                     query = query.limit(remaining)
 
@@ -100,8 +99,7 @@ class TaskExecutor:
                     parent_ids = {task.parent_task_id for task in tasks if task.parent_task_id}
 
                     # Bulk update the status of tasks
-                    if task_ids:
-                        session.query(Task).filter(Task.id.in_(task_ids)).update(
+                    session.query(Task).filter(Task.id.in_(task_ids)).update(
                             {"status": TaskStatus.IN_PROGRESS, "started_at": datetime.now(timezone.utc)}
                         )
 

@@ -1,4 +1,3 @@
-
 def get_fieldnames(data_list):
     fieldnames_dict = {}  # Initialize an empty dictionary
     for item in data_list:

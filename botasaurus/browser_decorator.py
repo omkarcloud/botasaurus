@@ -121,7 +121,7 @@ def browser(
             # # Pool to hold reusable drivers
             _driver_pool = wrapper_browser._driver_pool if dont_close_driver else []
 
-            def run_task(data, is_retry, retry_attempt, retry_driver=None) -> Any:
+            def run_task(data,  retry_attempt, retry_driver=None) -> Any:
                 if cache is True:
                     path = _get_cache_path(func, data)
                     if _has(path):
@@ -220,7 +220,7 @@ def browser(
                             from time import sleep
                             print("Waiting for " + str(retry_wait))
                             sleep(retry_wait)
-                        return run_task(data, True, retry_attempt + 1)
+                        return run_task(data, retry_attempt + 1)
 
                     if not raise_exception:
                         print_exc()
@@ -275,14 +275,12 @@ def browser(
             if n <= 1:
                 for index in range(len(used_data)):
                     data_item = used_data[index]
-                    current_result = run_task(data_item, False, 0)
+                    current_result = run_task(data_item, 0)
                     result.append(current_result)
             else:
 
                 def run(data_item):
-                    current_result = run_task(data_item, False, 0)
-                    result.append(current_result)
-
+                    current_result = run_task(data_item, 0)
                     return current_result
 
                 if callable(parallel):

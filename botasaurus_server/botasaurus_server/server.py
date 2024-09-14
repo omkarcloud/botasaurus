@@ -1,6 +1,5 @@
 from casefy import titlecase
 import os
-from math import inf
 from hashlib import sha256
 from .sorts import Sort
 from .scraper_type import ScraperType
@@ -296,9 +295,9 @@ class _Server:
         ]
 
     def set_rate_limit(self, browser=1, request=30, task=30):
-        self.rate_limit["browser"] = inf if browser is None else browser
-        self.rate_limit["request"] = inf if request is None else request
-        self.rate_limit["task"] = inf if task is None else task
+        self.rate_limit["browser"] =  browser
+        self.rate_limit["request"] =  request
+        self.rate_limit["task"] =  task
 
     def get_rate_limit(self):
         return self.rate_limit

@@ -52,6 +52,5 @@ def write_json(data, path,  indent=4):
         json.dump(data, fp, indent=indent)
 
 
-
 def uniquify_strings(strs):
     return list(dict.fromkeys(strs))

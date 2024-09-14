@@ -79,7 +79,6 @@ def request(
                 cycled_proxy = None
             def run_task(
                 data,
-                is_retry,
                 retry_attempt,
             ) -> Any:
                 if cache is True:
@@ -143,7 +142,7 @@ def request(
 
                             print("Waiting for " + str(retry_wait) + " seconds")
                             sleep(retry_wait)
-                        return run_task(data, True, retry_attempt + 1)
+                        return run_task(data, retry_attempt + 1)
 
                     if not raise_exception:
                         print_exc()
@@ -196,15 +195,14 @@ def request(
             if n <= 1:
                 for index in range(len(used_data)):
                     data_item = used_data[index]
-                    current_result = run_task(data_item, False, 0)
+                    current_result = run_task(data_item, 0)
                     result.append(current_result)
             else:
 
                 def run(data_item):
-                    current_result = run_task(data_item, False, 0)
-                    result.append(current_result)
-
+                    current_result = run_task(data_item, 0)
                     return current_result
+
 
                 if callable(parallel):
                     print(f"Running {n} Requests in Parallel")

@@ -67,7 +67,6 @@ def task(
 
             def run_task(
                 data,
-                is_retry,
                 retry_attempt,
             ) -> Any:
                 if cache is True:
@@ -85,7 +84,7 @@ def task(
                     if "metadata" in kwargs or metadata is not None:
                         result = func(data, metadata)
                     else:
-                        result = func( data)
+                        result = func(data)
                     if cache is True or cache == 'REFRESH' :
                         if is_dont_cache(result):
                             _remove(path)
@@ -117,7 +116,7 @@ def task(
                             from time import sleep
                             print("Waiting for " + str(retry_wait) + " seconds")
                             sleep(retry_wait)
-                        return run_task(data, True, retry_attempt + 1)
+                        return run_task(data, retry_attempt + 1)
 
                     if not raise_exception:
                         print_exc()
@@ -172,14 +171,12 @@ def task(
             if n <= 1:
                 for index in range(len(used_data)):
                     data_item = used_data[index]
-                    current_result = run_task(data_item, False, 0)
+                    current_result = run_task(data_item, 0)
                     result.append(current_result)
             else:
 
                 def run(data_item):
-                    current_result = run_task(data_item, False, 0)
-                    result.append(current_result)
-
+                    current_result = run_task(data_item, 0)
                     return current_result
 
                 if callable(parallel):

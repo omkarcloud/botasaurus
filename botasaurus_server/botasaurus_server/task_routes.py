@@ -40,10 +40,6 @@ import bottle
 OK_MESSAGE = {"message": "OK"}
 
 
-def ok():
-    # add_cors_headers(response.headers)
-    return OK_MESSAGE
-
 
 @route("/<:path>", method="OPTIONS")
 def enable_cors_generic_route():
@@ -93,12 +89,10 @@ def is_string_of_min_length(data, min_length=1):
 
 def ensure_json_body_is_dict(json_data):
     if json_data is None:
-        raise JsonHTTPResponse({"message": "json body must be provided"}, 400)
+        raise JsonHTTPResponseWithMessage("json body must be provided")
 
     if not isinstance(json_data, dict):
-        raise JsonHTTPResponse(
-            {"message": "json body must be provided as an object"}, 400
-        )
+        raise JsonHTTPResponseWithMessage("json body must be provided as an object")
 
 
 def dict_to_string(errors_dict):
@@ -122,7 +116,7 @@ def validate_scraper_name(scraper_name):
 
     if len(valid_scraper_names) == 0:
         error_message = "No Scrapers are available."
-        raise JsonHTTPResponse({"message": error_message}, 400)
+        raise JsonHTTPResponseWithMessage(error_message)
 
     valid_names_string = ", ".join(valid_scraper_names)
     if scraper_name is None:
@@ -130,7 +124,7 @@ def validate_scraper_name(scraper_name):
             scraper_name = valid_scraper_names[0]
         else:
             error_message = f"'scraper_name' must be provided when there are multiple scrapers. The scraper_name must be one of {valid_names_string}."
-            raise JsonHTTPResponse({"message": error_message}, 400)
+            raise JsonHTTPResponseWithMessage(error_message)
     elif not Server.get_scraper(scraper_name):
 
         if len(valid_scraper_names) == 1:
@@ -138,7 +132,7 @@ def validate_scraper_name(scraper_name):
         else:
             error_message = f"A scraper with the name '{scraper_name}' does not exist. The scraper_name must be one of {valid_names_string}."
 
-        raise JsonHTTPResponse({"message": error_message}, 400)
+        raise JsonHTTPResponseWithMessage(error_message)
     return scraper_name
 
 
@@ -153,12 +147,10 @@ def validate_task_request(json_data):
     scraper_name = validate_scraper_name(scraper_name)
 
     if data is None:
-        raise JsonHTTPResponse({"message": "'data' key must be provided"}, 400)
+        raise JsonHTTPResponseWithMessage("'data' key must be provided")
 
     if not isinstance(data, dict):
-        raise JsonHTTPResponse(
-            {"message": "'data' key must be a valid JSON object"}, 400
-        )
+        raise JsonHTTPResponseWithMessage("'data' key must be a valid JSON object")
 
     controls = Server.get_controls(scraper_name)
 
@@ -167,7 +159,7 @@ def validate_task_request(json_data):
     errors = result["errors"]
 
     if errors != {}:
-        raise JsonHTTPResponse({"message": dict_to_string(errors)}, 400)
+        raise JsonHTTPResponseWithMessage(dict_to_string(errors))
 
     data = result["data"]
     metadata = result["metadata"]
@@ -724,7 +716,7 @@ def validate_filters(json_data):
     filters = json_data.get("filters")
     if filters:  # Only validate if it exists
         if not isinstance(filters, dict):
-            raise JsonHTTPResponse({"message": "Filters must be a dictionary"}, 400)
+            raise JsonHTTPResponseWithMessage("Filters must be a dictionary")
     return filters
 
 
@@ -733,17 +725,14 @@ def validate_view(json_data, allowed_views):
 
     if view:
         if not is_string_of_min_length(view):
-            raise JsonHTTPResponse(
-                {"message": "View must be a string with at least one character"}, 400
+            raise JsonHTTPResponseWithMessage(
+                "View must be a string with at least one character"
             )
 
         view = view.lower()
         if view not in allowed_views:
-            raise JsonHTTPResponse(
-                {
-                    "message": f"Invalid view. Must be one of: {', '.join(allowed_views)}."
-                },
-                400,
+            raise JsonHTTPResponseWithMessage(
+                f"Invalid view. Must be one of: {', '.join(allowed_views)}."
             )
 
     return view
@@ -756,17 +745,14 @@ def validate_sort(json_data, allowed_sorts, default_sort):
         sort = None
     elif sort:
         if not is_string_of_min_length(sort):
-            raise JsonHTTPResponse(
-                {"message": "Sort must be a string with at least one character"}, 400
+            raise JsonHTTPResponseWithMessage(
+                "Sort must be a string with at least one character"
             )
 
         sort = sort.lower()
         if sort not in allowed_sorts:
-            raise JsonHTTPResponse(
-                {
-                    "message": f"Invalid sort. Must be one of: {', '.join(allowed_sorts)}."
-                },
-                400,
+            raise JsonHTTPResponseWithMessage(
+                f"Invalid sort. Must be one of: {', '.join(allowed_sorts)}."
             )
     else:
         sort = default_sort
@@ -792,7 +778,7 @@ def validate_results_request(json_data, allowed_sorts, allowed_views, default_so
         try:
             page = int(page)
         except ValueError:
-            raise JsonHTTPResponse({"message": "page must be an integer"}, 400)
+            raise JsonHTTPResponseWithMessage("page must be an integer")
         if not is_valid_positive_integer(page):
             raise JsonHTTPResponseWithMessage("page must be greater than or equal to 1")
     else:
@@ -803,10 +789,10 @@ def validate_results_request(json_data, allowed_sorts, allowed_views, default_so
         try:
             per_page = int(per_page)
         except ValueError:
-            raise JsonHTTPResponse({"message": "per_page must be an integer"}, 400)
+            raise JsonHTTPResponseWithMessage("per_page must be an integer")
         if per_page <= 0:
-            raise JsonHTTPResponse(
-                {"message": "per_page must be greater than or equal to 1"}, 400
+            raise JsonHTTPResponseWithMessage(
+                "per_page must be greater than or equal to 1"
             )
 
     return filters, sort, view, page, per_page
@@ -915,16 +901,16 @@ def validate_download_params(json_data, allowed_sorts, allowed_views, default_so
     if not fmt:
         fmt = "json"
     elif not is_string_of_min_length(fmt):  # Assuming you have this helper function
-        raise JsonHTTPResponse(
-            {"message": "Format must be a string with at least one character"}, 400
+        raise JsonHTTPResponseWithMessage(
+            "Format must be a string with at least one character"
         )
     elif fmt == "xlsx":
         fmt = "excel"
 
     fmt = fmt.lower()
     if fmt not in ["json", "csv", "excel"]:
-        raise JsonHTTPResponse(
-            {"message": "Invalid format.  Must be one of: JSON, CSV, Excel"}, 400
+        raise JsonHTTPResponseWithMessage(
+            "Invalid format.  Must be one of: JSON, CSV, Excel"
         )
 
     # Filters Validation (if applicable)
@@ -938,7 +924,7 @@ def validate_download_params(json_data, allowed_sorts, allowed_views, default_so
     # Convert to English Validation (if applicable)
     convert_to_english = json_data.get("convert_to_english", True)
     if not isinstance(convert_to_english, bool):
-        raise JsonHTTPResponse({"message": "convert_to_english must be a boolean"}, 400)
+        raise JsonHTTPResponseWithMessage("convert_to_english must be a boolean")
 
     return fmt, filters, sort, view, convert_to_english
 
@@ -968,7 +954,7 @@ def download_task_results(task_id):
     )
     validate_scraper_name(scraper_name)
     if not isinstance(results, list):
-        raise JsonHTTPResponse("No Results")
+        raise JsonHTTPResponseWithMessage("No Results")
 
     fmt, filters, sort, view, convert_to_english = validate_download_params(
         request.json,
@@ -1148,12 +1134,10 @@ def validate_patch_task(json_data):
     task_ids = json_data.get("task_ids")
 
     if not task_ids:
-        raise JsonHTTPResponse({"message": "'task_ids' must be provided"}, 400)
+        raise JsonHTTPResponseWithMessage("'task_ids' must be provided")
 
     if not is_list_of_integers(task_ids):
-        raise JsonHTTPResponse(
-            {"message": "'task_ids' must be a list of integers"}, 400
-        )
+        raise JsonHTTPResponseWithMessage("'task_ids' must be a list of integers")
 
     return task_ids
 
@@ -1225,20 +1209,13 @@ def is_any_task_finished():
     json_data = request.json
 
     if not is_list_of_integers(json_data.get("pending_task_ids")):
-        raise JsonHTTPResponse(
-            {"message": "'pending_task_ids' must be a list of integers"}, 400
-        )
+        raise JsonHTTPResponseWithMessage("'pending_task_ids' must be a list of integers")
     if not is_list_of_integers(json_data.get("progress_task_ids")):
-        raise JsonHTTPResponse(
-            {"message": "'progress_task_ids' must be a list of integers"}, 400
-        )
+        raise JsonHTTPResponseWithMessage("'progress_task_ids' must be a list of integers")
 
     if not is_valid_all_tasks(json_data.get("all_tasks")):
-        raise JsonHTTPResponse(
-            {
-                "message": "'all_tasks' must be a list of dictionaries with 'id' and 'result_count' keys"
-            },
-            400,
+        raise JsonHTTPResponseWithMessage(
+            "'all_tasks' must be a list of dictionaries with 'id' and 'result_count' keys"
         )
 
     pending_task_ids = json_data["pending_task_ids"]
@@ -1289,13 +1266,11 @@ def is_task_updated():
 
     # Validate 'task_id' using is_valid_integer
     if not is_valid_positive_integer(task_id):
-        raise JsonHTTPResponse({"message": "'task_id' must be a valid integer"}, 400)
+        raise JsonHTTPResponseWithMessage("'task_id' must be a valid integer")
 
     # Validate 'task_id' using is_valid_integer
     if not is_string_of_min_length(query_status):
-        raise JsonHTTPResponse(
-            {"message": "'status' must be a string with at least one character"}, 400
-        )
+        raise JsonHTTPResponseWithMessage("'status' must be a string with at least one character")
 
     # Convert 'task_id' to integer
     task_id = int(task_id)
@@ -1307,9 +1282,7 @@ def is_task_updated():
             tzinfo=None
         )  # Make 'last_updated' naive for comparison
     except ValueError:
-        raise JsonHTTPResponse(
-            {"message": "'last_updated' must be in valid ISO 8601 format"}, 400
-        )
+        raise JsonHTTPResponseWithMessage("'last_updated' must be in valid ISO 8601 format")
 
     # Query the database for the task's 'updated_at' timestamp using the given 'task_id'
     task_data = perform_is_task_updated(task_id)
@@ -1337,23 +1310,19 @@ def validate_ui_patch_task(json_data):
     task_ids = json_data.get("task_ids")
 
     if not action:
-        raise JsonHTTPResponse({"message": "'action' must be provided"}, 400)
+        raise JsonHTTPResponseWithMessage("'action' must be provided")
 
     if not isinstance(action, str):
-        raise JsonHTTPResponse({"message": "'action' must be a string"}, 400)
+        raise JsonHTTPResponseWithMessage("'action' must be a string")
     action = action.lower()
     if action not in ["abort", "delete"]:
-        raise JsonHTTPResponse(
-            {"message": '\'action\' must be either "abort" or "delete"'}, 400
-        )
+        raise JsonHTTPResponseWithMessage('\'action\' must be either "abort" or "delete"')
 
     if not task_ids:
-        raise JsonHTTPResponse({"message": "'task_ids' must be provided"}, 400)
+        raise JsonHTTPResponseWithMessage("'task_ids' must be provided")
 
     if not is_list_of_integers(task_ids):
-        raise JsonHTTPResponse(
-            {"message": "'task_ids' must be a list of integers"}, 400
-        )
+        raise JsonHTTPResponseWithMessage("'task_ids' must be a list of integers")
 
     return action, task_ids
 
@@ -1386,13 +1355,14 @@ def get_ui_tasks():
     return queryTasks(output_ui_tasks_ets, False, page, 100, serialize_ui_output_task)
 
 
+
 @route("/api/ui/tasks", method="PATCH")
 def patch_task():
     # This is done to return the tasks after the patch operation for purpose of faster ui response.
     page = request.query.get("page")
     if not (is_valid_positive_integer(page)):
         raise JsonHTTPResponseWithMessage(
-            "Invalid 'page' parameter. Must be a positive integer."
+            "Invalid 'page' parameter. Must be a positive integer.", status=400
         )
 
     action, task_ids = validate_ui_patch_task(request.json)

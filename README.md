@@ -2333,6 +2333,7 @@ You may choose to read the following questions based on your interests:
 
 ## Thank You
 - To That, who has given me a sufficiently intelligent mind to create Botasaurus and do a lot of good.
+<!-- - To the One who has given me with a sufficiently intelligent, practical mind with a will to do good, which led to the creation of Botasaurus. This, I believe, is the #1 gift a human can receive. It helps both here and here after. If you possess such a gift, please cherish it, for very very and very few people in this age have it. -->
 - I made Botasaurus because I would be really happy if you could use it to successfully complete your project. So, a Gigantic Thank you for using Botasaurus!
 - Kudos to the Apify Team for creating the `proxy-chain` library. The implementation of SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `proxy-chain`.
 - Shout out to [ultrafunkamsterdam](https://github.com/ultrafunkamsterdam) for creating `nodriver`, which inspired the creation of Botasaurus Driver.
