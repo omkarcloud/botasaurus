@@ -1,4 +1,4 @@
-from .task_routes import OK_MESSAGE # imports all routes as well
+from .validation import OK_MESSAGE # imports all routes as well
 from .executor import executor
 from bottle import (
     request,
@@ -7,13 +7,14 @@ from bottle import (
 
 @post("/k8s/success")
 def k8s_success():
+    json_data = request.json
 
-    task_id = request.json["task_id"]
-    task_type = request.json["task_type"]
-    task_result = request.json["task_result"]
-    scraper_name = request.json["scraper_name"]
-    data = request.json["data"]
-    node_name = request.json["node_name"]
+    task_id = json_data["task_id"]
+    task_type = json_data["task_type"]
+    task_result = json_data["task_result"]
+    scraper_name = json_data["scraper_name"]
+    data = json_data["data"]
+    node_name = json_data["node_name"]
 
     executor.on_success(task_id, task_type, task_result, node_name,scraper_name, data)
 
@@ -23,10 +24,11 @@ def k8s_success():
 @post("/k8s/fail")
 def k8s_fail():
 
-    task_id = request.json["task_id"]
-    task_type = request.json["task_type"]
-    task_result = request.json["task_result"]
-    node_name = request.json["node_name"]
+    json_data = request.json
+    task_id = json_data["task_id"]
+    task_type = json_data["task_type"]
+    task_result = json_data["task_result"]
+    node_name = json_data["node_name"]
 
     executor.on_failure(task_id, task_type, task_result, node_name)
 

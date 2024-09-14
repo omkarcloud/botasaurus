@@ -1,6 +1,6 @@
 from json import dumps
 
-from botasaurus_server.errors import DownloadResponse
+from .errors import DownloadResponse
 
 def convert_nested_to_json(input_list):
     """

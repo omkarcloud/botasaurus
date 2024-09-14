@@ -1,5 +1,34 @@
-from .errors import JsonHTTPResponseWithMessage
+from .errors import JsonHTTPResponse, JsonHTTPResponseWithMessage
 from .server import Server
+
+
+def serialize(data):
+    if data is None:
+        return None
+    if isinstance(data, list):
+        return [item.to_json() for item in data]
+    return data.to_json()
+
+def create_task_not_found_error(task_id):
+    return JsonHTTPResponse(
+        {"status": 404, "message": f"Task {task_id} not found"}, status=404
+    )
+
+
+def deep_clone_dict(original_dict):
+    if not isinstance(original_dict, dict):
+        return original_dict
+
+    new_dict = {}
+    for key, value in original_dict.items():
+        if isinstance(value, dict):
+            new_dict[key] = deep_clone_dict(value)
+        elif isinstance(value, list):
+            new_dict[key] = [deep_clone_dict(item) for item in value]
+        else:
+            new_dict[key] = value
+
+    return new_dict
 
 def dict_to_string(errors_dict):
     # Iterate through each key-value pair in the dictionary

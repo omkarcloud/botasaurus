@@ -7,9 +7,10 @@ OK_MESSAGE = {"message": "OK"}
 
 @post("/k8s/run-worker-task")
 def k8s_run():
+    json_data = request.json
 
-    task = request.json["task"]
-    node_name = request.json["node_name"]
+    task = json_data["task"]
+    node_name = json_data["node_name"]
 
     executor.run_worker_task(task, node_name)
 

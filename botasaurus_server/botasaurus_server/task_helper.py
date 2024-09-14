@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from sqlalchemy import update
-from botasaurus_server.db_setup import Session
+from .db_setup import Session
 from .cleaners import normalize_dicts_by_fieldnames
 from .task_results import TaskResults
 from botasaurus import bt
