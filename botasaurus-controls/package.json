@@ -23,7 +23,7 @@
         "uglify-js": "^3.17.4"
     },
     "scripts": {
-        "build": "rimraf dist && tsc && python3 fix.py && node minify-script.js",
+        "build": "rimraf dist && tsc && rimraf dist/tsconfig.tsbuildinfo &&  python3 fix.py && node minify-script.js",
         "prepublishOnly": "npm run build",
         "lint": "eslint src test",
         "lint:fix": "eslint src test --fix",

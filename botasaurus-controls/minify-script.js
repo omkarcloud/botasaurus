@@ -21,7 +21,7 @@ function minifyFile(inputFile) {
                     reject(`Error writing minified file ${inputFile}: ${err}`);
                     return;
                 }
-                resolve(`Minified file created successfully: ${inputFile}`);
+                resolve(`Minified file: ${inputFile}`);
             });
         });
     });
@@ -44,10 +44,26 @@ async function getJsFilesRecursively(directory) {
     return jsFiles;
 }
 
+async function getFilesRecursively(directory) {
+    let jsFiles = [];
+    const items = await fs.promises.readdir(directory, { withFileTypes: true });
+
+    for (const item of items) {
+        const fullPath = path.join(directory, item.name);
+        if (item.isDirectory()) {
+            jsFiles = jsFiles.concat(await getJsFilesRecursively(fullPath));
+        } else {
+            jsFiles.push(fullPath);
+        }
+    }
+
+
+    return jsFiles;
+}
+
 async function minifyAllJsFiles(directory) {
     try {
         const jsFiles = await getJsFilesRecursively(directory);
-        console.log(jsFiles)
         for (const file of jsFiles) {
             try {
                 const result = await minifyFile(file);
@@ -61,6 +77,32 @@ async function minifyAllJsFiles(directory) {
     }
 }
 
+function unlinkAsync(filePath) {
+    return new Promise((resolve, reject) => {
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+async function deleteMapFiles(directory) {
+    try {
+        const jsFiles = await getFilesRecursively(directory);
+        const mapFiles = jsFiles.filter(file => file.endsWith('.map'));
+        for (const file of mapFiles) {
+            const filePath =file;
+            await unlinkAsync(filePath);
+            console.log(`Deleted: ${filePath}`);
+        }
+    } catch (error) {
+        console.error(`Error processing directory ${directory}:`, error);
+    }
+}
 // Usage
 const distDirectory = 'dist';
+// deleteMapFiles(distDirectory)
 minifyAllJsFiles(distDirectory);
