@@ -555,26 +555,7 @@ def execute_sync_tasks(json_data):
     return rst
 
 def get_ets(with_results):
-    if with_results:
-        return [
-            Task.id,
-            Task.status,
-            Task.task_name,
-            Task.scraper_name,
-            Task.result_count,
-            Task.scraper_type,
-            Task.is_all_task,
-            Task.is_sync,
-            Task.parent_task_id,
-            Task.data,
-            Task.meta_data,
-            Task.finished_at,
-            Task.started_at,
-            Task.created_at,
-            Task.updated_at,
-        ]
-    else:
-        return [
+    return [
             Task.id,
             Task.status,
             Task.task_name,
@@ -679,7 +660,6 @@ def clean_results(
     result_count,
     contains_list_field,
 ):
-
     # Apply sorts, filters, and view
     results = apply_sorts(results, sort, Server.get_sorts(scraper_name))
     results = apply_filters(results, filters, Server.get_filters(scraper_name))

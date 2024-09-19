@@ -10,7 +10,7 @@ from .errors import add_cors_headers
 from .validation import (
     validate_patch_task,
 )
-from .routes_db import (
+from .routes_db_logic import (
     execute_async_task,
     execute_async_tasks,
     execute_get_api_config,
@@ -66,7 +66,7 @@ def get_api():
     return OK_MESSAGE
 
 @post("/api/tasks/create-task-async")
-def submit_async_task():
+def create_async_task():
     json_data = request.json
 
     if isinstance(json_data, list):
@@ -77,7 +77,7 @@ def submit_async_task():
         return jsonify(result)
 
 @post("/api/tasks/create-task-sync")
-def submit_sync_task():
+def create_sync_task():
     json_data = request.json
 
     if isinstance(json_data, list):
@@ -148,7 +148,7 @@ def get_api_config():
 
 
 @post("/api/ui/tasks/is-any-task-updated")  # Add this route
-def is_any_task_finished():
+def is_any_task_updated():
     json_data = request.json
     result = execute_is_any_task_finished(json_data)
     return jsonify(result)
@@ -162,7 +162,7 @@ def is_task_updated():
     return jsonify(result)
 
 @get("/api/ui/tasks")
-def get_ui_tasks():
+def get_tasks_for_ui_display():
     query_params = request.query
     page = query_params.get("page")
     result = execute_get_ui_tasks(page)
