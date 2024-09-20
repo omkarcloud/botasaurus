@@ -633,7 +633,7 @@ class Controls {
           !errorMessages.length &&  (type === "listOfTexts"||type === "listOfLinks") && limit !== null && value.length > limit
         ) {
           errorMessages.push(
-            `This field must contain at most ${limit} ${limit === 1 ? "item" : "items"}.`
+            `This field can contain at most ${limit} ${limit === 1 ? "item" : "items"}.`
           )
         }
 
