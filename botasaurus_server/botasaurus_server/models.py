@@ -149,6 +149,6 @@ class Task(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    def to_json(self):
+    def to_json(self, with_result=True):
         """Serializes all properties of the Task object into a JSON dictionary."""
-        return serialize_task(self, with_result=True)
+        return serialize_task(self, with_result)

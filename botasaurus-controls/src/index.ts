@@ -5,6 +5,11 @@ function isEmptyObject(obj: any) {
 function isNullish(x: any) {
   return x === null || x === undefined
 }
+
+function isNotNullish(value: any) {
+  return value !== null && value !== undefined
+}
+
 function isEmpty(x: any) {
   return (
     x === null || x === undefined || (typeof x == "string" && x.trim() === "")
@@ -16,6 +21,10 @@ function isNotEmpty(x: any) {
   return !isEmpty(x)
 }
 
+
+function isValidPositiveInteger(param: any): boolean {
+  return typeof param === 'number' && Number.isInteger(param) && param > 0;
+}
 
 function ensureEndsWithDot(validationResult: string): string {
   return validationResult.endsWith(".")
@@ -73,8 +82,9 @@ function getLink(string) {
 
 function ensureListOfStrings(value: any, id: string): string[] {
   if (!Array.isArray(value)) {
+    const valueType = typeof value
     throw new Error(
-      `DefaultValue for control '${id}' must be an array of strings.`
+      `DefaultValue for control '${id}' must be an array of strings, not ${valueType}.`
     )
   }
 
@@ -86,6 +96,19 @@ function ensureListOfStrings(value: any, id: string): string[] {
   }
 
   return value
+}
+
+
+function ensureIsNullishOrNumber(value: any, id: string) {
+  if (isNotNullish(value)) {
+    if (!isValidPositiveInteger(value)) {
+      const valueType = typeof value
+      throw new Error(`Limit for control '${id}' must be a number or null, not ${valueType}.`);
+    }
+    return value
+  }else {
+    return  null
+  }
 }
 
 
@@ -138,9 +161,17 @@ type TextControlInput<V, P = {}> = ControlInput<V, P> & {
   placeholder?: string
 }
 
+type LimitOptions = {
+  limit?: number
+}
+
+type ListOfTextControlInput<V, P = {}> = TextControlInput<V,P> &LimitOptions
+
 type LinkControlInput<V, P = {}> = ControlInput<V, P> & {
   placeholder?: string
 }
+
+type ListOfLinkControlInput<V, P = {}> = LinkControlInput<V,P> &LimitOptions
 
 // Define a generic control type with an additional parameter P for custom properties
 type NumberControlInput<V, P = {}> = ControlInput<V, P> & {
@@ -192,7 +223,7 @@ class Controls {
   private add<V>(
     id: string,
     type: string,
-    props?: ControlInput<V, WithChooseOptions>
+    props?: ControlInput<V, WithChooseOptions> & LimitOptions
   ) {
     props = props || {}
 
@@ -312,11 +343,12 @@ class Controls {
   }
 
   // Method to add a list of text fields
-  listOfTexts(id: string, props: TextControlInput<string[]> = {}) {
+  listOfTexts(id: string, props: ListOfTextControlInput<string[]> = {}) {
     const defaultValue = ensureListOfStrings(props.defaultValue || [""], id)
-
+    const limit = ensureIsNullishOrNumber(props.limit, "limit")
     this.add<string[]>(id, "listOfTexts", {
       ...props,
+      limit,
       defaultValue,
     })
 
@@ -355,11 +387,13 @@ class Controls {
   }
 
   // Method to add a list of link fields
-  listOfLinks(id: string, props: LinkControlInput<string[]> = {}) {
+  listOfLinks(id: string, props: ListOfLinkControlInput<string[]> = {}) {
     const defaultValue = ensureListOfStrings(props.defaultValue || [""], id)
+    const limit = ensureIsNullishOrNumber(props.limit, "limit")
 
     this.add<string[]>(id, "listOfLinks", {
       ...props,
+      limit,
       defaultValue, // Ensure default value is [""] if not provided
     })
 
@@ -390,7 +424,7 @@ class Controls {
     })
   }
   
-  multiSelect(id: string, props: ControlInput<string[], WithOptions> = {}) {
+  multiSelect(id: string, props: ControlInput<string[], WithOptions> & LimitOptions = {}) {
     if (!props.options || !props.options.length) {
       throw new Error(
         `MultiSelect control with id "${id}" requires at least one option`
@@ -405,9 +439,11 @@ class Controls {
             );
         }
     }
+    const limit = ensureIsNullishOrNumber(props.limit, "limit")
 
     return this.add<string[]>(id, "multiSelect", {
       ...props,
+      limit,
       defaultValue: props.defaultValue,
     })
   }
@@ -521,7 +557,7 @@ class Controls {
 
     this.iterateControls((control) => {
       const value = data[control.id]
-      const { validate, type, id, isShown, isDisabled, isRequired } = control
+      const { validate, type, id, isShown, isDisabled, isRequired , limit} = control as any
 
       let errorMessages: string[] = []
 
@@ -591,6 +627,22 @@ class Controls {
               "Each non empty field must be a valid URL. Example: https://example.com"
             )
           }
+        }
+
+        if (
+          !errorMessages.length &&  (type === "listOfTexts"||type === "listOfLinks") && limit !== null && value.length > limit
+        ) {
+          errorMessages.push(
+            `This field must contain at most ${limit} ${limit === 1 ? "item" : "items"}.`
+          )
+        }
+
+        if (
+          !errorMessages.length && type === "multiSelect" && limit !== null && value.length > limit
+        ) {
+          errorMessages.push(
+            `You can choose at most ${limit} ${limit === 1 ? "item" : "items"}.`
+          )
         }
 
         if (!errorMessages.length && type === "number" && isNotEmpty(value)) {
