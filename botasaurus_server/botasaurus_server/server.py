@@ -255,9 +255,10 @@ class _Server:
             with open(input_js_path, "r") as file:
                 input_js = file.read()
         else:
-            pth = f"backend/inputs/{scraper_name}.js"
+            scraper_file_path = f"backend/inputs/{scraper_name}.js"
+            
             raise ValueError(
-                f"Input js file not found for {scraper_name}. Kindly create {pth} file."
+                f"Input js file not found for {scraper_name}, at path {scraper_file_path}. Kindly create it."
             )
         return input_js
 
