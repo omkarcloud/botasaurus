@@ -433,20 +433,21 @@ def get_metadata(file_name):
     :return: A dictionary with appropriate metadata
     """
     extension = os.path.splitext(file_name)[1].lower()
-    if extension == '.csv':
-        return {'Content-Type': 'text/csv'}
-    elif extension == '.json':
-        return {'Content-Type': 'application/json'}
-    elif extension == '.zip':
-        return {'Content-Type': 'application/zip'}
-    elif extension == '.xlsx':
-        return {'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
-    elif extension == '.html':
-        return {'Content-Type': 'text/html'}
-    elif extension == '.txt':
-        return {'Content-Type': 'text/plain'}
-    else:
-        return None
+
+    extension_mapping = {
+        '.csv': {'Content-Type': 'text/csv'},
+        '.json': {'Content-Type': 'application/json'},
+        '.zip': {'Content-Type': 'application/zip'},
+        '.xlsx': {'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},
+        '.html': {'Content-Type': 'text/html'},
+        '.txt': {'Content-Type': 'text/plain'},
+        '.dmg': {'Content-Type': 'application/x-apple-diskimage'},
+        '.exe': {'Content-Type': 'application/x-msdownload'},
+        '.deb': {'Content-Type': 'application/vnd.debian.binary-package'},
+        '.rpm': {'Content-Type': 'application/x-rpm'}
+    }
+    
+    return extension_mapping.get(extension, None)
 
 def install(package):
     import subprocess
