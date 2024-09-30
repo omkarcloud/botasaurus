@@ -7,6 +7,7 @@ from .decorators_utils import create_directory_if_not_exists
 from .utils import read_json, relative_path, write_json as format_write_json
 from .dontcache import DontCache
 
+
 class CacheMissException(Exception):
     """Exception raised when an item is not found in the cache."""
     def __init__(self, key):
@@ -196,6 +197,19 @@ class Cache:
         paths = [relative_path(f'{Cache.cache_directory}{fn_name}/{r}.json') for r in hashes]
         return _read_json_files(paths)
 
+    @staticmethod
+    def get_random_items(func, n=5):
+        import random
+
+        hashes = Cache.get_items_hashes(func, None)
+        if n is not None:
+            hashes = random.sample(hashes, n)
+        else: 
+            random.shuffle(hashes)
+
+        fn_name = getfnname(func)
+        paths = [relative_path(f'{Cache.cache_directory}{fn_name}/{r}.json') for r in hashes]
+        return _read_json_files(paths)
     @staticmethod
     def get_items_hashes(func, items=None):
         results = get_cached_files(func)

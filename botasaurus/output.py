@@ -460,7 +460,7 @@ def dynamically_import_boto3():
     except ImportError:
         install('boto3')
 
-def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key):
+def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key, object_name=None,):
     """
     Upload a file to an S3 bucket
 
@@ -486,7 +486,7 @@ def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key):
     )
 
     # Extract the file name to use as the S3 object name
-    object_name = os.path.basename(file_name)
+    object_name = object_name or os.path.basename(file_name)
     metadata = get_metadata(file_name)
 
     with open(file_name, 'rb') as file:
