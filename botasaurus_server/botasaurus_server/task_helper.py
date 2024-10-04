@@ -185,8 +185,8 @@ class TaskHelper:
 
     @staticmethod
     def read_clean_save_task(parent_id,  remove_duplicates_by, status):
-        
-        rs = normalize_dicts_by_fieldnames(TaskResults.get_all_task(parent_id))
+        rs = TaskResults.get_all_task(parent_id) or []
+        rs = normalize_dicts_by_fieldnames(rs)
         
         if remove_duplicates_by:
            rs = remove_duplicates_by_key(rs, remove_duplicates_by)

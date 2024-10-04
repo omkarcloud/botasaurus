@@ -737,7 +737,6 @@ def execute_task_results(task_id, json_data):
         Server.get_view_ids(scraper_name),
         Server.get_default_sort(scraper_name),
     )
-
     # Apply sorts, filters, and view
     results = apply_sorts(results, sort, Server.get_sorts(scraper_name))
     results = apply_filters(results, filters, Server.get_filters(scraper_name))

@@ -251,8 +251,8 @@ api = Api('https://example.com')""".format(self._api_url))
             payload["sort"] = sort
         if view:
             payload["view"] = view
-        if convert_to_english:
-            payload["convert_to_english"] = convert_to_english
+        
+        payload["convert_to_english"] = convert_to_english
 
         url = self._make_api_url(f"api/tasks/{task_id}/download")
         response = requests.post(url, json=payload)
