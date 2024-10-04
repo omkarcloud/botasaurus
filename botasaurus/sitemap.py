@@ -159,7 +159,7 @@ def get_sitemaps_urls(request_options, urls):
 
         visited.add(url)
 
-        content = clean_sitemap_response(fetch_content(url))
+        content = clean_sitemap_response(fetch_content(url,proxy = request_options['proxy']))
         if not content:
             return DontCache([])
 
@@ -213,7 +213,7 @@ def get_urls(request_options, urls):
 
         visited.add(url)
 
-        content = clean_sitemap_response(fetch_content(url))
+        content = clean_sitemap_response(fetch_content(url,proxy = request_options['proxy']))
 
         if not content:
             return DontCache([])
@@ -282,7 +282,7 @@ def get_sitemaps_from_robots(request_options, urls):
             return []
 
         visited.add(url)
-        content = fetch_content(url)
+        content = fetch_content(url,proxy = request_options['proxy'])
 
         if not content:
             return DontCache([])
@@ -292,7 +292,7 @@ def get_sitemaps_from_robots(request_options, urls):
         )
         if not result:
             sm_url = clean_sitemap_url(url)
-            content = fetch_content(sm_url)
+            content = fetch_content(sm_url,proxy = request_options['proxy'])
             if content:
                 return [sm_url]
             return []
@@ -374,16 +374,17 @@ def parse_sitemaps_from_robots_txt(base_url, robots_txt_content):
 
 
 class Sitemap(_Base):
-    def __init__(self, urls, cache=True):
+    def __init__(self, urls, cache=True, proxy=None):
         self.cache = cache
-        self._filters = []  # Existing _filters list
-        self._extractors = []  # New list for _extractors
-        self._sort_links = False  # Flag for sorting links
-        self._randomize_links = False  # Flag for randomizing links
+        self.proxy = proxy
+        self._filters = []
+        self._extractors = []
+        self._sort_links = False
+        self._randomize_links = False
 
         urls = urls if isinstance(urls, list) else [urls]
 
-        urls = get_sitemaps_from_robots(self._create_request_options(), urls )
+        urls = get_sitemaps_from_robots(self._create_request_options(), urls)
         self.urls = urls
 
     def links(self) -> List[str]:
@@ -439,11 +440,11 @@ class Sitemap(_Base):
         results = self.sitemaps()
         write_json(results, filename)
         return results
-    
     def _create_request_options(self):
-        return {
+        options = {
             **default_request_options,
             "parallel": 40,
             "cache": self.cache,
         }
-
+        options["proxy"] = self.proxy
+        return options
