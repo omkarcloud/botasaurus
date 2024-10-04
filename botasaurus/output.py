@@ -306,20 +306,20 @@ def fix_excel_filename(filename):
     if not filename.endswith(".xlsx"):
         filename = filename + ".xlsx"
     return filename
-def write_excel(data, filename, log=True):
+def write_excel(data, filename, log=True, convert_strings_to_urls=True):
 
     data = clean_data(data)
     data = convert_nested_to_json(data)
 
     try:
         filename = fix_excel_filename(filename)
-        write_workbook(data, filename)
+        write_workbook(data, filename, convert_strings_to_urls)
 
         if log:
             print(f"View written Excel file at {filename}")
     except PermissionError:
         prompt(f"{filename} is currently open in another application (e.g., Excel). Please close the the Application and press 'Enter' to save.")
-        return write_excel(data, filename, log)
+        return write_excel(data, filename, log, convert_strings_to_urls)
     return filename
 def write_workbook(data, filename,  strings_to_urls = True):
     import xlsxwriter
@@ -373,8 +373,8 @@ def read_excel(filename):
 
     return data
 
-def write_temp_excel(data, log=True):
-    return write_excel(data, "temp.xlsx", log)
+def write_temp_excel(data, log=True, convert_strings_to_urls=True):
+    return write_excel(data, "temp.xlsx", log, convert_strings_to_urls)
 
 def read_temp_excel():
     return read_excel("temp.xlsx")
