@@ -167,11 +167,11 @@ def get_sitemaps_from_robots(request_options, urls):
       ls  
     )
 
-
 class Sitemap(_Base):
-    def __init__(self, urls, cache=True, proxy=None):
+    def __init__(self, urls, cache=True, proxy=None, parallel=40):
         self.cache = cache
         self.proxy = proxy
+        self.parallel = parallel
         self._filters = []
         self._extractors = []
         self._sort_links = False
@@ -235,10 +235,11 @@ class Sitemap(_Base):
         results = self.sitemaps()
         write_json(results, filename)
         return results
+
     def _create_request_options(self):
         options = {
             **default_request_options,
-            "parallel": 40,
+            "parallel": self.parallel,
             "cache": self.cache,
         }
         options["proxy"] = self.proxy
