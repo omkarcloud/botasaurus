@@ -187,16 +187,17 @@ class Cache:
         return None
 
     @staticmethod
-    def get_items(func, items=None):
+    def get_items(func, items=None, max=None):
         # resolve user errors
         if isinstance(items, str):
             return Cache.get_items(func, items)
-                
+
         hashes = Cache.get_items_hashes(func, items)
+        if max is not None:
+            hashes = hashes[:max]
         fn_name = getfnname(func)
         paths = [relative_path(f'{Cache.cache_directory}{fn_name}/{r}.json') for r in hashes]
         return _read_json_files(paths)
-
     @staticmethod
     def get_random_items(func, n=5):
         import random
