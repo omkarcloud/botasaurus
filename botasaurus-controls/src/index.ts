@@ -16,6 +16,15 @@ function isEmpty(x: any) {
   )
 }
 
+const FileTypes = {
+  image: ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'svg', 'webp'],
+  excel: ['xls', 'xlsx'],
+  audio: ['mp3', 'wav', 'ogg', 'm4a', 'flac'],
+  csv: ['csv'],
+  pdf: ['pdf'],
+  zip: ['zip'],
+  video: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv']
+} as const;
 
 function isNotEmpty(x: any) {
   return !isEmpty(x)
@@ -172,6 +181,12 @@ type LinkControlInput<V, P = {}> = ControlInput<V, P> & {
 }
 
 type ListOfLinkControlInput<V, P = {}> = LinkControlInput<V,P> &LimitOptions
+
+
+type FilePickerOptions = ControlInput<null, {
+  accept?: string[]
+  multiple?: boolean
+}> &LimitOptions
 
 // Define a generic control type with an additional parameter P for custom properties
 type NumberControlInput<V, P = {}> = ControlInput<V, P> & {
@@ -423,7 +438,31 @@ class Controls {
       defaultValue: props.defaultValue ?? null as any,
     })
   }
-  
+
+  filePicker(id: string, { accept = [], multiple = true, ...props }: FilePickerOptions = {}) {
+    const limit = ensureIsNullishOrNumber(props.limit, "limit")
+    return this.add(id, "filePicker", {
+        ...props,
+        limit,
+
+        accept: accept && accept.length > 0 ? accept : null, // Ensure accept is undefined if empty
+        multiple:multiple ?? true,
+        defaultValue: [],
+    } as any);
+  }
+
+  getFilePickerControlIds(): string[] {
+    const filePickerIds: string[] = [];
+
+    this.iterateControls((control) => {
+      if (control.type === "filePicker") {
+        filePickerIds.push(control.id);
+      }
+    });
+
+    return filePickerIds;
+  }
+
   multiSelect(id: string, props: ControlInput<string[], WithOptions> & LimitOptions = {}) {
     if (!props.options || !props.options.length) {
       throw new Error(
@@ -605,6 +644,10 @@ class Controls {
               }
 
             }
+          } else if (type === "filePicker") {
+            if (!value.length) {
+              errorMessages.push("Please select at least one file."); // Updated error message
+            }
           }
         }
 
@@ -630,11 +673,17 @@ class Controls {
         }
 
         if (
-          !errorMessages.length &&  (type === "listOfTexts"||type === "listOfLinks") && limit !== null && value.length > limit
+          !errorMessages.length && (type === "listOfTexts" || type === "filePicker" || type === "listOfLinks") && limit !== null && value.length > limit
         ) {
-          errorMessages.push(
-            `This field can contain at most ${limit} ${limit === 1 ? "item" : "items"}.`
-          )
+          if (type === "filePicker") {
+            errorMessages.push(
+              `You can select at most ${limit} ${limit === 1 ? "file" : "files"}.` // Updated error message
+            );
+          } else {
+            errorMessages.push(
+              `This field can contain at most ${limit} ${limit === 1 ? "item" : "items"}.`
+            );
+          }
         }
 
         if (
@@ -667,6 +716,22 @@ class Controls {
             }
         }
 
+        if (!errorMessages.length && type === "filePicker") {
+          const acceptedFileTypes = (control as any).accept;
+          if (acceptedFileTypes && acceptedFileTypes.length > 0) {
+            const invalidFiles = value.filter((file: any) => {
+              return isInvalidFileType(file, acceptedFileTypes)
+            });
+        
+            if (invalidFiles.length > 0) {
+              const acceptedFileTypesString = acceptedFileTypes.join(", ");
+              const foundFileTypesString = invalidFiles.map((file: any) => file.name.split(".").pop()?.toLowerCase()).join(", ");
+              errorMessages.push(
+                `Only files with the following extensions are allowed: ${acceptedFileTypesString}. Found: ${foundFileTypesString}.`
+              );
+            }
+          }
+        }
         // Custom validation
         if (validate && !errorMessages.length) {
           // Only proceed if no type or required errors
@@ -767,11 +832,15 @@ class Controls {
 }
 
 
+function isInvalidFileType(file: any, acceptedFileTypes: any) {
+  const fileExtension = file.name.split(".").pop()?.toLowerCase()
+  return !acceptedFileTypes.includes(fileExtension)
+}
+
 function runValidation(id:any, validate: (value: any, otherData: any) => string | string[] | undefined, value: any, data: any) {
   try {
     return validate(value, data)
   } catch (error) {
-    // console.log("aassa")
     throw new Error(`The custom validation function for ID: ${id} encountered an error. Please review the validate function of ${id}.`)
   }
 }
@@ -794,4 +863,4 @@ function createControls(input_js: string) {
 }
 
 
-export { Controls, createControls }
+export { Controls, createControls, FileTypes }
