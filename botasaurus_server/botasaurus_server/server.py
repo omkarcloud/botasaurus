@@ -1,3 +1,5 @@
+import json
+import re
 from casefy import titlecase
 import os
 from hashlib import sha256
@@ -20,6 +22,22 @@ def get_readme():
         return text
     except FileNotFoundError:
         return ""
+
+def replace_require_with_json(code: str, FileTypes) -> str:
+    """
+    Replaces require statements with a specified JSON object in the given JavaScript code.
+    
+    Args:
+        code (str): The JavaScript code as a string.
+    
+    Returns:
+        str: The modified JavaScript code.
+    """
+    # Define the JSON object to replace the require statement
+    replacement = json.dumps(FileTypes)
+
+    # Replace require statements with the specified JSON object
+    return re.sub(r"require\s*\(\s*['\"`]botasaurus-controls['\"`]\s*\)\s*;?", replacement, code)
 
 
 class _Server:
@@ -253,7 +271,15 @@ class _Server:
         input_js = None
         if os.path.exists(input_js_path):
             with open(input_js_path, "r") as file:
-                input_js = file.read()
+                input_js = replace_require_with_json(file.read(),  {
+                        "image": ["jpeg", "jpg", "png", "gif", "bmp", "svg", "webp"],
+                        "excel": ["xls", "xlsx"],
+                        "audio": ["mp3", "wav", "ogg", "m4a", "flac"],
+                        "csv": ["csv"],
+                        "pdf": ["pdf"],
+                        "zip": ["zip"],
+                        "video": ["mp4", "avi", "mov", "wmv", "flv", "mkv"],
+                    },)
         else:
             scraper_file_path = f"backend/inputs/{scraper_name}.js"
             
