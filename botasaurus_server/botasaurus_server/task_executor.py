@@ -35,7 +35,7 @@ class TaskExecutor:
             ).delete()
             # Update in progress tasks to pending
             session.query(Task).filter(Task.status == TaskStatus.IN_PROGRESS).update(
-                {"status": TaskStatus.PENDING, "started_at": None},
+                {"status": TaskStatus.PENDING, "started_at": None, "finished_at": None,},
             )
             session.commit()
 
