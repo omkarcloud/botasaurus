@@ -19,6 +19,7 @@ from .validation import (
 from .models import (
     Task,
     TaskStatus,
+    create_task_name,
     isoformat,
     serialize_task,
     serialize_ui_display_task,
@@ -715,7 +716,8 @@ def generate_filename(task_id, view, is_all_task, task_name):
         else:
             return f"all-task-{task_id}"  # Fixed missing f-string prefix
     else:
-        task_name = kebabcase(task_name)
+        
+        task_name = kebabcase(create_task_name(task_name, task_id))
         if view:
             return f"{task_name}-{view}"
         else:

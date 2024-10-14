@@ -271,15 +271,15 @@ class _Server:
         input_js = None
         if os.path.exists(input_js_path):
             with open(input_js_path, "r") as file:
-                input_js = replace_require_with_json(file.read(),  {
-                        "image": ["jpeg", "jpg", "png", "gif", "bmp", "svg", "webp"],
-                        "excel": ["xls", "xlsx"],
-                        "audio": ["mp3", "wav", "ogg", "m4a", "flac"],
-                        "csv": ["csv"],
-                        "pdf": ["pdf"],
-                        "zip": ["zip"],
-                        "video": ["mp4", "avi", "mov", "wmv", "flv", "mkv"],
-                    },)
+                input_js = replace_require_with_json(file.read(),  {"FileTypes": {
+                        "IMAGE": ["jpeg", "jpg", "png", "gif", "bmp", "svg", "webp"],
+                        "EXCEL": ["xls", "xlsx"],
+                        "AUDIO": ["mp3", "wav", "ogg", "m4a", "flac"],
+                        "CSV": ["csv"],
+                        "PDF": ["pdf"],
+                        "ZIP": ["zip"],
+                        "VIDEO": ["mp4", "avi", "mov", "wmv", "flv", "mkv"],
+                    }},)
         else:
             scraper_file_path = f"backend/inputs/{scraper_name}.js"
             

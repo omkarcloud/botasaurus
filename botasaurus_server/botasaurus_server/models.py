@@ -57,13 +57,16 @@ def isoformat(obj):
     return obj.isoformat() if obj else None
 
 
+def create_task_name(task_name, task_id):
+    return task_name if task_name is not None else f"Task {task_id}"
+
 def serialize_ui_output_task(obj, _):
     task_id = obj.id
 
     return {
         "id": task_id,
         "status": obj.status,
-        "task_name": obj.task_name if obj.task_name is not None else f"Task {task_id}",
+        "task_name": create_task_name(obj.task_name, task_id),
         "result_count": obj.result_count,
         "is_all_task": obj.is_all_task,
         "started_at": isoformat(obj.started_at),
@@ -98,7 +101,7 @@ def serialize_task(obj, with_result):
     return {
         "id": task_id,
         "status": status,
-        "task_name": obj.task_name if obj.task_name is not None else f"Task {task_id}",
+        "task_name": create_task_name(obj.task_name, task_id),
         "scraper_name": obj.scraper_name,
         "scraper_type": obj.scraper_type,
         "is_all_task": obj.is_all_task,
