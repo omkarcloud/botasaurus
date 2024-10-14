@@ -1,5 +1,5 @@
 from .errors import JsonHTTPResponse, JsonHTTPResponseWithMessage
-from .server import Server
+from .server import Server, get_scraper_error_message
 
 
 def serialize(data):
@@ -59,12 +59,12 @@ def ensure_json_body_is_dict(json_data):
 
 def validate_scraper_name(scraper_name):
     valid_scraper_names = Server.get_scrapers_names()
+    valid_names_string = ', '.join(valid_scraper_names)
 
     if len(valid_scraper_names) == 0:
-        error_message = "No Scrapers are available."
+        error_message = get_scraper_error_message(valid_scraper_names, scraper_name, valid_names_string)
         raise JsonHTTPResponseWithMessage(error_message)
 
-    valid_names_string = ", ".join(valid_scraper_names)
     if scraper_name is None:
         if len(valid_scraper_names) == 1:
             scraper_name = valid_scraper_names[0]
@@ -72,13 +72,9 @@ def validate_scraper_name(scraper_name):
             error_message = f"'scraper_name' must be provided when there are multiple scrapers. The scraper_name must be one of {valid_names_string}."
             raise JsonHTTPResponseWithMessage(error_message)
     elif not Server.get_scraper(scraper_name):
-
-        if len(valid_scraper_names) == 1:
-            error_message = f"A scraper with the name '{scraper_name}' does not exist. The scraper_name must be {valid_names_string}."
-        else:
-            error_message = f"A scraper with the name '{scraper_name}' does not exist. The scraper_name must be one of {valid_names_string}."
-
+        error_message = get_scraper_error_message(valid_scraper_names, scraper_name, valid_names_string)
         raise JsonHTTPResponseWithMessage(error_message)
+
     return scraper_name
 
 def validate_task_request(json_data):

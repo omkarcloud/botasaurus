@@ -5,7 +5,7 @@ from sqlalchemy import and_
 import traceback
 from .cleaners import clean_data
 from .db_setup import Session
-from .server import Server
+from .server import Server, get_scraper_error_message
 from .models import Task, TaskStatus, remove_duplicates_by_key
 from .task_helper import TaskHelper
 from .scraper_type import ScraperType
@@ -94,6 +94,14 @@ class TaskExecutor:
                 tasks = query.all()
 
                 if tasks:
+                    for task in tasks:
+                        valid_scraper_names = Server.get_scrapers_names()
+                        valid_scraper_names_set = set(valid_scraper_names)
+
+                        if task.scraper_name not in valid_scraper_names_set:
+                            valid_names_string = ', '.join(valid_scraper_names)
+                            raise Exception(get_scraper_error_message(valid_scraper_names, task.scraper_name, valid_names_string))
+
                     # Collect task and parent IDs
                     task_ids = [task.id for task in tasks]
                     parent_ids = {task.parent_task_id for task in tasks if task.parent_task_id}

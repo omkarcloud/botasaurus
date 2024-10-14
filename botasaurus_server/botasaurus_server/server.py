@@ -39,6 +39,10 @@ def replace_require_with_json(code: str, FileTypes) -> str:
     # Replace require statements with the specified JSON object
     return re.sub(r"require\s*\(\s*['\"`]botasaurus-controls['\"`]\s*\)\s*;?", replacement, code)
 
+def get_scraper_error_message(valid_scraper_names, scraper_name, valid_names_string):
+    if len(valid_scraper_names) == 0:
+        return f"The scraper named '{scraper_name}' does not exist. No scrapers are currently available. Please add a scraper using the Server.add_scraper method."
+    return f"A scraper with the name '{scraper_name}' does not exist. The scraper_name must be {valid_names_string}." if len(valid_scraper_names) == 1 else f"A scraper with the name '{scraper_name}' does not exist. The scraper_name must be one of {valid_names_string}."
 
 class _Server:
     def __init__(self):
