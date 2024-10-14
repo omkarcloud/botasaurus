@@ -367,7 +367,7 @@ def create_tasks(scraper, data, metadata, is_sync):
             ls.append({"key": key, "task_data": t})
             cache_keys.append(key)
 
-        cache_items_len, cache_map = create_cache_details(cache_keys)
+        cache_map = create_cache_details(cache_keys)
 
         tasks = []
 
@@ -403,7 +403,7 @@ def create_tasks(scraper, data, metadata, is_sync):
                 sort_id = all_task_sort_id - (idx + 1)
                 tasks.append(createTask(item["task_data"], sort_id))
 
-        return tasks, cached_tasks, cache_items_len
+        return tasks, cached_tasks, len(cached_tasks)
 
     if Server.cache:
         tasks, cached_tasks, cached_tasks_len = create_cached_tasks(tasks_data)
@@ -475,9 +475,8 @@ def create_cache_details(cache_keys):
     existing_items = TaskResults.filter_items_in_cache(cache_keys)
 
     cache_items = TaskResults.get_cached_items_json_filed(existing_items)
-    cache_items_len = len(cache_items)
     cache_map = {cache["key"]: cache["result"] for cache in cache_items}
-    return cache_items_len, cache_map
+    return cache_map
 
 
 

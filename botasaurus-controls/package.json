@@ -1,6 +1,6 @@
 {
   "name": "botasaurus-controls",
-  "version": "6.0.30",
+  "version": "6.0.40",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "engines": {
@@ -23,7 +23,7 @@
     "uglify-js": "^3.17.4"
   },
   "scripts": {
-    "build": "rimraf dist && tsc && rimraf dist/tsconfig.tsbuildinfo &&  python3 fix.py && node minify-script.js",
+    "build": "rimraf dist && tsc && rimraf dist/tsconfig.tsbuildinfo &&  python3 fix.py",
     "prepublishOnly": "npm run build",
     "lint": "eslint src test",
     "upload": "python3 increment_version.py && rm -rf dist/ && npm publish",

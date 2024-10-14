@@ -3,8 +3,6 @@
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
 		"alwaysStrict": true,
-		"declaration": true,
-		"declarationMap": false,
 		"emitDecoratorMetadata": true,
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
@@ -26,11 +24,14 @@
 		"pretty": true,
 		"removeComments": false,
 		"resolveJsonModule": true,
-		"sourceMap": false,
 		"strict": true,
 		"target": "ES2019",
 		"useDefineForClassFields": true,
 		"outDir": "dist",
+		"skipLibCheck": true, 
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
 	},
 	"include": [
 		"src"

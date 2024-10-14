@@ -236,8 +236,33 @@ def apply_sorts(data, sort_data, sort_objects):
 
     return data
 
-# python -m 
+# python -m  botasaurus_server.sorts
 if __name__ == "__main__":
-    c = NumericAscendingSort("age")
+    c = FalsyFirstSort("active")
 
-    print(c.apply([{"age": 30}, {"age": 20}, {"age": 10}]))
+    print(c.apply([
+    {
+        "name": "John",
+        "age": 30,
+        "active": True,
+        "date": "2022-01-01"
+    },
+    {
+        "name": "Alice",
+        "age": 25,
+        "active": False,
+        "date": "2021-12-31"
+    },
+    {
+        "name": "Bob",
+        "age": 35,
+        "active": None,
+        "date": None
+    },
+    {
+        "name": "Eve",
+        "age": 28,
+        "active": True,
+        "date": "2022-01-02"
+    }
+]))

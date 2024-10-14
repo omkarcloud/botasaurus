@@ -17,13 +17,13 @@ function isEmpty(x: any) {
 }
 
 const FileTypes = {
-  image: ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'svg', 'webp'],
-  excel: ['xls', 'xlsx'],
-  audio: ['mp3', 'wav', 'ogg', 'm4a', 'flac'],
-  csv: ['csv'],
-  pdf: ['pdf'],
-  zip: ['zip'],
-  video: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv']
+  IMAGE: ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'svg', 'webp'],
+  EXCEL: ['xls', 'xlsx'],
+  AUDIO: ['mp3', 'wav', 'ogg', 'm4a', 'flac'],
+  CSV: ['csv'],
+  PDF: ['pdf'],
+  ZIP: ['zip'],
+  VIDEO: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv']
 } as const;
 
 function isNotEmpty(x: any) {
@@ -439,17 +439,17 @@ class Controls {
     })
   }
 
+
   filePicker(id: string, { accept = [], multiple = true, ...props }: FilePickerOptions = {}) {
-    const limit = ensureIsNullishOrNumber(props.limit, "limit")
+    const limit = ensureIsNullishOrNumber(props.limit, "limit");
     return this.add(id, "filePicker", {
         ...props,
         limit,
-
-        accept: accept && accept.length > 0 ? accept : null, // Ensure accept is undefined if empty
+        accept: accept && accept.length > 0 ? accept : null,
         multiple:multiple ?? true,
         defaultValue: [],
     } as any);
-  }
+}
 
   getFilePickerControlIds(): string[] {
     const filePickerIds: string[] = [];
