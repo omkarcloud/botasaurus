@@ -1,29 +1,8 @@
 from json import dumps
 
 from .errors import DownloadResponse
+from botasaurus.output import convert_nested_to_json, convert_nested_to_json_for_excel
 
-def convert_nested_to_json(input_list):
-    """
-    Iterates through a list of dictionaries and converts any nested dictionaries or lists
-    within those dictionaries into JSON-formatted strings.
-
-    :param input_list: The list of dictionaries to process.
-    :return: A new list with dictionaries having nested dictionaries/lists converted to JSON strings.
-    """
-    output_list = []
-
-    for item in input_list:
-        processed_dict = {}
-        for key, value in item.items():
-            if isinstance(value, (dict, list, tuple, set)):
-                # Convert the value to a JSON-formatted string if it's a dict or list
-                processed_dict[key] = dumps(value)
-            else:
-                # Keep the value as is if it's not a dict or list
-                processed_dict[key] = value
-        output_list.append(processed_dict)
-
-    return output_list
 
 
 def make_csv(fieldnames, results):
@@ -91,7 +70,7 @@ def download_results(results, fmt, filename):
         headers["Content-Disposition"] = f'attachment; filename="{filename}.json"'
         return DownloadResponse(body=dumps(results), status=200, headers=headers)
     
-    results = convert_nested_to_json(results)
+    
 
     if results:
         fieldnames = list(results[0].keys())
@@ -99,6 +78,7 @@ def download_results(results, fmt, filename):
         fieldnames = []
     
     if fmt == "csv":
+        results = convert_nested_to_json(results)
         headers["Content-Type"] = "text/csv"
         headers["Content-Disposition"] = f'attachment; filename="{filename}.csv"'
 
@@ -106,6 +86,7 @@ def download_results(results, fmt, filename):
         body = make_csv(fieldnames, results)
         return DownloadResponse(body=body, status=200, headers=headers)
     elif fmt == "excel":
+        results = convert_nested_to_json_for_excel(results)
         headers["Content-Type"] = (
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )

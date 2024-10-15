@@ -142,7 +142,6 @@ def get_fieldnames(data_list):
                 )
     return list(fieldnames_dict.keys())  # Convert the dictionary keys to a list
 
-
 def convert_nested_to_json(input_list):
     """
     Iterates through a list of dictionaries and converts any nested dictionaries or lists
@@ -159,6 +158,43 @@ def convert_nested_to_json(input_list):
             if isinstance(value, (dict, list, tuple, set)):
                 # Convert the value to a JSON-formatted string if it's a dict or list
                 processed_dict[key] = dumps(value)
+            else:
+                # Keep the value as is if it's not a dict or list
+                processed_dict[key] = value
+        output_list.append(processed_dict)
+
+    return output_list
+
+def cap(string):
+    """
+    Truncate the string if it exceeds 32767 characters and append '...'.
+    
+    :param string: The string to truncate.
+    :return: The truncated string.
+    """
+    if len(string) > 32767:
+        return string[:32764] + '...'
+    return string
+
+def convert_nested_to_json_for_excel(input_list):
+    """
+    Iterates through a list of dictionaries and converts any nested dictionaries or lists
+    within those dictionaries into JSON-formatted strings. Also truncates long strings.
+
+    :param input_list: The list of dictionaries to process.
+    :return: A new list with dictionaries having nested dictionaries/lists converted to JSON strings.
+    """
+    output_list = []
+
+    for item in input_list:
+        processed_dict = {}
+        for key, value in item.items():
+            if isinstance(value, (dict, list, tuple, set)):
+                # Convert the value to a JSON-formatted string if it's a dict or list
+                processed_dict[key] = cap(dumps(value))
+            elif isinstance(value, str):
+                # Truncate the string if it's too long
+                processed_dict[key] = cap(value)
             else:
                 # Keep the value as is if it's not a dict or list
                 processed_dict[key] = value
@@ -309,7 +345,7 @@ def fix_excel_filename(filename):
 def write_excel(data, filename, log=True, convert_strings_to_urls=True):
 
     data = clean_data(data)
-    data = convert_nested_to_json(data)
+    data = convert_nested_to_json_for_excel(data)
 
     try:
         filename = fix_excel_filename(filename)
