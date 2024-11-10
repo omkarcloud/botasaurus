@@ -357,6 +357,7 @@ def write_excel(data, filename, log=True, convert_strings_to_urls=True):
         prompt(f"{filename} is currently open in another application (e.g., Excel). Please close the the Application and press 'Enter' to save.")
         return write_excel(data, filename, log, convert_strings_to_urls)
     return filename
+MAX_EXCEL_LINKS = 65528
 def write_workbook(data, filename,  strings_to_urls = True):
     import xlsxwriter
     if strings_to_urls:
@@ -374,7 +375,7 @@ def write_workbook(data, filename,  strings_to_urls = True):
     row = 1
     for item in data:
         # Prevent Warnings and Handle Excel 65K Link Limit
-        if worksheet.hlink_count > 65000:
+        if worksheet.hlink_count > MAX_EXCEL_LINKS:
             workbook.close()
             if os.path.exists(filename):
                 os.remove(filename)
@@ -496,6 +497,24 @@ def dynamically_import_boto3():
     except ImportError:
         install('boto3')
 
+def get_aws_access_message(access_key_id: str = None, secret_access_key: str = None) -> str:
+    """
+    Generate message based on missing AWS credentials.
+
+    Args:
+        access_key_id (str): AWS access key ID
+        secret_access_key (str): AWS secret access key
+
+    Returns:
+        str: Appropriate message about missing credentials
+    """
+    if not access_key_id and not secret_access_key:
+        return "AWS access key ID and secret access key are missing."
+    elif not access_key_id:
+        return "AWS access key ID is missing."
+    elif not secret_access_key:
+        return "AWS secret access key is missing."
+
 def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key, object_name=None,):
     """
     Upload a file to an S3 bucket
@@ -505,13 +524,14 @@ def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key, objec
     :param secret_access_key: AWS Secret Access Key
     :param bucket_name: S3 bucket name
     """
-
     if not os.path.exists(file_name):
         if not os.path.exists(append_output_if_needed(file_name)):
             raise FileNotFoundError(f"{file_name} not found. Unable to upload to S3.")
         else:
             file_name = append_output_if_needed(file_name)
-    
+    if not access_key_id or not secret_access_key:
+        msg = get_aws_access_message(access_key_id, secret_access_key)
+        raise ValueError(msg)
     dynamically_import_boto3()
     import boto3
 
@@ -540,7 +560,8 @@ def upload_to_s3(file_name, bucket_name, access_key_id, secret_access_key, objec
                 object_name,
             )
         print(f'Successfully uploaded file')
-
+    
+    return f"https://{bucket_name}.s3.amazonaws.com/{object_name}"
 
 def download_from_s3(file_name, object_name, bucket_name,  access_key_id, secret_access_key, region_name='us-east-1'):
     """
