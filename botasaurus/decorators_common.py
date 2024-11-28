@@ -225,6 +225,15 @@ def clean_error_logs(error_logs_dir, sort_key):
         folder_path = os.path.join(error_logs_dir, folder)
         rmtree(folder_path, ignore_errors=True)
 
+def to_time(x):
+    from datetime import datetime
+    try:
+      return datetime.strptime(x, '%Y-%m-%d_%H-%M-%S')
+    except:
+        # causes deletion for it, occurs for files like .DS_STORE
+        old_date = '2021-01-01_10-00-00'
+        return datetime.strptime(old_date, '%Y-%m-%d_%H-%M-%S')    
+
 def save_error_logs(exception_log, driver):
     from datetime import datetime
     main_error_directory = "error_logs"
@@ -248,7 +257,10 @@ def save_error_logs(exception_log, driver):
             driver.save_screenshot(screenshot_filename)
         except Exception as e:
             print(f"Error saving screenshot: {e}")
-    clean_error_logs("error_logs", lambda x: datetime.strptime(x, '%Y-%m-%d_%H-%M-%S'))
+
+
+    clean_error_logs("error_logs", to_time)
+
 def evaluate_proxy(proxy):
                     if isinstance(proxy, list):
                         import random

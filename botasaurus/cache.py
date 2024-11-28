@@ -14,10 +14,17 @@ class CacheMissException(Exception):
         self.key = key
         super().__init__(f"Cache miss for key: '{key}'")
 
+def get_directory_path(file_path):
+    return os.path.dirname(file_path)
 
 def write_json(data, path):
-    with open(path, 'w', encoding="utf-8") as fp:
-        json.dump(data, fp)
+    try:
+        with open(path, 'w', encoding="utf-8") as fp:
+            json.dump(data, fp)
+    except FileNotFoundError:
+        create_directory_if_not_exists(get_directory_path(path))
+        return write_json(data, path)
+
 
 def getfnname(func):
     return func if isinstance(func, str) else func.__name__
@@ -71,6 +78,19 @@ def _read_json_files(file_paths):
     results = Parallel(n_jobs=-1)(delayed(safe_get)(file_path) for file_path in file_paths)
     return results
 
+def safe_corrupted_get(cache_path):
+    try:
+        read_json(cache_path)
+        return 0
+    except (JSONDecodeError, FileNotFoundError):
+        _remove(cache_path)
+        # These are files which are corrupted, likely as user paused when files were being written.
+        return 1
+    
+def _delete_corrupted_cached_items(file_paths):
+    from joblib import Parallel, delayed
+    results = Parallel(n_jobs=-1)(delayed(safe_corrupted_get)(file_path) for file_path in file_paths)
+    return results
 
 def _remove(cache_path):
     if os.path.exists(cache_path):
@@ -106,6 +126,8 @@ def is_affirmative(input_string):
     # Check if the normalized string is in the set of affirmative values
     return normalized_string in affirmative_values
 
+def pluralize(word, n):
+        return word if n <= 1 else word + 's'
 def is_negative(input_string):
     # List of negative representations
     negative_values = {"false", "no", "n", "0", "nah", "nope", "never", "negative", "f"}
@@ -198,6 +220,21 @@ class Cache:
         fn_name = getfnname(func)
         paths = [relative_path(f'{Cache.cache_directory}{fn_name}/{r}.json') for r in hashes]
         return _read_json_files(paths)
+
+    @staticmethod
+    def delete_corrupted_items(func):
+        hashes = Cache.get_items_hashes(func, None)
+        fn_name = getfnname(func)
+        paths = [relative_path(f'{Cache.cache_directory}{fn_name}/{r}.json') for r in hashes]
+        corrupted_items_removed = sum(_delete_corrupted_cached_items(paths))
+        if corrupted_items_removed:
+            item_plural = pluralize('item', corrupted_items_removed)
+            print(f"Deleted {corrupted_items_removed} corrupted {item_plural}")
+        else:
+          print("No corrupted items found")        
+    
+        return corrupted_items_removed
+
     @staticmethod
     def get_random_items(func, n=5):
         import random
@@ -318,7 +355,8 @@ class Cache:
                 result = input(f"Should we delete {len(collected_honeypots)} items in {path}? (Y/n): ")
 
                 if is_affirmative(result):
-                    print(f"Deleting {len(collected_honeypots)} items...")
+                    item_plural = pluralize('item', len(collected_honeypots))
+                    print(f"Deleting {len(collected_honeypots)} {item_plural}...")
                     Cache.delete_items(func, collected_honeypots)
                     break
                 elif is_negative(result):
