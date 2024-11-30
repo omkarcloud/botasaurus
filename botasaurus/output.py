@@ -416,7 +416,17 @@ def write_temp_excel(data, log=True, convert_strings_to_urls=True):
 def read_temp_excel():
     return read_excel("temp.xlsx")
 
-def zip_files(filenames, output_filename="data", log=True):
+def zipdir(path, ziph):
+    # ziph is zipfile handle
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            
+            main = os.path.join(root, file)
+            arch = os.path.relpath(os.path.join(root, file), os.path.join(path, '..'))
+            ziph.write(main, arch)
+            
+
+def zip_files(filenames, output_filename=None, log=True):
     import zipfile
 
     # Ensure filenames is a list
@@ -430,20 +440,35 @@ def zip_files(filenames, output_filename="data", log=True):
     if not filenames:
         print("No files to zip.")
         return None
+    if not output_filename: 
+        if len(filenames) == 1:
+            output_filename = "./" + os.path.basename(filenames[0]) + ".zip"
+        else: 
+            output_filename = "./data.zip"
+
 
     # Prepare the output filename
-    output_filename = append_output_if_needed(output_filename)
     if not output_filename.endswith(".zip"):
         output_filename += ".zip"
+
+    if is_slash_not_in_filename(output_filename):
+        output_filename = "./"+output_filename.strip()
+    else: 
+        output_folder = os.path.dirname(output_filename)
+        os.makedirs(output_folder, exist_ok=True)
 
     try:
         with zipfile.ZipFile(output_filename, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
             for file in filenames:
-                file = append_output_if_needed(file)
-                if os.path.exists(file):
-                    # Get the file name without the "output/" prefix
-                    arcname =  os.path.basename(file) 
-                    zipf.write(file, arcname=arcname)
+                # file = append_output_if_needed(file)
+                file_exists = os.path.exists(file)
+                if file_exists:
+                    if os.path.isdir(file):
+                        zipdir(file, zipf)
+                    else: 
+                        # Get the file name without the "output/" prefix
+                        arcname =  os.path.basename(file) 
+                        zipf.write(file, arcname=arcname)
                 else:
                     raise Exception(f"{file}' not found. Unable to add to zip archive.")
 
@@ -459,6 +484,102 @@ def zip_files(filenames, output_filename="data", log=True):
         return None
     except Exception as e:
         print(f"Error while zipping files: {e}")
+        return None
+    
+def _has_less_than1_item(path):
+    file_count = 0
+    for _ in os.scandir(path):
+        file_count += 1
+            
+        if file_count > 1:
+            return False
+    
+    return True
+
+def _has_0_item(path):
+    file_count = 0
+    for _ in os.scandir(path):
+        file_count += 1
+        return False
+    
+    return True
+
+def unzip_file(filename, output_folder_path=None, force=False, log=True):
+    import zipfile
+    import shutil
+
+    # Ensure filename is provided
+    if not filename:
+        print("No file provided to unzip.")
+        return None
+
+    # Ensure the file exists
+    if not os.path.exists(filename):
+        print(f"File '{filename}' not found.")
+        return None
+
+    # Ensure the file has a .zip extension
+    if not filename.endswith(".zip"):
+        print(f"File '{filename}' is not a zip file.")
+        return None
+    
+    # Ensure the file is a zip file
+    if not zipfile.is_zipfile(filename):
+        print(f"Error: '{filename}' is not a valid zip file.")
+        return None
+    
+    try:
+        # Extract the base name of the file (without the .zip extension)
+        base_name = os.path.splitext(os.path.basename(filename))[0]
+        if output_folder_path is None:
+            output_folder_path = os.path.join(os.getcwd(), base_name)
+        else: 
+            output_folder_path = output_folder_path.rstrip("/")
+
+        # Check if the output folder already exists
+        if os.path.exists(output_folder_path):
+            if _has_0_item(output_folder_path):
+                pass
+            else:
+                if not force:
+                    print(f"Error: Folder '{output_folder_path}' already exists.")
+                    return None
+        
+        os.makedirs(output_folder_path, exist_ok=True)
+
+        with zipfile.ZipFile(filename, 'r') as zipf:
+            zipf.extractall(output_folder_path)
+
+
+        folder_in_folder = os.path.join(output_folder_path, os.path.basename(output_folder_path))
+        is_folder_in_folder = os.path.isdir(folder_in_folder)
+        
+        if is_folder_in_folder:
+                result = _has_less_than1_item(output_folder_path)
+                if result:
+                    s = folder_in_folder
+                    d = os.path.join(os.path.dirname(filename), "__" + base_name)
+                    real_dst = shutil.move(s, d)        
+                    shutil.rmtree(output_folder_path)    
+                    os.rename(real_dst, base_name)   
+
+        if log:
+            if output_folder_path == os.path.join(os.getcwd(), os.path.basename(output_folder_path)):
+              bn = os.path.basename(output_folder_path)
+              print(f"Unzipped files can be found in the folder: ./{bn}")
+            else:
+              print(f"Unzipped files can be found in the folder: {output_folder_path}")
+            
+        return output_folder_path
+
+    except PermissionError:
+        prompt(f"{filename} is currently open in another application. Please close the application and press 'Enter' to retry.")
+        return unzip_file(filename, log)
+    except zipfile.BadZipFile:
+        print(f"Error: Unable to unzip file {filename}. It may be corrupted.")
+        return None
+    except Exception as e:
+        print(f"Error while unzipping file: {e}")
         return None
 
 

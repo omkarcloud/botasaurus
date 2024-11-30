@@ -250,14 +250,14 @@ class Cache:
         return _read_json_files(paths)
     @staticmethod
     def get_items_hashes(func, items=None):
-        results = get_cached_files(func)
 
         if items is None:
+            results = get_cached_files(func)
             # Return all cached items
             return results
         else: 
-            items  = set([Cache.hash(item) for item in items])
-            return [r for r in results if r in items]
+            # bug fixed, which causes bad cached items order
+            return [Cache.hash(item) for item in items]
 
     @staticmethod
     def delete(func, key_data):

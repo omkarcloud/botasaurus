@@ -27,6 +27,7 @@ from .output import (
     write_temp_file,
     upload_to_s3,
     download_from_s3,
+    unzip_file, 
 )
 from .formats import Formats
 from .beep_utils import prompt
