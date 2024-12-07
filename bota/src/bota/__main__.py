@@ -444,24 +444,25 @@ def get_cluster_names(project_id):
 
 def list_all_ips_regional(project_id, region):
     commands = [
-            "gcloud",
-            "compute",
-            "addresses",
-            "list",
-            "--format=value(name)",
-            "--project",
-            project_id,
-            "--regions",
-            region,
-            "--quiet",
-        ]
-    
-    result = invoke_shell_command(commands)
+        "gcloud",
+        "compute",
+        "addresses",
+        "list",
+        "--format=value(name)",
+        "--project",
+        project_id,
+        "--regions",
+        region,
+        "--quiet",
+    ]
+
+    result = invoke_shell_command(commands, project_id)
 
     return get_all_lines(result.stdout)
 
+
 def enable_compute_services(project_id):
-    click.echo("Enabling services...")
+    click.echo("Enabling compute services...")
     subprocess.run(
         [
             "gcloud",
@@ -472,23 +473,22 @@ def enable_compute_services(project_id):
             project_id,
         ],
         check=True,
-        stderr=subprocess.STDOUT,
         capture_output=True,
-        text=True,        
-    ) 
-
-def invoke_shell_command(commands):
+        text=True,
+    )
+def invoke_shell_command(commands, project_id):
     try:
-      return subprocess.run(
-          commands,
-          check=True,
-          capture_output=True,
-          text=True,
-      )
+
+        return subprocess.run(
+            commands,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
     except subprocess.CalledProcessError as e:
         if "Enable it by visiting https://console.developers" in e.stderr:
-            enable_compute_services()
-            return invoke_shell_command(commands)
+            enable_compute_services(project_id)
+            return invoke_shell_command(commands, project_id)
         else:
             raise e  # Re-raise the exception for other errors
 
