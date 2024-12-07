@@ -443,8 +443,7 @@ def get_cluster_names(project_id):
 
 
 def list_all_ips_regional(project_id, region):
-    result = subprocess.run(
-        [
+    commands = [
             "gcloud",
             "compute",
             "addresses",
@@ -454,12 +453,45 @@ def list_all_ips_regional(project_id, region):
             project_id,
             "--regions",
             region,
+            "--quiet",
+        ]
+    
+    result = invoke_shell_command(commands)
+
+    return get_all_lines(result.stdout)
+
+def enable_compute_services(project_id):
+    click.echo("Enabling services...")
+    subprocess.run(
+        [
+            "gcloud",
+            "services",
+            "enable",
+            "compute.googleapis.com",
+            "--project",
+            project_id,
         ],
         check=True,
+        stderr=subprocess.STDOUT,
         capture_output=True,
-        text=True,
-    )
-    return get_all_lines(result.stdout)
+        text=True,        
+    ) 
+
+def invoke_shell_command(commands):
+    try:
+      return subprocess.run(
+          commands,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+    except subprocess.CalledProcessError as e:
+        if "Enable it by visiting https://console.developers" in e.stderr:
+            enable_compute_services()
+            return invoke_shell_command(commands)
+        else:
+            raise e  # Re-raise the exception for other errors
+
 
 
 def create_cluster_command_string(cluster_name, rgn, zone, project_id, max_nodes, machine_type):
