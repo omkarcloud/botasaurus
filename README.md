@@ -47,6 +47,7 @@ Now, for the magical powers awaiting you after learning Botasaurus:
 
 ![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
 
+
 - In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes E-V-E-R-Y) bot test, no need to spend time finding ways to access a website.
 
 ![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/solve-bot-detection.gif)
@@ -1788,7 +1789,7 @@ def should_delete_item(item, result):
 
 all_items = ['1', '2', '3', '4', '5']
 # List of items to iterate over, it is fine if the list contains items which have not been cached, as they will be simply ignored.
-Cache.delete_items_by_filter('scraping_function', all_items, should_delete_item)
+Cache.delete_items_by_filter('scraping_function', should_delete_item, all_items)
 ```
 
 Importantly, be cautious and first use `delete_items_by_filter` on a small set of items which you want to be deleted. Here's an example:
