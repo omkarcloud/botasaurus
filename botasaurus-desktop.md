@@ -2,6 +2,7 @@
 A **Desktop Extractor** is a standalone application that runs on your computer and extracts specific data from websites, PDFs, Excel files, and other documents. Unlike web-based tools, desktop extractors run locally, giving **faster performance** and **zero cloud costs**.
 
 ![Desktop Extractor showing an application interface with extraction options](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
+![Desktop Extractor showing an application interface with extraction options](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/aa.png)
 
 ### What advantages do Desktop Scrapers have over web-based scrapers?
 **Desktop Scrapers** offer key advantages over web-based scraper solutions like Outscraper:  
@@ -388,7 +389,7 @@ Please follow these steps:
 1. Open the AWS Console > S3.
 ![aws-s3](https://raw.githubusercontent.com/omkarcloud/macos-code-signing-example/master/images/aws-s3.png)  
 2. Click "Create bucket".
-![create-bucket](https://raw.githubusercontent.com/omkarcloud/macos-code-signing-example/master/images/create-bucket.png)  
+![create-bucket](https://raw.githubusercontent.com/omkarcloud/macos-code-signing-example/master/images/s3-bucket-setup.jpg)  
 3. Configure the bucket:
 ```
 Bucket name: Enter a unique bucket name. Conventionally, this name matches your product's name in kebab case. For example, if your product's name is "Yahoo Finance Extractor," your bucket name will be `yahoo-finance-extractor`.
@@ -432,7 +433,7 @@ Replace `todo-my-bucket-name` with the name of your S3 bucket.
 **5. Deploy**
 1. Push the code to your GitHub repository.
 2. Go to the repository's "Actions" tab to see the build process in action.
-![GitHub Actions Workflow](https://raw.githubusercontent.com/omkarcloud/macos-code-signing-example/master/images/github-actions.png)
+![GitHub Actions Workflow](https://raw.githubusercontent.com/omkarcloud/macos-code-signing-example/master/images/github-actions.jpg)
 3. After a successful build, the installer files will be found in your S3 bucket. These files will be publicly accessible in the following format:
 ```
 https://<your-bucket-name>.s3.amazonaws.com/<your-product-name>.dmg
