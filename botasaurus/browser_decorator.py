@@ -121,7 +121,7 @@ def browser(
             # # Pool to hold reusable drivers
             _driver_pool = wrapper_browser._driver_pool if dont_close_driver else []
 
-            def run_task(data,  retry_attempt, retry_driver=None) -> Any:
+            def run_task(data, retry_attempt, retry_driver=None) -> Any:
                 if cache is True:
                     path = _get_cache_path(func, data)
                     if _has(path):
