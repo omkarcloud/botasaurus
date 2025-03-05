@@ -452,7 +452,7 @@ Apple and Microsoft both want to ensure that the apps running on their OS are sa
 
 ### What if I don't sign my app?
 
-- **macOS:** Users **will not** be able to install your app without bypassing severe security warnings.
+- **macOS:** Users **will not** be able to install your app.
 
 ![macOS warning dialog showing "App cannot be opened because the developer cannot be verified"](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/macos-security-warning.webp)
 
