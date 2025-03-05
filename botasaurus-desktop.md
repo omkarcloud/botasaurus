@@ -2,7 +2,6 @@
 A **Desktop Extractor** is a standalone application that runs on your computer and extracts specific data from websites, PDFs, Excel files, and other documents. Unlike web-based tools, desktop extractors run locally, giving **faster performance** and **zero cloud costs**.
 
 ![Desktop Extractor showing an application interface with extraction options](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
-![Desktop Extractor showing an application interface with extraction options](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/aa.png)
 
 ### What advantages do Desktop Scrapers have over web-based scrapers?
 **Desktop Scrapers** offer key advantages over web-based scraper solutions like Outscraper:  
@@ -404,7 +403,7 @@ Ensure that **Object Ownership** is set to **"ACLs enabled"** because Electron B
 ![ACL Error](https://raw.githubusercontent.com/omkarcloud/macos-code-signing-example/master/images/acl-error.png)
 
 4. Click on "Create bucket".
-![S3 Bucket Creation](https://raw.githubusercontent.com/omkarcloud/macos-code-signing-example/master/images/s3-bucket-setup.png)
+![S3 Bucket Creation](https://raw.githubusercontent.com/omkarcloud/macos-code-signing-example/master/images/s3-bucket-setup.jpg)
 
 5. If you don't have an AWS access key and secret key, create them through the IAM service as described in [AWS documentation here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user_manage_add-key.html).
 
