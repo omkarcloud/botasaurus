@@ -6,7 +6,7 @@
   </div>
 
 <h3 align="center">
-  The All in One Framework to build Awesome Scrapers.
+  The All in One Framework to Build Awesome Scrapers
 </h3>
 
 <p align="center">
@@ -24,51 +24,48 @@
     <img alt="Run in Gitpod" src="https://gitpod.io/button/open-in-gitpod.svg" />
   </a>
 </p>
-
-## A new version has been released, with performance boost. To update please run `python -m pip install bota botasaurus botasaurus-api botasaurus-requests botasaurus-driver bota botasaurus-proxy-authentication botasaurus-server --upgrade`.
-
 ## 🐿️ Botasaurus In a Nutshell
 
 How wonderful that of all the web scraping tools out there, you chose to learn about Botasaurus. Congratulations! 
 
-And now that you are here, you are in for an exciting, unusual and rewarding journey that will make your web scraping life a lot, lot easier.
+And now that you are here, you are in for an exciting, unusual, and rewarding journey that will make your web scraping life a lot easier.
 
-Now, let me tell you in bullet points about Botasaurus. (Because as per the marketing gurus, YOU as a member of Developer Tribe have a VERY short attention span.)
+Now, let me tell you about Botasaurus in bullet points. (Because as per marketing gurus, YOU as a member of the Developer Tribe have a VERY short attention span.)
 
 *So, what is Botasaurus?*
 
-Botasaurus is an all-in-one web scraping framework that enables you to build awesome scrapers in less time, less code, and with more fun.
+Botasaurus is an all-in-one web scraping framework that enables you to build awesome scrapers in less time, with less code, and with more fun.
 
-A Web Scraping Magician has put all his web scraping experience and best practices into Botasaurus to save you hundreds of hours of Development Time! 
+A Web Scraping Magician has put all his web scraping experience and best practices into Botasaurus to save you hundreds of hours of development time! 
 
 Now, for the magical powers awaiting you after learning Botasaurus:
 
-- Convert any Web Scraper to a UI-based Scraper in minutes, which will make your Customer sing praises of you. 
+- Convert any web scraper to a UI-based scraper in minutes, which will make your customer sing your praises. 
 
 ![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
 
-- Convert your Web Scraper into a Desktop app for Mac, Windows and Linux in 1 Day, so your web scraper can not only developers but everyone can benefit from your scraper.
+- Convert your web scraper into a desktop app for Mac, Windows, and Linux in 1 day, so your web scraper can benefit not only developers but everyone.
 
-UI-based Scraper in minutes, which will make your Customer sing praises of you. 
+UI-based scraper in minutes, which will make your customer sing your praises. 
 
 ![desktop-app-photo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
 
 
-- In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes E-V-E-R-Y) bot test, no need to spend time finding ways to access a website.
+- In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test, no need to spend time finding ways to access a website.
 
 ![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/fingerprint-non-bot.png)
 
-- Save up to 97%, yes 97% on browser proxy costs by using [browser-based fetch requests.](https://github.com/omkarcloud/botasaurus#how-to-significantly-reduce-proxy-costs-when-scraping-at-scale)
+- Save up to 97%, yes 97%, on browser proxy costs by using [browser-based fetch requests.](https://github.com/omkarcloud/botasaurus#how-to-significantly-reduce-proxy-costs-when-scraping-at-scale)
 
-- Easily save hours of Development Time with easy parallelization, profiles, extensions, and proxy configuration. Botasaurus makes asynchronous, parallel scraping a child's play.
+- Easily save hours of development time with easy parallelization, profiles, extensions, and proxy configuration. Botasaurus makes asynchronous, parallel scraping child's play.
 
-- Use Caching, Sitemap, Data cleaning, and other utilities to save hours of time spent in writing and debugging code.
+- Use caching, sitemap, data cleaning, and other utilities to save hours of time spent writing and debugging code.
 
 - Easily scale your scraper to multiple machines with Kubernetes, and get your data faster than ever.
 
-And those are just the highlights. I Mean! 
+And those are just the highlights. I mean! 
 
-There is so much more to Botasaurus, that you will be amazed at how much time you will save with it.
+There is so much more to Botasaurus that you will be amazed at how much time you will save with it.
 
 ## 🚀 Getting Started with Botasaurus
 
@@ -130,7 +127,7 @@ Let's understand this code:
 def scrape_heading_task(driver: Driver, data):
 ```  
 
-- Botasaurus automatically provides an Humane Driver to our function:
+- Botasaurus automatically provides a Humane Driver to our function:
 ```python
 def scrape_heading_task(driver: Driver, data):
 ```  
@@ -205,13 +202,13 @@ Finally, run it again:
 python main.py
 ```
 
-This time, you will observe the exact same result as before, but instead of opening a whole Browser, we are making browser-like humane HTTP requests.
+This time, you will observe the exact same result as before, but instead of opening a whole browser, we are making browser-like humane HTTP requests.
 
 ## 💡 Understanding Botasaurus
 
-### What is Botasaurus Driver, And Why should I use it over Selenium and Playwright?
+### What is Botasaurus Driver, and why should I use it over Selenium and Playwright?
 
-Botasaurus Driver is a web automation driver like Selenium, and the single most important reason to use it is because it is truly humane, and you will not, and I repeat NOT, have any issues with accessing any website.
+Botasaurus Driver is a web automation driver like Selenium, and the single most important reason to use it is because it is truly humane. You will not, and I repeat NOT, have any issues accessing any website.
 
 Plus, it is super fast to launch and use, and the API is designed by and for web scrapers, and you will love it.
 
@@ -230,7 +227,7 @@ This is the single most popular challenge and requires making a browser-like con
 
 #### What Works?
 
-- Visiting the website via Google Referrer (which makes is seems as if the user has arrived from google search).
+- Visiting the website via Google Referrer (which makes it seem as if the user has arrived from a Google search).
 
 ```python
 from botasaurus.browser import browser, Driver
@@ -263,7 +260,7 @@ scrape_heading_task()
 
 **JS with Captcha Challenge**
 
-This challenge requires performing JS computations that differentiate a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. It's used to for pages which are rarely but sometimes visited by people, like:
+This challenge requires performing JS computations that differentiate a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. It's used for pages that are rarely but sometimes visited by people, like:
 - 5th Review page
 - Auth pages
 
@@ -273,7 +270,7 @@ This challenge requires performing JS computations that differentiate a Chrome c
 Using `@request` does not work because although it can make browser-like HTTP requests, it cannot run JavaScript to solve the challenge.
 
 #### What Works?
-Visiting the website via Google from a browser works
+Visiting the website via Google from a browser works.
 
 ```python
 from botasaurus.browser import browser, Driver
@@ -289,7 +286,7 @@ scrape_heading_task()
 ```
 
 
-### What are the benefits of a UI Scraper?
+### What are the benefits of a UI scraper?
 
 Here are some benefits of creating a scraper with a user interface:
 
@@ -337,31 +334,31 @@ Go to http://localhost:3000/about to see the rendered README.md file of the proj
 
 ![starter-scraper-demo-readme](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-scraper-demo-readme.png)
 
-Finally, visit http://localhost:3000/api-integration to see how to access the Scraper via API.
+Finally, visit http://localhost:3000/api-integration to see how to access the scraper via API.
 
 ![starter-scraper-demo-api](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/starter-scraper-demo-api.png)
 
-The API Documentation is generated dynamically based on your Scraper's Inputs, Sorts, Filters, etc., and is unique to your Scraper. 
+The API documentation is generated dynamically based on your scraper's inputs, sorts, filters, etc., and is unique to your scraper. 
 
-So, whenever you need to run the Scraper via API, visit this tab and copy the code specific to your Scraper.
+So, whenever you need to run the scraper via API, visit this tab and copy the code specific to your scraper.
 
-### How to create a UI Scraper using Botasaurus?
+### How to create a UI scraper using Botasaurus?
 
-Creating a UI Scraper with Botasaurus is a simple 3-step process:
-1. Create your Scraper function
-2. Add the Scraper to the Server using 1 line of code 
-3. Define the input controls for the Scraper
+Creating a UI scraper with Botasaurus is a simple 3-step process:
+1. Create your scraper function
+2. Add the scraper to the server using 1 line of code 
+3. Define the input controls for the scraper
 
 To understand these steps, let's go through the code of the Botasaurus Starter Template that you just ran.
 
 #### Step 1: Create the Scraper Function
 
-In `src/scrape_heading_task.py`, we define a scraping function which basically does the following:
+In `src/scrape_heading_task.py`, we define a scraping function that basically does the following:
 
 1. Receives a `data` object and extracts the "link".
 2. Retrieves the HTML content of the webpage using the "link".
 3. Converts the HTML into a BeautifulSoup object.
-4. Locates the heading element, extracts its text content and returns it.
+4. Locates the heading element, extracts its text content, and returns it.
 
 ```python
 from botasaurus.request import request, Request
@@ -400,7 +397,7 @@ Server.add_scraper(scrape_heading_task)
 
 #### Step 3: Define the Input Controls
 
-In `backend/inputs/scrape_heading_task.js` we:
+In `backend/inputs/scrape_heading_task.js`, we:
 - Define a `getInput` function that takes the controls parameter
 - Add a link input control to it
 - Use JSDoc comments to enable IntelliSense Code Completion in VSCode as you won't be able to remember all the controls in botasaurus.
@@ -488,11 +485,11 @@ I encourage you to paste the above code into `backend/inputs/scrape_heading_task
 
 ![complex-input](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/complex-input.png)
 
-Now, to use Botasaurus UI for adding new scrapers, remember these points:
+Now, to use the Botasaurus UI for adding new scrapers, remember these points:
 
 1. Create a `backend/inputs/{your_scraping_function_name}.js` file for each scraping function.
 2. Define the `getInput` function in the file with the necessary controls.
-3. Use JSDoc comments to enable IntelliSense Code Completion in VSCode as you won't be able to remember all the controls in botasaurus.
+3. Use JSDoc comments to enable IntelliSense code completion in VSCode, as you won't be able to remember all the controls in Botasaurus.
 
 Use this template as a starting point for new scraping function's input controls js file:
 
@@ -509,13 +506,56 @@ function getInput(controls) {
 }
 ```
 
-That's it! With these simple steps, you can create a fully functional UI Scraper using Botasaurus.
+That's it! With these simple steps, you can create a fully functional UI scraper using Botasaurus.
 
-Later, you will learn how to add sorts and filters to make your UI Scraper even more powerful and user-friendly.
+Later, you will learn how to add sorts and filters to make your UI scraper even more powerful and user-friendly.
 
 ![sorts-filters](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/sorts-filters.png)
 
-### What is Botasaurus, and what are its main features?
+### What is a Desktop Extractor?
+A **Desktop Extractor** is a standalone application that runs on your computer and extracts specific data from websites, PDFs, Excel files, and other documents. Unlike web-based tools, desktop extractors run locally, giving **faster performance** and **zero cloud costs**.
+
+![Desktop Extractor showing an application interface with extraction options](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
+
+### What advantages do Desktop Scrapers have over web-based scrapers?
+**Desktop Scrapers** offer key advantages over web-based scraper solutions like Outscraper:  
+
+- **Zero Infrastructure Costs**: 
+   - Runs on the user's machine, eliminating expensive cloud computing fees.  
+   - Lower cloud costs allow you to offer lower pricing, attracting more customers and increasing revenue.
+
+- **Faster Execution**:  
+  - Instant execution, no delays for cloud resource allocation.  
+  - Uses the user's system, which is much faster than shared cloud servers.  
+
+- **Increased Customer Engagement**:  
+  The app sits right on the user's desktop, encouraging frequent use compared to web tools they must actively visit via browser.  
+
+- **Cross-Platform Deployment in 1 Day**:  
+  With **Botasaurus**, you can launch a desktop scraper for **Windows, macOS, and Linux** within a day. No need to build a website, manage servers, or handle scaling issues. Bota Desktop includes built-in features such as:
+  - Task management
+  - Data Table
+  - Data export (Excel, CSV, etc.)
+  - Sorting & Filtering
+  - Caching and many more
+
+With zero usage costs, faster performance, and easier development, Desktop Scrapers outperform web-based alternatives.
+
+### How to Build a Desktop Extractor
+Creating Desktop Extractors is easier than you think! All you need is a basic understanding of JavaScript. Once you're ready, read the [Desktop Extraction Tutorial](https://github.com/omkarcloud/botasaurus/blob/master/botasaurus-desktop-tutorial.md#what-will-be-built-and-why), where we'll guide you through building two practical extractors:
+- **Yahoo Finance Stock Scraper** – Extracts real-time stock prices from Yahoo Finance.
+
+![Stock Scraper Demo showing the application extracting stock prices from Yahoo Finance](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/stock-scraper-preview.gif) 
+
+- **Amazon Invoice PDF Extractor** – Automates the extraction of key invoice data like Document Number, Document Date, and Place of Supply from Amazon PDFs.  
+
+![PDF Extraction Demo showing the application extracting data from Amazon PDF invoices](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/pdf-extract-preview.gif)  
+
+As a web scraper, you might naturally want to focus on web scraping. Still, I want you to create the **Amazon Invoice PDF Extractor** project. Why? Because many developers overlook the immense potential of extracting data from PDFs, Excel files, and other documents.  
+
+**Document Data Extraction is a large untapped market.** For example, even in most developed countries, accountants often spend hundreds of hours manually entering invoice data for tax filings. A desktop extractor can transform this tedious, error-prone process into a task that takes just minutes, delivering 100% accurate results.
+
+Please read the step-by-step tutorial [here](https://github.com/omkarcloud/botasaurus/blob/master/botasaurus-desktop-tutorial.md#what-will-be-built-and-why). By the end of this short guide, you'll be able to create powerful desktop extractors in very little time.
 
 ### What is Botasaurus, and what are its main features?
 
@@ -547,9 +587,9 @@ Additionally, you will utilize the following Botasaurus utilities for debugging 
 
 By simply configuring these three decorators (`@browser`, `@request`, and `@task`) with arguments, you can easily create `real-time scrapers` and `large-scale datasets`, thus saving you countless hours that would otherwise be spent writing and debugging code from scratch.
 
-2. Botasaurus offers a Python-based UI Scraper that allows non-technical users to run scrapers online by simply visiting a website link. (As described in previous FAQ)  
+2. Botasaurus offers a Python-based UI scraper that allows non-technical users to run scrapers online by simply visiting a website link. (As described in the previous FAQ)  
 
-3. Botasaurus makes it easy to create desktop applications for Mac, Windows, and Linux, using JavaScript. More details can be found in the [Botasaurus Desktop Documentation here](https://github.com/omkarcloud/botasaurus/blob/master/botasaurus-desktop.md).
+3. Botasaurus makes it easy to create desktop applications for Mac, Windows, and Linux, using JavaScript. More details can be found in the [Botasaurus Desktop Documentation here](https://github.com/omkarcloud/botasaurus/blob/master/botasaurus-desktop-tutorial.md).
 
 <!-- MAKE THIS -->
 
@@ -1862,14 +1902,14 @@ for item in test_items:
 
 In web scraping, it is a common use case to scrape product pages, blogs, etc. But before scraping these pages, you need to get the links to these pages.
 
-Sadly, Many developers unnecessarily increase their work by writing code to visit each page one by one and scrape links, which they could have easily obtained by just looking at the Sitemap.
+Sadly, many developers unnecessarily increase their work by writing code to visit each page one by one and scrape links, which they could have easily obtained by just looking at the Sitemap.
 
 The Botasaurus Sitemap Module makes this process easy as cake by allowing you to get all links or sitemaps using:
 - The homepage URL (e.g., `https://www.omkar.cloud/`)
 - A direct sitemap link (e.g., `https://www.omkar.cloud/sitemap.xml`)
 - A `.gz` compressed sitemap
 
-For example, if you're an Angel Investor seeking innovative tech startups to invest, G2 is an ideal platform to find such startups. You can run the following code to fetch all product links from G2:
+For example, if you're an Angel Investor seeking innovative tech startups to invest in, G2 is an ideal platform to find such startups. You can run the following code to fetch all product links from G2:
 
 ```python
 from botasaurus import bt
@@ -1887,7 +1927,7 @@ links = (
 
 ![g2-sitemap-links.png](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/g2-sitemap-links.png)
 
-Or, let's say you're in the mood for some reading and looking for good stories. The following code will get you over 1000+  from [moralstories26.com](https://moralstories26.com/):
+Or, let's say you're in the mood for some reading and looking for good stories. The following code will get you over 1000+ stories from [moralstories26.com](https://moralstories26.com/):
 
 ```python
 from botasaurus import bt
@@ -2331,7 +2371,7 @@ Next, follow these steps to delete the scraper:
 
    ![Delete deployment](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-deployment.gif)
 
-That's it! You have successfully deleted the scraper, and you will not incur any furthur charges.
+That's it! You have successfully deleted the scraper, and you will not incur any further charges.
 
 
 ### How to Run Scraper in Kubernetes?
@@ -2340,7 +2380,7 @@ Visit [this link](https://github.com/omkarcloud/botasaurus/blob/master/run-scrap
 
 ### I have a feature request!
 
-We'd love hear it! Share them on [GitHub Discussions](https://github.com/omkarcloud/botasaurus/discussions). 
+We'd love to hear it! Share them on [GitHub Discussions](https://github.com/omkarcloud/botasaurus/discussions). 
 
 [![Make](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/ask-on-github.png)](https://www.omkar.cloud/l/botasaurus-make-discussions/)
 <!-- 
@@ -2414,6 +2454,3 @@ It's just one click, but it means the world to me.
 > By using Botasaurus, you agree to comply with all applicable local and international laws related to data scraping, copyright, and privacy. The developers of Botasaurus are not responsible for any misuse of this software. It is the sole responsibility of the user to ensure adherence to all relevant laws regarding data scraping, copyright, and privacy, and to use Botasaurus in an ethical and legal manner.
 
 We take the concerns of the Botasaurus Project very seriously. For any inquiries or issues, please contact Chetan Jain at [chetan@omkar.cloud](mailto:chetan@omkar.cloud). We will take prompt and necessary action in response to your emails.
-
-
-
