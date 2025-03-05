@@ -47,10 +47,16 @@ Now, for the magical powers awaiting you after learning Botasaurus:
 
 ![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
 
+- Convert your Web Scraper into a Desktop app for Mac, Windows and Linux in 1 Day, so your web scraper can not only developers but everyone can benefit from your scraper.
+
+UI-based Scraper in minutes, which will make your Customer sing praises of you. 
+
+![desktop-app-photo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
+
 
 - In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes E-V-E-R-Y) bot test, no need to spend time finding ways to access a website.
 
-![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/solve-bot-detection.gif)
+![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/fingerprint-non-bot.png)
 
 - Save up to 97%, yes 97% on browser proxy costs by using [browser-based fetch requests.](https://github.com/omkarcloud/botasaurus#how-to-significantly-reduce-proxy-costs-when-scraping-at-scale)
 
@@ -209,9 +215,9 @@ Botasaurus Driver is a web automation driver like Selenium, and the single most 
 
 Plus, it is super fast to launch and use, and the API is designed by and for web scrapers, and you will love it.
 
-### How do I access Cloudflare-protected pages using Botasaurus?
+### How do I access bot-protected pages using Botasaurus?
 
-Cloudflare is the most popular protection system on the web. So, let's see how Botasaurus can help you solve various Cloudflare challenges.
+So, let's see how Botasaurus can help you solve various bot challenges.
 
 **Connection Challenge**
 
@@ -220,7 +226,7 @@ This is the single most popular challenge and requires making a browser-like con
 - Blog Pages 
 - Search Result Pages
 
-Example Page: https://www.g2.com/products/github/reviews
+<!-- Example Page: https://www.g2.com/products/github/reviews -->
 
 #### What Works?
 
@@ -232,9 +238,9 @@ from botasaurus.browser import browser, Driver
 @browser
 def scrape_heading_task(driver: Driver, data):
     # Visit the website via Google Referrer
-    driver.google_get("https://www.g2.com/products/github/reviews")
+    driver.google_get("https://fingerprint.com/products/bot-detection/")
     driver.prompt()
-    heading = driver.get_text('.product-head__title [itemprop="name"]')
+    heading = driver.get_text('h2')
     return heading
 
 scrape_heading_task()
@@ -247,7 +253,7 @@ from botasaurus.request import request, Request
 
 @request(max_retry=10)
 def scrape_heading_task(request: Request, data):
-    response = request.get('https://www.g2.com/products/github/reviews')
+    response = request.get("https://finance.yahoo.com/quote/AAPL/")
     print(response.status_code)
     response.raise_for_status()
     return response.text
@@ -257,26 +263,26 @@ scrape_heading_task()
 
 **JS with Captcha Challenge**
 
-This challenge requires performing JS computations that differentiate a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. It also involves solving a Captcha. It's used to for pages which are rarely but sometimes visited by people, like:
+This challenge requires performing JS computations that differentiate a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. It's used to for pages which are rarely but sometimes visited by people, like:
 - 5th Review page
 - Auth pages
 
-Example Page: https://www.g2.com/products/github/reviews.html?page=5&product_id=github
+<!-- Example Page: https://www.g2.com/products/github/reviews.html?page=5&product_id=github -->
 
 #### What Does Not Work?
 Using `@request` does not work because although it can make browser-like HTTP requests, it cannot run JavaScript to solve the challenge.
 
 #### What Works?
-Pass the `bypass_cloudflare=True` argument to the `google_get` method.
+Visiting the website via Google from a browser works
 
 ```python
 from botasaurus.browser import browser, Driver
 
 @browser
 def scrape_heading_task(driver: Driver, data):
-    driver.google_get("https://www.g2.com/products/github/reviews.html?page=5&product_id=github", bypass_cloudflare=True)
+    driver.google_get("https://fingerprint.com/products/bot-detection/")
     driver.prompt()
-    heading = driver.get_text('.product-head__title [itemprop="name"]')
+    heading = driver.get_text('h2')
     return heading
 
 scrape_heading_task()
@@ -397,7 +403,8 @@ Server.add_scraper(scrape_heading_task)
 In `backend/inputs/scrape_heading_task.js` we:
 - Define a `getInput` function that takes the controls parameter
 - Add a link input control to it
-- Use comments to enable intellisense in VSCode (Very Very Important)
+- Use JSDoc comments to enable IntelliSense Code Completion in VSCode as you won't be able to remember all the controls in botasaurus.
+
 
 ```js
 /**
@@ -409,8 +416,8 @@ In `backend/inputs/scrape_heading_task.js` we:
  */
 function getInput(controls) {
     controls
-        // Render a Link Input, which is required, defaults to "https://www.omkar.cloud/". 
-        .link('link', { isRequired: true, defaultValue: "https://www.omkar.cloud/" })
+        // Render a Link Input, which is required, defaults to "https://stackoverflow.blog/open-source". 
+        .link('link', { isRequired: true, defaultValue: "https://stackoverflow.blog/open-source" })
 }
 ```
 
@@ -485,7 +492,7 @@ Now, to use Botasaurus UI for adding new scrapers, remember these points:
 
 1. Create a `backend/inputs/{your_scraping_function_name}.js` file for each scraping function.
 2. Define the `getInput` function in the file with the necessary controls.
-3. Add comments to enable intellisense in VSCode, as you won't be able to remember all the controls.
+3. Use JSDoc comments to enable IntelliSense Code Completion in VSCode as you won't be able to remember all the controls in botasaurus.
 
 Use this template as a starting point for new scraping function's input controls js file:
 
@@ -510,9 +517,11 @@ Later, you will learn how to add sorts and filters to make your UI Scraper even 
 
 ### What is Botasaurus, and what are its main features?
 
-Botasaurus is an all-in-one web scraping framework designed to achieve two main goals:
-1. Provide common web scraping utilities to solve the pain points of web scraping.
-2. Offer a user interface to make it easy for your non-technical customers to run web scrapers.
+### What is Botasaurus, and what are its main features?
+
+Botasaurus is an all-in-one web scraping framework designed to achieve three main goals:  
+
+1. Provide essential web scraping utilities to streamline the scraping process.
 
 To accomplish these goals, Botasaurus gives you 3 decorators:
 - `@browser`: For scraping web pages using a humane browser.
@@ -537,6 +546,12 @@ Additionally, you will utilize the following Botasaurus utilities for debugging 
   - `Cache`: For managing the cache.
 
 By simply configuring these three decorators (`@browser`, `@request`, and `@task`) with arguments, you can easily create `real-time scrapers` and `large-scale datasets`, thus saving you countless hours that would otherwise be spent writing and debugging code from scratch.
+
+2. Botasaurus offers a Python-based UI Scraper that allows non-technical users to run scrapers online by simply visiting a website link. (As described in previous FAQ)  
+
+3. Botasaurus makes it easy to create desktop applications for Mac, Windows, and Linux, using JavaScript. More details can be found in the [Botasaurus Desktop Documentation here](https://github.com/omkarcloud/botasaurus/blob/master/botasaurus-desktop.md).
+
+<!-- MAKE THIS -->
 
 ### How to use decorators in Botasaurus?
 
@@ -588,6 +603,7 @@ The Browser Decorator allows you to easily configure various aspects of the brow
 - Specifying profiles
 - Enabling headless mode
 - Using Chrome extensions
+- Captcha Solving
 - Selecting language
 - Passing Arguments to Chrome
 
@@ -686,7 +702,7 @@ Enable headless mode with `headless=True`:
 )    
 ```
 
-Note that using headless mode makes the browser much easier to identify by services like Cloudflare and Datadome. So, use headless mode only when scraping websites that don't use such services.
+Note that using headless mode makes the browser much easier to identify by bot detection services. So, use headless mode only when scraping websites that don't use such services.
 
 #### Chrome Extensions
 
@@ -709,7 +725,35 @@ def scrape_while_blocking_ads(driver: Driver, data):
 scrape_while_blocking_ads()
 ```
 
+
+
 In some cases, an extension may require additional configuration, such as API keys or credentials. For such scenarios, you can create a custom extension. Learn more about creating and configuring custom extensions [here](https://github.com/omkarcloud/chrome-extension-python).
+
+#### Captcha Solving
+
+Encountering captchas is common in web scraping. You can use the [capsolver_extension_python](https://github.com/omkarcloud/capsolver-extension-python?tab=readme-ov-file#installation) package to automatically solve CAPTCHAs with Capsolver.  
+
+To use it, first install the package:  
+
+```bash
+python -m pip install capsolver_extension_python
+```
+
+Then, integrate it into your code:  
+
+
+```python
+from botasaurus.browser import browser, Driver
+from capsolver_extension_python import Capsolver
+
+# Replace "CAP-MY_KEY" with your actual CapSolver API key
+@browser(extensions=[Capsolver(api_key="CAP-MY_KEY")])  
+def solve_captcha(driver: Driver, data):
+    driver.get("https://recaptcha-demo.appspot.com/recaptcha-v2-checkbox.php")
+    driver.prompt()
+
+solve_captcha()
+```  
 
 #### Language
 
@@ -883,7 +927,7 @@ from botasaurus.soupify import soupify
 def scrape_data(driver: Driver, link):
     # If the browser is newly opened, first visit the link
     if driver.config.is_new:
-        driver.google_get(link, bypass_cloudflare=True)
+        driver.google_get(link)
     
     # Make requests using the browser fetch API
     response = driver.requests.get(link)
@@ -891,17 +935,20 @@ def scrape_data(driver: Driver, link):
     html = response.text
 
     # Parse the HTML to extract the desired data
-    heading = soupify(html).select_one('.product-head__title [itemprop="name"]').get_text()
+    soup = soupify(html)
+    stock_name = soup.select_one('[data-testid="quote-hdr"] h1').get_text()
+    stock_price = soup.select_one('[data-testid="qsp-price"]').get_text()
     
     return {
-        "heading": heading,
+        "stock_name": stock_name,
+        "stock_price": stock_price,
     }
 
 # List of URLs to scrape
 links = [
-    "https://www.g2.com/products/stack-overflow-for-teams/reviews",
-    "https://www.g2.com/products/jenkins/reviews",
-    "https://www.g2.com/products/docker-inc-docker/reviews",
+    "https://finance.yahoo.com/quote/AAPL/",
+    "https://finance.yahoo.com/quote/GOOG/",
+    "https://finance.yahoo.com/quote/MSFT/",
 ]
 
 # Execute the scraping function for the list of links
@@ -1109,7 +1156,7 @@ Botasaurus Driver provides several handy methods for web automation tasks such a
 - Execute CDP Command:
   ```python
   from botasaurus.browser import browser, Driver, cdp
-  driver.run_cdp_command(cdp.page.navigate(url='https://stackoverflow.com/'))
+  driver.run_cdp_command(cdp.page.navigate(url='https://stackoverflow.blog/open-source'))
   ```
 
 - Miscellaneous:
@@ -1133,7 +1180,7 @@ driver.prompt()
 
 Proxy providers like BrightData, IPRoyal, and others typically provide authenticated proxies in the format "http://username:password@proxy-provider-domain:port". For example, "http://greyninja:awesomepassword@geo.iproyal.com:12321".
 
-However, if you use an authenticated proxy with a library like seleniumwire to visit a website using Cloudflare like G2.com, you are GUARANTEED to be identified because you are using a non-SSL connection.
+However, if you use an authenticated proxy with a library like seleniumwire to visit a website using bot detection system, you are GUARANTEED to be identified because you are using a non-SSL connection.
 
 To verify this, run the following code:
 
@@ -1144,8 +1191,7 @@ python -m pip install selenium_wire chromedriver_autoinstaller_fix
 
 Then, execute this Python script:
 ```python
-from seleniumwire import webdriver
-from chromedriver_autoinstaller_fix import install
+from seleniumwire import webdriver  # Import from seleniumwire
 
 # Define the proxy
 proxy_options = {
@@ -1156,11 +1202,10 @@ proxy_options = {
 }
 
 # Install and set up the driver
-driver_path = install()
-driver = webdriver.Chrome(driver_path, seleniumwire_options=proxy_options)
+driver = webdriver.Chrome(seleniumwire_options=proxy_options)
 
 # Visit the desired URL
-link = 'https://www.g2.com/products/github/reviews'
+link = 'https://fingerprint.com/products/bot-detection/'
 driver.get("https://www.google.com/")
 driver.execute_script(f'window.location.href = "{link}"')
 
@@ -1182,7 +1227,7 @@ from botasaurus.browser import browser, Driver
 
 @browser(proxy="http://username:password@proxy-provider-domain:port") # TODO: Replace with your own proxy 
 def scrape_heading_task(driver: Driver, data):
-    driver.google_get("https://www.g2.com/products/github/reviews")
+    driver.google_get("https://fingerprint.com/products/bot-detection/")
     driver.prompt()
 
 scrape_heading_task()    
@@ -1280,7 +1325,7 @@ Run the example below to see parallelization in action:
 ```python
 from botasaurus.browser import browser, Driver
 
-@browser(parallel=3, data=["https://www.omkar.cloud/", "https://www.omkar.cloud/blog/", "https://stackoverflow.com/"])
+@browser(parallel=3, data=["https://stackoverflow.blog/open-source", "https://stackoverflow.blog/ai", "https://stackoverflow.blog/productivity",])
 def scrape_heading_task(driver: Driver, link):
     driver.get(link)
     heading = driver.get_text('h1')
@@ -1298,7 +1343,7 @@ Run the example below to see how caching works:
 ```python
 from botasaurus.browser import browser, Driver
 
-@browser(cache=True, data=["https://www.omkar.cloud/", "https://www.omkar.cloud/blog/", "https://stackoverflow.com/"])
+@browser(cache=True, data=["https://stackoverflow.blog/open-source", "https://stackoverflow.blog/ai", "https://stackoverflow.blog/productivity",])
 def scrape_heading_task(driver: Driver, link):
     driver.get(link)
     heading = driver.get_text('h1')
@@ -1824,7 +1869,7 @@ The Botasaurus Sitemap Module makes this process easy as cake by allowing you to
 - A direct sitemap link (e.g., `https://www.omkar.cloud/sitemap.xml`)
 - A `.gz` compressed sitemap
 
-For example, if you're an Angel Investor seeking innovative tech startups to invest, G2 is an ideal platform to find such startups. You can run the following code to fetch over 160K+ product links from G2:
+For example, if you're an Angel Investor seeking innovative tech startups to invest, G2 is an ideal platform to find such startups. You can run the following code to fetch all product links from G2:
 
 ```python
 from botasaurus import bt
@@ -1885,10 +1930,8 @@ from botasaurus.sitemap import Sitemap, Filters, Extractors
 from botasaurus.cache import Cache
 
 links = (
-    Sitemap("https://www.g2.com/sitemaps/sitemap_index.xml.gz", cache=Cache.REFRESH) # Refresh the cache
-    .filter(Filters.first_segment_equals("products"))
-    .extract(Extractors.extract_link_upto_second_segment())
-    .write_links('g2-products')
+    Sitemap("https://moralstories26.com/", cache=Cache.REFRESH)
+    .write_links('moral-stories')
 )
 ```
 ### How can I filter a list of links, similar to working with Sitemaps?
@@ -1903,18 +1946,18 @@ from botasaurus.links import Links, Filters, Extractors
 
 # Sample list of links
 links = [
-    "https://www.g2.com/categories/project-management",
-    "https://www.g2.com/categories/payroll", 
-    "https://www.g2.com/products/jenkins/reviews", 
-    "https://www.g2.com/products/redis-software/pricing"
+    "https://finance.yahoo.com/topic/stock-market-news/",
+    "https://finance.yahoo.com/topic/morning-brief/", 
+    "https://finance.yahoo.com/quote/AAPL/", 
+    "https://finance.yahoo.com/quote/GOOG/"
 ]
 
 # Filter and extract links
 filtered_links = (
     Links(links)
-    .filter(Filters.first_segment_equals("products"))
+    .filter(Filters.first_segment_equals("quote"))
     .extract(Extractors.extract_link_upto_second_segment())
-    .write('g2-products')
+    .write('stocks')
 )
 ```
 
@@ -1941,9 +1984,9 @@ def scrape_data(request: Request, data):
     return {"heading": heading}
 
 data_items = [
-    "https://www.omkar.cloud/",
-    "https://www.omkar.cloud/blog/",
-    "https://stackoverflow.com/",
+    "https://stackoverflow.blog/open-source",
+    "https://stackoverflow.blog/ai",
+    "https://stackoverflow.blog/productivity",
 ]
 
 scrape_data(data_items)
@@ -1987,9 +2030,9 @@ def scrape_data(link):
     return extract_data(soupify(html))
 
 data_items = [
-    "https://www.omkar.cloud/",
-    "https://www.omkar.cloud/blog/",
-    "https://stackoverflow.com/",
+    "https://stackoverflow.blog/open-source",
+    "https://stackoverflow.blog/ai",
+    "https://stackoverflow.blog/productivity",
 ]
 
 scrape_data(data_items)
@@ -2012,7 +2055,7 @@ def extract_data(soup: BeautifulSoup):
 
 if __name__ == '__main__':
     # Will use the cached HTML and run the extract_data function again.
-    bt.write_temp_json(scrape_data("https://www.omkar.cloud/", cache=False))
+    bt.write_temp_json(scrape_data("https://stackoverflow.blog/open-source", cache=False))
 ```
 ### What are the recommended settings for each decorator to build a production-ready scraper in Botasaurus?
 
@@ -2066,9 +2109,9 @@ def scrape_data(link):
     return extract_data(soupify(html))
 
 data_items = [
-    "https://www.omkar.cloud/",
-    "https://www.omkar.cloud/blog/",
-    "https://stackoverflow.com/",
+    "https://stackoverflow.blog/open-source",
+    "https://stackoverflow.blog/ai",
+    "https://stackoverflow.blog/productivity",
 ]
 
 scrape_data(data_items)
@@ -2088,7 +2131,7 @@ from botasaurus.soupify import soupify
     # proxy='http://username:password@datacenter-proxy-domain:proxy-port', # Uncomment to use Proxy ONLY if you face IP blocking
 
     # block_images_and_css=True, # Uncomment to block images and CSS, which can speed up scraping
-    # wait_for_complete_page_load=False, # Uncomment to proceed once the DOM (Document Object Model) is loaded, without waiting for all resources to finish loading. This is recommended for faster scraping of Server Side Rendered (HTML) pages. eg: https://www.g2.com/products/jenkins/reviews.html
+    # wait_for_complete_page_load=False, # Uncomment to proceed once the DOM (Document Object Model) is loaded, without waiting for all resources to finish loading. This is recommended for faster scraping of Server Side Rendered (HTML) pages.
 
     cache=True,
     max_retry=5,  # Retry up to 5 times, which is a good default
@@ -2106,7 +2149,6 @@ def scrape_html(driver: Driver, link):
     if driver.config.is_new:
         driver.google_get(
             link,
-            bypass_cloudflare=True,  # delete this line if the website you're accessing is not protected by Cloudflare
         )
     response = driver.requests.get(link)
     
@@ -2120,8 +2162,13 @@ def scrape_html(driver: Driver, link):
 
 def extract_data(soup: BeautifulSoup):
     # Extract the heading from the HTML
-    heading = soup.select_one('.product-head__title [itemprop="name"]').get_text()
-    return {"heading": heading}
+    stock_name = soup.select_one('[data-testid="quote-hdr"] h1').get_text()
+    stock_price = soup.select_one('[data-testid="qsp-price"]').get_text()
+    
+    return {
+        "stock_name": stock_name,
+        "stock_price": stock_price,
+    }
 
 # Cache the scrape_data task as well
 @task(
@@ -2136,8 +2183,9 @@ def scrape_data(link):
     return extract_data(soupify(html))
 
 data_items = [
-    "https://www.g2.com/products/stack-overflow-for-teams/reviews?page=8",
-    "https://www.g2.com/products/jenkins/reviews?page=19",
+    "https://finance.yahoo.com/quote/AAPL/",
+    "https://finance.yahoo.com/quote/GOOG/",
+    "https://finance.yahoo.com/quote/MSFT/",
 ]
 
 scrape_data(data_items)
@@ -2146,7 +2194,7 @@ scrape_data(data_items)
 ### What Are Some Tips for accessing Protected sites?
 
 - Use `google_get`, use `google_get`, and use `google_get`!
-- Don't use `headless` mode, else you will surely be identified by Cloudflare, Datadome, Imperva.
+- Don't use `headless` mode, else you will surely be identified by bot detection systems.
 - Don't use Proxies, instead use your home Wi-Fi connection, even when scraping hundreds of thousands of pages.
 
 ### How Do I Close All Running Chrome Instances?
@@ -2336,10 +2384,11 @@ You may choose to read the following questions based on your interests:
 - To That, who has given me a sufficiently intelligent mind to create Botasaurus and do a lot of good.
 <!-- - To the One who has given me with a sufficiently intelligent, practical mind with a will to do good, which led to the creation of Botasaurus. This, I believe, is the #1 gift a human can receive. It helps both here and here after. If you possess such a gift, please cherish it, for very very and very few people in this age have it. -->
 - I made Botasaurus because I would be really happy if you could use it to successfully complete your project. So, a Gigantic Thank you for using Botasaurus!
+- A heartfelt thank you to [Cheng Zhao](https://zcbenz.com/) from GitHub for creating Electron, which powers Botasaurus Desktop.
 - Kudos to the Apify Team for creating the `proxy-chain` library. The implementation of SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `proxy-chain`.
 - Shout out to [ultrafunkamsterdam](https://github.com/ultrafunkamsterdam) for creating `nodriver`, which inspired the creation of Botasaurus Driver.
 - A big thank you to [daijro](https://github.com/daijro) for creating [hrequest](https://github.com/daijro/hrequests), which inspired the creation of botasaurus-requests.
-- A humongous thank you to Cloudflare, DataDome, Imperva, and all bot recognition systems. Had you not been there, we wouldn't be either 😅.
+<!-- - A humongous thank you to Cloudflare, DataDome, Imperva, and all bot recognition systems. Had you not been there, we wouldn't be either 😅. -->
 
 *Now, what are you waiting for? 🤔 Go and make something mastastic! 🚀*
 <!-- 
