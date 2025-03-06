@@ -24,6 +24,7 @@
     <img alt="Run in Gitpod" src="https://gitpod.io/button/open-in-gitpod.svg" />
   </a>
 </p>
+
 ## 🐿️ Botasaurus In a Nutshell
 
 How wonderful that of all the web scraping tools out there, you chose to learn about Botasaurus. Congratulations! 
@@ -44,12 +45,9 @@ Now, for the magical powers awaiting you after learning Botasaurus:
 
 ![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
 
-- Convert your web scraper into a desktop app for Mac, Windows, and Linux in 1 day, so your web scraper can benefit not only developers but everyone.
-
-UI-based scraper in minutes, which will make your customer sing your praises. 
+- Convert your web scraper into a desktop app for Mac, Windows, and Linux in 1 day, so not only developers but everyone can use your web scraper.
 
 ![desktop-app-photo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
-
 
 - In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test, no need to spend time finding ways to access a website.
 
