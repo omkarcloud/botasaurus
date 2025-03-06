@@ -41,13 +41,13 @@ A Web Scraping Magician has put all his web scraping experience and best practic
 
 Now, for the magical powers awaiting you after learning Botasaurus:
 
-- Convert any web scraper to a UI-based scraper in minutes, which will make your customer sing your praises. 
-
-![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
-
 - Convert your web scraper into a desktop app for Mac, Windows, and Linux in 1 day, so not only developers but everyone can use your web scraper.
 
 ![desktop-app-photo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
+
+- Convert any web scraper to a UI-based scraper in minutes, which will make your customer sing your praises. 
+
+![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
 
 - In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test, no need to spend time finding ways to access a website.
 

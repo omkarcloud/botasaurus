@@ -408,7 +408,7 @@ Ensure that **Object Ownership** is set to **"ACLs enabled"** because Electron B
 5. If you don't have an AWS access key and secret key, create them through the IAM service as described in [AWS documentation here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user_manage_add-key.html).
 
 **3. Configure GitHub Secrets**
-In your GitHub Repository, navigate to Settings > Secrets and variables > Actions and add the following secrets:
+In your GitHub Repository, navigate to Settings > Secrets and variables > Actions > Repository secrets and add the following secrets:
 ```
 AWS_ACCESS_KEY_ID            # AWS access key
 AWS_SECRET_ACCESS_KEY        # AWS secret key
@@ -506,8 +506,9 @@ Search your project for the following placeholders and update them with your act
 | `todo-my-app-name` | `amazon-invoice-pdf-extractor` |
 | `Todo My App Name` | `Amazon Invoice PDF Extractor` |
 | `Todo my app description` | `Extract data from Amazon PDFs quickly and accurately.` |
-| `todo-my-organization-name` | `acme` |  
-| `Todo My Organization Name` | `Acme` |  
+| `todo-my-organization-name` | `head-first` |  
+| `Todo My Organization Name` | `Head First` |  
+| `todo-my-email@gmail.com` | `head-first-python@gmail.com` |
 
 #### 2. Replace Icon Assets
 Replace the placeholder icons with your brand assets. These icons are used when creating installers for your app:
@@ -530,8 +531,9 @@ Replace the placeholder icons with your brand assets. These icons are used when 
 **Recommended Workflow to Create Them:**
 1. Use [Figma](https://www.figma.com/) to design your app icon.
 2. Export your icon from Figma in all the required PNG sizes.
-3. Use [CloudConvert PNG to ICNS](https://cloudconvert.com/png-to-icns) to generate `assets/icon.icns` by uploading `assets/icons/512x512.png`.
-   Use [FreeConvert PNG to ICO](https://www.freeconvert.com/png-to-ico) to create `assets/icon.ico` by uploading `assets/icons/512x512.png`.
+3. Generate platform-specific icon formats:
+   - For macOS, use [CloudConvert PNG to ICNS](https://cloudconvert.com/png-to-icns) to generate `assets/icon.icns`. Upload the `assets/icons/1024x1024.png` file, which is the [recommended size for macOS app icons](https://www.electronforge.io/guides/create-and-add-icons).
+   - For Windows, use [FreeConvert PNG to ICO](https://www.freeconvert.com/png-to-ico) to create `assets/icon.ico`. Upload the `assets/icons/256x256.png` file, which is the [recommended size for Windows app icons](https://www.electronforge.io/guides/create-and-add-icons).
 4. Replace all the listed files with your new brand assets.
 5. Save the following icons in a secure location, as you will need them in the future for your organization's LinkedIn, Twitter, or other social media profiles:
    - `assets/icons/256x256.png`
