@@ -22,6 +22,7 @@ def close_driver_pool(pool: list):
                 while pool:
                     close_driver(pool.pop())
 
+
 def browser(
     _func: Optional[Callable] = None,
     *,
@@ -38,6 +39,7 @@ def browser(
     extensions: Optional[Union[List[Any], Callable[[Any], List[Any]]]] = None,
     lang: Optional[Union[Callable[[Any], str], str]] = None,
     headless: Optional[Union[Callable[[Any], bool], bool]] = False,
+    enable_xvfb_virtual_display: bool = False,
     beep: bool = False,
     close_on_crash: bool = False,
     async_queue: bool = False,
@@ -54,6 +56,8 @@ def browser(
     retry_wait: Optional[int] = None,
     create_error_logs: bool = True,
     create_driver: Optional[Callable] = None,
+    host: Optional[str] = None,
+    port: Optional[int] = None,
 ) -> Callable:
     def decorator_browser(func: Callable) -> Callable:
         if not hasattr(func, '_scraper_type'):
@@ -69,8 +73,8 @@ def browser(
             nonlocal tiny_profile, wait_for_complete_page_load, lang, headless, beep
             nonlocal close_on_crash, async_queue, run_async, profile
             nonlocal proxy, user_agent, reuse_driver, raise_exception, must_raise_exceptions
-
             nonlocal output, output_formats, max_retry, retry_wait, create_driver, create_error_logs
+            nonlocal enable_xvfb_virtual_display, host, port
 
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
@@ -80,7 +84,6 @@ def browser(
             add_arguments = kwargs.get("add_arguments", add_arguments)
             extensions = kwargs.get("extensions", extensions)
             window_size = kwargs.get("window_size", window_size)
-
             metadata = kwargs.get("metadata", metadata)
             tiny_profile = kwargs.get("tiny_profile", tiny_profile)
             wait_for_complete_page_load = kwargs.get("wait_for_complete_page_load", wait_for_complete_page_load)
@@ -102,9 +105,11 @@ def browser(
             # A Special Option passed by botasaurus server which prevents caching at database level
             return_dont_cache_as_is = kwargs.get("return_dont_cache_as_is", False)
             create_error_logs = kwargs.get("create_error_logs", create_error_logs)
-
             raise_exception = kwargs.get("raise_exception", raise_exception)
             create_driver = kwargs.get("create_driver", create_driver)
+            enable_xvfb_virtual_display = kwargs.get("enable_xvfb_virtual_display", enable_xvfb_virtual_display) 
+            host = kwargs.get("host", host) 
+            port = kwargs.get("port", port) 
 
             fn_name = func.__name__
 
@@ -118,7 +123,6 @@ def browser(
             else:
                 cycled_proxy = None
 
-            # # Pool to hold reusable drivers
             _driver_pool = wrapper_browser._driver_pool if dont_close_driver else []
 
             def run_task(data, retry_attempt, retry_driver=None) -> Any:
@@ -162,7 +166,24 @@ def browser(
                     else:
                         args = add_arguments
 
-                    driver = Driver(headless=evaluated_headless, proxy=evaluated_proxy, profile=evaluated_profile, tiny_profile=tiny_profile, block_images=block_images, block_images_and_css=block_images_and_css, wait_for_complete_page_load=wait_for_complete_page_load, extensions=evaluated_extensions, arguments=args, user_agent=evaluated_user_agent, window_size=evaluated_window_size, lang=evaluated_lang, beep=beep)
+                    driver = Driver(
+                        headless=evaluated_headless,
+                        proxy=evaluated_proxy,
+                        profile=evaluated_profile,
+                        tiny_profile=tiny_profile,
+                        block_images=block_images,
+                        block_images_and_css=block_images_and_css,
+                        wait_for_complete_page_load=wait_for_complete_page_load,
+                        extensions=evaluated_extensions,
+                        arguments=args,
+                        user_agent=evaluated_user_agent,
+                        window_size=evaluated_window_size,
+                        lang=evaluated_lang,
+                        beep=beep,
+                        enable_xvfb_virtual_display=enable_xvfb_virtual_display,
+                        host=host,
+                        port=port,
+                    )
 
                 result = None
                 try:
