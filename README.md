@@ -41,11 +41,11 @@ A Web Scraping Magician has put all his web scraping experience and best practic
 
 Now, for the magical powers awaiting you after learning Botasaurus:
 
-- Convert your web scraper into a desktop app for Mac, Windows, and Linux in 1 day, so not only developers but everyone can use your web scraper.
+- Convert your scraper into a desktop app for Mac, Windows, and Linux in 1 day, so not only developers but everyone can use your web scraper.
 
 ![desktop-app-photo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
 
-- Convert any web scraper to a UI-based scraper in minutes, which will make your customer sing your praises. 
+- Turn your scraper into a beautiful website, making it easy for your customers to use it from anywhere, anytime.
 
 ![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
 
