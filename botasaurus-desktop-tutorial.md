@@ -1,3 +1,10 @@
+<a
+  target="_blank"
+  rel="noopener noreferrer nofollow"
+  href="https://camo.githubusercontent.com/4b399104ebd9540801b3284a1a270d2577aa1f0a52331808cd2e450d8ffa6f79/68747470733a2f2f76696577732e77686174696c656172656e65642e746f6461792f76696577732f6769746875622f6f6d6b6172636c6f75642f626f74617361757275732e737667"
+  style="opacity: 0; max-height: 0px; display: block"
+  ><img src="https://views.whatilearened.today/views/github/omkarcloud/botasaurus-desktop.svg" width="80px" height="28px" alt="View" /></a>
+
 ### What is a Desktop Extractor?
 A **Desktop Extractor** is a standalone application that runs on your computer and extracts specific data from websites, PDFs, Excel files, and other documents. Unlike web-based tools, desktop extractors run locally, giving **faster performance** and **zero cloud costs**.
 
