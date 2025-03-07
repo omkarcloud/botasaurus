@@ -585,11 +585,9 @@ Additionally, you will utilize the following Botasaurus utilities for debugging 
 
 By simply configuring these three decorators (`@browser`, `@request`, and `@task`) with arguments, you can easily create `real-time scrapers` and `large-scale datasets`, thus saving you countless hours that would otherwise be spent writing and debugging code from scratch.
 
-2. Botasaurus offers a Python-based UI scraper that allows non-technical users to run scrapers online by simply visiting a website link. (As described in the previous FAQ)  
+2. Offering a Python-based UI scraper that allows non-technical users to run scrapers online by simply visiting a website link. (As described in the previous FAQ)  
 
-3. Botasaurus makes it easy to create desktop applications for Mac, Windows, and Linux, using JavaScript. More details can be found in the [Botasaurus Desktop Documentation here](https://github.com/omkarcloud/botasaurus/blob/master/botasaurus-desktop-tutorial.md).
-
-<!-- MAKE THIS -->
+3. Make it easy to create desktop applications for Mac, Windows, and Linux, using JavaScript. More details can be found in the [Botasaurus Desktop Documentation here](https://github.com/omkarcloud/botasaurus/blob/master/botasaurus-desktop-tutorial.md).
 
 ### How to use decorators in Botasaurus?
 
