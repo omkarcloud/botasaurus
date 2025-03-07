@@ -283,6 +283,27 @@ def scrape_heading_task(driver: Driver, data):
 scrape_heading_task()
 ```
 
+## Differences between `@request` and `@browser`
+
+Below is a table that highlights the key differences between the `@request` and `@browser` decorators available in Botasaurus:
+
+| **Feature**                | **`@request`**                                        | **`@browser`**                                        |
+|----------------------------|------------------------------------------------------|------------------------------------------------------|
+| **Use Case**               | For direct scraping via HTTP requests (static sites or APIs). | For scraping via a browser (dynamic sites or JavaScript-heavy pages). |
+| **Speed**                  | Very fast (direct requests).                         | Slower (requires rendering the page in a browser).   |
+| **JavaScript Execution**   | Not supported.                                       | Supported (the browser executes the page's JavaScript). |
+| **Anti-bot Measures**      | Limited (depends on proxy, headers, etc.).           | More effective (simulates human-like behavior in a browser). |
+| **Page Interaction**       | Not possible (no clicks, scrolling, etc.).           | Supported (simulate clicks, scrolling, form filling, etc.). |
+| **Screenshots**            | Not available.                                       | Available (via `driver.screenshot()` or similar tools). |
+| **Data Parsing**           | Works with returned HTML or JSON sources.            | Works with the DOM rendered in the browser.          |
+| **Suitable for**           | - Static pages. <br> - APIs. <br> - Structured data (HTML, JSON). | - Dynamic pages. <br> - Sites with anti-bot protections. |
+| **Setup Requirements**     | No browser required (uses HTTP requests only).       | Requires a browser (e.g., Chrome) and WebDriver.     |
+| **Proxy/User-Agent Rotation** | Supported manually.                                | Supported manually but requires configuration in the driver. |
+| **Ease of Use**            | Simpler (no browser setup required).                 | More complex (requires WebDriver and browser setup). |
+
+### When to Use `@request` or `@browser`?
+- Use **`@request`** for fast and lightweight scraping of static pages or APIs.
+- Use **`@browser`** for dynamic pages, sites requiring JavaScript execution, or in the presence of anti-bot measures.
 
 ### What are the benefits of a UI scraper?
 
