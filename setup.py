@@ -32,7 +32,7 @@ def get_description():
 setup(
     name="botasaurus",
     packages=["botasaurus"],
-    version='4.0.77',
+    version='4.0.82',
     license="MIT",
     project_urls={
         "Documentation": "https://omkar.cloud/botasaurus/",
@@ -43,9 +43,9 @@ setup(
     long_description_content_type="text/markdown",
     long_description=get_description(),
     author="Chetan Jain",
-    author_email="chetan@omkar.cloud",
+    author_email="53407137+Chetan11-dev@users.noreply.github.com",
     maintainer="Chetan Jain",
-    maintainer_email="chetan@omkar.cloud",
+    maintainer_email="53407137+Chetan11-dev@users.noreply.github.com",
     keywords=[
         "crawler",
         "framework",

@@ -1,6 +1,6 @@
 from setuptools import setup
 
-__author__ = "Chetan Jain <chetan@omkar.cloud>"
+__author__ = "Chetan Jain <53407137+Chetan11-dev@users.noreply.github.com>"
 
 install_requires = [
     "Unidecode",
@@ -28,7 +28,7 @@ setup(
     name="botasaurus_server",
     version='4.0.60',
     author="Chetan Jain",
-    author_email="chetan@omkar.cloud",
+    author_email="53407137+Chetan11-dev@users.noreply.github.com",
     description="Botasaurus Server allows you to transform your scrapers into APIs or scale them using Kubernetes.",
     license="MIT",
     keywords=["botasaurus", "botasaurus_server"],

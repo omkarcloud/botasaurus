@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-__author__ = "Chetan Jain <chetan@omkar.cloud>"
+__author__ = "Chetan Jain <53407137+Chetan11-dev@users.noreply.github.com>"
 
 
 install_requires = [
@@ -55,7 +55,7 @@ setup(
     # https://packaging.python.org/specifications/core-metadata/#description-optional
     version='4.0.71',
     author="Chetan Jain",
-    author_email="chetan@omkar.cloud",
+    author_email="53407137+Chetan11-dev@users.noreply.github.com",
     description="CLI for botasaurus.",
     license="MIT",
     keywords=["seleniumwire proxy authentication", "proxy authentication"],
