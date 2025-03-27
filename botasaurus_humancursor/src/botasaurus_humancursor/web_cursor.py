@@ -1,12 +1,12 @@
 from time import sleep
 import random
-from typing import Union
+from typing import Union, Callable, Optional
 from botasaurus_driver import Driver, cdp, BrowserTab
 from botasaurus_driver.driver import Element
 from .web_adjuster import WebAdjuster
 
 class WebCursor:
-    def __init__(self, driver: Driver, _dot_name: str):
+    def __init__(self, driver: Driver, _dot_name: str = "dot"):
         """
         Initialize WebCursor with a Botasaurus driver
         
@@ -25,19 +25,22 @@ class WebCursor:
             relative_position: list = None,
             absolute_offset: bool = False,
             origin_coordinates=None,
-            steady=False
+            steady=False,
+            is_mouse_pressed=False
     ):
         """Moves to element or coordinates with human curve"""
         if not self.scroll_into_view_of_element(element):
             return False
         if origin_coordinates is None:
             origin_coordinates = self.origin_coordinates
+        self.show_cursor()
         self.origin_coordinates = self.human.move_to(
             element,
             origin_coordinates=origin_coordinates,
             absolute_offset=absolute_offset,
             relative_position=relative_position,
-            steady=steady
+            steady=steady,
+            is_mouse_pressed=is_mouse_pressed,
         )
         return self.origin_coordinates
 
@@ -66,40 +69,75 @@ class WebCursor:
     def random_natural_sleep(self):
         sleep(random.randint(170, 280) / 1000)
 
-    def _click(self, number_of_clicks: int = 1, click_duration: float = 0):
+    def _click(self, number_of_clicks: int = 1, release_condition: Optional[Callable[[], bool]] = None, release_condition_check_interval: float = 0.5, click_duration: Optional[float] = None,) -> None:
         """Performs the click action"""
         for _ in range(number_of_clicks):
-                # Using CDP to perform mousedown
-                self.driver.run_cdp_command(
-                    cdp.input_.dispatch_mouse_event(
-                        "mousePressed",
+            # Using CDP to perform mousedown
+            self.mouse_press(
+                x=self.origin_coordinates[0],
+                y=self.origin_coordinates[1],
+            )
+            if click_duration:
+                sleep(click_duration)
+            else:
+                self.random_natural_sleep()
+
+            if release_condition is not None:
+                try:
+                  while not release_condition():
+                    sleep(release_condition_check_interval)
+                except Exception as e:
+                    raise e
+                finally:
+                    self.mouse_release(
                         x=self.origin_coordinates[0],
                         y=self.origin_coordinates[1],
+                    )
+                    self.random_natural_sleep()
+            else:
+                self.mouse_release(
+                    x=self.origin_coordinates[0],
+                    y=self.origin_coordinates[1],
+                )
+                self.random_natural_sleep()
+
+    def mouse_press(self,x,y):
+        self.driver.run_cdp_command(
+                    cdp.input_.dispatch_mouse_event(
+                        "mousePressed",
+                        x=x,
+                        y=y,
                         button=cdp.input_.MouseButton("left"),
                         click_count=1,
                     )
                 )
-                if click_duration:
-                    sleep(click_duration)
-                else:
-                    self.random_natural_sleep()
-                # Using CDP to perform mouseup and click
-                self.driver.run_cdp_command(
+
+    def mouse_release(self,x,y):
+        self.driver.run_cdp_command(
                     cdp.input_.dispatch_mouse_event(
                         "mouseReleased",
-                        x=self.origin_coordinates[0],
-                        y=self.origin_coordinates[1],
+                        x=x,
+                        y=y,
                         button=cdp.input_.MouseButton("left"),
                         click_count=1,
-                        )
+                    )
                 )
-                self.random_natural_sleep()
-        return True
 
-    def move_by_offset(self, x: int, y: int, steady=False):
+
+
+    def mouse_press_and_hold(self, x: int, y: int, release_condition: Optional[Callable[[], bool]] = None, release_condition_check_interval: float = 0.5, click_duration: Optional[float] = None):
         """Moves the cursor with human curve, by specified number of x and y pixels"""
+        self.move_mouse_to_point(x,y)
+        self._click(release_condition=release_condition, release_condition_check_interval=release_condition_check_interval, click_duration=click_duration)
+        return True
+    
+    def move_mouse_to_point(self, x: int, y: int, steady=False):
+        """Moves the cursor with human curve, by specified number of x and y pixels"""
+        self.show_cursor()
         self.origin_coordinates = self.human.move_to([x, y],  absolute_offset=True, steady=steady)
         return True
+    
+    
 
     def drag_and_drop(
             self,
@@ -121,30 +159,20 @@ class WebCursor:
             self._click()
         else:
         # Click and hold using CDP
-            self.driver.run_cdp_command(
-                cdp.input_.dispatch_mouse_event(
-                    "mousePressed",
-                    x=self.origin_coordinates[0],
-                    y=self.origin_coordinates[1],
-                    button=cdp.input_.MouseButton("left"),
-                    click_count=1
-                )
+            self.mouse_press(
+                x=self.origin_coordinates[0],
+                y=self.origin_coordinates[1],
             )
             if drag_to_relative_position is None:
-                self.move_to(drag_to_element, steady=steady)
+                self.move_to(drag_to_element, steady=steady, is_mouse_pressed=True)
             else:
                 self.move_to(
-                    drag_to_element, relative_position=drag_to_relative_position, steady=steady
+                    drag_to_element, relative_position=drag_to_relative_position, steady=steady, is_mouse_pressed=True
                 )
-            self.driver.run_cdp_command(
-                cdp.input_.dispatch_mouse_event(
-                    "mouseReleased",
-                    x=self.origin_coordinates[0],
-                    y=self.origin_coordinates[1],
-                        button=cdp.input_.MouseButton("left"),
-                        click_count=1,
-                )
-            )
+            self.mouse_release(
+                        x=self.origin_coordinates[0],
+                        y=self.origin_coordinates[1],
+                    )
         return True
 
     def control_scroll_bar(
@@ -204,13 +232,18 @@ class WebCursor:
             self.scroll_to_element(element)
             return True
         elif isinstance(element, (list, tuple)):
-            element = self.driver.get_element_at_point(x=element[0],y=element[1])
-            # an iframe, no need to scroll into view
-            if isinstance(element, BrowserTab):
-              return True
+            try:
+                element = self.driver.get_element_at_point(x=element[0],y=element[1])
+                # an iframe, no need to scroll into view
+                if isinstance(element, BrowserTab):
+                    return True
 
-            self.scroll_to_element(element)
-            return True
+                self.scroll_to_element(element)
+                return True
+            except:
+              return True
+            
+            
         else:
             print("Incorrect Element or Coordinates values!")
             return False
@@ -229,37 +262,53 @@ class WebCursor:
         if not is_in_viewport:
             element.scroll_into_view()
             sleep(random.uniform(0.8, 1.4))
+    
+    def _generate_show_cursor_code(self):
+        return f'''if (!window.{self._dot_name}) {{
+    function displayRedDot(event) {{
+        // Get the cursor position
+        const x = event.clientX;
+        const y = event.clientY;
+        // Get or create the dot
+        let dot = window.{self._dot_name};
+        if (!dot) {{
+            // Create a new span element for the red dot
+            dot = document.createElement("span");
+            // Style the dot with CSS
+            dot.style.position = "fixed";
+            dot.style.width = "5px";
+            dot.style.height = "5px";
+            dot.style.borderRadius = "50%";
+            dot.style.backgroundColor = "#E7010A";
+            dot.style.pointerEvents = "none"; // Make it non-interactive
+            dot.style.zIndex = "999999"; // Ensure it's on top
+            // Add the dot to the page
+            document.body.prepend(dot);
+            window.{self._dot_name} = dot;
+        }}
+        // Update the dot's position
+        dot.style.left = x + "px";
+        dot.style.top = y + "px";
+    }}
+    // Add event listener to update the dot's position on mousemove
+    document.addEventListener("mousemove", displayRedDot);
+}}'''
+
+    def _generate_update_position_code(self, x: int, y: int):
+        return f'''if (window.{self._dot_name}) {{
+        let dot = window.{self._dot_name};
+        dot.style.left = "{x}px";
+        dot.style.top = "{y}px";
+    }}'''
+
+    def update_position(self, x: int, y: int):
+        self.driver.run_js(self._generate_update_position_code(x,y))
 
     def show_cursor(self):
-        self.driver.run_js('''if (!window.dEl) {
-    let dot
-    function displayRedDot() {
-        // Get the cursor position
-        const x = event.clientX
-        const y = event.clientY
+        self.driver.run_js(self._generate_show_cursor_code())
 
-        if (!dot) {
-            // Create a new span element for the red dot if it doesn't exist
-            dot = document.createElement("span")
-            // Style the dot with CSS
-            dot.style.position = "fixed"
-            dot.style.width = "5px"
-            dot.style.height = "5px"
-            dot.style.borderRadius = "50%"
-            dot.style.backgroundColor = "#E7010A"
-            // Add the dot to the page
-            document.body.prepend(dot)
-        }
-
-        // Update the dot's position
-        dot.style.left = x + "px"
-        dot.style.top = y + "px"
-    }
-
-    // Add event listener to update the dot's position on mousemove
-    document.addEventListener("mousemove", displayRedDot)
-    window.dEl = dot
-}''')
+    def _generate_hide_cursor_code(self):
+        return f'''window.{self._dot_name}?.remove()'''
 
     def hide_cursor(self):
-        self.driver.run_js('''window.dEl?.remove()''')
+                self.driver.run_js(self._generate_hide_cursor_code())
