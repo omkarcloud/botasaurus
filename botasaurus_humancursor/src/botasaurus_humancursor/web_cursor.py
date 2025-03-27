@@ -33,9 +33,10 @@ class WebCursor:
             return False
         if origin_coordinates is None:
             origin_coordinates = self.origin_coordinates
-        self.show_cursor()
+        # self.show_cursor()
         self.origin_coordinates = self.human.move_to(
             element,
+            self.update_cursor_position,
             origin_coordinates=origin_coordinates,
             absolute_offset=absolute_offset,
             relative_position=relative_position,
@@ -133,8 +134,8 @@ class WebCursor:
     
     def move_mouse_to_point(self, x: int, y: int, steady=False):
         """Moves the cursor with human curve, by specified number of x and y pixels"""
-        self.show_cursor()
-        self.origin_coordinates = self.human.move_to([x, y],  absolute_offset=True, steady=steady)
+        # self.show_cursor()
+        self.origin_coordinates = self.human.move_to([x, y], self.update_cursor_position, absolute_offset=True, steady=steady)
         return True
     
     
@@ -263,12 +264,38 @@ class WebCursor:
             element.scroll_into_view()
             sleep(random.uniform(0.8, 1.4))
     
-    def _generate_show_cursor_code(self):
-        return f'''if (!window.{self._dot_name}) {{
-    function displayRedDot(event) {{
+#     def _generate_show_cursor_code(self):
+#         return f'''if (!window.{self._dot_name}) {{
+#     function displayRedDot(x,y) {{
+#         // Get the cursor position
+#         // Get or create the dot
+#         let dot = window.{self._dot_name};
+#         if (!dot) {{
+#             // Create a new span element for the red dot
+#             dot = document.createElement("span");
+#             // Style the dot with CSS
+#             dot.style.position = "fixed";
+#             dot.style.width = "5px";
+#             dot.style.height = "5px";
+#             dot.style.borderRadius = "50%";
+#             dot.style.backgroundColor = "#E7010A";
+#             dot.style.pointerEvents = "none"; // Make it non-interactive
+#             dot.style.zIndex = "999999"; // Ensure it's on top
+#             // Add the dot to the page
+#             document.body.prepend(dot);
+#             window.{self._dot_name} = dot;
+#         }}
+#         // Update the dot's position
+#         dot.style.left = x + "px";
+#         dot.style.top = y + "px";
+#     }}
+#     // Add event listener to update the dot's position on mousemove
+#     // document.addEventListener("mousemove", (e) => displayRedDot(event.clientX, event.clientY));
+# }}'''
+
+    def _generate_update_cursor_position_code(self, x: int, y: int):
+        return f'''function displayRedDot(x,y) {{
         // Get the cursor position
-        const x = event.clientX;
-        const y = event.clientY;
         // Get or create the dot
         let dot = window.{self._dot_name};
         if (!dot) {{
@@ -290,25 +317,16 @@ class WebCursor:
         dot.style.left = x + "px";
         dot.style.top = y + "px";
     }}
-    // Add event listener to update the dot's position on mousemove
-    document.addEventListener("mousemove", displayRedDot);
-}}'''
+    displayRedDot({x}, {y})'''
 
-    def _generate_update_position_code(self, x: int, y: int):
-        return f'''if (window.{self._dot_name}) {{
-        let dot = window.{self._dot_name};
-        dot.style.left = "{x}px";
-        dot.style.top = "{y}px";
-    }}'''
+    def update_cursor_position(self, x: int, y: int):
+        self.driver.run_js(self._generate_update_cursor_position_code(x,y))
 
-    def update_position(self, x: int, y: int):
-        self.driver.run_js(self._generate_update_position_code(x,y))
+    # def show_cursor(self):
+    #     self.driver.run_js(self._generate_show_cursor_code())
 
-    def show_cursor(self):
-        self.driver.run_js(self._generate_show_cursor_code())
-
-    def _generate_hide_cursor_code(self):
-        return f'''window.{self._dot_name}?.remove()'''
+    # def _generate_hide_cursor_code(self):
+    #     return f'''window.{self._dot_name}?.remove()'''
 
     def hide_cursor(self):
                 self.driver.run_js(self._generate_hide_cursor_code())

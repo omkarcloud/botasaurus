@@ -1,4 +1,5 @@
 import random
+from time import sleep
 
 from botasaurus_driver import Driver, cdp
 from .human_curve_generator import HumanizeMouseTrajectory
@@ -17,26 +18,30 @@ class WebAdjuster:
         self.origin_coordinate = [0, 0]
 
     def do_move(self, x,y,
-                # update_position,
+                update_cursor_position,
                 is_mouse_pressed=False):
         if is_mouse_pressed:
             self.driver.run_cdp_command(cdp.input_.dispatch_mouse_event(
                                 "mouseMoved",
                                 x=x,
                                 y=y,
-                                # button=cdp.input_.MouseButton("left"), 
+                                button=cdp.input_.MouseButton("left"), 
                         ))
-            # update_position(x,y)
+            # needed to shoe cordinates
+            update_cursor_position(x,y)
+            sleep(0.003 )
         else: 
             self.driver.run_cdp_command(cdp.input_.dispatch_mouse_event(
                                 "mouseMoved",
                                 x=x,
                                 y=y,
                         ))
+            update_cursor_position(x,y)
+            # sleep(0.003 )
     def move_to(
         self,
         element_or_pos,
-        # update_position, 
+        update_cursor_position, 
         origin_coordinates=None,
         absolute_offset=False,
         relative_position=None,
@@ -105,7 +110,6 @@ class WebAdjuster:
         ) = generate_random_curve_parameters(
             self.driver, [origin[0], origin[1]], [x, y]
         )
-        print(target_points)
         if steady:
             offset_boundary_x, offset_boundary_y = 10, 10
             distortion_mean, distortion_st_dev, distortion_frequency = 1.2, 1.2, 1
@@ -122,12 +126,13 @@ class WebAdjuster:
                 tween=tween,
                 target_points=target_points,
             )
+            
         for point in human_curve.points:
             # Move to each point in the curve
             self.do_move(
-                    x,
-                    y,
-                    # update_position,
+                    x=point[0],
+                    y=point[1],
+                    update_cursor_position=update_cursor_position,
                     is_mouse_pressed=is_mouse_pressed
             )
             
