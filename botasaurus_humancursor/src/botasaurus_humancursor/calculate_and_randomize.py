@@ -6,8 +6,8 @@ import pytweening
 def calculate_absolute_offset(element, relative_position, rect=None):
     """Calculates the absolute offset based on relative position"""
     if rect is None:
-        # Get element position using get_bounding_rect
-        rect = element.get_bounding_rect()
+        # Get element position using _get_bounding_rect_with_iframe_offset
+        rect = element._get_bounding_rect_with_iframe_offset()
     
     element_width = rect["width"]
     element_height = rect["height"]
@@ -102,31 +102,39 @@ def generate_random_curve_parameters(driver, pre_origin, post_destination):
         tween,
         target_points,
     )
-
 def calculate_step_count(
     distance: float,
-    min_steps: int = 60,
-    max_steps: int = 200,
-    base_distance: float = 300.0
 ) -> int:
     """
     Calculate the ideal number of steps for a drag operation based on distance.
     
     Args:
         distance: The pixel distance between origin and destination
-        min_steps: Minimum number of steps (default: 40)
-        max_steps: Maximum number of steps (default: 200)
-        base_distance: Distance at which max_steps will be used (default: 300px)
     
     Returns:
         The calculated step count, clamped between min_steps and max_steps
     """
+    # Define step parameters based on distance ranges
+    if distance <= 500:
+        min_steps, max_steps, base_distance = 40, 50, 500
+    elif distance <= 1000:
+        min_steps, max_steps, base_distance = 50, 60, 1000
+    elif distance <= 1500:
+        min_steps, max_steps, base_distance = 60, 70, 1500
+    elif distance <= 2000:
+        min_steps, max_steps, base_distance = 70, 80, 2000
+    else:
+        #  generate_distance((0,0), (1920, 1080)) = 2202
+        min_steps, max_steps, base_distance = 80, 100, 2202
+        
     # Calculate step count that scales with distance
     step_count = min_steps + (distance / base_distance) * (max_steps - min_steps)
     
-    # Round down and clamp between min and max
-    step_count = int(step_count)
+    # Round down and apply some randomness for variability
+    step_count = int(step_count * random.uniform(0.9, 1.1))
+    
     return max(min_steps, min(max_steps, step_count))
+
 
 def generate_distance(pre_origin, post_destination):
     x1, y1 = pre_origin

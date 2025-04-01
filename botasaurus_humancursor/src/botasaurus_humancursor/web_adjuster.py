@@ -43,7 +43,7 @@ class WebAdjuster:
         element_or_pos,
         update_cursor_position, 
         origin_coordinates=None,
-        absolute_offset=False,
+        absolute_offset=True,
         relative_position=None,
         human_curve=None,
         steady=False,
@@ -56,7 +56,7 @@ class WebAdjuster:
 
         pre_origin = tuple(origin)
         if isinstance(element_or_pos, (list,tuple)):
-            if not absolute_offset:
+            if absolute_offset:
                 x, y = element_or_pos[0], element_or_pos[1]
             else:
                 x, y = (
@@ -64,9 +64,9 @@ class WebAdjuster:
                     element_or_pos[1] + pre_origin[1],
                 )
         else:
-            # Get element position using Botasaurus's get_bounding_rect, with fallback if needed
+            # Get element position using Botasaurus's _get_bounding_rect_with_iframe_offset, with fallback if needed
             try:
-                rect = element_or_pos.get_bounding_rect()
+                rect = element_or_pos._get_bounding_rect_with_iframe_offset()
             except Exception as e:
                 print("Error obtaining bounding rect for element:", e)
                 if hasattr(element_or_pos, "_elem"):
@@ -126,7 +126,6 @@ class WebAdjuster:
                 tween=tween,
                 target_points=target_points,
             )
-            
         for point in human_curve.points:
             # Move to each point in the curve
             self.do_move(

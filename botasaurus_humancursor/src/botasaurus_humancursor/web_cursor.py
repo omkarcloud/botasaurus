@@ -19,11 +19,17 @@ class WebCursor:
         self.origin_coordinates = [0, 0]
         self._dot_name = _dot_name
 
+    def move_mouse_to_point(self, x: int, y: int, steady=False):
+        """Moves the cursor with human curve, by specified number of x and y pixels"""
+        # self.show_cursor()
+        self.origin_coordinates = self.human.move_to([x, y], self.update_cursor_position, steady=steady)
+        return True
+    
     def move_to(
             self,
-            element: Union[Element, list],
-            relative_position: list = None,
-            absolute_offset: bool = False,
+            element: Union[Element, tuple[int, int] ],
+            relative_position: tuple[int, int]  = None,
+            absolute_offset: bool = True,
             origin_coordinates=None,
             steady=False,
             is_mouse_pressed=False
@@ -47,11 +53,11 @@ class WebCursor:
 
     def click(
             self,
-            element: Union[Element, list],
+            element: Union[Element, tuple[int, int] ],
             number_of_clicks: int = 1,
             click_duration: float = 0,
-            relative_position: list = None,
-            absolute_offset: bool = False,
+            relative_position: tuple[int, int]  = None,
+            absolute_offset: bool = True,
             origin_coordinates=None,
             steady=False
     ):
@@ -132,20 +138,14 @@ class WebCursor:
         self._click(release_condition=release_condition, release_condition_check_interval=release_condition_check_interval, click_duration=click_duration)
         return True
     
-    def move_mouse_to_point(self, x: int, y: int, steady=False):
-        """Moves the cursor with human curve, by specified number of x and y pixels"""
-        # self.show_cursor()
-        self.origin_coordinates = self.human.move_to([x, y], self.update_cursor_position, absolute_offset=True, steady=steady)
-        return True
-    
     
 
     def drag_and_drop(
             self,
-            drag_from_element: Union[Element, list],
-            drag_to_element: Union[Element, list],
-            drag_from_relative_position: list = None,
-            drag_to_relative_position: list = None,
+            drag_from_element: Union[Element, tuple[int, int] ],
+            drag_to_element: Union[Element, tuple[int, int] ],
+            drag_from_relative_position: tuple[int, int]  = None,
+            drag_to_relative_position: tuple[int, int]  = None,
             steady=False
     ):
         """Moves to element or coordinates, clicks and holds, dragging it to another element, with human curve"""
@@ -178,7 +178,7 @@ class WebCursor:
 
     def control_scroll_bar(
             self,
-            scroll_bar_element: Union[Element, list],
+            scroll_bar_element: Union[Element, tuple[int, int] ],
             amount_by_percentage: list,
             orientation: str = "horizontal",
             steady=False
@@ -325,8 +325,8 @@ class WebCursor:
     # def show_cursor(self):
     #     self.driver.run_js(self._generate_show_cursor_code())
 
-    # def _generate_hide_cursor_code(self):
-    #     return f'''window.{self._dot_name}?.remove()'''
+    def _generate_hide_cursor_code(self):
+        return f'''window.{self._dot_name}?.remove()'''
 
     def hide_cursor(self):
                 self.driver.run_js(self._generate_hide_cursor_code())

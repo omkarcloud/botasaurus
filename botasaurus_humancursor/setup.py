@@ -3,9 +3,7 @@ from setuptools import setup, find_packages
 __author__ = "Chetan Jain <53407137+Chetan11-dev@users.noreply.github.com>"
 
 
-install_requires = [
-    "click",
-]
+install_requires = []
 
 
 def get_description():
@@ -31,7 +29,7 @@ setup(
     # There are some restrictions on what makes a valid project name
     # specification here:
     # https://packaging.python.org/specifications/core-metadata/#name
-    name='bota',  # Required
+    name='botasaurus-humancursor',  # Required
 
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
@@ -53,12 +51,12 @@ setup(
     #
     # This field corresponds to the "Description" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#description-optional
-    version='4.0.71',
+    version='4.0.77',
     author="Chetan Jain",
     author_email="53407137+Chetan11-dev@users.noreply.github.com",
-    description="CLI for botasaurus.",
+    description="A fork of HumanCursor which brings human-like mouse movements to Botasaurus.",
     license="MIT",
-    keywords=["bota"],
+    keywords=["botasaurus-humancursor"],
     url="https://github.com/omkarcloud/botasaurus",
     long_description_content_type="text/markdown",
     long_description=get_description(),

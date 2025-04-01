@@ -1,0 +1,4 @@
+{
+  "scripts": {
+    "upload": "python3 increment_version.py && rm -rf dist/ src/botasaurus_humancursor.egg-info src/botasaurus_humancursor/package_storage.json  MANIFEST  && python3 setup.py sdist && python3 -m pip install -e . && python3 -m twine upload dist/* --verbose"
+  }}
