@@ -189,9 +189,32 @@ def safe_download(url: str, folder_name: str):
                                  
         else:
             raise Exception("The URL does not point to a valid git repository or zip file.")
-    
 
-def run_clone_repository_commands(git_repo_url, folder_name):
+def install_chrome(uname):
+    # lsof install as we need it.
+    install_dependencies = f"""sudo apt install -y python3-pip
+alias python=python3
+echo "alias python=python3" >> /home/{uname}/.bashrc
+if ! command -v google-chrome &> /dev/null
+then
+    sudo apt-get update
+    wget  https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    sudo apt-get install -y lsof wget gnupg2 apt-transport-https ca-certificates software-properties-common adwaita-icon-theme alsa-topology-conf alsa-ucm-conf at-spi2-core dbus-user-session dconf-gsettings-backend dconf-service fontconfig fonts-liberation glib-networking glib-networking-common glib-networking-services gsettings-desktop-schemas gtk-update-icon-cache hicolor-icon-theme libasound2 libasound2-data libatk-bridge2.0-0 libatk1.0-0 libatk1.0-data libatspi2.0-0 libauthen-sasl-perl libavahi-client3 libavahi-common-data libavahi-common3 libcairo-gobject2 libcairo2 libclone-perl libcolord2 libcups2 libdata-dump-perl libdatrie1 libdconf1 libdrm-amdgpu1 libdrm-common libdrm-intel1 libdrm-nouveau2 libdrm-radeon1 libdrm2 libencode-locale-perl libepoxy0 libfile-basedir-perl libfile-desktopentry-perl libfile-listing-perl libfile-mimeinfo-perl libfont-afm-perl libfontenc1 libgbm1 libgdk-pixbuf-2.0-0 libgdk-pixbuf2.0-bin libgdk-pixbuf2.0-common libgl1 libgl1-mesa-dri libglapi-mesa libglvnd0 libglx-mesa0 libglx0 libgraphite2-3 libgtk-3-0 libgtk-3-bin libgtk-3-common libharfbuzz0b libhtml-form-perl libhtml-format-perl libhtml-parser-perl libhtml-tagset-perl libhtml-tree-perl libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl libhttp-message-perl libhttp-negotiate-perl libice6 libio-html-perl libio-socket-ssl-perl libio-stringy-perl libipc-system-simple-perl libjson-glib-1.0-0 libjson-glib-1.0-common liblcms2-2 libllvm11 liblwp-mediatypes-perl liblwp-protocol-https-perl libmailtools-perl libnet-dbus-perl libnet-http-perl libnet-smtp-ssl-perl libnet-ssleay-perl libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libpangoft2-1.0-0 libpciaccess0 libpixman-1-0 libproxy1v5 librest-0.7-0 librsvg2-2 librsvg2-common libsensors-config libsensors5 libsm6 libsoup-gnome2.4-1 libsoup2.4-1 libtext-iconv-perl libthai-data libthai0 libtie-ixhash-perl libtimedate-perl libtry-tiny-perl libu2f-udev liburi-perl libvte-2.91-0 libvte-2.91-common libvulkan1 libwayland-client0 libwayland-cursor0 libwayland-egl1 libwayland-server0 libwww-perl libwww-robotrules-perl libx11-protocol-perl libx11-xcb1 libxaw7 libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0 libxcb-present0 libxcb-randr0 libxcb-render0 libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxft2 libxi6 libxinerama1 libxkbcommon0 libxkbfile1 libxml-parser-perl libxml-twig-perl libxml-xpathengine-perl libxmu6 libxmuu1 libxrandr2 libxrender1 libxshmfence1 libxt6 libxtst6 libxv1 libxxf86dga1 libxxf86vm1 libz3-4 mesa-vulkan-drivers perl-openssl-defaults shared-mime-info termit x11-common x11-utils xdg-utils xvfb
+    sudo dpkg -i google-chrome-stable_current_amd64.deb
+    rm -rf google-chrome-stable_current_amd64.deb
+fi
+"""    
+    subprocess.run(remove_empty_lines(install_dependencies),     shell=True, 
+            check=True,
+            stderr=subprocess.STDOUT,)
+
+def install_requirements(folder_name):
+    install_commands = create_install_commands(folder_name)
+    subprocess.run(remove_empty_lines(install_commands),     shell=True, 
+            check=True,
+            stderr=subprocess.STDOUT,)
+
+def clone_repository(git_repo_url, folder_name):
     clone_commands = create_clone_commands(git_repo_url, folder_name)
     if clone_commands:
         try:
@@ -203,16 +226,8 @@ def create_install_commands(folder_name):
     return  f"""
 cd {folder_name}
 python3 -m pip install -r requirements.txt && python3 run.py install"""
-    
-def installreqs(git_repo_url, folder_name):
-    
-    uname = get_username()
 
-    launch_frontend_sh = r"""#!/bin/bash
-sudo pkill -f "npm run start"
-cd frontend
-npm run start"""
-
+def create_backend(folder_name, uname):
     launch_backend_sh = r"""#!/bin/bash
 sudo pkill chrome
 sudo pkill -f "python3 run.py backend"
@@ -221,7 +236,6 @@ VM=true /usr/bin/python3 run.py backend"""
     launch_backend_service = f"""[Unit]
 Description=Launch Backend
 After=network.target
-
 [Service]
 Type=simple
 User={uname}
@@ -229,14 +243,47 @@ WorkingDirectory=/home/{uname}/{folder_name}
 ExecStart=/bin/bash /home/{uname}/{folder_name}/launch-backend.sh
 Restart=always
 RestartSec=10
-
 [Install]
 WantedBy=multi-user.target"""
     
+    write_file(launch_backend_sh, f"/home/{uname}/{folder_name}/launch-backend.sh")
+    write_file_sudo(launch_backend_service, "/etc/systemd/system/launch-backend.service")
+
+
+def make_uname_service(uname):
+    return f"{uname}.service"
+
+def create_main(folder_name, uname):
+    launch_main = r"""#!/bin/bash
+sudo pkill chrome
+sudo pkill -f "python3 main.py"
+VM=true /usr/bin/python3 main.py"""
+
+    service = f"""[Unit]
+Description=Run {folder_name}
+After=network.target
+[Service]
+Type=simple
+User={uname}
+WorkingDirectory=/home/{uname}/{folder_name}
+ExecStart=/bin/bash /home/{uname}/{folder_name}/launch-main.sh
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target"""
+    
+    write_file(launch_main, f"/home/{uname}/{folder_name}/launch-main.sh")
+    write_file_sudo(service, "/etc/systemd/system/"+make_uname_service(uname))
+
+def create_frontend(folder_name, uname):
+    launch_frontend_sh = r"""#!/bin/bash
+sudo pkill -f "npm run start"
+cd frontend
+npm run start"""
+
     launch_frontend_service = f"""[Unit]
 Description=Launch Frontend
 After=network.target
-
 [Service]
 Type=simple
 User={uname}
@@ -244,10 +291,13 @@ WorkingDirectory=/home/{uname}/{folder_name}
 ExecStart=/bin/bash /home/{uname}/{folder_name}/launch-frontend.sh
 Restart=always
 RestartSec=10
-
 [Install]
 WantedBy=multi-user.target"""
 
+    write_file(launch_frontend_sh, f"/home/{uname}/{folder_name}/launch-frontend.sh")
+    write_file_sudo(launch_frontend_service, "/etc/systemd/system/launch-frontend.service")
+
+def setup_apache_load_balancer():
     apache_conf = r"""<VirtualHost *:80>
     ServerAdmin webmaster@localhost
     DocumentRoot /var/www/html
@@ -259,70 +309,75 @@ WantedBy=multi-user.target"""
     ProxyPassReverse / http://127.0.0.1:3000/
 </VirtualHost>"""
     
-    # lsof install as we need it.
     
-    install_dependencies = f"""sudo apt install -y python3-pip
-alias python=python3
-echo "alias python=python3" >> /home/{uname}/.bashrc
-
-if ! command -v google-chrome &> /dev/null
-then
-    sudo apt-get update
-    wget  https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-    sudo apt-get install -y lsof wget gnupg2 apt-transport-https ca-certificates software-properties-common adwaita-icon-theme alsa-topology-conf alsa-ucm-conf at-spi2-core dbus-user-session dconf-gsettings-backend dconf-service fontconfig fonts-liberation glib-networking glib-networking-common glib-networking-services gsettings-desktop-schemas gtk-update-icon-cache hicolor-icon-theme libasound2 libasound2-data libatk-bridge2.0-0 libatk1.0-0 libatk1.0-data libatspi2.0-0 libauthen-sasl-perl libavahi-client3 libavahi-common-data libavahi-common3 libcairo-gobject2 libcairo2 libclone-perl libcolord2 libcups2 libdata-dump-perl libdatrie1 libdconf1 libdrm-amdgpu1 libdrm-common libdrm-intel1 libdrm-nouveau2 libdrm-radeon1 libdrm2 libencode-locale-perl libepoxy0 libfile-basedir-perl libfile-desktopentry-perl libfile-listing-perl libfile-mimeinfo-perl libfont-afm-perl libfontenc1 libgbm1 libgdk-pixbuf-2.0-0 libgdk-pixbuf2.0-bin libgdk-pixbuf2.0-common libgl1 libgl1-mesa-dri libglapi-mesa libglvnd0 libglx-mesa0 libglx0 libgraphite2-3 libgtk-3-0 libgtk-3-bin libgtk-3-common libharfbuzz0b libhtml-form-perl libhtml-format-perl libhtml-parser-perl libhtml-tagset-perl libhtml-tree-perl libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl libhttp-message-perl libhttp-negotiate-perl libice6 libio-html-perl libio-socket-ssl-perl libio-stringy-perl libipc-system-simple-perl libjson-glib-1.0-0 libjson-glib-1.0-common liblcms2-2 libllvm11 liblwp-mediatypes-perl liblwp-protocol-https-perl libmailtools-perl libnet-dbus-perl libnet-http-perl libnet-smtp-ssl-perl libnet-ssleay-perl libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libpangoft2-1.0-0 libpciaccess0 libpixman-1-0 libproxy1v5 librest-0.7-0 librsvg2-2 librsvg2-common libsensors-config libsensors5 libsm6 libsoup-gnome2.4-1 libsoup2.4-1 libtext-iconv-perl libthai-data libthai0 libtie-ixhash-perl libtimedate-perl libtry-tiny-perl libu2f-udev liburi-perl libvte-2.91-0 libvte-2.91-common libvulkan1 libwayland-client0 libwayland-cursor0 libwayland-egl1 libwayland-server0 libwww-perl libwww-robotrules-perl libx11-protocol-perl libx11-xcb1 libxaw7 libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0 libxcb-present0 libxcb-randr0 libxcb-render0 libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxft2 libxi6 libxinerama1 libxkbcommon0 libxkbfile1 libxml-parser-perl libxml-twig-perl libxml-xpathengine-perl libxmu6 libxmuu1 libxrandr2 libxrender1 libxshmfence1 libxt6 libxtst6 libxv1 libxxf86dga1 libxxf86vm1 libz3-4 mesa-vulkan-drivers perl-openssl-defaults shared-mime-info termit x11-common x11-utils xdg-utils xvfb
-    sudo dpkg -i google-chrome-stable_current_amd64.deb
-    rm -rf google-chrome-stable_current_amd64.deb
-fi
-"""
+    write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
     
+def setup_systemctl(folder_name, uname):
     sysytemctl_commands=f"""
 sudo chmod +x /home/{uname}/{folder_name}/launch-backend.sh || true
 sudo chmod +x /home/{uname}/{folder_name}/launch-frontend.sh || true
-
 sudo systemctl daemon-reload
 sudo systemctl enable launch-backend.service
 sudo systemctl start launch-backend.service
-
 sudo systemctl daemon-reload
 sudo systemctl enable launch-frontend.service
 sudo systemctl start launch-frontend.service
-
 sudo a2enmod proxy
 sudo a2enmod proxy_http
-
 sudo systemctl restart apache2
 """
-    subprocess.run(remove_empty_lines(install_dependencies),     shell=True, 
-            check=True,
-            stderr=subprocess.STDOUT,)
-    run_clone_repository_commands(git_repo_url, folder_name)
-
-    install_commands = create_install_commands(folder_name)
-    subprocess.run(remove_empty_lines(install_commands),     shell=True, 
-            check=True,
-            stderr=subprocess.STDOUT,)
-    write_file(launch_backend_sh, f"/home/{uname}/{folder_name}/launch-backend.sh")
-    write_file(launch_frontend_sh, f"/home/{uname}/{folder_name}/launch-frontend.sh")
-
-    write_file_sudo(launch_backend_service, "/etc/systemd/system/launch-backend.service")
-    write_file_sudo(launch_frontend_service, "/etc/systemd/system/launch-frontend.service")
-
-    write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
     subprocess.run(remove_empty_lines(sysytemctl_commands),     shell=True, 
             check=True,
             stderr=subprocess.STDOUT,)
 
+def install_ui_scraper(git_repo_url, folder_name):
+    uname = get_username()
+    
+    install_chrome(uname)
+
+    clone_repository(git_repo_url, folder_name)
+
+    install_requirements(folder_name)
+
+    # FIX FROM HERE
+    create_backend(folder_name, uname)
 
 
-def install_scraper_in_vm(git_repo_url, folder_name):
+    setup_apache_load_balancer()
+    
+    setup_systemctl(folder_name, uname)
+
+def install_scraper(git_repo_url, folder_name, max_retry):
+    uname = get_username()
+    
+    install_chrome(uname)
+    clone_repository(git_repo_url, folder_name)
+
+    install_requirements(folder_name)
+
+    create_backend(folder_name, uname)
+
+    create_frontend(folder_name, uname)
+
+    setup_apache_load_balancer()
+    
+    setup_systemctl(folder_name, uname)
+
+def install_ui_scraper_in_vm(git_repo_url, folder_name):
     validateRepository(git_repo_url)
-    installreqs(git_repo_url, folder_name)
+    install_ui_scraper(git_repo_url, folder_name)
     click.echo("Successfully installed the Scraper.")
     click.echo("Now, Checking VM Status...")
     ip = get_vm_ip()
     wait_till_up(ip)
     click.echo(create_visit_ip_text(ip))
 
+def install_scraper_in_vm(git_repo_url, folder_name, max_retry):
+    validateRepository(git_repo_url)
+    install_scraper(git_repo_url, folder_name, max_retry)
+    click.echo("Successfully installed the Scraper.")
+    # todo check status is it running or error?
+    # if error show it
 # python -m bota.vm 
 if __name__ == "__main__":
     pass
