@@ -6,7 +6,7 @@ import click
 from os import path, makedirs
 
 from .package_storage import get_package_storage
-from .vm import extractRepositoryName, install_scraper_in_vm
+from .vm import extractRepositoryName, install_scraper_in_vm, install_ui_scraper_in_vm
 
 @click.group(context_settings=dict(max_content_width=95))
 def cli():
@@ -1102,8 +1102,8 @@ def perform_cluster_deletion(cluster_name, force):
 
 @cli.command()
 @click.option("--repo-url", prompt="Enter the repository URL for the scraper (e.g., https://github.com/your-username/your-repository)", required=True, help="The GitHub repository URL to install.")
-def install_scraper(repo_url):
-    """Installs a scraper inside VM"""
+def install_ui_scraper(repo_url):
+    """Clones and installs a ui scraper from a given GitHub repository"""
     repo_url = repo_url.strip()
 
     folder_name = extractRepositoryName(repo_url)
@@ -1113,7 +1113,67 @@ def install_scraper(repo_url):
     click.echo(f"    - Cloning the {folder_name} repository and installing dependencies")
     click.echo("    - Creating systemctl services to ensure the scraper runs continuously on the VM")
     click.echo("------------")
-    install_scraper_in_vm(repo_url, folder_name)
+    install_ui_scraper_in_vm(repo_url, folder_name)
+
+
+# Custom type for max_retry to handle integer >= 0 or 'unlimited'
+class MaxRetryParamType(click.ParamType):
+    name = "integer>=0 or 'unlimited'"
+
+    def convert(self, value, param, ctx):
+        if value == 'unlimited':
+            return value
+        try:
+            int_value = int(value)
+            if int_value >= 0:
+                return int_value
+            else:
+                self.fail(
+                  f"'{value}' is not valid. Please enter a number greater than or equal to 0, or the word 'unlimited'.",
+                  param,
+                  ctx,
+                )
+        except ValueError:
+            self.fail(
+                f"'{value}' is not a valid integer or the string 'unlimited'.",
+                 param,
+                 ctx,
+            )
+
+# Instantiate the custom type
+MAX_RETRY_TYPE = MaxRetryParamType()
+
+@cli.command()
+@click.option(
+    "--repo-url",
+    prompt="Enter the repository URL for the scraper (e.g., https://github.com/your-username/your-repository)",
+    required=True,
+    help="The GitHub repository URL to install.",
+)
+@click.option(
+    "--max-retry",
+    type=MAX_RETRY_TYPE, # Use the custom type for validation
+    required=False,      # Make it optional
+    default=3,        # Default to None if not provided
+    help="The maximum number of retries for the scraper. Can be a number greater than or equal to 0 or 'unlimited'. Defaults to 3"
+)
+def install_scraper(repo_url, max_retry):
+    """
+    Clones and installs a scraper from a given GitHub repository.
+    """
+    repo_url = repo_url.strip()
+
+    folder_name = extractRepositoryName(repo_url)
+    click.echo("------------")
+    click.echo("Performing the following steps to install the scraper:")
+    click.echo("    - Installing Google Chrome")
+    click.echo(f"    - Cloning the {folder_name} repository and installing dependencies")
+    click.echo("    - Creating systemctl services for the scraper")
+    click.echo("------------")
+
+    install_scraper_in_vm(repo_url, folder_name, max_retry)
+
+
 
 @cli.command()
 def switch_project():

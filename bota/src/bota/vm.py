@@ -85,7 +85,7 @@ def wait_till_up(ip):
 
     # If the function hasn't returned after the loop, raise an exception
     raise Exception(f"The VM at http://{ip}/ is not up after {timeout} seconds. Please check the logs using "
-                    '"journalctl -u launch-backend.service -b" or "journalctl -u launch-frontend.service -b".')
+                    '"journalctl -u backend.service -b" or "journalctl -u frontend.service -b".')
 
 def remove_empty_lines(text):
     """
@@ -228,74 +228,51 @@ cd {folder_name}
 python3 -m pip install -r requirements.txt && python3 run.py install"""
 
 def create_backend(folder_name, uname):
-    launch_backend_sh = r"""#!/bin/bash
+    backend_sh = r"""#!/bin/bash
 sudo pkill chrome
 sudo pkill -f "python3 run.py backend"
 VM=true /usr/bin/python3 run.py backend"""
 
-    launch_backend_service = f"""[Unit]
+    backend_service = f"""[Unit]
 Description=Launch Backend
 After=network.target
 [Service]
 Type=simple
 User={uname}
 WorkingDirectory=/home/{uname}/{folder_name}
-ExecStart=/bin/bash /home/{uname}/{folder_name}/launch-backend.sh
+ExecStart=/bin/bash /home/{uname}/{folder_name}/backend.sh
 Restart=always
 RestartSec=10
 [Install]
 WantedBy=multi-user.target"""
     
-    write_file(launch_backend_sh, f"/home/{uname}/{folder_name}/launch-backend.sh")
-    write_file_sudo(launch_backend_service, "/etc/systemd/system/launch-backend.service")
+    write_file(backend_sh, f"/home/{uname}/{folder_name}/backend.sh")
+    write_file_sudo(backend_service, "/etc/systemd/system/backend.service")
 
 
-def make_uname_service(uname):
-    return f"{uname}.service"
 
-def create_main(folder_name, uname):
-    launch_main = r"""#!/bin/bash
-sudo pkill chrome
-sudo pkill -f "python3 main.py"
-VM=true /usr/bin/python3 main.py"""
-
-    service = f"""[Unit]
-Description=Run {folder_name}
-After=network.target
-[Service]
-Type=simple
-User={uname}
-WorkingDirectory=/home/{uname}/{folder_name}
-ExecStart=/bin/bash /home/{uname}/{folder_name}/launch-main.sh
-Restart=always
-RestartSec=10
-[Install]
-WantedBy=multi-user.target"""
-    
-    write_file(launch_main, f"/home/{uname}/{folder_name}/launch-main.sh")
-    write_file_sudo(service, "/etc/systemd/system/"+make_uname_service(uname))
 
 def create_frontend(folder_name, uname):
-    launch_frontend_sh = r"""#!/bin/bash
+    frontend_sh = r"""#!/bin/bash
 sudo pkill -f "npm run start"
 cd frontend
 npm run start"""
 
-    launch_frontend_service = f"""[Unit]
+    frontend_service = f"""[Unit]
 Description=Launch Frontend
 After=network.target
 [Service]
 Type=simple
 User={uname}
 WorkingDirectory=/home/{uname}/{folder_name}
-ExecStart=/bin/bash /home/{uname}/{folder_name}/launch-frontend.sh
+ExecStart=/bin/bash /home/{uname}/{folder_name}/frontend.sh
 Restart=always
 RestartSec=10
 [Install]
 WantedBy=multi-user.target"""
 
-    write_file(launch_frontend_sh, f"/home/{uname}/{folder_name}/launch-frontend.sh")
-    write_file_sudo(launch_frontend_service, "/etc/systemd/system/launch-frontend.service")
+    write_file(frontend_sh, f"/home/{uname}/{folder_name}/frontend.sh")
+    write_file_sudo(frontend_service, "/etc/systemd/system/frontend.service")
 
 def setup_apache_load_balancer():
     apache_conf = r"""<VirtualHost *:80>
@@ -313,20 +290,20 @@ def setup_apache_load_balancer():
     write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
     
 def setup_systemctl(folder_name, uname):
-    sysytemctl_commands=f"""
-sudo chmod +x /home/{uname}/{folder_name}/launch-backend.sh || true
-sudo chmod +x /home/{uname}/{folder_name}/launch-frontend.sh || true
+    systemctl_commands=f"""
+sudo chmod +x /home/{uname}/{folder_name}/backend.sh || true
+sudo chmod +x /home/{uname}/{folder_name}/frontend.sh || true
 sudo systemctl daemon-reload
-sudo systemctl enable launch-backend.service
-sudo systemctl start launch-backend.service
+sudo systemctl enable backend.service
+sudo systemctl start backend.service
 sudo systemctl daemon-reload
-sudo systemctl enable launch-frontend.service
-sudo systemctl start launch-frontend.service
+sudo systemctl enable frontend.service
+sudo systemctl start frontend.service
 sudo a2enmod proxy
 sudo a2enmod proxy_http
 sudo systemctl restart apache2
 """
-    subprocess.run(remove_empty_lines(sysytemctl_commands),     shell=True, 
+    subprocess.run(remove_empty_lines(systemctl_commands),     shell=True, 
             check=True,
             stderr=subprocess.STDOUT,)
 
@@ -346,6 +323,67 @@ def install_ui_scraper(git_repo_url, folder_name):
     setup_apache_load_balancer()
     
     setup_systemctl(folder_name, uname)
+def create_main(folder_name, uname, max_retry):
+    launch_file_path = f"/home/{uname}/{folder_name}/main.sh"
+    service_name = f"{uname}.service"
+    
+    # Create launch script
+    main = r"""#!/bin/bash
+sudo pkill chrome
+sudo pkill -f "python3 main.py"
+VM=true /usr/bin/python3 main.py"""
+    
+    # Create service file with retry configuration
+    service = f"""[Unit]
+Description=Run {folder_name}
+After=network.target
+[Service]
+Type=simple
+User={uname}
+WorkingDirectory=/home/{uname}/{folder_name}
+ExecStart=/bin/bash {launch_file_path}"""
+    
+    # Add restart configuration based on max_retry
+    if max_retry == 'unlimited':
+        # will be retries unlimited number of time's
+        service += """
+Restart=on-failure
+StartLimitIntervalSec=0
+RestartSec=10"""
+
+    elif max_retry is not None and int(max_retry) > 0:
+          # (3153600000) 100 years (effectively restart max_retry time's)
+        service += f"""
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=3153600000
+StartLimitBurst={max_retry}"""
+        
+    else:  # No retry or max_retry = 0
+        service += """
+Restart=no"""
+    
+    # Complete the service file
+    service += f"""
+[Install]
+WantedBy=multi-user.target"""
+    
+    # Write files
+    write_file(main, f"/home/{uname}/{folder_name}/main.sh")
+    write_file_sudo(service, "/etc/systemd/system/"+service_name)
+
+    return launch_file_path, service_name
+
+def setup_systemctl_for_data_scraper(launch_file_path, service_name):
+    systemctl_commands=f"""
+sudo chmod +x {launch_file_path} || true
+sudo systemctl daemon-reload
+sudo systemctl enable {service_name}
+sudo systemctl start {service_name}
+"""
+    subprocess.run(remove_empty_lines(systemctl_commands),     shell=True, 
+            check=True,
+            stderr=subprocess.STDOUT)
 
 def install_scraper(git_repo_url, folder_name, max_retry):
     uname = get_username()
@@ -355,13 +393,11 @@ def install_scraper(git_repo_url, folder_name, max_retry):
 
     install_requirements(folder_name)
 
-    create_backend(folder_name, uname)
+    launch_file_path, service_name = create_main(folder_name, uname, max_retry)
 
-    create_frontend(folder_name, uname)
 
-    setup_apache_load_balancer()
     
-    setup_systemctl(folder_name, uname)
+    setup_systemctl_for_data_scraper(launch_file_path, service_name)
 
 def install_ui_scraper_in_vm(git_repo_url, folder_name):
     validateRepository(git_repo_url)
