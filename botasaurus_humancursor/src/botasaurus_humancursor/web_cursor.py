@@ -18,11 +18,12 @@ class WebCursor:
         self.human = WebAdjuster(self.driver)
         self.origin_coordinates = [0, 0]
         self._dot_name = _dot_name
+        self._show_cursor_movements = True
 
     def move_mouse_to_point(self, x: int, y: int, steady=False):
         """Moves the cursor with human curve, by specified number of x and y pixels"""
         # self.show_cursor()
-        self.origin_coordinates = self.human.move_to([x, y], self.update_cursor_position, steady=steady)
+        self.origin_coordinates = self.human.move_to([x, y], self, steady=steady)
         return True
     
     def move_to(
@@ -42,7 +43,7 @@ class WebCursor:
         # self.show_cursor()
         self.origin_coordinates = self.human.move_to(
             element,
-            self.update_cursor_position,
+            self,
             origin_coordinates=origin_coordinates,
             absolute_offset=absolute_offset,
             relative_position=relative_position,
@@ -297,7 +298,7 @@ class WebCursor:
         return f'''function displayRedDot(x,y) {{
         // Get the cursor position
         // Get or create the dot
-        let dot = window.{self._dot_name};
+        let dot = HTMLMarqueeElement.prototype.{self._dot_name};
         if (!dot) {{
             // Create a new span element for the red dot
             dot = document.createElement("span");
@@ -311,7 +312,7 @@ class WebCursor:
             dot.style.zIndex = "999999"; // Ensure it's on top
             // Add the dot to the page
             document.body.prepend(dot);
-            window.{self._dot_name} = dot;
+            HTMLMarqueeElement.prototype.{self._dot_name} = dot;
         }}
         // Update the dot's position
         dot.style.left = x + "px";
@@ -325,8 +326,11 @@ class WebCursor:
     # def show_cursor(self):
     #     self.driver.run_js(self._generate_show_cursor_code())
 
-    def _generate_hide_cursor_code(self):
-        return f'''window.{self._dot_name}?.remove()'''
+    def _generate_delete_cursor_code(self):
+        return f'''HTMLMarqueeElement.prototype.{self._dot_name}?.remove()'''
 
-    def hide_cursor(self):
-                self.driver.run_js(self._generate_hide_cursor_code())
+    def delete_cursor(self):
+                self.driver.run_js(self._generate_delete_cursor_code())
+
+    def hide_cursor_movements(self):
+        self._show_cursor_movements = False

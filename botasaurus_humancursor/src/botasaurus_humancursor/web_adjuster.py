@@ -18,7 +18,7 @@ class WebAdjuster:
         self.origin_coordinate = [0, 0]
 
     def do_move(self, x,y,
-                update_cursor_position,
+                web_cursor,
                 is_mouse_pressed=False):
         if is_mouse_pressed:
             self.driver.run_cdp_command(cdp.input_.dispatch_mouse_event(
@@ -27,21 +27,44 @@ class WebAdjuster:
                                 y=y,
                                 button=cdp.input_.MouseButton("left"), 
                         ))
-            # needed to shoe cordinates
-            update_cursor_position(x,y)
-            sleep(0.003 )
+            if web_cursor._show_cursor_movements:
+                web_cursor.update_cursor_position(x,y)
+                sleep(0.003 )
+            # needed to show cordinates movments
+            
         else: 
             self.driver.run_cdp_command(cdp.input_.dispatch_mouse_event(
                                 "mouseMoved",
                                 x=x,
                                 y=y,
                         ))
-            update_cursor_position(x,y)
+            if web_cursor._show_cursor_movements:
+                web_cursor.update_cursor_position(x,y)
             # sleep(0.003 )
+
+
+    def fix_mouse_move_cursor(self, web_cursor):
+        name = web_cursor._dot_name + 't'
+        self.driver.run_js(f"""
+let dot = HTMLMarqueeElement.prototype.{name};
+if (!dot) {{
+    Object.defineProperty(MouseEvent.prototype, 'screenX', {{
+        get: function () {{
+            return this.clientX + window.screenX;
+        }}
+    }});
+    Object.defineProperty(MouseEvent.prototype, 'screenY', {{
+        get: function () {{
+            return this.clientY + window.screenY;
+        }}
+    }});
+    HTMLMarqueeElement.prototype.{name} = true;
+}}                           
+        """)
     def move_to(
         self,
         element_or_pos,
-        update_cursor_position, 
+        web_cursor, 
         origin_coordinates=None,
         absolute_offset=True,
         relative_position=None,
@@ -126,12 +149,13 @@ class WebAdjuster:
                 tween=tween,
                 target_points=target_points,
             )
+        self.fix_mouse_move_cursor(web_cursor)
         for point in human_curve.points:
             # Move to each point in the curve
             self.do_move(
                     x=point[0],
                     y=point[1],
-                    update_cursor_position=update_cursor_position,
+                    web_cursor=web_cursor,
                     is_mouse_pressed=is_mouse_pressed
             )
             

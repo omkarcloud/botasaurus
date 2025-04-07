@@ -35,23 +35,32 @@ def generate_random_curve_parameters(driver, pre_origin, post_destination):
     min_width, max_width = viewport_width * 0.15, viewport_width * 0.85
     min_height, max_height = viewport_height * 0.15, viewport_height * 0.85
 
+    # tween_options = [
+    #     pytweening.easeOutExpo,
+    #     # pytweening.easeInOutQuint,
+    #     # pytweening.easeInOutSine,
+    #     # pytweening.easeInOutQuart,
+    #     # pytweening.easeInOutExpo,
+    #     # pytweening.easeInOutCubic,
+    #     # pytweening.easeInOutCirc,
+    #     # pytweening.linear,
+    #     pytweening.easeOutSine,
+    #     pytweening.easeOutQuart,
+    #     pytweening.easeOutQuint,
+    #     pytweening.easeOutCubic,
+    #     pytweening.easeOutCirc,
+    # ]
+    # lesser detected option's
     tween_options = [
-        pytweening.easeOutExpo,
-        pytweening.easeInOutQuint,
+        pytweening.easeInOutQuad,
+        pytweening.easeOutQuad,
         pytweening.easeInOutSine,
-        pytweening.easeInOutQuart,
-        pytweening.easeInOutExpo,
         pytweening.easeInOutCubic,
-        pytweening.easeInOutCirc,
-        pytweening.linear,
-        pytweening.easeOutSine,
-        pytweening.easeOutQuart,
-        pytweening.easeOutQuint,
-        pytweening.easeOutCubic,
-        pytweening.easeOutCirc,
+        pytweening.easeInOutQuint
     ]
-
     tween = random.choice(tween_options)
+    # tween = pytweening.easeOutQuad
+    # print(tween.__name__)
     offset_boundary_x = random.choice(
         random.choices(
             [range(20, 45), range(45, 75), range(75, 100)], [0.2, 0.65, 15]
