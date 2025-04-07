@@ -29,9 +29,8 @@ class WebAdjuster:
                         ))
             if web_cursor._show_cursor_movements:
                 web_cursor.update_cursor_position(x,y)
-                sleep(0.003 )
+                sleep(0.003)
             # needed to show cordinates movments
-            
         else: 
             self.driver.run_cdp_command(cdp.input_.dispatch_mouse_event(
                                 "mouseMoved",
