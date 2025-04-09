@@ -59,14 +59,15 @@ In the video below, watch as we **bypass some of the best bot detection systems*
 - ✅ [Datadome Bot Detection](https://antoinevastel.com/bots/datadome)  
 - ✅ [Cloudflare Turnstile CAPTCHA](https://turnstile.zeroclover.io/)
 
+<p align="center">
+<video src='https://github.com/user-attachments/assets/b4f6171f-f2a2-4255-9feb-2973ee9a25ae'/>
+</p>
+
 🔗 Want to try it yourself?
 See the code behind these tests [here](https://github.com/omkarcloud/botasaurus/blob/master/bot_detection_tests.py)
 
-![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/fingerprint-non-bot.png)
-
 - Perform realistic, human-like mouse movements and say sayonara to detection
 ![human-mode-demo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/human-mode-demo.gif)
-
 
 - Save up to 97%, yes 97%, on browser proxy costs by using [browser-based fetch requests.](https://github.com/omkarcloud/botasaurus#how-to-significantly-reduce-proxy-costs-when-scraping-at-scale)
 
