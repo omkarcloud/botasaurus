@@ -59,9 +59,7 @@ In the video below, watch as we **bypass some of the best bot detection systems*
 - ✅ [Datadome Bot Detection](https://antoinevastel.com/bots/datadome)  
 - ✅ [Cloudflare Turnstile CAPTCHA](https://turnstile.zeroclover.io/)
 
-<p align="center">
 <video src='https://github.com/user-attachments/assets/b4f6171f-f2a2-4255-9feb-2973ee9a25ae'/>
-</p>
 
 🔗 Want to try it yourself?
 See the code behind these tests [here](https://github.com/omkarcloud/botasaurus/blob/master/bot_detection_tests.py)
