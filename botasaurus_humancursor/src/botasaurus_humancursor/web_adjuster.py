@@ -44,9 +44,9 @@ class WebAdjuster:
 
     def fix_mouse_move_cursor(self, web_cursor):
         name = web_cursor._dot_name + 't'
-        self.driver.run_js(f"""
-let dot = HTMLMarqueeElement.prototype.{name};
-if (!dot) {{
+        # fix the mouse event's dispatched by cdp
+        # as MouseEvent.prototype.screenY is equal to clientY but should be clientY + window.screenY
+        self.driver.run_js(f"""if (!HTMLMarqueeElement.prototype.{name}) {{
     Object.defineProperty(MouseEvent.prototype, 'screenX', {{
         get: function () {{
             return this.clientX + window.screenX;
@@ -64,14 +64,20 @@ if (!dot) {{
         self,
         element_or_pos,
         web_cursor, 
+        is_jump=False,
         origin_coordinates=None,
         absolute_offset=True,
         relative_position=None,
         human_curve=None,
         steady=False,
-        is_mouse_pressed=False
+        is_mouse_pressed=False,
+          # Added new argument (alternative names: direct_move, immediate, skip_animation, fast_move, instant_move)
     ):
-        """Moves the cursor, trying to mimic human behaviour!"""
+        """Moves the cursor, trying to mimic human behaviour!
+        
+        Args:
+            is_jump: If True, moves directly to the target coordinates without human-like movement
+        """
         origin = origin_coordinates
         if origin_coordinates is None:
             origin = self.origin_coordinate
@@ -120,6 +126,18 @@ if (!dot) {{
                 x_exact_off, y_exact_off = abs_exact_offset[0], abs_exact_offset[1]
                 x, y = destination["x"] + x_exact_off, destination["y"] + y_exact_off
 
+        if is_jump:  # If is_jump is True, move directly to the target coordinates
+            self.fix_mouse_move_cursor(web_cursor)
+            self.do_move(
+                x=x,
+                y=y,
+                web_cursor=web_cursor,
+                is_mouse_pressed=is_mouse_pressed
+            )
+            self.origin_coordinate = [x, y]
+            return [x, y]
+
+        # Original human-like movement code
         (
             offset_boundary_x,
             offset_boundary_y,

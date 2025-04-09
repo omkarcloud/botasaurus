@@ -20,15 +20,16 @@ class WebCursor:
         self._dot_name = _dot_name
         self._show_cursor_movements = True
 
-    def move_mouse_to_point(self, x: int, y: int, steady=False):
+    def move_mouse_to_point(self, x: int, y: int, is_jump=False,steady=False):
         """Moves the cursor with human curve, by specified number of x and y pixels"""
         # self.show_cursor()
-        self.origin_coordinates = self.human.move_to([x, y], self, steady=steady)
+        self.origin_coordinates = self.human.move_to([x, y], self,is_jump, steady=steady)
         return True
     
     def move_to(
             self,
             element: Union[Element, tuple[int, int] ],
+            is_jump=False,
             relative_position: tuple[int, int]  = None,
             absolute_offset: bool = True,
             origin_coordinates=None,
@@ -44,6 +45,7 @@ class WebCursor:
         self.origin_coordinates = self.human.move_to(
             element,
             self,
+            is_jump,
             origin_coordinates=origin_coordinates,
             absolute_offset=absolute_offset,
             relative_position=relative_position,
@@ -57,20 +59,27 @@ class WebCursor:
             element: Union[Element, tuple[int, int] ],
             number_of_clicks: int = 1,
             click_duration: float = 0,
+            skip_move: bool = False,
             relative_position: tuple[int, int]  = None,
             absolute_offset: bool = True,
             origin_coordinates=None,
             steady=False
     ):
-        """Moves to element or coordinates with human curve, and clicks on it a specified number of times, default is 1"""
-        self.move_to(
-            element,
-            origin_coordinates=origin_coordinates,
-            absolute_offset=absolute_offset,
-            relative_position=relative_position,
-            steady=steady
-        )
-        self.random_natural_sleep()
+        """Moves to element or coordinates with human curve, and clicks on it a specified number of times, default is 1
+        
+        Args:
+            skip_move: If True, skips the mouse movement and clicks at the current position (or target coordinates directly)
+        """
+        if not skip_move:
+            self.move_to(
+                element,
+                origin_coordinates=origin_coordinates,
+                absolute_offset=absolute_offset,
+                relative_position=relative_position,
+                steady=steady
+            )
+            self.random_natural_sleep()
+        
         self._click(number_of_clicks=number_of_clicks, click_duration=click_duration)
         return True
 
@@ -115,6 +124,8 @@ class WebCursor:
                         "mousePressed",
                         x=x,
                         y=y,
+                        modifiers=0, 
+                        buttons=1, 
                         button=cdp.input_.MouseButton("left"),
                         click_count=1,
                     )
@@ -126,6 +137,9 @@ class WebCursor:
                         "mouseReleased",
                         x=x,
                         y=y,
+                        modifiers=0, 
+                        # no buttons
+                        buttons=0, 
                         button=cdp.input_.MouseButton("left"),
                         click_count=1,
                     )

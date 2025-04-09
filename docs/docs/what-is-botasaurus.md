@@ -33,7 +33,7 @@ In this tutorial, we will go through the steps to scrape the heading text from [
 First things first, you need to install Botasaurus. Run the following command in your terminal:
 
 ```shell
-python -m pip install botasaurus
+python -m pip install --upgrade botasaurus 
 ```
 
 ### Step 2: Set Up Your Botasaurus Project

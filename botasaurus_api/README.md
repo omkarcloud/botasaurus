@@ -9,7 +9,7 @@ It provides a simple and convenient way to create, fetch, download, abort, and d
 To install the API client, use pip:
 
 ```bash
-python -m pip install botasaurus-api
+python -m pip install --upgrade botasaurus-api
 ```
 
 ## Usage

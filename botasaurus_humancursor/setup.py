@@ -51,7 +51,7 @@ setup(
     #
     # This field corresponds to the "Description" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#description-optional
-    version='4.0.78',
+    version='4.0.80',
     author="Chetan Jain",
     author_email="53407137+Chetan11-dev@users.noreply.github.com",
     description="A fork of HumanCursor which brings human-like mouse movements to Botasaurus.",
