@@ -5,6 +5,7 @@ __author__ = "Chetan Jain <53407137+Chetan11-dev@users.noreply.github.com>"
 
 install_requires = [
     "click",
+    "pytweening",
 ]
 
 

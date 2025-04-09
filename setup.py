@@ -9,11 +9,12 @@ install_requires = [
     "lxml>=5.2.2",
     "openpyxl",
     "close_chrome",
+    "botasaurus-humancursor",
     "botasaurus-api",
     "botasaurus-driver",
     "bota",
     "botasaurus-proxy-authentication",
-    "botasaurus-requests"
+    "botasaurus-requests",
 ]
 extras_require = {}
 cpython_dependencies = [

@@ -6,7 +6,7 @@
   </div>
 
 <h3 align="center">
-  The All in One Framework to Build Awesome Scrapers
+  The All in One Framework to Build Undefeatable Scrapers
 </h3>
 
 <p align="center">
@@ -49,9 +49,24 @@ Now, for the magical powers awaiting you after learning Botasaurus:
 
 ![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
 
-- In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test, no need to spend time finding ways to access a website.
+- In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test, no need to spend time finding ways to access a website. 
+    
+In the video below, watch as we **bypass some of the best bot detection systems**:
+
+- ✅ [Cloudflare Web Application Firewall (WAF)](https://nopecha.com/demo/cloudflare)  
+- ✅ [BrowserScan Bot Detection](https://www.browserscan.net/bot-detection)  
+- ✅ [Fingerprint Bot Detection](https://fingerprint.com/products/bot-detection/)  
+- ✅ [Datadome Bot Detection](https://antoinevastel.com/bots/datadome)  
+- ✅ [Cloudflare Turnstile CAPTCHA](https://turnstile.zeroclover.io/)
+
+🔗 Want to try it yourself?
+See the code behind these tests [here](https://github.com/omkarcloud/botasaurus/blob/master/bot_detection_tests.py)
 
 ![solve-bot-detection](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/fingerprint-non-bot.png)
+
+- Perform realistic, human-like mouse movements and say sayonara to detection
+![human-mode-demo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/human-mode-demo.gif)
+
 
 - Save up to 97%, yes 97%, on browser proxy costs by using [browser-based fetch requests.](https://github.com/omkarcloud/botasaurus#how-to-significantly-reduce-proxy-costs-when-scraping-at-scale)
 
@@ -78,7 +93,7 @@ In this example, we will go through the steps to scrape the heading text from [h
 First things first, you need to install Botasaurus. Run the following command in your terminal:
 
 ```shell
-python -m pip install botasaurus
+python -m pip install --upgrade botasaurus
 ```
 
 ### Step 2: Set Up Your Botasaurus Project
@@ -210,9 +225,9 @@ Botasaurus Driver is a web automation driver like Selenium, and the single most 
 
 Plus, it is super fast to launch and use, and the API is designed by and for web scrapers, and you will love it.
 
-### How do I access bot-protected pages using Botasaurus?
+### How do I access Cloudflare-protected pages using Botasaurus?
 
-So, let's see how Botasaurus can help you solve various bot challenges.
+Cloudflare is the most popular protection system on the web. So, let's see how Botasaurus can help you solve various Cloudflare challenges.
 
 **Connection Challenge**
 
@@ -233,9 +248,9 @@ from botasaurus.browser import browser, Driver
 @browser
 def scrape_heading_task(driver: Driver, data):
     # Visit the website via Google Referrer
-    driver.google_get("https://fingerprint.com/products/bot-detection/")
+    driver.google_get("https://www.cloudflare.com/en-in/")
     driver.prompt()
-    heading = driver.get_text('h2')
+    heading = driver.get_text('h1')
     return heading
 
 scrape_heading_task()
@@ -248,7 +263,7 @@ from botasaurus.request import request, Request
 
 @request(max_retry=10)
 def scrape_heading_task(request: Request, data):
-    response = request.get("https://finance.yahoo.com/quote/AAPL/")
+    response = request.get("https://www.cloudflare.com/en-in/")
     print(response.status_code)
     response.raise_for_status()
     return response.text
@@ -258,31 +273,29 @@ scrape_heading_task()
 
 **JS with Captcha Challenge**
 
-This challenge requires performing JS computations that differentiate a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. It's used for pages that are rarely but sometimes visited by people, like:
+This challenge requires performing JS computations that differentiate a Chrome controlled by Selenium/Puppeteer/Playwright from a real Chrome. It also involves solving a Captcha. It's used to for pages which are rarely but sometimes visited by people, like:
 - 5th Review page
 - Auth pages
 
-<!-- Example Page: https://www.g2.com/products/github/reviews.html?page=5&product_id=github -->
+Example Page: https://nopecha.com/demo/cloudflare
 
 #### What Does Not Work?
 Using `@request` does not work because although it can make browser-like HTTP requests, it cannot run JavaScript to solve the challenge.
 
 #### What Works?
-Visiting the website via Google from a browser works.
+Pass the `bypass_cloudflare=True` argument to the `google_get` method.
 
 ```python
 from botasaurus.browser import browser, Driver
 
 @browser
 def scrape_heading_task(driver: Driver, data):
-    driver.google_get("https://fingerprint.com/products/bot-detection/")
+    driver.google_get("https://nopecha.com/demo/cloudflare", bypass_cloudflare=True)
     driver.prompt()
-    heading = driver.get_text('h2')
-    return heading
 
 scrape_heading_task()
 ```
-
+![Cloudflare JS with Captcha Challenge Demo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/cloudflare-js-captcha-demo.gif)
 
 ### What are the benefits of a UI scraper?
 
@@ -737,12 +750,11 @@ Enable headless mode with `headless=True`:
     headless=True
 )    
 ```
-
-Note that using headless mode makes the browser much easier to identify by bot detection services. So, use headless mode only when scraping websites that don't use such services.
+Note that if you use headless mode, you will surely be identified by services like Cloudflare and Datadome. Therefore, use headless mode only when scraping websites that don't use such services.
 
 #### Chrome Extensions
 
-Botasaurus allows the use of ANY Chrome Extension with just 1 line of code. The example below shows how to use the AdBlocker Chrome Extension:
+Botasaurus allows the use of ANY Chrome Extension with just 1 line of code. The example below shows how to use the Mouse Coordinates Chrome Extension to show current mouse X and Y coordinates on web pages:
 
 ```python
 from botasaurus.browser import browser, Driver
@@ -751,17 +763,16 @@ from chrome_extension_python import Extension
 @browser(
     extensions=[
         Extension(
-            "https://chromewebstore.google.com/detail/adblock-%E2%80%94-best-ad-blocker/gighmmpiobklfepjocnamgkkbiglidom"
+            "https://chromewebstore.google.com/detail/mouse-coordinates/mfohnjojhopfcahiddmeljeholnciakl"
         )
     ],
 )
 def scrape_while_blocking_ads(driver: Driver, data):
+    driver.get("https://example.com/")
     driver.prompt()
 
 scrape_while_blocking_ads()
 ```
-
-
 
 In some cases, an extension may require additional configuration, such as API keys or credentials. For such scenarios, you can create a custom extension. Learn more about creating and configuring custom extensions [here](https://github.com/omkarcloud/chrome-extension-python).
 
@@ -775,8 +786,7 @@ To use it, first install the package:
 python -m pip install capsolver_extension_python
 ```
 
-Then, integrate it into your code:  
-
+Then, integrate it into your code as follows:  
 
 ```python
 from botasaurus.browser import browser, Driver
@@ -1134,7 +1144,7 @@ Note: All profile data is stored in the `profiles.json` file in the current work
 
 ### What are some common methods in Botasaurus Driver?
 
-Botasaurus Driver provides several handy methods for web automation tasks such as:
+Botasaurus Driver provides several handy methods for web automation tasks, such as:
 
 - Visiting URLs:
   ```python
@@ -1144,7 +1154,7 @@ Botasaurus Driver provides several handy methods for web automation tasks such a
   driver.get_via_this_page("https://www.example.com")  # Use current page as referer
   ```
 
-- For finding elements:
+- Finding elements:
   ```python
   from botasaurus.browser import Wait
   search_results = driver.select(".search-results", wait=Wait.SHORT)  # Wait for up to 4 seconds for the element to be present, return None if not found
@@ -1153,43 +1163,168 @@ Botasaurus Driver provides several handy methods for web automation tasks such a
   hello_mom = driver.get_element_with_exact_text("Hello Mom", wait=Wait.VERY_LONG)  # Wait for up to 16 seconds for an element having the exact text "Hello Mom"
   ```
 
-- Interact with elements:
+- Interacting with elements:
   ```python
   driver.type("input[name='username']", "john_doe")  # Type into an input field
-  driver.click("button.submit")  # Clicks an element
+  driver.click("button.submit")  # Click an element
   element = driver.select("button.submit")
   element.click()  # Click on an element
+  element.select_option("select#fruits", index=2)  # Select an option
   ```
 
-- Retrieve element properties:
+- Retrieving element properties:
   ```python
   header_text = driver.get_text("h1")  # Get text content
   error_message = driver.get_element_containing_text("Error: Invalid input")
   image_url = driver.select("img.logo").get_attribute("src")  # Get attribute value
   ```
 
-- Work with parent-child elements:
+- Working with parent-child elements:
   ```python
   parent_element = driver.select(".parent")
   child_element = parent_element.select(".child")
   child_element.click()  # Click child element
   ```
 
-- Execute JavaScript:
+- Executing JavaScript:
   ```python
+  result = driver.run_js("script.js") # Run a JavaScript file located in the current working directory.
   result = driver.run_js("return document.title")
-  text_content = element.run_js("(el) => el.textContent")
+  pikachu = driver.run_js("return args.pokemon", {"pokemon": 'pikachu'}) # args can be a dictionary, list, string, etc.
+  text_content = driver.select("body").run_js("(el) => el.textContent")
   ```
+
+- Enable human mode to perform, human-like mouse movements and say sayonara to detection:
+  ```python
+  # Navigate to Cloudflare's Turnstile Captcha demo
+  driver.get(
+    "https://nopecha.com/demo/cloudflare",
+  )
+
+  # Wait for page to fully load
+  driver.sleep(4)
+  
+  # Locate iframe containing the Cloudflare challenge
+  iframe = driver.get_element_at_point(160, 290)
+  
+  # Find checkbox element within the iframe
+  checkbox = iframe.get_element_at_point(30, 30)
+
+  # Enable human mode for realistic, human-like mouse movements
+  driver.enable_human_mode()
+
+  # Click the checkbox to solve the challenge
+  checkbox.click()
+
+  # (Optional) Disable human mode if no longer needed  
+  driver.disable_human_mode()
+
+  # Pause execution, for inspection
+  driver.prompt()
+  ```
+  
+  ![human-mode-demo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/human-mode-demo.gif)
+
+- Drag and Drop:
+  ```python
+  # Open React DnD tutorial  
+  driver.get("https://react-dnd.github.io/react-dnd/examples/tutorial")  
+
+  # Select draggable and droppable elements  
+  draggable = driver.select('[draggable="true"]')  
+  droppable = driver.select('[data-testid="(3,6)"]')  
+
+  # Perform drag-and-drop  
+  draggable.drag_and_drop_to(droppable)  
+
+  # Pause execution, for inspection
+  driver.prompt()  
+  ```
+
+  ![drag-and-drop-demo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/drag-and-drop-demo.gif)
+
+- Selecting Shadow Root Elements:
+  ```python
+  # Visit the website
+  driver.get("https://nopecha.com/demo/cloudflare")
+  
+  # Let is load
+  driver.long_random_sleep()
+  
+  # Locate the element containing shadow root
+  shadow_root_element = driver.select('[name="cf-turnstile-response"]').parent
+  
+  # Access the iframe
+  iframe = shadow_root_element.get_shadow_root()
+
+  # Access the nested shadow DOM inside the iframe 
+  content = iframe.get_shadow_root()
+  
+  # print the text content of the "label" element.
+  print(content.select("label", wait = 8).text)
+
+  # Pause execution, for inspection
+  driver.prompt()
+  ```
+![Selecting Shadow Root Elements](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/selecting-shadow-root-elements.gif)
+
+- Monitoring requests:
+  ```python
+  from botasaurus.browser import browser, Driver, cdp
+
+  @browser()
+  def scrape_responses_task(driver: Driver, data):
+      # Define a handler function that will be called after a response is received
+      def after_response_handler(
+          request_id: str,
+          response: cdp.network.Response,
+          event: cdp.network.ResponseReceived,
+      ):
+          # Extract URL, status, and headers from the response
+          url = response.url
+          status = response.status
+          headers = response.headers
+          
+          # Print the response details 
+          print(
+              "after_response_handler",
+              {
+                  "request_id": request_id,
+                  "url": url,
+                  "status": status,
+                  "headers": headers,
+              },
+          )
+
+          # Append the request ID to the driver's responses list
+          driver.responses.append(request_id)
+
+      # Register the after_response_handler to be called after each response is received
+      driver.after_response_received(after_response_handler)
+
+      # Navigate to the specified URL
+      driver.get("https://example.com/")
+
+      # Collect all the responses that were appended during the navigation
+      collected_responses = driver.responses.collect()
+      
+      # Save it in output/scrape_responses_task.json
+      return collected_responses
+
+  # Execute the scraping task
+  scrape_responses_task()
+  ```  
 
 - Working with iframes:
   ```python
   driver.get("https://www.freecodecamp.org/news/using-entity-framework-core-with-mongodb/")
   iframe = driver.get_iframe_by_link("www.youtube.com/embed") 
-  # OR following works as well
-  # iframe = driver.select(".embed-wrapper iframe") 
+  # OR the following works as well
+  # iframe = driver.select_iframe(".embed-wrapper iframe") 
   freecodecamp_youtube_subscribers_count = iframe.select(".ytp-title-expanded-subtitle").text
+  print(freecodecamp_youtube_subscribers_count)
   ```
-- Execute CDP Command:
+- Executing CDP Command:
   ```python
   from botasaurus.browser import browser, Driver, cdp
   driver.run_cdp_command(cdp.page.navigate(url='https://stackoverflow.blog/open-source'))
@@ -1216,13 +1351,13 @@ driver.prompt()
 
 Proxy providers like BrightData, IPRoyal, and others typically provide authenticated proxies in the format "http://username:password@proxy-provider-domain:port". For example, "http://greyninja:awesomepassword@geo.iproyal.com:12321".
 
-However, if you use an authenticated proxy with a library like seleniumwire to visit a website using bot detection system, you are GUARANTEED to be identified because you are using a non-SSL connection.
+However, if you use an authenticated proxy with a library like seleniumwire to visit a website using Cloudflare, or Datadome, you are GUARANTEED to be identified because you are using a non-SSL connection.
 
 To verify this, run the following code:
 
 First, install the necessary packages:
 ```bash 
-python -m pip install selenium_wire chromedriver_autoinstaller_fix
+python -m pip install selenium_wire
 ```
 
 Then, execute this Python script:
@@ -1905,7 +2040,7 @@ The Botasaurus Sitemap Module makes this process easy as cake by allowing you to
 - A direct sitemap link (e.g., `https://www.omkar.cloud/sitemap.xml`)
 - A `.gz` compressed sitemap
 
-For example, if you're an Angel Investor seeking innovative tech startups to invest in, G2 is an ideal platform to find such startups. You can run the following code to fetch all product links from G2:
+For example, if you're an Angel Investor seeking innovative tech startups to invest in, G2 is an ideal platform to find such startups. You can run the following code to fetch over 190K+ product links from G2:
 
 ```python
 from botasaurus import bt
@@ -2185,6 +2320,7 @@ def scrape_html(driver: Driver, link):
     if driver.config.is_new:
         driver.google_get(
             link,
+            bypass_cloudflare=True,  # delete this line if the website you're accessing is not protected by Cloudflare
         )
     response = driver.requests.get(link)
     
@@ -2227,11 +2363,51 @@ data_items = [
 scrape_data(data_items)
 ```
 
-### What Are Some Tips for accessing Protected sites?
+### Why Am I Getting Detected on Some Websites?
 
-- Use `google_get`, use `google_get`, and use `google_get`!
-- Don't use `headless` mode, else you will surely be identified by bot detection systems.
-- Don't use Proxies, instead use your home Wi-Fi connection, even when scraping hundreds of thousands of pages.
+If you're getting detected, it's likely due to:
+
+- Using a non-residential proxy — Services like Datadome and Cloudflare often flag datacenter IPs/VPNs.
+- Clicking without Human Mode enabled — Unnatural mouse movements can trigger detection.
+- Visiting websites too quickly — Rapid, bot-like navigation is easy to detect.
+
+To reduce detection, follow these best practices:
+
+1. Upgrade all Botasaurus packages to the latest version:
+   ```bash
+   python -m pip install --upgrade bota botasaurus botasaurus-api botasaurus-requests botasaurus-driver botasaurus-proxy-authentication botasaurus-server botasaurus-humancursor
+   ```
+
+2. Enable Human Mode for human-like mouse movements:
+   ```python
+   driver.enable_human_mode()
+   ```
+
+3. Avoid rapid `driver.get` calls. Instead, try:
+   - Clicking within pages with Human Mode enabled, if possible.
+   - Using `driver.google_get` or `driver.get_via_this_page`.
+   - Using [`driver.requests.get`](https://github.com/omkarcloud/botasaurus?tab=readme-ov-file#how-to-significantly-reduce-proxy-costs-when-scraping-at-scale) to fetch the page HTML content.
+
+4. Slow down your scraper with random delays:
+   ```python
+   driver.short_random_sleep()
+   driver.long_random_sleep()
+   ```
+
+5. Avoid using `headless` mode, as it can be easily detected by Cloudflare, Datadome, and Imperva.
+
+6. Use a residential proxy, as datacenter IPs are often flagged.
+
+7. Remove the `--no-default-browser-check` argument as it is detectable by systems like Datadome, as follows:
+   ```python
+   @browser(remove_default_browser_check_argument=True)
+   ```
+
+8. If your IP has been flagged, you can perform this technique to change it:
+   1. Connect your PC to a smartphone's hotspot.
+   2. On your smartphone, turn airplane mode on and off.
+   3. Turn the hotspot on again.
+   4. You'll be assigned a new IP address. You can verify the change by visiting [https://ipinfo.io/](https://ipinfo.io/) before and after the process.
 
 ### How Do I Close All Running Chrome Instances?
 
@@ -2275,7 +2451,7 @@ In this example, we will run the Botasaurus Starter template in Gitpod:
 
    ![gp-continue](https://raw.githubusercontent.com/omkarcloud/assets/master/images/gitpod-continue.png)
 
-3. In the terminal, run the following command:
+3. To use UI Scraper, run the following command in Terminal:
    ```bash
    python run.py
    ```
@@ -2289,17 +2465,145 @@ In this example, we will run the Botasaurus Starter template in Gitpod:
 
 Note: Gitpod is not suitable for long-running tasks, as the environment will automatically shut down after a short period of inactivity. Use your local machine or a cloud VM for long-running scrapers.
 
-## How to Run Scraper in Virtual Machine?
+## Should I Scrape Datasets Locally or in the Cloud?  
+For most scraping tasks, we recommend running the scraper **locally** on your system because:  
+- It requires far fewer setup steps  
+- It saves time and costs  
+- Most importantly, it allows you to quickly fix bugs and continue scraping.
 
-To run your scraper in a Virtual Machine, we will:
+However, consider cloud scraping when:  
+- Running tasks longer than 5 days.  
+- Scraping large-scale data (terabytes).  
+- Performing recurring monthly scrapes.  
+- Having slow Internet or data caps
+
+Cloud scraping is also significantly faster due to superior internet speeds (often 10x+ faster than home Wi-Fi).  
+
+---
+
+## How to Run a Data Scraper in a Virtual Machine? 
+
+To run a scraper in a virtual machine (VM), follow these steps:
+
+### 1. Prepare Your Scraper
+1. Use the [Botasaurus Starter Template](https://github.com/omkarcloud/botasaurus-starter) to create your dataset scraper.
+2. For large datasets, ensure memory efficiency (e.g., by using file formats like `ndjson`).  
+3. Add project dependencies to `requirements.txt`.
+4. Push your project to GitHub.
+
+### 2. Set Up a Virtual Machine
+
+1. If you don't already have one, create a Google Cloud Account. You'll receive a $300 credit to use over 3 months.
+   ![Select-your-billing-country](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/Select-your-billing-country.png)
+
+
+2. Go to [Google Click to Deploy](https://console.cloud.google.com/marketplace/product/click-to-deploy-images/nodejs), create a deployment and configure it as follows or as appropriate based on your workload:
+   ```
+   Zone: us-central1-a # Use us-central1 (Iowa) for the lowest-cost VMs
+   Series: N1
+   Machine Type: n1-standard-2 (2 vCPU, 1 core, 7.5 GB memory)
+   Boot Disk Type: Standard persistent disk	# This is the most cost-effective disk option.
+   Boot disk size in GB: 20 GB # Adjust based on storage needs  
+   ```
+   ![Deployment setup](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/deploy-node-vm.gif)
+
+3. Navigate to [VM Instances](https://console.cloud.google.com/compute/instances) and click the SSH button to SSH into the VM.
+   ![ssh-vm](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/ssh-vm.png)
+
+4.  Now, run the following command in the terminal and wait for it to complete:
+
+   ```bash
+   curl -sL https://raw.githubusercontent.com/omkarcloud/botasaurus/master/vm-scripts/install-bota.sh | bash
+   ```
+   
+5.  Install your scraper by running the following command. It may take 5 minutes to install the scraper, so grab a coffee or watch [this awesome video](https://www.youtube.com/watch?v=nwAYpLVyeFU):
+
+   ```bash
+   python3 -m bota install-scraper --repo-url https://github.com/omkarcloud/botasaurus-starter
+   ```
+   ![install-scraper](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/install-scraper-vm.gif)
+
+   Note: If you are using a different repo, replace `https://github.com/omkarcloud/botasaurus-starter` with your repo URL.
+   
+That's it! You have successfully installed the scraper in a virtual machine. The scraper will now start running and succeed.
+
+![ls-output](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/vm-succeed.png)
+
+*Notes*
+- The `main.py` file serves as the scraper's entry point.
+- Update your project's `requirements.txt` to ensure it has all the dependencies required to run the scraper.
+- Ensure your VM has enough memory for your scraper's needs.
+- If running a headful browser, enable a virtual display by setting `enable_xvfb_virtual_display=True`. This creates a virtual display required for running a headful browser in a VM.
+  ```python
+  @browser(enable_xvfb_virtual_display=True)
+  ```
+- The scraper will run until it completes successfully or fails three times. You can also configure retries as follows:
+  For example, to allow a maximum of 5 retries:
+  ```bash
+  python3 -m bota install-scraper --repo-url <your-repo> --max-retry=5
+  ```
+  or, to allow unlimited retries:
+  ```bash
+  python3 -m bota install-scraper --repo-url <your-repo> --max-retry=unlimited
+  ```
+- If your scraper fails, you can check the logs of the current boot by running:
+  ```bash
+  journalctl -u botasaurus-starter.service -b # replace botasaurus-starter with your repo name
+  ```
+
+*Downloading Data*
+To download the scraped data, you can either:
+1. Download it directly from the VM.
+![Download Data from VM](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/download-data-vm.png)
+2. Upload it to Amazon S3:
+   ```python
+   from botasaurus import bt
+   bt.upload_to_s3('data.json', 'my-bucket', "AWS_ACCESS_KEY", "AWS_SECRET_KEY")
+   ```
+
+## How to Stop the Scraper
+If you are performing recurring monthly scrapes, it's best to stop the scraper instead of deleting it. Note that you will only incur storage costs (~$0.4 per month for a 10GB Standard Persistent Disk) but not compute costs.
+
+To stop the scraper:
+1. Visit [VM Instances](https://console.cloud.google.com/compute/instances).
+2. Select your VM and stop it.
+
+![stop-scraper-in-vm](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/stop-scraper-in-vm.png)
+
+To restart later:
+1. Start the VM from [VM Instances](https://console.cloud.google.com/compute/instances).
+
+![run-scraper-in-vm](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/run-scraper-in-vm.png)
+2. SSH into it.
+3. Delete caches and update sitemaps if needed.
+4. Restart with:
+   ```bash
+   shutdown -r now
+   ```
+
+## How to Delete the Scraper and Avoid Incurring Further Charges
+
+If you no longer need the scraper, please ensure you have downloaded your data before deleting it.
+
+Next, follow these steps to delete the scraper:
+1. Go to [Deployments](https://console.cloud.google.com/products/solutions/deployments).
+2. Delete your deployment.
+
+![Delete deployment](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-deployment.png)
+
+That's it! You have successfully deleted the scraper, and you will not incur any disk or compute charges.
+
+## How to Run a UI Scraper in a Virtual Machine
+
+To run your scraper in a virtual machine, we will:
 - Create a static IP
 - Create a VM with that IP
 - SSH into the VM
 - Install the scraper
 
-Now, follow these steps to run your scraper in a Virtual Machine:
+Now, follow these steps to run your scraper in a virtual machine:
 
-1. 1. If you don't already have one, create a Google Cloud Account. You'll receive a $300 credit to use over 3 months.
+1. Create a Google Cloud Account if you don't already have one.
    ![Select-your-billing-country](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/Select-your-billing-country.png)
 
 2. Visit the [Google Cloud Console](https://console.cloud.google.com/welcome?cloudshell=true) and click the Cloud Shell button. A terminal will open up.
@@ -2316,38 +2620,60 @@ Now, follow these steps to run your scraper in a Virtual Machine:
 
    > Name: pikachu
 
-   Then, you will be asked for the region for the scraper. Press Enter to go with the default, which is "us-central1", as most global companies host their websites in the US.
+   Then, you will be asked for the region for the scraper. Press Enter to go with the default, which is "us-central1", as it has the lowest-cost VMs.
 
    > Region: Default
 
    ![Install bota](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/install-bota.gif)
 
-4. Now, visit [this link](https://console.cloud.google.com/marketplace/product/click-to-deploy-images/nodejs) and create a deployment from Google Click to Deploy with the following settings:
+4. Go to [Google Click to Deploy](https://console.cloud.google.com/marketplace/product/click-to-deploy-images/nodejs), create a deployment and configure it as follows or as appropriate based on your workload:
    ```
-   zone: us-central1-a # Use the zone from the region you selected in the previous step.
+   Zone: us-central1-a # Use the zone from the region you selected in the previous step.
    Series: N1
    Machine Type: n1-standard-2 (2 vCPU, 1 core, 7.5 GB memory)
+   Boot Disk Type: Standard persistent disk	# This is the most cost-effective disk option.
+   Boot disk size in GB: 20 GB # Adjust based on storage needs  
    Network Interface [External IP]: pikachu-ip # Use the IP name you created in the previous step.
    ```
    ![deploy-node](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/deploy-node.gif)
 
-5. Visit [this link](https://console.cloud.google.com/compute/instances) and click the SSH button to SSH into the VM.
+5. Navigate to [VM Instances](https://console.cloud.google.com/compute/instances) and click the SSH button to SSH into the VM.
    ![ssh-vm](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/ssh-vm.png)
 
-6. Now, run the following commands in the terminal, then wait for 5 minutes for the installation to complete:
+6.  Now, run the following command in the terminal:
+
    ```bash
-   curl -sL https://raw.githubusercontent.com/omkarcloud/botasaurus/master/vm-scripts/install-scraper.sh | bash -s -- https://github.com/omkarcloud/botasaurus-starter
+   curl -sL https://raw.githubusercontent.com/omkarcloud/botasaurus/master/vm-scripts/install-bota.sh | bash
+   ```
+
+7. Finally, install the UI scraper by running the following command, then wait for 5 minutes for it to complete:
+   ```bash
+   python3 -m bota install-ui-scraper --repo-url https://github.com/omkarcloud/botasaurus-starter
    ```
    
    ![install-scraper](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/install-scraper.gif)
    Note: If you are using a different repo, replace `https://github.com/omkarcloud/botasaurus-starter` with your repo URL.
-That's it! You have successfully launched the Scraper in a Virtual Machine. When the previous commands are done, you will see a link to your scraper. Visit it to run your scraper.
+
+That's it! You have successfully launched the scraper in a virtual machine. When the previous commands are done, you will see a **link** to your scraper. Visit it to run your scraper.
 
 ![vm-success](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/vm-success.gif)
 
-## How to delete the scraper and avoid incurring charges?
+*Notes*
+    - Update your project's `requirements.txt` to ensure it has all the dependencies required to run the scraper.
+    - Ensure your VM has enough memory for your scraper's needs.
+    - If running a headful browser, enable a virtual display by setting `enable_xvfb_virtual_display=True`. This creates a virtual display required for running a headful browser in a VM.
+  ```python
+  @browser(enable_xvfb_virtual_display=True)
+  ```
+    - The UI scraper will run indefinitely and will be available at the printed link.
+    - If your UI scraper fails, you can check the logs of the current boot by running:
+  ```bash
+  journalctl -u backend.service -b 
+  ```
 
-If you are deleting a custom scraper you deployed, please ensure you have downloaded the results from it. 
+##  How to Delete the UI Scraper and Avoid Incurring Further Charges
+
+If you no longer need the scraper, please ensure you have downloaded your data before deleting it.
 
 Next, follow these steps to delete the scraper:
 
@@ -2363,12 +2689,11 @@ Next, follow these steps to delete the scraper:
 
    Note: If you forgot the name of the IP, you can also delete all the IPs by running `python -m bota delete-all-ips`.
 
-2. Go to [Deployment Manager](https://console.cloud.google.com/dm/deployments) and delete your deployment.
+2. Go to [Deployments](https://console.cloud.google.com/products/solutions/deployments) and delete your deployment.
 
-   ![Delete deployment](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-deployment.gif)
+   ![Delete deployment](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/delete-deployment.png)
 
 That's it! You have successfully deleted the scraper, and you will not incur any further charges.
-
 
 ### How to Run Scraper in Kubernetes?
 Visit [this link](https://github.com/omkarcloud/botasaurus/blob/master/run-scraper-in-kubernetes.md) to learn how to run scraper at scale using Kubernetes.
@@ -2418,13 +2743,13 @@ You may choose to read the following questions based on your interests:
 
 ## Thank You
 - To That, who has given me a sufficiently intelligent mind to create Botasaurus and do a lot of good.
-<!-- - To the One who has given me with a sufficiently intelligent, practical mind with a will to do good, which led to the creation of Botasaurus. This, I believe, is the #1 gift a human can receive. It helps both here and here after. If you possess such a gift, please cherish it, for very very and very few people in this age have it. -->
 - I made Botasaurus because I would be really happy if you could use it to successfully complete your project. So, a Gigantic Thank you for using Botasaurus!
 - A heartfelt thank you to [Cheng Zhao](https://zcbenz.com/) from GitHub for creating Electron, which powers Botasaurus Desktop.
 - Kudos to the Apify Team for creating the `proxy-chain` library. The implementation of SSL-based Proxy Authentication wouldn't have been possible without their groundbreaking work on `proxy-chain`.
 - Shout out to [ultrafunkamsterdam](https://github.com/ultrafunkamsterdam) for creating `nodriver`, which inspired the creation of Botasaurus Driver.
 - A big thank you to [daijro](https://github.com/daijro) for creating [hrequest](https://github.com/daijro/hrequests), which inspired the creation of botasaurus-requests.
-<!-- - A humongous thank you to Cloudflare, DataDome, Imperva, and all bot recognition systems. Had you not been there, we wouldn't be either 😅. -->
+- Deepest gratitude to [Flori Batusha](https://github.com/riflosnake) and [Ambri](https://github.com/iLeaf30/) for their contributions in creating **Botasaurus Humancursor**, which brings human-like mouse movements to Botasaurus.
+- A humongous thank you to Cloudflare, DataDome, Imperva, and all bot recognition systems. Had you not been there, we wouldn't be either 😅.
 
 *Now, what are you waiting for? 🤔 Go and make something mastastic! 🚀*
 <!-- 
@@ -2450,3 +2775,4 @@ It's just one click, but it means the world to me.
 > By using Botasaurus, you agree to comply with all applicable local and international laws related to data scraping, copyright, and privacy. The developers of Botasaurus are not responsible for any misuse of this software. It is the sole responsibility of the user to ensure adherence to all relevant laws regarding data scraping, copyright, and privacy, and to use Botasaurus in an ethical and legal manner.
 
 We take the concerns of the Botasaurus Project very seriously. For any inquiries or issues, please contact Chetan Jain at [chetan@omkar.cloud](mailto:chetan@omkar.cloud). We will take prompt and necessary action in response to your emails.
+

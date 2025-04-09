@@ -22,7 +22,6 @@ def close_driver_pool(pool: list):
                 while pool:
                     close_driver(pool.pop())
 
-
 def browser(
     _func: Optional[Callable] = None,
     *,
@@ -36,6 +35,7 @@ def browser(
     tiny_profile: bool = False,
     wait_for_complete_page_load: bool = True,
     add_arguments: Optional[Union[List[str], Callable[[Any, List[str]], None]]] = None,
+    remove_default_browser_check_argument: bool = False,
     extensions: Optional[Union[List[Any], Callable[[Any], List[Any]]]] = None,
     lang: Optional[Union[Callable[[Any], str], str]] = None,
     headless: Optional[Union[Callable[[Any], bool], bool]] = False,
@@ -69,12 +69,7 @@ def browser(
         def wrapper_browser(*args, **kwargs) -> Any:
             print_running()
 
-            nonlocal parallel, data, cache, block_images_and_css, block_images, window_size, metadata, add_arguments, extensions
-            nonlocal tiny_profile, wait_for_complete_page_load, lang, headless, beep
-            nonlocal close_on_crash, async_queue, run_async, profile
-            nonlocal proxy, user_agent, reuse_driver, raise_exception, must_raise_exceptions
-            nonlocal output, output_formats, max_retry, retry_wait, create_driver, create_error_logs
-            nonlocal enable_xvfb_virtual_display, host, port
+            nonlocal parallel, data, cache, block_images_and_css, block_images, window_size, metadata, add_arguments, extensions, tiny_profile, wait_for_complete_page_load, lang, headless, beep, close_on_crash, async_queue, run_async, profile, proxy, user_agent, reuse_driver, raise_exception, must_raise_exceptions, output, output_formats, max_retry, retry_wait, create_driver, create_error_logs, enable_xvfb_virtual_display, host, port, remove_default_browser_check_argument
 
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
@@ -110,6 +105,7 @@ def browser(
             enable_xvfb_virtual_display = kwargs.get("enable_xvfb_virtual_display", enable_xvfb_virtual_display) 
             host = kwargs.get("host", host) 
             port = kwargs.get("port", port) 
+            remove_default_browser_check_argument = kwargs.get("remove_default_browser_check_argument", remove_default_browser_check_argument)
 
             fn_name = func.__name__
 
@@ -183,6 +179,7 @@ def browser(
                         enable_xvfb_virtual_display=enable_xvfb_virtual_display,
                         host=host,
                         port=port,
+                        remove_default_browser_check_argument=remove_default_browser_check_argument,
                     )
 
                 result = None
