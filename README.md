@@ -41,14 +41,6 @@ A Web Scraping Magician has put all his web scraping experience and best practic
 
 Now, for the magical powers awaiting you after learning Botasaurus:
 
-- Convert your scraper into a desktop app for Mac, Windows, and Linux in 1 day, so not only developers but everyone can use your web scraper.
-
-![desktop-app-photo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
-
-- Turn your scraper into a beautiful website, making it easy for your customers to use it from anywhere, anytime.
-
-![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
-
 - In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test, no need to spend time finding ways to access a website. 
     
 In the video below, watch as we **bypass some of the best bot detection systems**:
@@ -68,6 +60,14 @@ See the code behind these tests [here](https://github.com/omkarcloud/botasaurus/
 
 - Perform realistic, human-like mouse movements and say sayonara to detection
 ![human-mode-demo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/human-mode-demo.gif)
+
+- Convert your scraper into a desktop app for Mac, Windows, and Linux in 1 day, so not only developers but everyone can use your web scraper.
+
+![desktop-app-photo](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/desktop-app-photo.png)
+
+- Turn your scraper into a beautiful website, making it easy for your customers to use it from anywhere, anytime.
+
+![pro-gmaps-demo](https://raw.githubusercontent.com/omkarcloud/google-maps-scraper/master/screenshots/demo.gif)
 
 - Save up to 97%, yes 97%, on browser proxy costs by using [browser-based fetch requests.](https://github.com/omkarcloud/botasaurus#how-to-significantly-reduce-proxy-costs-when-scraping-at-scale)
 
