@@ -46,7 +46,7 @@ A Web Scraping Magician has put all his web scraping experience and best practic
 
 Now, for the magical powers awaiting you after learning Botasaurus:
 
-- In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test, no need to spend time finding ways to access a website. 
+- In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test,  and build truly undefeatable scrapers.  
     
 In the video below, watch as we **bypass some of the best bot detection systems**:
 
