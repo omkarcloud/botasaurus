@@ -40,13 +40,13 @@ Now, let me tell you about Botasaurus in bullet points. (Because as per marketin
 
 *So, what is Botasaurus?*
 
-Botasaurus is an all-in-one web scraping framework that enables you to build undefeatable scrapers in less time, with less code, and with more fun.
+Botasaurus is an all-in-one web scraping framework that enables you to build awesome scrapers in less time, with less code, and with more fun.
 
 We have put all our web scraping experience and best practices into Botasaurus to save you hundreds of hours of development time! 
 
 Now, for the magical powers awaiting you after learning Botasaurus:
 
-- In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test,  and build truly undefeatable scrapers.  
+- In terms of humaneness, what Superman is to Man, Botasaurus is to Selenium and Playwright. Easily pass every (Yes, E-V-E-R-Y) bot test,  and build undetected scrapers.  
     
 In the video below, watch as we **bypass some of the best bot detection systems**:
 
