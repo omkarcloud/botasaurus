@@ -25,6 +25,11 @@
   </a>
 </p>
 
+# IMPORTANT: We recently released an update with new features and bug fixes. Please run the following command to upgrade all Botasaurus packages to their latest versions:
+```shell
+python -m pip install bota botasaurus botasaurus-api botasaurus-requests botasaurus-driver botasaurus-proxy-authentication botasaurus-server botasaurus-humancursor --upgrade
+```
+
 ## 🐿️ Botasaurus In a Nutshell
 
 How wonderful that of all the web scraping tools out there, you chose to learn about Botasaurus. Congratulations! 
