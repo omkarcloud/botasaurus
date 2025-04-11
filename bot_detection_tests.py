@@ -62,11 +62,13 @@ def run_bot_tests(driver: Driver, _):
     Main function to run all bot detection tests.
     Executes various tests to check bypass capabilities against different security systems.
     """
+    test_cloudflare_waf(driver)
     test_browserscan_bot_detection(driver)
     test_fingerprint_bot_detection(driver)
     test_datadome_bot_detection(driver)
     test_cloudflare_turnstile(driver)
-    test_cloudflare_waf(driver)
+    
+    
 
 
 if __name__ == "__main__":
