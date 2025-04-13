@@ -61,7 +61,7 @@ Follow these simple steps to get started:
 
 1️⃣ Clone the Magic 🧙‍♀️:
    ```
-   git clone https://github.com/omkarcloud/botasaurus-starter my-botasaurus-desktop-app
+   git clone https://github.com/omkarcloud/botasaurus-desktop-starter my-botasaurus-desktop-app
    cd my-botasaurus-desktop-app
    ```
 
