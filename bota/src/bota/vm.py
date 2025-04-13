@@ -144,46 +144,47 @@ def create_clone_commands(git_repo_url, folder_name):
     clone_commands = "" if has_folder(folder_name) else f"git clone {git_repo_url} {folder_name}"
     return clone_commands.strip()
 
-def safe_download(url: str, folder_name: str):
-        import zipfile
-        import shutil
-        from io import BytesIO
-    
-        # Download the file
-        is_zip_file, response = is_zip(url)
+def safe_download(url: str, folder_name: str, print_ignore: bool):
+    import zipfile
+    import shutil
+    from io import BytesIO
+    # Download the file
+    is_zip_file, response = is_zip(url)
 
-        if is_zip_file:    
-            try:
-                os.makedirs(folder_name, exist_ok=True)
+    if is_zip_file:    
+        try:
+            os.makedirs(folder_name, exist_ok=True)
+            
+            # Read the zip file from the response content
+            with zipfile.ZipFile(BytesIO(response.content)) as zip_file:
+                # Extract all contents to the folder
+                zip_file.extractall(folder_name)
+
+                # Get the list of files and directories in the extracted folder
+                extracted_items = os.listdir(folder_name)
                 
-                # Read the zip file from the response content
-                with zipfile.ZipFile(BytesIO(response.content)) as zip_file:
-                    # Extract all contents to the folder
-                    zip_file.extractall(folder_name)
-
-                    # Get the list of files and directories in the extracted folder
-                    extracted_items = os.listdir(folder_name)
+                # If there is exactly one folder inside, move its contents up
+                if len(extracted_items) == 1 and os.path.isdir(os.path.join(folder_name, extracted_items[0])):
+                    inner_folder = os.path.join(folder_name, extracted_items[0])
                     
-                    # If there is exactly one folder inside, move its contents up
-                    if len(extracted_items) == 1 and os.path.isdir(os.path.join(folder_name, extracted_items[0])):
-                        inner_folder = os.path.join(folder_name, extracted_items[0])
-                        
-                        # Move all files from the inner folder to the main folder
-                        for item in os.listdir(inner_folder):
-                            shutil.move(os.path.join(inner_folder, item), folder_name)
-                        
-                        # Remove the now-empty inner folder
-                        os.rmdir(inner_folder)   
+                    # Move all files from the inner folder to the main folder
+                    for item in os.listdir(inner_folder):
+                        shutil.move(os.path.join(inner_folder, item), folder_name)
+                    
+                    # Remove the now-empty inner folder
+                    os.rmdir(inner_folder)
+                
+                if print_ignore:
                     print("Kindly ignore the previous errors, as we have successfully installed the repository")
                     
-            except Exception:
-                # Clean up the folder if there was an error
-                if os.path.exists(folder_name):
-                    shutil.rmtree(folder_name)
-                raise
-                                 
-        else:
-            raise Exception("The URL does not point to a valid git repository or zip file.")
+        except Exception:
+            # Clean up the folder if there was an error
+            if os.path.exists(folder_name):
+                shutil.rmtree(folder_name)
+            raise
+                         
+    else:
+        raise Exception("The URL does not point to a valid git repository or zip file.")
 
 def is_zip(url):
     try:
@@ -268,13 +269,13 @@ def clone_repository(git_repo_url, folder_name):
 
     domain = get_domain(git_repo_url)
     if domain not in SUPPORTED_GIT_PROVIDERS and is_zip(git_repo_url)[0]:
-        return safe_download(git_repo_url, folder_name)
+        return safe_download(git_repo_url, folder_name, False)
     clone_commands = create_clone_commands(git_repo_url, folder_name)
     if clone_commands:
         try:
           subprocess.run(remove_empty_lines(clone_commands), shell=True, check=True, stderr=subprocess.STDOUT,)
         except Exception as e:
-          safe_download(git_repo_url, folder_name)
+          safe_download(git_repo_url, folder_name, True)
 
 def create_backend(folder_name, uname):
     backend_sh = r"""#!/bin/bash
