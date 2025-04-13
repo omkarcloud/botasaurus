@@ -5,7 +5,6 @@ import subprocess
 import requests
 from requests.exceptions import ReadTimeout
 import traceback
-
 def find_ip(attempts=5, proxy=None) -> str:
     """Finds the public IP address of the current connection."""
     url = 'https://checkip.amazonaws.com/'
@@ -151,13 +150,9 @@ def safe_download(url: str, folder_name: str):
         from io import BytesIO
     
         # Download the file
-        response = requests.get(url)
+        is_zip_file, response = is_zip(url)
 
-        # Check if the URL returns a valid zip file
-        content_type = response.headers.get('Content-Type')
-        meta_content_type = response.headers.get('x-amz-meta-content-type')
-
-        if response.status_code == 200 and ('application/zip' in [content_type, meta_content_type]):    
+        if is_zip_file:    
             try:
                 os.makedirs(folder_name, exist_ok=True)
                 
@@ -179,7 +174,7 @@ def safe_download(url: str, folder_name: str):
                         
                         # Remove the now-empty inner folder
                         os.rmdir(inner_folder)   
-                    print("Ignore previous error as we have successfully installed repository")
+                    print("Kindly ignore the previous errors, as we have successfully installed the repository")
                     
             except Exception:
                 # Clean up the folder if there was an error
@@ -189,6 +184,16 @@ def safe_download(url: str, folder_name: str):
                                  
         else:
             raise Exception("The URL does not point to a valid git repository or zip file.")
+
+def is_zip(url):
+    try:
+        response = requests.get(url)
+            # Check if the URL returns a valid zip file
+        content_type = response.headers.get('Content-Type')
+        meta_content_type = response.headers.get('x-amz-meta-content-type')
+        return response.status_code == 200 and ('application/zip' in [content_type, meta_content_type]), response
+    except:
+      return False, None
 
 def install_chrome(uname):
     # lsof install as we need it.
@@ -233,7 +238,18 @@ def install_python_requirements_only(folder_name):
             check=True,
             stderr=subprocess.STDOUT,)
 
+
+def get_domain(url):
+    from urllib.parse import urlparse
+
+    parsed_uri = urlparse(url)
+    domain = parsed_uri.netloc
+    return domain
+
 def clone_repository(git_repo_url, folder_name):
+    domain = get_domain(git_repo_url)
+    if domain not in ["github.com", "gitlab.com"] and is_zip(git_repo_url)[0]:
+        return safe_download(git_repo_url, folder_name)
     clone_commands = create_clone_commands(git_repo_url, folder_name)
     if clone_commands:
         try:
