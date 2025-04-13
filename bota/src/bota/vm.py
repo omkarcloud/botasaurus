@@ -247,8 +247,27 @@ def get_domain(url):
     return domain
 
 def clone_repository(git_repo_url, folder_name):
+    SUPPORTED_GIT_PROVIDERS = [
+        "github.com",
+        "gitlab.com",
+        "bitbucket.org",
+        "azure.com",
+        "dev.azure.com",
+        "gitea.com",
+        "sourceforge.net",
+        "git.sr.ht",  # Sourcehut
+        "codeberg.org",
+        "git.code.tencent.com",
+        "pagure.io",
+        "git.kernel.org",
+        "git.eclipse.org",
+        "salsa.debian.org",
+        "invent.kde.org",
+        "gitlab.gnome.org",
+    ]
+
     domain = get_domain(git_repo_url)
-    if domain not in ["github.com", "gitlab.com"] and is_zip(git_repo_url)[0]:
+    if domain not in SUPPORTED_GIT_PROVIDERS and is_zip(git_repo_url)[0]:
         return safe_download(git_repo_url, folder_name)
     clone_commands = create_clone_commands(git_repo_url, folder_name)
     if clone_commands:
