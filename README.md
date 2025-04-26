@@ -695,11 +695,11 @@ To use proxies, simply specify the `proxy` parameter:
 @browser(
     proxy="http://username:password@proxy-provider-domain:port"
 )    
-def visit_ipinfo(driver: Driver, data):
-    driver.get("https://ipinfo.io/")
+def visit_what_is_my_ip(driver: Driver, data):
+    driver.get("https://whatismyipaddress.com/")
     driver.prompt()
 
-visit_ipinfo()
+visit_what_is_my_ip()
 ```
 
 You can also pass a list of proxies, and the proxy will be automatically rotated:
@@ -711,11 +711,11 @@ You can also pass a list of proxies, and the proxy will be automatically rotated
         "http://username2:password2@proxy-provider-domain:port"
     ]
 )
-def visit_ipinfo(driver: Driver, data):
-    driver.get("https://ipinfo.io/")
+def visit_what_is_my_ip(driver: Driver, data):
+    driver.get("https://whatismyipaddress.com/")
     driver.prompt()
 
-visit_ipinfo() 
+visit_what_is_my_ip() 
 ```
 
 #### Profile
@@ -1423,14 +1423,14 @@ Certain proxy providers like BrightData will block access to specific websites. 
 from botasaurus.browser import browser, Driver
 
 @browser(proxy="http://username:password@proxy-provider-domain:port")  # TODO: Replace with your own proxy
-def visit_ipinfo(driver: Driver, data):
-    driver.get("https://ipinfo.io/")
+def visit_what_is_my_ip(driver: Driver, data):
+    driver.get("https://whatismyipaddress.com/")
     driver.prompt()
 
-visit_ipinfo()
+visit_what_is_my_ip()
 ```
 
-If you can successfully access the ipinfo website but not the website you're attempting to scrape, it means the proxy provider is blocking access to that particular website. 
+If you can successfully access [whatismyipaddress.com](https://whatismyipaddress.com/) but not the website you're attempting to scrape, it means the proxy provider is blocking access to that particular website. 
 
 In such situations, the only solution is to switch to a different proxy provider.
 
@@ -2410,10 +2410,11 @@ To reduce detection, follow these best practices:
    ```
 
 8. If your IP has been flagged, you can perform this technique to change it:
-   1. Connect your PC to a smartphone's hotspot.
-   2. On your smartphone, turn airplane mode on and off.
-   3. Turn the hotspot on again.
-   4. You'll be assigned a new IP address. You can verify the change by visiting [https://ipinfo.io/](https://ipinfo.io/) before and after the process.
+1. Visit [whatismyipaddress.com](https://whatismyipaddress.com/) to see your current IP Address.
+2. Connect your PC to a smartphone's hotspot.
+3. On your smartphone, turn airplane mode on and off.
+4. Turn the hotspot on again.
+5. Now visit [whatismyipaddress.com](https://whatismyipaddress.com/). You'll see a new IP address.
 
 ### How Do I Close All Running Chrome Instances?
 
