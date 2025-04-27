@@ -357,6 +357,10 @@ class Controls {
     return this.add<string>(id, "text", { defaultValue: "", ...props })
   }
 
+  search(id: string, props: TextControlInput<string> = {}) {
+    return this.add<string>(id, "search", { defaultValue: "", ...props })
+  }
+
   // Method to add a list of text fields
   listOfTexts(id: string, props: ListOfTextControlInput<string[]> = {}) {
     const defaultValue = ensureListOfStrings(props.defaultValue || [""], id)
@@ -556,7 +560,7 @@ class Controls {
       let value = mergedData[controlId]
 
 
-      if (control.type === "text" || control.type === "textarea") {
+      if (control.type === "text"  || control.type === "textarea" ||control.type === "search") {
         if (canTrim(control)) {
           value = value.trim()
         }
@@ -771,6 +775,7 @@ class Controls {
   private getTypeValidationErrorMessage(type: string, value: any) {
     switch (type) {
       case "text":
+      case "search":
       case "textarea":
       case "link":
         if (typeof value !== "string")
