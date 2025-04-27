@@ -6,7 +6,7 @@ import styles from './styles.module.css'
 type FeatureItem = {
   title: string
   Svg: React.ComponentType<React.ComponentProps<'svg'>>
-  description: JSX.Element
+  description: any
 }
 
 const FeatureList: FeatureItem[] = [
@@ -53,83 +53,8 @@ function Feature({ title, Svg, description }: FeatureItem) {
 }
 
 
-export function Inspired(): JSX.Element {
-  return (
-    <section className={styles.inspired}>
-      <div className="container">
-        <h1 className="hero__title">{'Inspiration'}</h1>
-        <div style={{ textAlign: 'left' }} >
-          <p>We dedicate this project to Subhash Chandra Botasaurus, the
-            person who turbo boosted Bharat&#x27;s freedom. Subhash Chandra Botasaurus was the founder of Azad Hind Fauj
-            (Indian National Army),which was formed from Indian prisoners of war captured by the Axis powers
-            (Germany, Japan, and Italy) during World War II. The Azad Hind Fauj fought against the British Indian
-            Army to free Bharat from British rule in present day Mynammar.</p>
-          <p>Although the Azad Hind Fauj was unsuccessful in
-            defeating the British Indian Army, taking up arms against the British had a domino effect on Indians in
-            the police and British Indian Army. They revolted and started fighting against the Britishers, forcing
-            them to leave Bharat in 1947.</p>
-          <p>Without Subhash Chandra Botasaurus&#x27;s efforts, Bharat may
-            have had to wait for few more decades to gain independence. Consequently, Internet would had
-            arrived late in Bharat and, I wouldn&#x27;t have been able to learn programming and create this framework to
-            help you.</p>
-          <p>Therefore, we are grateful to Netaji for his role in
-            turbo boosting Bharat&#x27;s freedom movement. Jai Hind.</p>
-        </div>
-      </div>
-    </section>
-  )
-}
 
-
-export function Thanks(): JSX.Element {
-  return (
-    <section className={styles.inspired}>
-      <div className="container">
-        <h1 className="hero__title">{'Thanks'}</h1>
-        <div style={{ textAlign: 'left' }} className="page-body">
-          <p className="">
-            Botasaurus framework stands on the shoulders of giants. We leverage various
-            projects to simplify web scraping for you. We extend our gratitude to the
-            following individuals who have developed the software that Botasaurus framework
-            relies on:
-          </p>
-          <ul className="bulleted-list">
-            <li style={{ listStyleType: "disc" }}>
-              Jason Huggins, the creator of the Selenium library, which is the backbone
-              of Botasaurus framework. Thank you, Jason, for creating Selenium.
-            </li>
-            <li style={{ listStyleType: "disc" }}>
-              Leon, who developed the undetected-chromedriver library, which we utilize
-              to avoid detection by anti-bot detection services such as Cloudflare.
-              Thank you, Leon.
-            </li>
-
-            <li style={{ listStyleType: "disc" }}>
-              Chida, who developed the chromedriver-autoinstaller library, which we
-              employ to download the driver for your Chrome version that is utilized to
-              launch the browser. Thank you, Chida.
-            </li>
-            <li style={{ listStyleType: "disc" }}>
-              Kenneth Reitz, who developed the requests library, which is used in Botasaurus
-              framework. Thank you, Kenneth Reitz, for creating requests.
-            </li>
-          </ul>
-
-        </div>
-        <div className={styles.buttons}>
-          <Link
-            className="button button--secondary button--lg"
-            to="/docs/what-is-botasaurus/">
-            What is Botasaurus 🤔?
-          </Link>
-        </div>
-      </div>
-    </section>
-  )
-}
-  
-
-export default function HomepageFeatures(): JSX.Element {
+export default function HomepageFeatures(): any {
   return (
     <section className={styles.features}>
       <div className="container">
