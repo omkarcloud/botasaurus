@@ -20,7 +20,7 @@ const config: Config = {
       src: "/botasaurus/ga.js",
     },
   ],
-  baseUrl: "/botasaurus/",
+  baseUrl: "/botasaurus",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
