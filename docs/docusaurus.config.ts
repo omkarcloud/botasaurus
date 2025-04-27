@@ -9,7 +9,6 @@ const config: Config = {
   tagline: "Botasaurus is a Swiss Army knife 🔪 for web scraping and browser automation 🤖 that helps you create bots fast. ⚡️",
   url: "https://www.omkar.cloud",
   trailingSlash: false,
-
   favicon: "img/favicon.ico",
   scripts: [
     {
