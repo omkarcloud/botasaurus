@@ -19,11 +19,6 @@ jobs:
         persist-credentials: false
         fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
-
     - name: Install build tools
       run: |
         python -m pip install --upgrade pip
@@ -38,4 +33,3 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: master
-        
