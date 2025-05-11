@@ -1,0 +1,87 @@
+name: Build and Deploy Botasaurus Desktop API Docs
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'js/botasaurus-desktop-api/botasaurus-desktop-api-docs/**'
+      - 'js/botasaurus-server-js/src/api-config.ts'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Needed for git diff and push later
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Install dependencies and build
+      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
+      run: |
+        npm i --legacy-peer-deps
+        npm run build
+
+    - name: Get built asset names
+      id: assets
+      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
+      run: |
+        CSS_FILE=$(ls build/static/css/main.*.css | sed 's/build\/static\/css\///')
+        JS_FILE=$(ls build/static/js/main.*.js | sed 's/build\/static\/js\///')
+        echo "CSS_FILE=${CSS_FILE}" >> $GITHUB_OUTPUT
+        echo "JS_FILE=${JS_FILE}" >> $GITHUB_OUTPUT
+
+    - name: Get current asset names from config
+      id: config
+      working-directory: js/botasaurus-server-js/src
+      run: |
+        CURRENT_CSS=$(grep -o "main.*.css" api-config.ts | head -1)
+        CURRENT_JS=$(grep -o "main.*.js" api-config.ts | head -1)
+        echo "CURRENT_CSS=${CURRENT_CSS}" >> $GITHUB_OUTPUT
+        echo "CURRENT_JS=${CURRENT_JS}" >> $GITHUB_OUTPUT
+
+    - name: Compare assets
+      id: compare
+      run: |
+        if [ "${{ steps.assets.outputs.CSS_FILE }}" != "${{ steps.config.outputs.CURRENT_CSS }}" ] || \
+           [ "${{ steps.assets.outputs.JS_FILE }}" != "${{ steps.config.outputs.CURRENT_JS }}" ]; then
+          echo "DIFFERENT=true" >> $GITHUB_OUTPUT
+        else
+          echo "DIFFERENT=false" >> $GITHUB_OUTPUT
+        fi
+
+    # - name: Configure AWS credentials
+    #   if: steps.compare.outputs.DIFFERENT == 'true'
+    #   uses: aws-actions/configure-aws-credentials@v1
+    #   with:
+    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     aws-region: us-east-1  # Change to your bucket's region
+
+    # - name: Deploy to S3
+    #   if: steps.compare.outputs.DIFFERENT == 'true'
+    #   working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
+    #   run: |
+    #     aws s3 sync build s3://botasaurus-desktop-api --delete
+
+    - name: Update config file
+      if: steps.compare.outputs.DIFFERENT == 'true'
+      working-directory: js/botasaurus-server-js/src
+      run: |
+        sed -i "s/main.*.css/${{ steps.assets.outputs.CSS_FILE }}/g" api-config.ts
+        sed -i "s/main.*.js/${{ steps.assets.outputs.JS_FILE }}/g" api-config.ts
+
+    - name: Commit and push changes
+      if: steps.compare.outputs.DIFFERENT == 'true'
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add js/botasaurus-server-js/src/api-config.ts
+        git commit -m "Update asset filenames in api-config.ts"
+        git push
