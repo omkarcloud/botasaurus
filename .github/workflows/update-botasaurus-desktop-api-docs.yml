@@ -5,10 +5,11 @@ on:
     branches: [ master ]
     # paths:
     #   - 'js/botasaurus-desktop-api/botasaurus-desktop-api-docs/**'
-    #   - 'js/botasaurus-server-js/src/api-config.ts'
 
 jobs:
   build-and-deploy:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
 
     steps:
@@ -51,17 +52,25 @@ jobs:
     #   working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
     #   run: |
     #     aws s3 sync build s3://botasaurus-desktop-api --delete
+    - uses: actions/checkout@master
+      with:
+        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+        fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
 
     - name: Update config file
       working-directory: js/botasaurus-server-js/src
       run: |
         sed -i "s/main.*.css/${{ steps.assets.outputs.CSS_FILE }}/g" api-config.ts
         sed -i "s/main.*.js/${{ steps.assets.outputs.JS_FILE }}/g" api-config.ts
+    - name: Commit & Push changes
+      uses: actions-js/push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Commit and push changes
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add js/botasaurus-server-js/src/api-config.ts
-        git commit -m "Update asset filenames in api-config.ts"
-        git push
+    # - name: Commit and push changes
+    #   run: |
+    #     git config --global user.name "GitHub Actions"
+    #     git config --global user.email "actions@github.com"
+    #     git add js/botasaurus-server-js/src/api-config.ts
+    #     git commit -m "Update asset filenames in api-config.ts"
+    #     git push
