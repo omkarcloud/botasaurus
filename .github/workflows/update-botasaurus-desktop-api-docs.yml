@@ -27,11 +27,22 @@ jobs:
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
         fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
-
-    - uses: shallwefootball/s3-upload-action@master
-      
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v3
       with:
-        aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-        aws_bucket: ${{ secrets.AWS_BUCKET }}
-        source_dir: './js/botasaurus-desktop-api/botasaurus-desktop-api-docs/src'
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+        aws-region: us-east-2
+
+    - name: Deploy to S3
+      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
+      run: |
+        aws s3 cp src/ s3://botasaurus-api/ --recursive
+
+    # - uses: shallwefootball/s3-upload-action@master
+      
+    #   with:
+    #     aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     aws_secret_access_key: 
+    #     aws_bucket: ${{ secrets.AWS_BUCKET }}
+    #     source_dir: './js/botasaurus-desktop-api/botasaurus-desktop-api-docs/src'
