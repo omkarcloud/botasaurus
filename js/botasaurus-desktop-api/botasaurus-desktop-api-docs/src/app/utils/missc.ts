@@ -1,5 +1,3 @@
-export function readNumber(r) { if ("" === r || "number" != typeof r && "string" != typeof r) return null; var t = Number(r); return Number.isNaN(t) ? null : t }
-
 export function isEmpty(x: any) {
   return (
     x === null ||
