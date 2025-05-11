@@ -1,10 +1,10 @@
-name: Build and Deploy Botasaurus
+name: Build and Deploy Botasaurus Server
 
 on:
   push:
     branches: [ master ]
     paths:
-      - 'botasaurus/botasaurus/**'
+      - 'botasaurus_server/**'
 
 jobs:
   build-and-deploy:
@@ -32,6 +32,7 @@ jobs:
     - name: Build and Push 
       run: |
         npm run upload -- -u __token__ -p ${{ secrets.PYPI_TOKEN }}
+      working-directory: botasaurus_server
 
     - name: Commit & Push changes
       uses: actions-js/push@master
