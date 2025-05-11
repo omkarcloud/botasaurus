@@ -68,13 +68,20 @@ jobs:
         fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
 
     - uses: shallwefootball/s3-upload-action@master
+      
       with:
         aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
         aws_bucket: ${{ secrets.AWS_BUCKET }}
-        source_dir: 'js/botasaurus-desktop-api/botasaurus-desktop-api-docs/build'
+        source_dir: './js/botasaurus-desktop-api/botasaurus-desktop-api-docs/build'
+
+    - name: Install dependencies and build
+      working-directory: js/botasaurus-server-js
+      run: |
+        npm i --legacy-peer-deps
 
     - uses: JS-DevTools/npm-publish@v3
+      working-directory: js/botasaurus-server-js
       with:
         token: ${{ secrets.NPM_TOKEN }}
 
