@@ -66,6 +66,7 @@ jobs:
       uses: actions-js/push@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: master
 
     # - name: Commit and push changes
     #   run: |
