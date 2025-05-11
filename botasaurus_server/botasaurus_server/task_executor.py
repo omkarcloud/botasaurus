@@ -39,7 +39,6 @@ class TaskExecutor:
             )
             session.commit()
 
-
     def task_worker(self):
         browser_scrapers = len(Server.get_browser_scrapers()) > 0
         request_scrapers = len(Server.get_request_scrapers()) > 0
@@ -141,7 +140,6 @@ class TaskExecutor:
             self.current_capacity[scraper_type] -= 1
 
     def run_task(self, task):
-
         scraper_type = task["scraper_type"]
         task_id = task["id"]
         scraper_name = task["scraper_name"]
@@ -210,7 +208,7 @@ class TaskExecutor:
         if parent_id:
             self.complete_parent_task_if_possible(parent_id, Server.get_remove_duplicates_by(scraper_name), result)
 
-    def complete_parent_task_if_possible(self,parent_id, remove_duplicates_by, result):
+    def complete_parent_task_if_possible(self, parent_id, remove_duplicates_by, result):
             fn = None
             with Session() as session:
                 parent_task = TaskHelper.get_task(
@@ -222,7 +220,7 @@ class TaskExecutor:
                 # MAY BE DELETED SO CHECK
                 if parent_task:
                     # is fast no worry
-                    TaskHelper.update_parent_task_results(parent_id,result,)
+                    TaskHelper.update_parent_task_results(parent_id, result)
                     is_done = TaskHelper.are_all_child_task_done(
                                 session, parent_id
                             )
@@ -235,7 +233,7 @@ class TaskExecutor:
             if fn:
                 fn()          
 
-    def complete_as_much_all_task_as_possible(self,parent_id, remove_duplicates_by):
+    def complete_as_much_all_task_as_possible(self, parent_id, remove_duplicates_by):
             fn = None
             with Session() as session:
                     is_done = TaskHelper.are_all_child_task_done(
