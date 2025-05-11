@@ -3,8 +3,8 @@ name: Build and Deploy Botasaurus Desktop API Docs
 on:
   push:
     branches: [ master ]
-    # paths:
-    #   - 'js/botasaurus-desktop-api/botasaurus-desktop-api-docs/**'
+    paths:
+      - 'js/botasaurus-desktop-api/botasaurus-desktop-api-docs/**'
 
 jobs:
   build-and-deploy:
@@ -16,7 +16,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # Needed for git diff and push later
+        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+        fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
@@ -39,16 +40,11 @@ jobs:
         echo "CSS_FILE=${CSS_FILE}" >> $GITHUB_OUTPUT
         echo "JS_FILE=${JS_FILE}" >> $GITHUB_OUTPUT
 
-    - uses: actions/checkout@master
-      with:
-        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
-        fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
-
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v3
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
     - name: Deploy to S3
