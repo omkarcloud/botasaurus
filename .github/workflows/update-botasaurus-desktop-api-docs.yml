@@ -14,21 +14,53 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0  # Needed for git diff and push later
 
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
         node-version: 20
         registry-url: 'https://registry.npmjs.org'
 
+    - name: Install dependencies and build
+      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
+      run: |
+        npm i --legacy-peer-deps
+        npm run build
+
+    - name: Get built asset names
+      id: assets
+      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
+      run: |
+        CSS_FILE=$(ls build/static/css/main.*.css | sed 's/build\/static\/css\///')
+        JS_FILE=$(ls build/static/js/main.*.js | sed 's/build\/static\/js\///')
+        echo "CSS_FILE=${CSS_FILE}" >> $GITHUB_OUTPUT
+        echo "JS_FILE=${JS_FILE}" >> $GITHUB_OUTPUT
 
     - uses: actions/checkout@master
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
         fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+        aws-region: us-east-1
+
+    - name: Deploy to S3
+      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
+      run: |
+        aws s3 cp build/ s3://botasaurus-api/ --recursive
+
+    - name: Update config file
+      working-directory: js/botasaurus-server-js/src
+      run: |
+        sed -i "s/main.*.css/${{ steps.assets.outputs.CSS_FILE }}/g" api-config.ts
+        sed -i "s/main.*.js/${{ steps.assets.outputs.JS_FILE }}/g" api-config.ts
 
     - name: Install dependencies and build
       working-directory: js/botasaurus-server-js
@@ -38,6 +70,8 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-    # - uses: JS-DevTools/npm-publish@v3
-    #   with:
-    #     token: ${{ secrets.NPM_TOKEN }}
+    - name: Commit & Push changes
+      uses: actions-js/push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: master
