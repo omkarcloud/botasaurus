@@ -38,7 +38,7 @@
   "scripts": {
     "dev": "tsc -w",
     "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
-    "build-mv": "npm run build && mv -f /Users/om/Documents/grow/botasaurus-desktop-api/dist/* ~/Documents/playground/my-project-name/node_modules/botasaurus-desktop-api/dist/",
+    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus-desktop-api/dist/* ~/Documents/playground/my-project-name/node_modules/botasaurus-desktop-api/dist/",
     "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "update": "npm update botasaurus",

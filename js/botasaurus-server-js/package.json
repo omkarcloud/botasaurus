@@ -1,6 +1,6 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.45",
+  "version": "4.1.46",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -184,7 +184,7 @@
     "dev": "tsc -w",
     "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
     "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus-server-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus-server/dist/",
-    "build-mv-starter": "npm run build && mv -f ~/Documents/grow/botasaurus-server-js/dist/* ~/Documents/botasaurus-desktop-starter/node_modules/botasaurus-server/dist/",
+    "build-mv-starter": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-server-js/dist/* ~/Documents/botasaurus-desktop-starter/node_modules/botasaurus-server/dist/",
     "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "update": "npm update botasaurus",
