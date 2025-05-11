@@ -23,45 +23,6 @@ jobs:
       with:
         node-version: 20
 
-    - name: Install dependencies and build
-      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
-      run: |
-        npm i --legacy-peer-deps
-        npm run build
-
-    - name: Get built asset names
-      id: assets
-      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
-      run: |
-        CSS_FILE=$(ls build/static/css/main.*.css | sed 's/build\/static\/css\///')
-        JS_FILE=$(ls build/static/js/main.*.js | sed 's/build\/static\/js\///')
-        echo "CSS_FILE=${CSS_FILE}" >> $GITHUB_OUTPUT
-        echo "JS_FILE=${JS_FILE}" >> $GITHUB_OUTPUT
-
-
-    # - name: Deploying application to Amazon S3
-    #   uses: dvelasquez/deploy-s3-action@main
-    #   with:
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-    #     AWS_BUCKET_NAME: awesome-bucket
-    #     BUCKET_PATH: "/pr/${{github.event.number}}"
-    #     DIST_LOCATION_CODE: ./dist
-        
-    # - name: Configure AWS credentials
-    #   if: steps.compare.outputs.DIFFERENT == 'true'
-    #   uses: aws-actions/configure-aws-credentials@v1
-    #   with:
-    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     aws-region: us-east-1  # Change to your bucket's region
-
-    # - name: Deploy to S3
-    #   if: steps.compare.outputs.DIFFERENT == 'true'
-    #   working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
-    #   run: |
-    #     aws s3 sync build s3://botasaurus-desktop-api --delete
     - uses: actions/checkout@master
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
@@ -73,33 +34,4 @@ jobs:
         aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
         aws_bucket: ${{ secrets.AWS_BUCKET }}
-        source_dir: './js/botasaurus-desktop-api/botasaurus-desktop-api-docs/build'
-
-    - name: Install dependencies and build
-      working-directory: js/botasaurus-server-js
-      run: |
-        npm i --legacy-peer-deps
-
-    - uses: JS-DevTools/npm-publish@v3
-      working-directory: js/botasaurus-server-js
-      with:
-        token: ${{ secrets.NPM_TOKEN }}
-
-    - name: Update config file
-      working-directory: js/botasaurus-server-js/src
-      run: |
-        sed -i "s/main.*.css/${{ steps.assets.outputs.CSS_FILE }}/g" api-config.ts
-        sed -i "s/main.*.js/${{ steps.assets.outputs.JS_FILE }}/g" api-config.ts
-    - name: Commit & Push changes
-      uses: actions-js/push@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: master
-
-    # - name: Commit and push changes
-    #   run: |
-    #     git config --global user.name "GitHub Actions"
-    #     git config --global user.email "actions@github.com"
-    #     git add js/botasaurus-server-js/src/api-config.ts
-    #     git commit -m "Update asset filenames in api-config.ts"
-    #     git push
+        source_dir: './js/botasaurus-desktop-api/botasaurus-desktop-api-docs/src'
