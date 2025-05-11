@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
     # paths:
-    #   - 'botasaurus/botasaurus/**'
+      #   - 'botasaurus/botasaurus/**'
 
 jobs:
   build-and-deploy:
