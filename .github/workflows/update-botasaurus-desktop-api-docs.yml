@@ -39,6 +39,16 @@ jobs:
         echo "JS_FILE=${JS_FILE}" >> $GITHUB_OUTPUT
 
 
+    # - name: Deploying application to Amazon S3
+    #   uses: dvelasquez/deploy-s3-action@main
+    #   with:
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+    #     AWS_BUCKET_NAME: awesome-bucket
+    #     BUCKET_PATH: "/pr/${{github.event.number}}"
+    #     DIST_LOCATION_CODE: ./dist
+        
     # - name: Configure AWS credentials
     #   if: steps.compare.outputs.DIFFERENT == 'true'
     #   uses: aws-actions/configure-aws-credentials@v1
@@ -56,6 +66,14 @@ jobs:
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
         fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
+
+    - uses: shallwefootball/s3-upload-action@master
+      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
+      with:
+        aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+        aws_bucket: ${{ secrets.AWS_BUCKET }}
+        source_dir: 'build'
 
     - name: Update config file
       working-directory: js/botasaurus-server-js/src
