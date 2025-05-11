@@ -25,24 +25,24 @@ jobs:
         node-version: 20
         registry-url: 'https://registry.npmjs.org'
 
-    - name: Install dependencies and build
-      working-directory: js/botasaurus-js
-      run: |
-        npm i --legacy-peer-deps
-        npm run upload
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    # - name: Install dependencies and build
+    #   working-directory: js/botasaurus-js
+    #   run: |
+    #     npm i --legacy-peer-deps
+    #     npm run upload
+    #   env:
+    #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-    - name: Commit & Push changes
-      uses: actions-js/push@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: master
+    # - name: Commit & Push changes
+    #   uses: actions-js/push@master
+    #   with:
+    #     github_token: ${{ secrets.GITHUB_TOKEN }}
+    #     branch: master
 
 
     - name: Clone Botasaurus Desktop Starter
       run: |
-        git clone https://github.com/omkarcloud/botasaurus-desktop-starter desktop-starter
+        git clone https://${{ secrets.PAT }}@github.com/omkarcloud/botasaurus-desktop-starter.git desktop-starter
         cd desktop-starter
         npm i
         npm run update
