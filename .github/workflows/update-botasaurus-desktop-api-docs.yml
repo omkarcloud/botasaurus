@@ -20,7 +20,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 16
+        node-version: 20
 
     - name: Install dependencies and build
       working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
@@ -52,8 +52,10 @@ jobs:
         if [ "${{ steps.assets.outputs.CSS_FILE }}" != "${{ steps.config.outputs.CURRENT_CSS }}" ] || \
            [ "${{ steps.assets.outputs.JS_FILE }}" != "${{ steps.config.outputs.CURRENT_JS }}" ]; then
           echo "DIFFERENT=true" >> $GITHUB_OUTPUT
+          echo "a"
         else
           echo "DIFFERENT=false" >> $GITHUB_OUTPUT
+          echo "b"
         fi
 
     # - name: Configure AWS credentials
