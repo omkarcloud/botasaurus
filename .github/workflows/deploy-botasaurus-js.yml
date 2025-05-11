@@ -3,8 +3,8 @@ name: Build and Deploy Botasaurus JS
 on:
   push:
     branches: [ master ]
-    paths:
-      - 'js/botasaurus-js/**'
+    # paths:
+    #   - 'js/botasaurus-js/**'
 
 jobs:
   build-and-deploy:
@@ -38,3 +38,18 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: master
+
+
+    - name: Clone Botasaurus Desktop Starter
+      run: |
+        git clone https://github.com/omkarcloud/botasaurus-desktop-starter desktop-starter
+        cd desktop-starter
+        npm i
+        npm run update
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Update Botasaurus Desktop Starter"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
