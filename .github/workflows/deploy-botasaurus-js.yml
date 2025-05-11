@@ -1,0 +1,40 @@
+name: Build and Deploy Botasaurus JS
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'js/botasaurus-js/**'
+
+jobs:
+  build-and-deploy:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install dependencies and build
+      working-directory: js/botasaurus-js
+      run: |
+        npm i --legacy-peer-deps
+        npm run upload
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    - name: Commit & Push changes
+      uses: actions-js/push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: master

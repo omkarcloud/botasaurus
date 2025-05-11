@@ -3,4 +3,3 @@ dist
 .idea
 node_modules
 coverage
-package-lock.json
