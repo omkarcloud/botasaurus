@@ -68,7 +68,6 @@ jobs:
         fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
 
     - uses: shallwefootball/s3-upload-action@master
-      working-directory: 
       with:
         aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
