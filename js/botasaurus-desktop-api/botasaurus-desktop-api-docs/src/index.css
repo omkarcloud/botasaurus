@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body{background:#f6e2e7}
+
+/* expand bg color */
+#root {
+    min-height: 100vh;
+}

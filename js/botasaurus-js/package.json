@@ -1,0 +1,168 @@
+{
+  "name": "botasaurus",
+  "version": "4.0.101",
+  "description": "controls adder for botasaurus.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./output": "./dist/output.js",
+    "./list-utils": "./dist/list-utils.js",
+    "./botasaurus-storage": "./dist/botasaurus-storage.js",
+    "./decorators-common": "./dist/decorators-common.js",
+    "./on-close": "./dist/on-close.js",
+    "./dontcache": "./dist/dontcache.js",
+    "./formats": "./dist/formats.js",
+    "./utils": "./dist/utils.js",
+    "./beep-utils": "./dist/beep-utils.js",
+    "./decorators-utils": "./dist/decorators-utils.js",
+    "./page": "./dist/page.js",
+    "./cache": "./dist/cache.js",
+    "./increment": "./dist/increment.js",
+    "./paths": "./dist/paths.js",
+    "./env": "./dist/env.js",
+    "./playwright": "./dist/playwright.js",
+    "./string-utils": "./dist/string-utils.js",
+    "./task": "./dist/task.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/*"
+      ],
+      "output": [
+        "dist/output.d.ts"
+      ],
+      "list-utils": [
+        "dist/list-utils.d.ts"
+      ],
+      "botasaurus-storage": [
+        "dist/botasaurus-storage.d.ts"
+      ],
+      "decorators-common": [
+        "dist/decorators-common.d.ts"
+      ],
+      "on-close": [
+        "dist/on-close.d.ts"
+      ],
+      "dontcache": [
+        "dist/dontcache.d.ts"
+      ],
+      "formats": [
+        "dist/formats.d.ts"
+      ],
+      "utils": [
+        "dist/utils.d.ts"
+      ],
+      "beep-utils": [
+        "dist/beep-utils.d.ts"
+      ],
+      "decorators-utils": [
+        "dist/decorators-utils.d.ts"
+      ],
+      "page": [
+        "dist/page.d.ts"
+      ],
+      "cache": [
+        "dist/cache.d.ts"
+      ],
+      "increment": [
+        "dist/increment.d.ts"
+      ],
+      "paths": [
+        "dist/paths.d.ts"
+      ],
+      "env": [
+        "dist/env.d.ts"
+      ],
+      "playwright": [
+        "dist/playwright.d.ts"
+      ],
+      "string-utils": [
+        "dist/string-utils.d.ts"
+      ],
+      "task": [
+        "dist/task.d.ts"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=15.10.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@apify/eslint-config-ts": "^0.2.3",
+    "@apify/tsconfig": "^0.1.0",
+    "@types/jest": "^28.1.2",
+    "@types/node": "^18.8.3",
+    "@typescript-eslint/eslint-plugin": "5.29.0",
+    "@typescript-eslint/parser": "5.29.0",
+    "basic-auth": "^2.0.1",
+    "basic-auth-parser": "^0.0.2",
+    "body-parser": "^1.19.0",
+    "chai": "^4.3.4",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.10.0",
+    "express": "^4.17.1",
+    "faye-websocket": "^0.11.4",
+    "fs-extra": "^9.1.0",
+    "got-scraping": "^3.2.4-beta.0",
+    "isparta": "^4.1.1",
+    "mocha": "^10.0.0",
+    "nyc": "^15.1.0",
+    "portastic": "^1.0.1",
+    "proxy": "^1.0.2",
+    "puppeteer": "^19.6.3",
+    "request": "^2.88.2",
+    "rimraf": "^5.0.1",
+    "sinon": "^13.0.2",
+    "sinon-stub-promise": "^4.0.0",
+    "socks": "^2.8.3",
+    "socks-proxy-agent": "^8.0.3",
+    "socksv5": "^0.0.6",
+    "through": "^2.3.8",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3",
+    "uglify-js": "^3.17.4",
+    "underscore": "^1.13.1",
+    "ws": "^8.2.2"
+  },
+  "scripts": {
+    "dev": "tsc -w",
+    "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
+    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus/dist/",
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
+    "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
+    "prepublishOnly": "npm run build",
+    "local-proxy": "node ./dist/run_locally.js",
+    "mtest": "node test/test.mjs",
+    "upload": "python3 increment_version.py && rm -rf dist/ && npm publish",
+    "test": "nyc cross-env NODE_OPTIONS=--insecure-http-parser mocha --bail",
+    "test:watch": "nyc cross-env NODE_OPTIONS=--insecure-http-parser mocha --bail --watch",
+    "lint": "eslint src",
+    "lint-fix": "eslint src --fix"
+  },
+  "author": {
+    "name": "Chetan",
+    "url": "https://www.omkar.cloud"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omkarcloud/botasaurus"
+  },
+  "bugs": {
+    "url": "https://github.com/omkarcloud/botasaurus/issues"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "chrome-launcher": "^1.1.2",
+    "csv-parse": "^5.5.6",
+    "csv-stringify": "^6.5.1",
+    "exceljs": "^4.4.0",
+    "rebrowser-playwright-core": "^1.49.1",
+    "tslib": "^2.6.2"
+  }
+}

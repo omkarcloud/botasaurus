@@ -1,0 +1,16 @@
+{
+    "globals": {
+        "it": false,
+        "describe": false,
+        "xit": false,
+        "before": false,
+        "after": false,
+        "beforeAll": false,
+        "afterAll": false,
+        "beforeEach": false,
+        "afterEach": false,
+        "expect": false,
+        "test": false,
+        "jest": false
+    }
+}

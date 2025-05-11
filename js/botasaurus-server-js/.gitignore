@@ -1,0 +1,20 @@
+build
+node_modules
+*.log
+*.pid
+*.seed
+.DS_Store
+lib
+coverage
+logs
+pids
+.idea
+yarn.lock
+docs
+.nyc_output
+dist
+.vscode
+todo.md
+temp.js
+todo copy.md
+tsconfig.tsbuildinfo

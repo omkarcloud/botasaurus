@@ -1,0 +1,224 @@
+{
+  "name": "botasaurus-server",
+  "version": "4.1.45",
+  "description": "controls adder for botasaurus.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./validation": "./dist/validation.js",
+    "./executor": "./dist/executor.js",
+    "./task-helper": "./dist/task-helper.js",
+    "./filters": "./dist/filters.js",
+    "./sorts": "./dist/sorts.js",
+    "./views": "./dist/views.js",
+    "./scraper-type": "./dist/scraper-type.js",
+    "./errors": "./dist/errors.js",
+    "./change-case": "./dist/change-case.js",
+    "./writer": "./dist/writer.js",
+    "./writer-http": "./dist/writer-http.js",
+    "./task-routes": "./dist/task-routes.js",
+    "./utils": "./dist/utils.js",
+    "./convert-to-english": "./dist/convert-to-english.js",
+    "./api-config": "./dist/api-config.js",
+    "./ndjson": "./dist/ndjson.js",
+    "./task-results": "./dist/task-results.js",
+    "./controls-adapter": "./dist/controls-adapter.js",
+    "./null-utils": "./dist/null-utils.js",
+    "./task-executor": "./dist/task-executor.js",
+    "./download": "./dist/download.js",
+    "./routes-db-logic": "./dist/routes-db-logic.js",
+    "./db-setup": "./dist/db-setup.js",
+    "./ui": "./dist/ui.js",
+    "./models": "./dist/models.js",
+    "./paths": "./dist/paths.js",
+    "./env": "./dist/env.js",
+    "./server": "./dist/server.js",
+    "./ndjson-http": "./dist/ndjson-http.js",
+    "./run": "./dist/run.js",
+    "./apply-pagination": "./dist/apply-pagination.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/*"
+      ],
+      "validation": [
+        "dist/validation.d.ts"
+      ],
+      "executor": [
+        "dist/executor.d.ts"
+      ],
+      "task-helper": [
+        "dist/task-helper.d.ts"
+      ],
+      "filters": [
+        "dist/filters.d.ts"
+      ],
+      "sorts": [
+        "dist/sorts.d.ts"
+      ],
+      "views": [
+        "dist/views.d.ts"
+      ],
+      "scraper-type": [
+        "dist/scraper-type.d.ts"
+      ],
+      "errors": [
+        "dist/errors.d.ts"
+      ],
+      "change-case": [
+        "dist/change-case.d.ts"
+      ],
+      "writer": [
+        "dist/writer.d.ts"
+      ],
+      "writer-http": [
+        "dist/writer-http.d.ts"
+      ],
+      "task-routes": [
+        "dist/task-routes.d.ts"
+      ],
+      "utils": [
+        "dist/utils.d.ts"
+      ],
+      "convert-to-english": [
+        "dist/convert-to-english.d.ts"
+      ],
+      "api-config": [
+        "dist/api-config.d.ts"
+      ],
+      "ndjson": [
+        "dist/ndjson.d.ts"
+      ],
+      "task-results": [
+        "dist/task-results.d.ts"
+      ],
+      "controls-adapter": [
+        "dist/controls-adapter.d.ts"
+      ],
+      "null-utils": [
+        "dist/null-utils.d.ts"
+      ],
+      "task-executor": [
+        "dist/task-executor.d.ts"
+      ],
+      "download": [
+        "dist/download.d.ts"
+      ],
+      "routes-db-logic": [
+        "dist/routes-db-logic.d.ts"
+      ],
+      "db-setup": [
+        "dist/db-setup.d.ts"
+      ],
+      "ui": [
+        "dist/ui.d.ts"
+      ],
+      "models": [
+        "dist/models.d.ts"
+      ],
+      "paths": [
+        "dist/paths.d.ts"
+      ],
+      "env": [
+        "dist/env.d.ts"
+      ],
+      "server": [
+        "dist/server.d.ts"
+      ],
+      "ndjson-http": [
+        "dist/ndjson-http.d.ts"
+      ],
+      "run": [
+        "dist/run.d.ts"
+      ],
+      "apply-pagination": [
+        "dist/apply-pagination.d.ts"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=15.10.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@apify/eslint-config-ts": "^0.2.3",
+    "@apify/tsconfig": "^0.1.0",
+    "@types/jest": "^28.1.2",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "basic-auth": "^2.0.1",
+    "basic-auth-parser": "^0.0.2",
+    "body-parser": "^1.19.0",
+    "chai": "^4.3.4",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.10.0",
+    "express": "^4.17.1",
+    "faye-websocket": "^0.11.4",
+    "fs-extra": "^9.1.0",
+    "got-scraping": "^3.2.4-beta.0",
+    "isparta": "^4.1.1",
+    "mocha": "^10.0.0",
+    "nodemon": "^3.1.7",
+    "nyc": "^15.1.0",
+    "portastic": "^1.0.1",
+    "proxy": "^1.0.2",
+    "puppeteer": "^19.6.3",
+    "request": "^2.88.2",
+    "rimraf": "^5.0.1",
+    "sinon": "^13.0.2",
+    "sinon-stub-promise": "^4.0.0",
+    "socks": "^2.8.3",
+    "socks-proxy-agent": "^8.0.3",
+    "socksv5": "^0.0.6",
+    "through": "^2.3.8",
+    "ts-node": "^10.2.1",
+    "typescript": "^5.8.3",
+    "underscore": "^1.13.1",
+    "ws": "^8.2.2"
+  },
+  "scripts": {
+    "dev": "tsc -w",
+    "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
+    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus-server-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus-server/dist/",
+    "build-mv-starter": "npm run build && mv -f ~/Documents/grow/botasaurus-server-js/dist/* ~/Documents/botasaurus-desktop-starter/node_modules/botasaurus-server/dist/",
+    "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
+    "update": "npm update botasaurus",
+    "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install --legacy-peer-deps",
+    "prepublishOnly": "npm run build",
+    "local-proxy": "node ./dist/run_locally.js",
+    "mtest": "node test/test.mjs",
+    "upload": "python3 increment_version.py && rm -rf dist/ && npm publish",
+    "test": "nyc cross-env NODE_OPTIONS=--insecure-http-parser mocha --bail",
+    "test:watch": "nyc cross-env NODE_OPTIONS=--insecure-http-parser mocha --bail --watch",
+    "lint": "eslint src",
+    "lint-fix": "eslint src --fix"
+  },
+  "author": {
+    "name": "Chetan",
+    "url": "https://www.omkar.cloud"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omkarcloud/botasaurus"
+  },
+  "bugs": {
+    "url": "https://github.com/omkarcloud/botasaurus/issues"
+  },
+  "dependencies": {
+    "@seald-io/nedb": "latest",
+    "botasaurus": "latest",
+    "botasaurus-controls": "latest",
+    "change-case": "^5.4.4",
+    "csv-stringify": "^6.5.1",
+    "exceljs": "^4.4.0",
+    "fastify": "^5.3.2",
+    "transliteration": "^2.3.5",
+    "tslib": "^2.6.2"
+  }
+}

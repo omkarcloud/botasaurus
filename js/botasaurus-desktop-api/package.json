@@ -1,0 +1,70 @@
+{
+  "name": "botasaurus-desktop-api",
+  "version": "4.1.45",
+  "description": "The Botasaurus Desktop API Client provides programmatic access to Botasaurus Desktop scrapers with a developer-friendly API.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./utils": "./dist/utils.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/*"
+      ],
+      "utils": [
+        "dist/utils.d.ts"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=15.10.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@apify/eslint-config-ts": "^0.2.3",
+    "@apify/tsconfig": "^0.1.0",
+    "@types/node": "^16.4.13",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "eslint": "^7.0.0",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.2.0",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "dev": "tsc -w",
+    "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
+    "build-mv": "npm run build && mv -f /Users/om/Documents/grow/botasaurus-desktop-api/dist/* ~/Documents/playground/my-project-name/node_modules/botasaurus-desktop-api/dist/",
+    "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
+    "update": "npm update botasaurus",
+    "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install --legacy-peer-deps",
+    "prepublishOnly": "npm run build",
+    "local-proxy": "node ./dist/run_locally.js",
+    "mtest": "node test/test.mjs",
+    "upload": "python3 increment_version.py && rm -rf dist/ && npm publish",
+    "test": "nyc cross-env NODE_OPTIONS=--insecure-http-parser mocha --bail",
+    "test:watch": "nyc cross-env NODE_OPTIONS=--insecure-http-parser mocha --bail --watch",
+    "lint": "eslint src",
+    "lint-fix": "eslint src --fix"
+  },
+  "author": {
+    "name": "Chetan",
+    "url": "https://www.omkar.cloud"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omkarcloud/botasaurus"
+  },
+  "bugs": {
+    "url": "https://github.com/omkarcloud/botasaurus/issues"
+  },
+  "dependencies": {
+    "axios": "^1.9.0"
+  }
+}
