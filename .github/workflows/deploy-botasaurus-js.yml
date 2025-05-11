@@ -3,8 +3,8 @@ name: Build and Deploy Botasaurus JS
 on:
   push:
     branches: [ master ]
-    # paths:
-    #   - 'js/botasaurus-js/**'
+    paths:
+      - 'js/botasaurus-js/**'
 
 jobs:
   build-and-deploy:
