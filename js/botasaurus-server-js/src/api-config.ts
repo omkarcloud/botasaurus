@@ -33,9 +33,6 @@ function addCorsHeaders(reply: any) {
     reply.header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token");
 }
 
-function sendJson(reply: any, result: any) {
-    return reply.type("application/json").send(result);
-}
 function addScraperRoutes(app:FastifyInstance) {
     Object.values(Server.scrapers).forEach(scraper => {
         const routePath = `/${kebabCase(scraper.scraper_name)}`
@@ -65,7 +62,7 @@ function addScraperRoutes(app:FastifyInstance) {
                     if (DirectCallCacheService.has(cacheKey)) {
                         try {
                             const cachedResult = DirectCallCacheService.get(cacheKey)
-                            return sendJson(reply, cachedResult ?? { result: null })
+                            return cachedResult ?? { result: null }
                         } catch (error) {
                             console.error(error)
                             // Continue with normal execution if cache fails
@@ -115,7 +112,7 @@ function addScraperRoutes(app:FastifyInstance) {
                         }
                     }
 
-                    return sendJson(reply, finalResults ?? { result: null })
+                    return finalResults ?? { result: null }
                 } finally {
                     executor.decrementCapacity(key)
                 }
@@ -171,33 +168,33 @@ export function buildApp(scrapers:any[]): FastifyInstance {
       return reply.type('text/html').send(html);
     });
 
-    app.post("/tasks/create-task-async", async (request, reply) => {
+    app.post("/tasks/create-task-async", async (request, _) => {
         const jsonData = request.body;
         const result = await createAsyncTask(jsonData);
-        return sendJson(reply, result);
+        return result;
     });
 
-    app.post("/tasks/create-task-sync", async (request, reply) => {
+    app.post("/tasks/create-task-sync", async (request, _) => {
         const jsonData = request.body;
         const result = await createSyncTask(jsonData);
-        return sendJson(reply, result);
+        return result;
     });
 
-    app.get("/tasks", async (request, reply) => {
+    app.get("/tasks", async (request, _) => {
         const queryParams = request.query;
         const result = await getTasks(queryParams);
-        return sendJson(reply, result);
+        return result;
     });
 
     app.get(
         "/tasks/:taskId",
         async (
             request: FastifyRequest<{ Params: { taskId: number } }>,
-            reply
+            _
         ) => {
             const taskId = request.params.taskId;
             const result = await getTask(taskId);
-            return sendJson(reply, result);
+            return result;
         }
     );
 
@@ -205,12 +202,12 @@ export function buildApp(scrapers:any[]): FastifyInstance {
         "/tasks/:taskId/results",
         async (
             request: FastifyRequest<{ Params: { taskId: number }; Body: any }>,
-            reply
+            _
         ) => {
             const taskId = request.params.taskId;
             const jsonData = request.body;
             const results = await getTaskResults(taskId, jsonData);
-            return sendJson(reply, results);
+            return results;
         }
     );
 
@@ -230,12 +227,12 @@ export function buildApp(scrapers:any[]): FastifyInstance {
         "/tasks/:taskId/abort",
         async (
             request: FastifyRequest<{ Params: { taskId: number } }>,
-            reply
+            _
         ) => {
             
             const taskId = request.params.taskId;
             const result = await abortSingleTask(taskId);
-            return sendJson(reply, result);
+            return result;
         }
     );
 
@@ -243,54 +240,51 @@ export function buildApp(scrapers:any[]): FastifyInstance {
         "/tasks/:taskId",
         async (
             request: FastifyRequest<{ Params: { taskId: number } }>,
-            reply
+            _
         ) => {
             const taskId = request.params.taskId;
             const result = await deleteSingleTask(taskId);
-            return sendJson(reply, result);
+            return result;
         }
     );
 
-    app.post("/tasks/bulk-abort", async (request, reply) => {
+    app.post("/tasks/bulk-abort", async (request, _) => {
         const jsonData = request.body;
         const result = await bulkAbortTasks(jsonData);
-        return sendJson(reply, result);
+        return result;
     });
 
-    app.post("/tasks/bulk-delete", async (request, reply) => {
+    app.post("/tasks/bulk-delete", async (request, _) => {
         const jsonData = request.body;
         const result = await bulkDeleteTasks(jsonData);
-        return sendJson(reply, result);
+        return result;
     });
 
-    app.get("/ui/app-props", (_, reply) => {
-        const result = getAppProps();
-        return sendJson(reply, result);
-    });
+    app.get("/ui/app-props", getAppProps);
 
-    app.post("/ui/tasks/is-any-task-updated", async (request, reply) => {
+    app.post("/ui/tasks/is-any-task-updated", async (request, _) => {
         const jsonData = request.body;
         const result = await isAnyTaskUpdated(jsonData);
-        return sendJson(reply, result);
+        return result;
     });
 
-    app.post("/ui/tasks/is-task-updated", async (request, reply) => {
+    app.post("/ui/tasks/is-task-updated", async (request, _) => {
         const jsonData = request.body;
         const result = await isTaskUpdated(jsonData);
-        return sendJson(reply, result);
+        return result;
     });
 
-    app.get("/ui/tasks", async (request, reply) => {
+    app.get("/ui/tasks", async (request, _) => {
         const queryParams = request.query;
         const result = await getTasksForUiDisplay(queryParams);
-        return sendJson(reply, result);
+        return result;
     });
 
-    app.patch("/ui/tasks", async (request, reply) => {
+    app.patch("/ui/tasks", async (request, _) => {
         const queryParams = request.query;
         const jsonData = request.body;
         const result = await patchTask(queryParams, jsonData);
-        return sendJson(reply, result);
+        return result;
     });
 
     app.post(
@@ -301,13 +295,13 @@ export function buildApp(scrapers:any[]): FastifyInstance {
                 Body: any;
                 Querystring: any;
             }>,
-            reply
+            _
         ) => {
             const taskId = request.params.taskId;
             const jsonData = request.body;
             const queryParams = request.query;
             const final = await getUiTaskResults(taskId, queryParams, jsonData);
-            return sendJson(reply, final);
+            return final;
         }
     );
 

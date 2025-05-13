@@ -137,6 +137,17 @@ class _Server {
   }
 
   addWhatsAppSupport(options: WhatsAppSupportOptions) {
+    if (options.number.length !== 10) {
+      throw new Error('The WhatsApp number must be exactly 10 characters long.');
+    }
+    
+    if (options.countryCallingCode.length < 1) {
+      throw new Error('The country calling code must be at least 1 character long.');
+    }
+
+    if (options.countryCallingCode.includes('+')) {
+      throw new Error('The country calling code must not contain a plus sign (+).');
+    }
     this.whatsAppSupport = options;
   }
 

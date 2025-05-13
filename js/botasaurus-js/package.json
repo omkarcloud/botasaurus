@@ -1,76 +1,46 @@
 {
   "name": "botasaurus",
-  "version": "4.0.103",
+  "version": "4.0.110",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./increment": "./dist/increment.js",
-    "./env": "./dist/env.js",
-    "./page": "./dist/page.js",
-    "./decorators-utils": "./dist/decorators-utils.js",
-    "./list-utils": "./dist/list-utils.js",
-    "./string-utils": "./dist/string-utils.js",
     "./output": "./dist/output.js",
-    "./decorators-common": "./dist/decorators-common.js",
-    "./beep-utils": "./dist/beep-utils.js",
-    "./formats": "./dist/formats.js",
-    "./task": "./dist/task.js",
+    "./list-utils": "./dist/list-utils.js",
     "./botasaurus-storage": "./dist/botasaurus-storage.js",
-    "./utils": "./dist/utils.js",
-    "./playwright": "./dist/playwright.js",
+    "./decorators-common": "./dist/decorators-common.js",
     "./on-close": "./dist/on-close.js",
     "./dontcache": "./dist/dontcache.js",
+    "./formats": "./dist/formats.js",
+    "./utils": "./dist/utils.js",
+    "./beep-utils": "./dist/beep-utils.js",
+    "./decorators-utils": "./dist/decorators-utils.js",
+    "./page": "./dist/page.js",
     "./cache": "./dist/cache.js",
-    "./paths": "./dist/paths.js"
+    "./increment": "./dist/increment.js",
+    "./paths": "./dist/paths.js",
+    "./env": "./dist/env.js",
+    "./playwright": "./dist/playwright.js",
+    "./string-utils": "./dist/string-utils.js",
+    "./task": "./dist/task.js"
   },
   "typesVersions": {
     "*": {
       "*": [
         "dist/*"
       ],
-      "increment": [
-        "dist/increment.d.ts"
-      ],
-      "env": [
-        "dist/env.d.ts"
-      ],
-      "page": [
-        "dist/page.d.ts"
-      ],
-      "decorators-utils": [
-        "dist/decorators-utils.d.ts"
+      "output": [
+        "dist/output.d.ts"
       ],
       "list-utils": [
         "dist/list-utils.d.ts"
       ],
-      "string-utils": [
-        "dist/string-utils.d.ts"
-      ],
-      "output": [
-        "dist/output.d.ts"
-      ],
-      "decorators-common": [
-        "dist/decorators-common.d.ts"
-      ],
-      "beep-utils": [
-        "dist/beep-utils.d.ts"
-      ],
-      "formats": [
-        "dist/formats.d.ts"
-      ],
-      "task": [
-        "dist/task.d.ts"
-      ],
       "botasaurus-storage": [
         "dist/botasaurus-storage.d.ts"
       ],
-      "utils": [
-        "dist/utils.d.ts"
-      ],
-      "playwright": [
-        "dist/playwright.d.ts"
+      "decorators-common": [
+        "dist/decorators-common.d.ts"
       ],
       "on-close": [
         "dist/on-close.d.ts"
@@ -78,11 +48,41 @@
       "dontcache": [
         "dist/dontcache.d.ts"
       ],
+      "formats": [
+        "dist/formats.d.ts"
+      ],
+      "utils": [
+        "dist/utils.d.ts"
+      ],
+      "beep-utils": [
+        "dist/beep-utils.d.ts"
+      ],
+      "decorators-utils": [
+        "dist/decorators-utils.d.ts"
+      ],
+      "page": [
+        "dist/page.d.ts"
+      ],
       "cache": [
         "dist/cache.d.ts"
       ],
+      "increment": [
+        "dist/increment.d.ts"
+      ],
       "paths": [
         "dist/paths.d.ts"
+      ],
+      "env": [
+        "dist/env.d.ts"
+      ],
+      "playwright": [
+        "dist/playwright.d.ts"
+      ],
+      "string-utils": [
+        "dist/string-utils.d.ts"
+      ],
+      "task": [
+        "dist/task.d.ts"
       ]
     }
   },
@@ -132,7 +132,7 @@
   "scripts": {
     "dev": "tsc -w",
     "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
-    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus/dist/",
+    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-js/dist/* ~/Documents/botasaurus-desktop-starter/node_modules/botasaurus/dist/",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
     "prepublishOnly": "npm run build",
