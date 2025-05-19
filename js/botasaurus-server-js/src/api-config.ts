@@ -44,7 +44,7 @@ function addScraperRoutes(app:FastifyInstance) {
                 const params: Record<string, any> = {};
                 for (const [key, value] of Object.entries(request.query as any)) {
                     if (key.endsWith("[]")) {
-                        params[key.slice(0, -2)] = value;
+                        params[key.slice(0, -2)] =  Array.isArray(value) ? value : [value];
                     } else {
                         params[key] = value;
                     }
