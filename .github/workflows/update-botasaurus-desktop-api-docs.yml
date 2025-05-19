@@ -57,9 +57,6 @@ jobs:
       run: |
         sed -i "s/main.[a-z0-9]\{8\}.css/${{ steps.assets.outputs.CSS_FILE }}/g" api-config.ts
         sed -i "s/main.[a-z0-9]\{8\}.js/${{ steps.assets.outputs.JS_FILE }}/g" api-config.ts
-    - name: Pull Changes
-      run: |
-        git pull
 
     - name: Install dependencies and build
       working-directory: js/botasaurus-server-js
@@ -68,6 +65,10 @@ jobs:
         npm run upload
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    - name: Pull Changes
+      run: |
+        git pull
 
     - name: Commit & Push changes
       uses: actions-js/push@master

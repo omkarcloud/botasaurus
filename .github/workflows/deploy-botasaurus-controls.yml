@@ -33,6 +33,10 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+    - name: Pull Changes
+      run: |
+        git pull
+
     - name: Commit & Push changes
       uses: actions-js/push@master
       with:
