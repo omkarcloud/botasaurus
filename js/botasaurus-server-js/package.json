@@ -1,122 +1,83 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.52",
+  "version": "4.1.54",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./controls-adapter": "./dist/controls-adapter.js",
-    "./api-config": "./dist/api-config.js",
-    "./models": "./dist/models.js",
-    "./env": "./dist/env.js",
-    "./routes-db-logic": "./dist/routes-db-logic.js",
-    "./scraper-type": "./dist/scraper-type.js",
-    "./db-setup": "./dist/db-setup.js",
-    "./change-case": "./dist/change-case.js",
-    "./run": "./dist/run.js",
-    "./null-utils": "./dist/null-utils.js",
-    "./ui": "./dist/ui.js",
-    "./errors": "./dist/errors.js",
-    "./task-routes": "./dist/task-routes.js",
-    "./task-executor": "./dist/task-executor.js",
-    "./writer-http": "./dist/writer-http.js",
-    "./writer": "./dist/writer.js",
-    "./download": "./dist/download.js",
-    "./views": "./dist/views.js",
-    "./task-helper": "./dist/task-helper.js",
-    "./apply-pagination": "./dist/apply-pagination.js",
-    "./sorts": "./dist/sorts.js",
     "./validation": "./dist/validation.js",
-    "./task-results": "./dist/task-results.js",
+    "./executor": "./dist/executor.js",
+    "./task-helper": "./dist/task-helper.js",
     "./filters": "./dist/filters.js",
-    "./ndjson-http": "./dist/ndjson-http.js",
+    "./sorts": "./dist/sorts.js",
+    "./views": "./dist/views.js",
+    "./scraper-type": "./dist/scraper-type.js",
+    "./errors": "./dist/errors.js",
+    "./change-case": "./dist/change-case.js",
+    "./writer": "./dist/writer.js",
+    "./writer-http": "./dist/writer-http.js",
+    "./task-routes": "./dist/task-routes.js",
     "./utils": "./dist/utils.js",
     "./convert-to-english": "./dist/convert-to-english.js",
-    "./executor": "./dist/executor.js",
+    "./api-config": "./dist/api-config.js",
     "./ndjson": "./dist/ndjson.js",
+    "./task-results": "./dist/task-results.js",
+    "./controls-adapter": "./dist/controls-adapter.js",
+    "./null-utils": "./dist/null-utils.js",
+    "./task-executor": "./dist/task-executor.js",
+    "./download": "./dist/download.js",
+    "./routes-db-logic": "./dist/routes-db-logic.js",
+    "./db-setup": "./dist/db-setup.js",
+    "./ui": "./dist/ui.js",
+    "./models": "./dist/models.js",
+    "./paths": "./dist/paths.js",
+    "./env": "./dist/env.js",
     "./server": "./dist/server.js",
-    "./paths": "./dist/paths.js"
+    "./ndjson-http": "./dist/ndjson-http.js",
+    "./run": "./dist/run.js",
+    "./apply-pagination": "./dist/apply-pagination.js"
   },
   "typesVersions": {
     "*": {
       "*": [
         "dist/*"
       ],
-      "controls-adapter": [
-        "dist/controls-adapter.d.ts"
+      "validation": [
+        "dist/validation.d.ts"
       ],
-      "api-config": [
-        "dist/api-config.d.ts"
-      ],
-      "models": [
-        "dist/models.d.ts"
-      ],
-      "env": [
-        "dist/env.d.ts"
-      ],
-      "routes-db-logic": [
-        "dist/routes-db-logic.d.ts"
-      ],
-      "scraper-type": [
-        "dist/scraper-type.d.ts"
-      ],
-      "db-setup": [
-        "dist/db-setup.d.ts"
-      ],
-      "change-case": [
-        "dist/change-case.d.ts"
-      ],
-      "run": [
-        "dist/run.d.ts"
-      ],
-      "null-utils": [
-        "dist/null-utils.d.ts"
-      ],
-      "ui": [
-        "dist/ui.d.ts"
-      ],
-      "errors": [
-        "dist/errors.d.ts"
-      ],
-      "task-routes": [
-        "dist/task-routes.d.ts"
-      ],
-      "task-executor": [
-        "dist/task-executor.d.ts"
-      ],
-      "writer-http": [
-        "dist/writer-http.d.ts"
-      ],
-      "writer": [
-        "dist/writer.d.ts"
-      ],
-      "download": [
-        "dist/download.d.ts"
-      ],
-      "views": [
-        "dist/views.d.ts"
+      "executor": [
+        "dist/executor.d.ts"
       ],
       "task-helper": [
         "dist/task-helper.d.ts"
       ],
-      "apply-pagination": [
-        "dist/apply-pagination.d.ts"
+      "filters": [
+        "dist/filters.d.ts"
       ],
       "sorts": [
         "dist/sorts.d.ts"
       ],
-      "validation": [
-        "dist/validation.d.ts"
+      "views": [
+        "dist/views.d.ts"
       ],
-      "task-results": [
-        "dist/task-results.d.ts"
+      "scraper-type": [
+        "dist/scraper-type.d.ts"
       ],
-      "filters": [
-        "dist/filters.d.ts"
+      "errors": [
+        "dist/errors.d.ts"
       ],
-      "ndjson-http": [
-        "dist/ndjson-http.d.ts"
+      "change-case": [
+        "dist/change-case.d.ts"
+      ],
+      "writer": [
+        "dist/writer.d.ts"
+      ],
+      "writer-http": [
+        "dist/writer-http.d.ts"
+      ],
+      "task-routes": [
+        "dist/task-routes.d.ts"
       ],
       "utils": [
         "dist/utils.d.ts"
@@ -124,17 +85,56 @@
       "convert-to-english": [
         "dist/convert-to-english.d.ts"
       ],
-      "executor": [
-        "dist/executor.d.ts"
+      "api-config": [
+        "dist/api-config.d.ts"
       ],
       "ndjson": [
         "dist/ndjson.d.ts"
       ],
-      "server": [
-        "dist/server.d.ts"
+      "task-results": [
+        "dist/task-results.d.ts"
+      ],
+      "controls-adapter": [
+        "dist/controls-adapter.d.ts"
+      ],
+      "null-utils": [
+        "dist/null-utils.d.ts"
+      ],
+      "task-executor": [
+        "dist/task-executor.d.ts"
+      ],
+      "download": [
+        "dist/download.d.ts"
+      ],
+      "routes-db-logic": [
+        "dist/routes-db-logic.d.ts"
+      ],
+      "db-setup": [
+        "dist/db-setup.d.ts"
+      ],
+      "ui": [
+        "dist/ui.d.ts"
+      ],
+      "models": [
+        "dist/models.d.ts"
       ],
       "paths": [
         "dist/paths.d.ts"
+      ],
+      "env": [
+        "dist/env.d.ts"
+      ],
+      "server": [
+        "dist/server.d.ts"
+      ],
+      "ndjson-http": [
+        "dist/ndjson-http.d.ts"
+      ],
+      "run": [
+        "dist/run.d.ts"
+      ],
+      "apply-pagination": [
+        "dist/apply-pagination.d.ts"
       ]
     }
   },
