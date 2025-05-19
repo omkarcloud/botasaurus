@@ -3,8 +3,8 @@ name: Build and Deploy Botasaurus Desktop API Docs
 on:
   push:
     branches: [ master ]
-    # paths:
-    #   - 'js/botasaurus-desktop-api/botasaurus-desktop-api-docs/**'
+    paths:
+      - 'js/botasaurus-desktop-api/botasaurus-desktop-api-docs/**'
 
 jobs:
   build-and-deploy:
@@ -40,17 +40,17 @@ jobs:
         echo "CSS_FILE=${CSS_FILE}" >> $GITHUB_OUTPUT
         echo "JS_FILE=${JS_FILE}" >> $GITHUB_OUTPUT
 
-    # - name: Configure AWS Credentials
-    #   uses: aws-actions/configure-aws-credentials@v3
-    #   with:
-    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     aws-region: us-east-1
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-    # - name: Deploy to S3
-    #   working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
-    #   run: |
-    #     aws s3 cp build/ s3://botasaurus-api/ --recursive
+    - name: Deploy to S3
+      working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
+      run: |
+        aws s3 cp build/ s3://botasaurus-api/ --recursive
 
     - name: Update config file
       working-directory: js/botasaurus-server-js/src
@@ -61,13 +61,13 @@ jobs:
       run: |
         git pull
 
-    # - name: Install dependencies and build
-    #   working-directory: js/botasaurus-server-js
-    #   run: |
-    #     npm i
-    #     npm run upload
-    #   env:
-    #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    - name: Install dependencies and build
+      working-directory: js/botasaurus-server-js
+      run: |
+        npm i
+        npm run upload
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     - name: Commit & Push changes
       uses: actions-js/push@master
