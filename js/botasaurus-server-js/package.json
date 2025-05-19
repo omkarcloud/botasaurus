@@ -1,42 +1,42 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.82",
+  "version": "4.1.83",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
     "./validation": "./dist/validation.js",
-    "./executor": "./dist/executor.js",
-    "./task-helper": "./dist/task-helper.js",
-    "./filters": "./dist/filters.js",
-    "./sorts": "./dist/sorts.js",
-    "./views": "./dist/views.js",
-    "./scraper-type": "./dist/scraper-type.js",
-    "./errors": "./dist/errors.js",
-    "./change-case": "./dist/change-case.js",
-    "./writer": "./dist/writer.js",
-    "./writer-http": "./dist/writer-http.js",
-    "./task-routes": "./dist/task-routes.js",
-    "./utils": "./dist/utils.js",
-    "./convert-to-english": "./dist/convert-to-english.js",
-    "./api-config": "./dist/api-config.js",
-    "./ndjson": "./dist/ndjson.js",
-    "./task-results": "./dist/task-results.js",
-    "./controls-adapter": "./dist/controls-adapter.js",
     "./null-utils": "./dist/null-utils.js",
-    "./task-executor": "./dist/task-executor.js",
-    "./download": "./dist/download.js",
+    "./views": "./dist/views.js",
+    "./sorts": "./dist/sorts.js",
+    "./task-results": "./dist/task-results.js",
+    "./convert-to-english": "./dist/convert-to-english.js",
+    "./change-case": "./dist/change-case.js",
+    "./task-helper": "./dist/task-helper.js",
     "./routes-db-logic": "./dist/routes-db-logic.js",
-    "./db-setup": "./dist/db-setup.js",
-    "./ui": "./dist/ui.js",
-    "./models": "./dist/models.js",
-    "./paths": "./dist/paths.js",
-    "./env": "./dist/env.js",
     "./server": "./dist/server.js",
-    "./ndjson-http": "./dist/ndjson-http.js",
+    "./task-routes": "./dist/task-routes.js",
+    "./ndjson": "./dist/ndjson.js",
+    "./executor": "./dist/executor.js",
+    "./api-config": "./dist/api-config.js",
     "./run": "./dist/run.js",
-    "./apply-pagination": "./dist/apply-pagination.js"
+    "./task-executor": "./dist/task-executor.js",
+    "./filters": "./dist/filters.js",
+    "./db-setup": "./dist/db-setup.js",
+    "./models": "./dist/models.js",
+    "./controls-adapter": "./dist/controls-adapter.js",
+    "./env": "./dist/env.js",
+    "./ndjson-http": "./dist/ndjson-http.js",
+    "./errors": "./dist/errors.js",
+    "./apply-pagination": "./dist/apply-pagination.js",
+    "./utils": "./dist/utils.js",
+    "./writer-http": "./dist/writer-http.js",
+    "./download": "./dist/download.js",
+    "./writer": "./dist/writer.js",
+    "./ui": "./dist/ui.js",
+    "./scraper-type": "./dist/scraper-type.js",
+    "./paths": "./dist/paths.js"
   },
   "typesVersions": {
     "*": {
@@ -46,95 +46,95 @@
       "validation": [
         "dist/validation.d.ts"
       ],
-      "executor": [
-        "dist/executor.d.ts"
-      ],
-      "task-helper": [
-        "dist/task-helper.d.ts"
-      ],
-      "filters": [
-        "dist/filters.d.ts"
-      ],
-      "sorts": [
-        "dist/sorts.d.ts"
+      "null-utils": [
+        "dist/null-utils.d.ts"
       ],
       "views": [
         "dist/views.d.ts"
       ],
-      "scraper-type": [
-        "dist/scraper-type.d.ts"
-      ],
-      "errors": [
-        "dist/errors.d.ts"
-      ],
-      "change-case": [
-        "dist/change-case.d.ts"
-      ],
-      "writer": [
-        "dist/writer.d.ts"
-      ],
-      "writer-http": [
-        "dist/writer-http.d.ts"
-      ],
-      "task-routes": [
-        "dist/task-routes.d.ts"
-      ],
-      "utils": [
-        "dist/utils.d.ts"
-      ],
-      "convert-to-english": [
-        "dist/convert-to-english.d.ts"
-      ],
-      "api-config": [
-        "dist/api-config.d.ts"
-      ],
-      "ndjson": [
-        "dist/ndjson.d.ts"
+      "sorts": [
+        "dist/sorts.d.ts"
       ],
       "task-results": [
         "dist/task-results.d.ts"
       ],
-      "controls-adapter": [
-        "dist/controls-adapter.d.ts"
+      "convert-to-english": [
+        "dist/convert-to-english.d.ts"
       ],
-      "null-utils": [
-        "dist/null-utils.d.ts"
+      "change-case": [
+        "dist/change-case.d.ts"
       ],
-      "task-executor": [
-        "dist/task-executor.d.ts"
-      ],
-      "download": [
-        "dist/download.d.ts"
+      "task-helper": [
+        "dist/task-helper.d.ts"
       ],
       "routes-db-logic": [
         "dist/routes-db-logic.d.ts"
       ],
-      "db-setup": [
-        "dist/db-setup.d.ts"
-      ],
-      "ui": [
-        "dist/ui.d.ts"
-      ],
-      "models": [
-        "dist/models.d.ts"
-      ],
-      "paths": [
-        "dist/paths.d.ts"
-      ],
-      "env": [
-        "dist/env.d.ts"
-      ],
       "server": [
         "dist/server.d.ts"
       ],
-      "ndjson-http": [
-        "dist/ndjson-http.d.ts"
+      "task-routes": [
+        "dist/task-routes.d.ts"
+      ],
+      "ndjson": [
+        "dist/ndjson.d.ts"
+      ],
+      "executor": [
+        "dist/executor.d.ts"
+      ],
+      "api-config": [
+        "dist/api-config.d.ts"
       ],
       "run": [
         "dist/run.d.ts"
       ],
+      "task-executor": [
+        "dist/task-executor.d.ts"
+      ],
+      "filters": [
+        "dist/filters.d.ts"
+      ],
+      "db-setup": [
+        "dist/db-setup.d.ts"
+      ],
+      "models": [
+        "dist/models.d.ts"
+      ],
+      "controls-adapter": [
+        "dist/controls-adapter.d.ts"
+      ],
+      "env": [
+        "dist/env.d.ts"
+      ],
+      "ndjson-http": [
+        "dist/ndjson-http.d.ts"
+      ],
+      "errors": [
+        "dist/errors.d.ts"
+      ],
       "apply-pagination": [
         "dist/apply-pagination.d.ts"
+      ],
+      "utils": [
+        "dist/utils.d.ts"
+      ],
+      "writer-http": [
+        "dist/writer-http.d.ts"
+      ],
+      "download": [
+        "dist/download.d.ts"
+      ],
+      "writer": [
+        "dist/writer.d.ts"
+      ],
+      "ui": [
+        "dist/ui.d.ts"
+      ],
+      "scraper-type": [
+        "dist/scraper-type.d.ts"
+      ],
+      "paths": [
+        "dist/paths.d.ts"
       ]
     }
   },
