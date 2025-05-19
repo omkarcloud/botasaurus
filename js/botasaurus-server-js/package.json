@@ -1,6 +1,6 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.54",
+  "version": "4.1.58",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
