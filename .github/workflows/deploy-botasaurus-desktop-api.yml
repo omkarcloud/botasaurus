@@ -1,4 +1,4 @@
-name: Build and Deploy Botasaurus Desktop API Docs
+name: Build and Deploy Botasaurus Desktop API
 
 on:
   push:
