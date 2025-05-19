@@ -55,6 +55,8 @@ jobs:
     - name: Update config file
       working-directory: js/botasaurus-server-js/src
       run: |
+        echo "${{steps.assets.outputs.CSS_FILE}}"
+        echo "${{steps.assets.outputs.JS_FILE}}"
         sed -i "s/main.*.css/${{ steps.assets.outputs.CSS_FILE }}/g" api-config.ts
         sed -i "s/main.*.js/${{ steps.assets.outputs.JS_FILE }}/g" api-config.ts
 
