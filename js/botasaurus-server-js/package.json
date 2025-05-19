@@ -188,7 +188,7 @@
     "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "update": "npm update botasaurus",
-    "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install --legacy-peer-deps",
+    "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
     "prepublishOnly": "npm run build",
     "local-proxy": "node ./dist/run_locally.js",
     "mtest": "node test/test.mjs",

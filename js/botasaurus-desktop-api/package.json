@@ -1,6 +1,6 @@
 {
   "name": "botasaurus-desktop-api",
-  "version": "4.1.59",
+  "version": "4.1.60",
   "description": "The Botasaurus Desktop API Client provides programmatic access to Botasaurus Desktop scrapers with a developer-friendly API.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,7 +42,7 @@
     "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "update": "npm update botasaurus",
-    "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install --legacy-peer-deps",
+    "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
     "prepublishOnly": "npm run build",
     "local-proxy": "node ./dist/run_locally.js",
     "mtest": "node test/test.mjs",

@@ -28,7 +28,7 @@ jobs:
     - name: Install dependencies and build
       working-directory: js/botasaurus-desktop-api
       run: |
-        npm i --legacy-peer-deps
+        npm i
         npm run upload
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

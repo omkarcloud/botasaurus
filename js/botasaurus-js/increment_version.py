@@ -44,7 +44,7 @@ def main():
 
     current_version = data["version"]
     new_version = increment_minor_version(current_version)
-    data["version"] = new_version
+    # data["version"] = new_version
     data["exports"] = {
         ".": "./dist/index.js",
         **get_exports(),
@@ -58,7 +58,7 @@ def main():
 
     with open(package_json_path, "w") as file:
         json.dump(data, file, indent=2)
-
+    os.system(f"npm version {new_version}")
     print(f"Version incremented from {current_version} to {new_version}")
 
 
