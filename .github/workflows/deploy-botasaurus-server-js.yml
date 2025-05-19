@@ -51,6 +51,7 @@ jobs:
         npm run update
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
+        git pull
         git add .
         git commit -m "Update Botasaurus Desktop Starter Dependencies"
         git push
