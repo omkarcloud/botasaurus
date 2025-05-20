@@ -4,3 +4,4 @@ __*__
 src/**/package.json
 package-lock.json
 *.egg-info
+gpt/

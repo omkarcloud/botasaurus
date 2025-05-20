@@ -52,7 +52,6 @@ def get_vm_ip():
 
 def create_visit_ip_text(ip):
     return "Hurray! your scraper is up and running. Visit http://{}/ to use it.".format(ip)
-
 def wait_till_up(ip):
     """
     Polls the given IP address every 10 seconds for 180 seconds to check if it's up.
@@ -63,11 +62,11 @@ def wait_till_up(ip):
     Raises:
     Exception: If the IP is not up after 180 seconds.
     """
-    timeout = 180  # Total time to wait in seconds
+    timeout = 60  # Total time to wait in seconds
     interval = 1  # Time to wait between checks in seconds
-    elapsed_time = 0
+    end_time = time.time() + timeout
 
-    while elapsed_time <= timeout:
+    while time.time() < end_time:
         try:
             # Attempt to connect to the IP address
             response = requests.get(f"http://{ip}/api", timeout=5)
@@ -80,7 +79,6 @@ def wait_till_up(ip):
             pass
 
         time.sleep(interval)
-        elapsed_time += interval
 
     # If the function hasn't returned after the loop, raise an exception
     raise Exception(f"The VM at http://{ip}/ is not up after {timeout} seconds. Please check the logs using "
@@ -479,6 +477,7 @@ def install_scraper_in_vm(git_repo_url, folder_name, max_retry):
     install_scraper(git_repo_url, folder_name, max_retry)
     click.echo("Successfully installed the Scraper.")
     # todo check status is it running or error?
+
 def get_filename_from_url(url):
         from urllib.parse import urlparse
         return os.path.basename(urlparse(url).path.rstrip("/"))
@@ -490,8 +489,11 @@ def install_desktop_app_in_vm(
         api_path_prefix
     ):
     # Validate api_path_prefix
-    api_path_prefix = api_path_prefix if api_path_prefix else ""
-    if api_path_prefix:
+    api_path_prefix = os.path.normpath(api_path_prefix) if api_path_prefix else ""
+    
+    if api_path_prefix == ".":
+        api_path_prefix = ""
+    elif api_path_prefix:
         if not api_path_prefix.startswith("/"):
             api_path_prefix = "/" + api_path_prefix
         if api_path_prefix.endswith("/"):
@@ -506,8 +508,7 @@ def install_desktop_app_in_vm(
     default_name = get_filename_from_url(debian_installer_url)
 
     delete_installer(default_name)
-    wget_command = f"wget {debian_installer_url}"
-    subprocess.run(wget_command, shell=True, check=True, stderr=subprocess.STDOUT)
+    subprocess.run(["wget", debian_installer_url], check=True, stderr=subprocess.STDOUT)
     install_command = f"sudo apt --fix-broken install ./{default_name} -y"
     subprocess.run(install_command, shell=True, check=True, stderr=subprocess.STDOUT)
     package_name = subprocess.check_output(f"dpkg-deb -f ./{default_name} Package", shell=True).decode().strip()
@@ -531,7 +532,8 @@ WantedBy=multi-user.target"""
     package_service_name = f"{package_name}.service"
     package_service_content = f"""[Unit]
 Description={package_name} Service
-After=network.target
+After=network.target {xvfb_service_name}
+Requires={xvfb_service_name}
 StartLimitInterval=0
 [Service]
 Type=simple
@@ -565,7 +567,7 @@ sudo systemctl restart apache2"""
     click.echo("Now, Checking API Status...")
     ip = get_vm_ip()
     wait_till_desktop_api_up(ip, api_path_prefix)
-    click.echo(f"Hurray! your desktop app is up and running. Visit http://{ip}{api_path_prefix}/ to see the API Docs.")
+    click.echo(f"Hurray! your desktop app is up and running. Visit http://{ip}{api_path_prefix or "/"} to see the API Docs.")
 
 def delete_installer(default_name):
     if os.path.exists(default_name):
@@ -577,8 +579,8 @@ def setup_apache_load_balancer_desktop_app(port, api_path_prefix):
     DocumentRoot /var/www/html
     ErrorLog ${{APACHE_LOG_DIR}}/error.log
     CustomLog ${{APACHE_LOG_DIR}}/access.log combined
-    ProxyPass {api_path_prefix}/ http://127.0.0.1:{port}{api_path_prefix}/
-    ProxyPassReverse {api_path_prefix}/ http://127.0.0.1:{port}{api_path_prefix}/
+    ProxyPass {api_path_prefix or "/"} http://127.0.0.1:{port}{api_path_prefix or "/"}
+    ProxyPassReverse {api_path_prefix or "/"} http://127.0.0.1:{port}{api_path_prefix or "/"}
 </VirtualHost>"""
     write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
 
@@ -587,7 +589,12 @@ def validate_url(url):
         response = requests.head(url, allow_redirects=True, timeout=20)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
-        raise Exception(f"URL validation failed: {e}")
+        # Retry with GET if HEAD fails (some servers don't support HEAD)
+        try:
+            response = requests.get(url, allow_redirects=True, timeout=20)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e2:
+            raise Exception(f"The URL {url} does not point to a valid Debian installer.")
 
 def wait_till_desktop_api_up(ip, api_path_prefix):
     """
@@ -600,14 +607,17 @@ def wait_till_desktop_api_up(ip, api_path_prefix):
     Raises:
     Exception: If the IP is not up after 180 seconds.
     """
-    timeout = 180  # Total time to wait in seconds
+    timeout = 60  # Total time to wait in seconds
     interval = 1  # Time to wait between checks in seconds
-    elapsed_time = 0
+    end_time = time.time() + timeout
 
-    while elapsed_time <= timeout:
+    while time.time() < end_time:
         try:
             # Attempt to connect to the IP address
-            response = requests.get(f"http://{ip}{api_path_prefix}/ui/app-props", timeout=5)
+            if api_path_prefix:
+                response = requests.get(f"http://{ip}{api_path_prefix}/ui/app-props", timeout=5)
+            else:
+                response = requests.get(f"http://{ip}/ui/app-props", timeout=5)
             
             # If the response is successful, return without raising an exception
             if response.status_code == 200:
@@ -617,10 +627,10 @@ def wait_till_desktop_api_up(ip, api_path_prefix):
             pass
 
         time.sleep(interval)
-        elapsed_time += interval
-
     # If the function hasn't returned after the loop, raise an exception
-    raise Exception(f"The Desktop App at http://{ip}/ is not up after {timeout} seconds.")
+    raise Exception(
+        f"The Desktop Api at http://{ip}/ is not up after {timeout} seconds. Are you sure you have enabled the Api in api-config.ts?"
+    )
 
 # python -m bota.vm 
 if __name__ == "__main__":

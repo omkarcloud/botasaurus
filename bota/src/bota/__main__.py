@@ -6,9 +6,9 @@ import click
 from os import path, makedirs
 
 from .package_storage import get_package_storage
-from .vm import extractRepositoryName, install_scraper_in_vm, install_ui_scraper_in_vm
+from .vm import extractRepositoryName, install_desktop_app_in_vm, install_scraper_in_vm, install_ui_scraper_in_vm
 
-@click.group(context_settings=dict(max_content_width=95))
+@click.group(context_settings=dict(max_content_width=160))
 def cli():
     """Botasaurus CLI"""
     pass
@@ -1162,7 +1162,7 @@ MAX_RETRY_TYPE = MaxRetryParamType()
 )
 def install_scraper(repo_url, max_retry, name):
   """
-  Clones and installs a scraper from a given GitHub repository.
+  Clones and installs a scraper from a given GitHub repository
   """
   repo_url = repo_url.strip()
 
@@ -1176,6 +1176,55 @@ def install_scraper(repo_url, max_retry, name):
 
   install_scraper_in_vm(repo_url, folder_name, max_retry)
 
+@cli.command()
+@click.option(
+    "--debian-installer-url",
+    prompt="Enter the URL to download the .deb installer",
+    required=True,
+    type=str,
+    help="URL to download the .deb package for the desktop app",
+)
+@click.option(
+    "--port",
+    default=8000,
+    type=click.IntRange(1, 65535),
+    help="Port on which the desktop app will run. Defaults to 8000",
+)
+@click.option(
+    "--skip-apache-request-routing",
+    is_flag=True,
+    help="Skip setting up Apache request routing",
+)
+@click.option(
+    "--api-path-prefix",
+    default=None,
+    type=str,
+    help="Optional API path prefix for request routing",
+)
+def install_desktop_app(debian_installer_url, port, skip_apache_request_routing, api_path_prefix):
+    """
+    Installs a desktop app in the VM using the provided .deb installer URL
+    """
+    # This command will:
+    # 1. Download and install the specified .deb package
+    # 2. Setup systemctl to run app at all times
+    # 3. Optionally configures Apache to route requests
+
+    click.echo("------------")
+    click.echo("Performing the following steps to install the desktop app:")
+    click.echo(f"    - Downloading and installing the desktop app from {debian_installer_url}")
+    click.echo("    - Setting up systemctl to run app at all times")
+    if not skip_apache_request_routing:
+        click.echo("    - Configuring Apache request routing")
+    click.echo("------------")    
+    print(debian_installer_url, port, skip_apache_request_routing, api_path_prefix)
+    # Call the actual implementation (to be defined elsewhere)
+    install_desktop_app_in_vm(
+        debian_installer_url.strip(),
+        port,
+        skip_apache_request_routing,
+        api_path_prefix.strip() if api_path_prefix else None
+    )
 
 @cli.command()
 def switch_project():
