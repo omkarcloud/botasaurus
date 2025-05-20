@@ -64,7 +64,7 @@ def wait_till_up(ip):
     Exception: If the IP is not up after 180 seconds.
     """
     timeout = 180  # Total time to wait in seconds
-    interval = 10  # Time to wait between checks in seconds
+    interval = 1  # Time to wait between checks in seconds
     elapsed_time = 0
 
     while elapsed_time <= timeout:
@@ -100,7 +100,7 @@ def remove_empty_lines(text):
 def validateRepository(git_repo_url):
     """Checks if a GitHub repository exists. Raises an exception if not."""
     try:
-        response = requests.head(git_repo_url)
+        response = requests.head(git_repo_url, allow_redirects=True, timeout=20)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         if "Not Found" in str(e):
@@ -341,9 +341,6 @@ def setup_apache_load_balancer():
     
 def setup_systemctl(folder_name, uname):
     systemctl_commands=f"""
-sudo a2enmod proxy
-sudo a2enmod proxy_http
-sudo systemctl restart apache2
 sudo chmod +x /home/{uname}/{folder_name}/backend.sh || true
 sudo chmod +x /home/{uname}/{folder_name}/frontend.sh || true
 sudo systemctl daemon-reload
@@ -351,6 +348,9 @@ sudo systemctl enable backend.service
 sudo systemctl start backend.service
 sudo systemctl enable frontend.service
 sudo systemctl start frontend.service
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo systemctl restart apache2
 """
     subprocess.run(remove_empty_lines(systemctl_commands),     shell=True, 
             check=True,
@@ -456,7 +456,6 @@ sudo systemctl start {service_name}
 
 def install_scraper(git_repo_url, folder_name, max_retry):
     uname = get_username()
-    
     install_chrome(uname)
     clone_repository(git_repo_url, folder_name)
 
@@ -469,7 +468,7 @@ def install_scraper(git_repo_url, folder_name, max_retry):
 def install_ui_scraper_in_vm(git_repo_url, folder_name):
     validateRepository(git_repo_url)
     install_ui_scraper(git_repo_url, folder_name)
-    click.echo("Successfully installed the Scraper.")
+    click.echo("Successfully installed the Web Scraper.")
     click.echo("Now, Checking VM Status...")
     ip = get_vm_ip()
     wait_till_up(ip)
@@ -480,7 +479,149 @@ def install_scraper_in_vm(git_repo_url, folder_name, max_retry):
     install_scraper(git_repo_url, folder_name, max_retry)
     click.echo("Successfully installed the Scraper.")
     # todo check status is it running or error?
-    # if error show it
+def get_filename_from_url(url):
+        from urllib.parse import urlparse
+        return os.path.basename(urlparse(url).path.rstrip("/"))
+
+def install_desktop_app_in_vm(
+        debian_installer_url,
+        port,
+        skip_apache_request_routing,
+        api_path_prefix
+    ):
+    # Validate api_path_prefix
+    api_path_prefix = api_path_prefix if api_path_prefix else ""
+    if api_path_prefix:
+        if not api_path_prefix.startswith("/"):
+            api_path_prefix = "/" + api_path_prefix
+        if api_path_prefix.endswith("/"):
+            api_path_prefix = api_path_prefix[:-1]
+
+    # Validate URL
+    validate_url(debian_installer_url)
+
+    # Install the app
+    uname = get_username()
+    install_chrome(uname)
+    default_name = get_filename_from_url(debian_installer_url)
+
+    delete_installer(default_name)
+    wget_command = f"wget {debian_installer_url}"
+    subprocess.run(wget_command, shell=True, check=True, stderr=subprocess.STDOUT)
+    install_command = f"sudo apt --fix-broken install ./{default_name} -y"
+    subprocess.run(install_command, shell=True, check=True, stderr=subprocess.STDOUT)
+    package_name = subprocess.check_output(f"dpkg-deb -f ./{default_name} Package", shell=True).decode().strip()
+    delete_installer(default_name)
+
+    # Create systemd service for Xvfb
+    xvfb_service_name = f"xvfb.service"
+    xvfb_service_content = f"""[Unit]
+Description=Xvfb Service
+After=network.target
+[Service]
+Type=simple
+User={uname}
+ExecStart=/usr/bin/Xvfb -ac :99 -screen 0 1280x1024x16
+Restart=no
+[Install]
+WantedBy=multi-user.target"""
+    write_file_sudo(xvfb_service_content, f"/etc/systemd/system/{xvfb_service_name}")
+
+    # Create systemd service for the package
+    package_service_name = f"{package_name}.service"
+    package_service_content = f"""[Unit]
+Description={package_name} Service
+After=network.target
+StartLimitInterval=0
+[Service]
+Type=simple
+User={uname}
+Environment="DISPLAY=:99"
+ExecStart=/usr/bin/{package_name} --port {port} {'--api_path_prefix ' + api_path_prefix if api_path_prefix else ''}
+Restart=on-failure
+RestartSec=10
+[Install]
+WantedBy=multi-user.target"""
+    write_file_sudo(package_service_content, f"/etc/systemd/system/{package_service_name}")
+
+    if not skip_apache_request_routing:
+        setup_apache_load_balancer_desktop_app(port, api_path_prefix)
+
+    # Enable and start services
+    systemctl_commands = f"""
+sudo systemctl daemon-reload
+sudo systemctl enable {xvfb_service_name}
+sudo systemctl start {xvfb_service_name}
+sudo systemctl enable {package_service_name}
+sudo systemctl start {package_service_name}"""
+    if not skip_apache_request_routing:
+        systemctl_commands += """
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo systemctl restart apache2"""
+    subprocess.run(remove_empty_lines(systemctl_commands), shell=True, check=True, stderr=subprocess.STDOUT)
+
+    click.echo("Successfully installed the Desktop App.")
+    click.echo("Now, Checking API Status...")
+    ip = get_vm_ip()
+    wait_till_desktop_api_up(ip, api_path_prefix)
+    click.echo(f"Hurray! your desktop app is up and running. Visit http://{ip}{api_path_prefix}/ to see the API Docs.")
+
+def delete_installer(default_name):
+    if os.path.exists(default_name):
+        os.remove(default_name)
+
+def setup_apache_load_balancer_desktop_app(port, api_path_prefix):
+    apache_conf = f"""<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+    ErrorLog ${{APACHE_LOG_DIR}}/error.log
+    CustomLog ${{APACHE_LOG_DIR}}/access.log combined
+    ProxyPass {api_path_prefix}/ http://127.0.0.1:{port}{api_path_prefix}/
+    ProxyPassReverse {api_path_prefix}/ http://127.0.0.1:{port}{api_path_prefix}/
+</VirtualHost>"""
+    write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
+
+def validate_url(url):
+    try:
+        response = requests.head(url, allow_redirects=True, timeout=20)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"URL validation failed: {e}")
+
+def wait_till_desktop_api_up(ip, api_path_prefix):
+    """
+    Polls the given IP address every 10 seconds for 180 seconds to check if it's up.
+
+    Args:
+    ip (str): The IP address to check.
+    api_path_prefix (str): The API path prefix.
+
+    Raises:
+    Exception: If the IP is not up after 180 seconds.
+    """
+    timeout = 180  # Total time to wait in seconds
+    interval = 1  # Time to wait between checks in seconds
+    elapsed_time = 0
+
+    while elapsed_time <= timeout:
+        try:
+            # Attempt to connect to the IP address
+            response = requests.get(f"http://{ip}{api_path_prefix}/ui/app-props", timeout=5)
+            
+            # If the response is successful, return without raising an exception
+            if response.status_code == 200:
+                return
+        except requests.ConnectionError:
+            # If a connection error occurs, just wait and try again
+            pass
+
+        time.sleep(interval)
+        elapsed_time += interval
+
+    # If the function hasn't returned after the loop, raise an exception
+    raise Exception(f"The Desktop App at http://{ip}/ is not up after {timeout} seconds.")
+
 # python -m bota.vm 
 if __name__ == "__main__":
     pass
