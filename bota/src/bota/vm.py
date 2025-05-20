@@ -567,7 +567,7 @@ sudo systemctl restart apache2"""
     click.echo("Now, Checking API Status...")
     ip = get_vm_ip()
     wait_till_desktop_api_up(ip, api_path_prefix)
-    click.echo(f"Hurray! your desktop app is up and running. Visit http://{ip}{api_path_prefix or "/"} to see the API Docs.")
+    click.echo(f"Hurray! your desktop app is up and running. Visit http://{ip}{api_path_prefix or '/'} to see the API Docs.")
 
 def delete_installer(default_name):
     if os.path.exists(default_name):
@@ -579,8 +579,8 @@ def setup_apache_load_balancer_desktop_app(port, api_path_prefix):
     DocumentRoot /var/www/html
     ErrorLog ${{APACHE_LOG_DIR}}/error.log
     CustomLog ${{APACHE_LOG_DIR}}/access.log combined
-    ProxyPass {api_path_prefix or "/"} http://127.0.0.1:{port}{api_path_prefix or "/"}
-    ProxyPassReverse {api_path_prefix or "/"} http://127.0.0.1:{port}{api_path_prefix or "/"}
+    ProxyPass {api_path_prefix or '/'} http://127.0.0.1:{port}{api_path_prefix or '/'}
+    ProxyPassReverse {api_path_prefix or '/'} http://127.0.0.1:{port}{api_path_prefix or '/'}
 </VirtualHost>"""
     write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
 
