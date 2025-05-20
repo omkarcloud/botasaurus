@@ -1217,7 +1217,6 @@ def install_desktop_app(debian_installer_url, port, skip_apache_request_routing,
     if not skip_apache_request_routing:
         click.echo("    - Configuring Apache request routing")
     click.echo("------------")    
-    print(debian_installer_url, port, skip_apache_request_routing, api_path_prefix)
     # Call the actual implementation (to be defined elsewhere)
     install_desktop_app_in_vm(
         debian_installer_url.strip(),
