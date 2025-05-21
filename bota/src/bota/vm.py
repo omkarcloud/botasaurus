@@ -486,18 +486,18 @@ def install_desktop_app_in_vm(
         debian_installer_url,
         port,
         skip_apache_request_routing,
-        api_path_prefix
+        api_base_path
     ):
-    # Validate api_path_prefix
-    api_path_prefix = os.path.normpath(api_path_prefix) if api_path_prefix else ""
+    # Validate api_base_path
+    api_base_path = os.path.normpath(api_base_path) if api_base_path else ""
     
-    if api_path_prefix == ".":
-        api_path_prefix = ""
-    elif api_path_prefix:
-        if not api_path_prefix.startswith("/"):
-            api_path_prefix = "/" + api_path_prefix
-        if api_path_prefix.endswith("/"):
-            api_path_prefix = api_path_prefix[:-1]
+    if api_base_path == ".":
+        api_base_path = ""
+    elif api_base_path:
+        if not api_base_path.startswith("/"):
+            api_base_path = "/" + api_base_path
+        if api_base_path.endswith("/"):
+            api_base_path = api_base_path[:-1]
 
     # Validate URL
     validate_url(debian_installer_url)
@@ -539,7 +539,7 @@ StartLimitInterval=0
 Type=simple
 User={uname}
 Environment="DISPLAY=:99"
-ExecStart=/usr/bin/{package_name} --only-start-api --port {port} {'--api_path_prefix ' + api_path_prefix if api_path_prefix else ''}
+ExecStart=/usr/bin/{package_name} --only-start-api --port {port} {'--api-base-path ' + api_base_path if api_base_path else ''}
 Restart=on-failure
 RestartSec=10
 [Install]
@@ -547,7 +547,7 @@ WantedBy=multi-user.target"""
     write_file_sudo(package_service_content, f"/etc/systemd/system/{package_service_name}")
 
     if not skip_apache_request_routing:
-        setup_apache_load_balancer_desktop_app(port, api_path_prefix)
+        setup_apache_load_balancer_desktop_app(port, api_base_path)
 
     # Enable and start services
     systemctl_commands = f"""
@@ -566,21 +566,21 @@ sudo systemctl restart apache2"""
     click.echo("Successfully installed the Desktop App.")
     click.echo("Now, Checking API Status...")
     ip = get_vm_ip()
-    wait_till_desktop_api_up(ip, api_path_prefix)
-    click.echo(f"Hurray! your desktop app is up and running. Visit http://{ip}{api_path_prefix or '/'} to see the API Docs.")
+    wait_till_desktop_api_up(ip, api_base_path)
+    click.echo(f"Hurray! your desktop app is up and running. Visit http://{ip}{api_base_path or '/'} to see the API Docs.")
 
 def delete_installer(default_name):
     if os.path.exists(default_name):
         os.remove(default_name)
 
-def setup_apache_load_balancer_desktop_app(port, api_path_prefix):
+def setup_apache_load_balancer_desktop_app(port, api_base_path):
     apache_conf = f"""<VirtualHost *:80>
     ServerAdmin webmaster@localhost
     DocumentRoot /var/www/html
     ErrorLog ${{APACHE_LOG_DIR}}/error.log
     CustomLog ${{APACHE_LOG_DIR}}/access.log combined
-    ProxyPass {api_path_prefix or '/'} http://127.0.0.1:{port}{api_path_prefix or '/'}
-    ProxyPassReverse {api_path_prefix or '/'} http://127.0.0.1:{port}{api_path_prefix or '/'}
+    ProxyPass {api_base_path or '/'} http://127.0.0.1:{port}{api_base_path or '/'}
+    ProxyPassReverse {api_base_path or '/'} http://127.0.0.1:{port}{api_base_path or '/'}
 </VirtualHost>"""
     write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
 
@@ -596,13 +596,13 @@ def validate_url(url):
         except requests.exceptions.RequestException as e2:
             raise Exception(f"The URL {url} does not point to a valid Debian installer.")
 
-def wait_till_desktop_api_up(ip, api_path_prefix):
+def wait_till_desktop_api_up(ip, api_base_path):
     """
     Polls the given IP address every 10 seconds for 180 seconds to check if it's up.
 
     Args:
     ip (str): The IP address to check.
-    api_path_prefix (str): The API path prefix.
+    api_base_path (str): The API path prefix.
 
     Raises:
     Exception: If the IP is not up after 180 seconds.
@@ -614,8 +614,8 @@ def wait_till_desktop_api_up(ip, api_path_prefix):
     while time.time() < end_time:
         try:
             # Attempt to connect to the IP address
-            if api_path_prefix:
-                response = requests.get(f"http://{ip}{api_path_prefix}/ui/app-props", timeout=5)
+            if api_base_path:
+                response = requests.get(f"http://{ip}{api_base_path}/ui/app-props", timeout=5)
             else:
                 response = requests.get(f"http://{ip}/ui/app-props", timeout=5)
             

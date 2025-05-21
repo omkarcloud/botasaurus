@@ -1196,12 +1196,12 @@ def install_scraper(repo_url, max_retry, name):
     help="Skip setting up Apache request routing",
 )
 @click.option(
-    "--api-path-prefix",
+    "--api-base-path",
     default=None,
     type=str,
-    help="Optional API path prefix for request routing",
+    help="Specifies the initial URL segment that prefixes all API endpoint paths",
 )
-def install_desktop_app(debian_installer_url, port, skip_apache_request_routing, api_path_prefix):
+def install_desktop_app(debian_installer_url, port, skip_apache_request_routing, api_base_path):
     """
     Installs a desktop app in the VM using the provided .deb installer URL
     """
@@ -1222,7 +1222,7 @@ def install_desktop_app(debian_installer_url, port, skip_apache_request_routing,
         debian_installer_url.strip(),
         port,
         skip_apache_request_routing,
-        api_path_prefix.strip() if api_path_prefix else None
+        api_base_path.strip() if api_base_path else None
     )
 
 @cli.command()
