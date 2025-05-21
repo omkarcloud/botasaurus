@@ -360,7 +360,7 @@ class ApiConfig {
     static autoStart: boolean = true;
     static apiOnlyMode: boolean;
     static routeSetupFn?: (server: FastifyInstance) => void;
-    static apiBasePath: string; // Default empty
+    static apiBasePath: string = ''; // Default empty
 
   /**
    * Enables API
