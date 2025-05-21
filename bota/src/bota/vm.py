@@ -198,6 +198,10 @@ def is_google_chrome_installed():
     import shutil
     return shutil.which("google-chrome") is not None
 
+def is_package_installed(package):
+    import shutil
+    return shutil.which(package) is not None
+
 def install_chrome(uname):
     if is_google_chrome_installed():
         return
@@ -504,11 +508,17 @@ def install_desktop_app_in_vm(
     default_name = get_filename_from_url(debian_installer_url)
 
     delete_installer(default_name)
+    
+
+    
     subprocess.run(["wget", debian_installer_url], check=True, stderr=subprocess.STDOUT)
-    install_command = f"sudo apt --fix-broken install ./{default_name} -y"
-    subprocess.run(install_command, shell=True, check=True, stderr=subprocess.STDOUT)
     package_name = subprocess.check_output(f"dpkg-deb -f ./{default_name} Package", shell=True).decode().strip()
-    delete_installer(default_name)
+    if is_package_installed(package_name):
+        install_command = f"sudo dpkg -i ./{default_name}"
+    else:
+        install_command = f"sudo apt --fix-broken install ./{default_name} -y"
+    subprocess.run(install_command, shell=True, check=True, stderr=subprocess.STDOUT)
+    
 
     # Create systemd service for Xvfb
     xvfb_service_name = f"xvfb.service"
@@ -637,7 +647,7 @@ def wait_till_desktop_api_up(ip, api_base_path):
         time.sleep(interval)
     # If the function hasn't returned after the loop, raise an exception
     raise Exception(
-        f"The Desktop Api at http://{ip}{api_base_path or '/'} is not running. You have surely forgotten to enable the Api in api-config.ts."
+        f'The Desktop Api at http://{ip}{api_base_path or "/"} is not running. You have surely forgotten to enable the Api in "api-config.ts".'
     )
 
 # python -m bota.vm 
