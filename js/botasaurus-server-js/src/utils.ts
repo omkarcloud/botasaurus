@@ -66,4 +66,37 @@ function isEmpty(x: any) {
     isEmptyObject(x)
   )
 }
-export { callOnce, db_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile};
+
+
+// Helper to normalize path similar to Python's os.path.normpath
+function normalizePath(path: string): string {
+  return path
+    .split("/")
+    .filter(Boolean)
+    .join("/")
+    .replace(/\/+/g, "/");
+}
+
+// @ts-ignore
+function cleanBasePath(apiBasePath: string | null | undefined){
+  
+  if (typeof apiBasePath === "string") {
+    let path = apiBasePath ? normalizePath(apiBasePath) : "";
+
+    if (path === ".") {
+      path = "";
+    } else if (path) {
+      if (!path.startsWith("/")) {
+        path = "/" + path;
+      }
+      if (path.endsWith("/")) {
+        path = path.slice(0, -1);
+      }
+    }
+
+    return path;
+  }
+
+}
+
+export { callOnce, db_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile, cleanBasePath};

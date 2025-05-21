@@ -244,8 +244,41 @@ fs.writeFileSync(filename, buffer)
 \`\`\``
   }
 }
-function makeAPI(baseUrl) {
-  return `const api = ${baseUrl ? `new Api({ apiUrl: '${baseUrl}' })` : "new Api()"}`
+
+function makeResponseFn(baseUrl: string, apiBasePath: string) {
+  if (baseUrl && apiBasePath) {
+    return `new Api({
+  apiUrl: '${baseUrl}',
+  apiBasePath: '${apiBasePath}',
+  createResponseFiles: false,
+})`
+  } else if (baseUrl) {
+    return `new Api({
+  apiUrl: '${baseUrl}',
+  createResponseFiles: false,
+})`
+  } else if (apiBasePath) {
+    return `new Api({
+  apiBasePath: '${apiBasePath}',
+  createResponseFiles: false,
+})`
+  } else {
+    return `new Api({ createResponseFiles: false })`
+  }
+}
+
+function makeAPI(baseUrl, apiBasePath) {
+  const config: string[] = []
+
+  if (baseUrl) {
+    config.push(`apiUrl: '${baseUrl}'`)
+  }
+
+  if (apiBasePath) {
+    config.push(`apiBasePath: '${apiBasePath}'`)
+  }
+
+  return config.length > 0 ? `new Api({ ${config.join(', ')} })` : 'new Api()'
 }
 export function createApiREADME(
   baseUrl: string,
@@ -256,21 +289,21 @@ export function createApiREADME(
   filters: any[],
   views: any[],
   defaultSort: string,
-  route_path:string,
-  max_runs: number | null): string {
-    const maxRunsMessage = max_runs === null
+  route_path: string,
+  max_runs: number | null,
+  apiBasePath: string
+): string {
+  const maxRunsMessage = max_runs === null
     ? "This scraper supports unlimited concurrent tasks."
     : max_runs === 1
       ? "You can run only **1** task of this scraper concurrently."
-      : `You can run up to **${max_runs}** tasks of this scraper concurrently.`
+      : `You can run up to **${max_runs}** tasks of this scraper concurrently.`;
 
-      
-      
-    const maxRunsMessage2 = max_runs === null
+  const maxRunsMessage2 = max_runs === null
     ? "Allow unlimited concurrent runs of this scraper."
     : max_runs === 1
       ? "Allow only **1** concurrent run of this scraper."
-      : `Allow up to **${max_runs}** concurrent runs of this scraper.`
+      : `Allow up to **${max_runs}** concurrent runs of this scraper.`;
 
   return `# API Integration
 
@@ -299,7 +332,7 @@ Then, create an instance of the \`Api\` class:
 
 \`\`\`javascript
 async function main() {
-  ${makeAPI(baseUrl)}
+  ${makeAPI(baseUrl, apiBasePath)}
 }
 
 main()
@@ -308,10 +341,7 @@ main()
 Additionally, the API client will create response JSON files in the \`output/responses/\` directory to help with debugging and development. If you want to disable this feature in production, you can set \`createResponseFiles=false\`.
 
 \`\`\`javascript
-const api = ${baseUrl ? `new Api({
-  apiUrl: '${baseUrl}',
-  createResponseFiles: false,
-})` : "new Api({ createResponseFiles: false })"}
+const api = ${makeResponseFn(baseUrl, apiBasePath)}
 
 \`\`\`
 
@@ -387,7 +417,7 @@ await api.deleteTasks({ taskIds: [4, 5, 6] })
 
 ## Direct Call (Bypassing Task System)
 
-If you prefer a lightweight, immediate way to run the scraper without the overhead of creating, scheduling, and running tasks, you can make a direct \`GET\` request to the \`/${route_path}\` endpoint.
+If you prefer a lightweight, immediate way to run the scraper without the overhead of creating, scheduling, and running tasks, you can make a direct \`GET\` request to the \`${apiBasePath}/${route_path}\` endpoint.
 
 
 \`\`\`javascript
@@ -395,7 +425,7 @@ const result = await api.get('${route_path}', ${jsObjectToJsObjectString(default
 
 \`\`\`
 This will:
-- Make a **GET** request to the \`/${route_path}\` endpoint.
+- Make a **GET** request to the \`${apiBasePath}/${route_path}\` endpoint.
 - Bypass task creation, scheduling, and running overhead.
 - Validate the input data before execution.
 - Cache the results based on the provided parameters.
@@ -416,7 +446,7 @@ import { Api } from 'botasaurus-desktop-api'
 
 async function main() {
   // Create an instance of the API client
-  ${makeAPI(baseUrl)}
+  ${makeAPI(baseUrl, apiBasePath)}
 
   // Create a synchronous task
   const data = ${jsObjectToJsObjectString(defaultData, defaultIndentation, 2)}

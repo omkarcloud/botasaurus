@@ -23,7 +23,7 @@ import { kebabCase } from 'change-case';
 import { validateDirectCallRequest } from "./validation"
 import { sleep } from 'botasaurus/utils'
 import { DirectCallCacheService } from "./task-results"
-import { isNotEmptyObject } from "./utils"
+import { cleanBasePath, isNotEmptyObject } from "./utils"
 import { isDontCache } from "botasaurus/dontcache"
 import { JsonHTTPResponseWithMessage } from "./errors"
 
@@ -33,9 +33,9 @@ function addCorsHeaders(reply: any) {
     reply.header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token");
 }
 
-function addScraperRoutes(app:FastifyInstance) {
+function addScraperRoutes(app:FastifyInstance, apiBasePath: string) {
     Object.values(Server.scrapers).forEach(scraper => {
-        const routePath = `/${kebabCase(scraper.scraper_name)}`
+        const routePath = `${apiBasePath}/${kebabCase(scraper.scraper_name)}`
         const fn = scraper.function
         const key = Server.isScraperBasedRateLimit ? scraper.scraper_name : scraper.scraper_type
 
@@ -129,8 +129,7 @@ function addScraperRoutes(app:FastifyInstance) {
         })
     })
 }
-
-export function buildApp(scrapers:any[]): FastifyInstance {
+export function buildApp(scrapers:any[], apiBasePath: string): FastifyInstance {
     const app = fastify({logger: true});
 
     // Add CORS handling
@@ -162,32 +161,32 @@ export function buildApp(scrapers:any[]): FastifyInstance {
     });
         
     // Routes
-    app.get("/", (_, reply) => {
-      const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="https://botasaurus-api.omkar.cloud/favicon.ico"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><meta name="description" content="API documentation for using web scrapers"><link rel="apple-touch-icon" href="https://botasaurus-api.omkar.cloud/logo192.png"><title>Api Docs</title><script>window.scrapers=${JSON.stringify(scrapers)}</script><script defer="defer" src="https://botasaurus-api.omkar.cloud/static/js/main.b9312db8.js"></script><link href="https://botasaurus-api.omkar.cloud/static/css/main.69260e80.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>`;
+    app.get(apiBasePath || "/", (_, reply) => {
+      const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="https://botasaurus-api.omkar.cloud/favicon.ico"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><meta name="description" content="API documentation for using web scrapers"><link rel="apple-touch-icon" href="https://botasaurus-api.omkar.cloud/logo192.png"><title>Api Docs</title><script>window.scrapers=${JSON.stringify(scrapers)};window.apiBasePath="${apiBasePath || ''}";</script><script defer="defer" src="https://botasaurus-api.omkar.cloud/static/js/main.b9312db8.js"></script><link href="https://botasaurus-api.omkar.cloud/static/css/main.69260e80.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>`;
     
       return reply.type('text/html').send(html);
     });
 
-    app.post("/tasks/create-task-async", async (request, _) => {
+    app.post(`${apiBasePath}/tasks/create-task-async`, async (request, _) => {
         const jsonData = request.body;
         const result = await createAsyncTask(jsonData);
         return result;
     });
 
-    app.post("/tasks/create-task-sync", async (request, _) => {
+    app.post(`${apiBasePath}/tasks/create-task-sync`, async (request, _) => {
         const jsonData = request.body;
         const result = await createSyncTask(jsonData);
         return result;
     });
 
-    app.get("/tasks", async (request, _) => {
+    app.get(`${apiBasePath}/tasks`, async (request, _) => {
         const queryParams = request.query;
         const result = await getTasks(queryParams);
         return result;
     });
 
     app.get(
-        "/tasks/:taskId",
+        `${apiBasePath}/tasks/:taskId`,
         async (
             request: FastifyRequest<{ Params: { taskId: number } }>,
             _
@@ -199,7 +198,7 @@ export function buildApp(scrapers:any[]): FastifyInstance {
     );
 
     app.post(
-        "/tasks/:taskId/results",
+        `${apiBasePath}/tasks/:taskId/results`,
         async (
             request: FastifyRequest<{ Params: { taskId: number }; Body: any }>,
             _
@@ -212,7 +211,7 @@ export function buildApp(scrapers:any[]): FastifyInstance {
     );
 
     app.post(
-        "/tasks/:taskId/download",
+        `${apiBasePath}/tasks/:taskId/download`,
         async (
             request: FastifyRequest<{ Params: { taskId: number }; Body: any }>,
             reply
@@ -224,7 +223,7 @@ export function buildApp(scrapers:any[]): FastifyInstance {
     );
 
     app.patch(
-        "/tasks/:taskId/abort",
+        `${apiBasePath}/tasks/:taskId/abort`,
         async (
             request: FastifyRequest<{ Params: { taskId: number } }>,
             _
@@ -237,7 +236,7 @@ export function buildApp(scrapers:any[]): FastifyInstance {
     );
 
     app.delete(
-        "/tasks/:taskId",
+        `${apiBasePath}/tasks/:taskId`,
         async (
             request: FastifyRequest<{ Params: { taskId: number } }>,
             _
@@ -248,39 +247,39 @@ export function buildApp(scrapers:any[]): FastifyInstance {
         }
     );
 
-    app.post("/tasks/bulk-abort", async (request, _) => {
+    app.post(`${apiBasePath}/tasks/bulk-abort`, async (request, _) => {
         const jsonData = request.body;
         const result = await bulkAbortTasks(jsonData);
         return result;
     });
 
-    app.post("/tasks/bulk-delete", async (request, _) => {
+    app.post(`${apiBasePath}/tasks/bulk-delete`, async (request, _) => {
         const jsonData = request.body;
         const result = await bulkDeleteTasks(jsonData);
         return result;
     });
 
-    app.get("/ui/app-props", getAppProps);
+    app.get(`${apiBasePath}/ui/app-props`, getAppProps);
 
-    app.post("/ui/tasks/is-any-task-updated", async (request, _) => {
+    app.post(`${apiBasePath}/ui/tasks/is-any-task-updated`, async (request, _) => {
         const jsonData = request.body;
         const result = await isAnyTaskUpdated(jsonData);
         return result;
     });
 
-    app.post("/ui/tasks/is-task-updated", async (request, _) => {
+    app.post(`${apiBasePath}/ui/tasks/is-task-updated`, async (request, _) => {
         const jsonData = request.body;
         const result = await isTaskUpdated(jsonData);
         return result;
     });
 
-    app.get("/ui/tasks", async (request, _) => {
+    app.get(`${apiBasePath}/ui/tasks`, async (request, _) => {
         const queryParams = request.query;
         const result = await getTasksForUiDisplay(queryParams);
         return result;
     });
 
-    app.patch("/ui/tasks", async (request, _) => {
+    app.patch(`${apiBasePath}/ui/tasks`, async (request, _) => {
         const queryParams = request.query;
         const jsonData = request.body;
         const result = await patchTask(queryParams, jsonData);
@@ -288,7 +287,7 @@ export function buildApp(scrapers:any[]): FastifyInstance {
     });
 
     app.post(
-        "/ui/tasks/:taskId/results",
+        `${apiBasePath}/ui/tasks/:taskId/results`,
         async (
             request: FastifyRequest<{
                 Params: { taskId: number };
@@ -308,7 +307,7 @@ export function buildApp(scrapers:any[]): FastifyInstance {
 
 
     // Add direct scraper routes for each scraper
-    addScraperRoutes(app)
+    addScraperRoutes(app, apiBasePath)
     if (ApiConfig.routeSetupFn) {
         ApiConfig.routeSetupFn(app);
     }
@@ -317,18 +316,18 @@ export function buildApp(scrapers:any[]): FastifyInstance {
     return app;
 }
 let server: FastifyInstance;
-async function startServer(port:number, scrapers:any[]): Promise<void> {
+async function startServer(port:number, scrapers:any[], apiBasePath: string): Promise<void> {
         try {
             if (server) {
                 await stopServer()
             }
-            server = buildApp(scrapers);
+            server = buildApp(scrapers, apiBasePath);
             
             await server.listen({port, 
                 host: '0.0.0.0' // bind on all interfaces
     
             });
-            console.log(`Server running on http://127.0.0.1:${port}/ 🟢`);
+            console.log(`Server running on http://127.0.0.1:${port}${apiBasePath || '/'} 🟢`);
         } catch (err) {
             server = null as unknown as FastifyInstance;
             console.error(err);
@@ -359,8 +358,9 @@ async function stopServer(): Promise<void> {
 class ApiConfig {
     static apiPort: number = 8000;
     static autoStart: boolean = true;
-    static apiOnlyMode: boolean = false;
+    static apiOnlyMode: boolean;
     static routeSetupFn?: (server: FastifyInstance) => void;
+    static apiBasePath: string; // Default empty
 
   /**
    * Enables API
@@ -420,6 +420,18 @@ class ApiConfig {
    */
     static setApiPort(port: number = 8000): void {
         this.apiPort = port;
+    }
+
+
+    /**
+     * Sets the base path to be prefixed for all API routes.
+     * Useful for mounting the API under a specific subpath like `/v1`.
+     * @param {string} basePath - The base path to prefix (e.g., "/v1")
+     * @example
+     * ApiConfig.setApiBasePath("/v1"); // All routes will now be prefixed with /v1
+     */
+    static setApiBasePath(basePath: string): void {
+        this.apiBasePath = cleanBasePath(basePath) as any;
     }
 
 }

@@ -24,14 +24,17 @@ const ContentContainer = ({ selectedScraper, hasSingleScraper }: { selectedScrap
   //@ts-ignore
   const defdata = controls.getDefaultData()
 
-  const readmeContent = createApiREADME(baseUrl, selectedScraper.scraper_name,hasSingleScraper, defdata, sorts, filters, views, default_sort, selectedScraper.route_path, selectedScraper.max_runs,)
+  const readmeContent = createApiREADME(baseUrl, selectedScraper.scraper_name,hasSingleScraper, defdata, sorts, filters, views, default_sort, selectedScraper.route_path, selectedScraper.max_runs,
+  // @ts-ignore
+    window.apiBasePath
+  )
 
   return <MarkdownComponent content={readmeContent} />
 }
 
 const ScraperContainer = ({ scrapers }: { scrapers: any[] }) => {
   const [selectedScraper, setSelectedScraper] = useState(scrapers[0])
-
+  
   const hasSingleScraper = scrapers.length <= 1
   return (
     <div>

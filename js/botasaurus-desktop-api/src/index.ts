@@ -61,28 +61,62 @@ export interface OkResponse {
     message: "OK";
 }
 
+// Helper to normalize path similar to Python's os.path.normpath
+function normalizePath(path: string): string {
+  return path
+    .split("/")
+    .filter(Boolean)
+    .join("/")
+    .replace(/\/+/g, "/");
+}
+
+// @ts-ignore
+function cleanBasePath(apiBasePath: string | null | undefined){
+  
+  if (typeof apiBasePath === "string") {
+    let path = apiBasePath ? normalizePath(apiBasePath) : "";
+
+    if (path === ".") {
+      path = "";
+    } else if (path) {
+      if (!path.startsWith("/")) {
+        path = "/" + path;
+      }
+      if (path.endsWith("/")) {
+        path = path.slice(0, -1);
+      }
+    }
+
+    return path;
+  }
+
+}
+
 export class Api {
     private _apiUrl: string;
+    private _apiBasePath: string;
     private _createResponseFiles: boolean;
     private readonly DEFAULT_API_URL = "http://127.0.0.1:8000";
 
-    constructor({ apiUrl, createResponseFiles = true }: { apiUrl?: string; createResponseFiles?: boolean } = { createResponseFiles: true }) {
+    constructor({ apiUrl,  createResponseFiles = true, apiBasePath = "", }: { apiUrl?: string;  createResponseFiles?: boolean ;apiBasePath?: string;} = { createResponseFiles: true }) {
         /**
-         * Initializes the API client with a specified server URL and an option to create response files.
+         * Initializes the API client with a specified server URL, base path, and an option to create response files.
          *
          * @param apiUrl The base URL for the API server. If not specified, defaults to "http://127.0.0.1:8000".
          * @param createResponseFiles Indicates if the client should create response files for each API call. This is useful for debugging or development purposes. Defaults to True.
+         * @param apiBasePath Base path to prefix API endpoints (e.g., "/v1").
          */
         this._apiUrl = apiUrl
             ? removeAfterFirstSlash(apiUrl)
             : this.DEFAULT_API_URL;
         this._createResponseFiles = createResponseFiles;
+        this._apiBasePath = cleanBasePath(apiBasePath) as any;
 
         // Check if API is running (note: this is synchronous in the original, but should be async in TS)
         this.isApiRunning().then((isRunning) => {
             if (!isRunning) {
                 throw new ApiException(
-                    `API at ${this._apiUrl} is not running. Please check if the API is up and running.`
+                    `API at ${this._apiUrl}${this._apiBasePath} is not running. Please check if the API is up and running.`
                 );
             }
         });
@@ -103,7 +137,7 @@ export class Api {
     }
 
     private _makeApiUrl(path: string): string {
-        return `${this._apiUrl}/${path}`;
+        return `${this._apiUrl}${this._apiBasePath}/${path}`;
     }
 
     async isApiRunning(): Promise<boolean> {
@@ -117,9 +151,9 @@ export class Api {
             return response.status === 200;
         } catch (error) {
             if (axios.isAxiosError(error) && error.code === "ECONNREFUSED") {
-                throw new ApiException(`API at ${this._apiUrl} is not running. 
+                throw new ApiException(`API at ${this._apiUrl}${this._apiBasePath} is not running. 
 Check the network connection, or verify if the API is running on a different endpoint. In case the API is running on a different endpoint, you can pass the endpoint as follows:
-api = new Api('https://example.com')`);
+const api = new Api({ apiUrl: 'https://example.com' })`);
             }
             throw error;
         }
