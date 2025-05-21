@@ -278,7 +278,7 @@ function makeAPI(baseUrl, apiBasePath) {
     config.push(`apiBasePath: '${apiBasePath}'`)
   }
 
-  return config.length > 0 ? `new Api({ ${config.join(', ')} })` : 'new Api()'
+  return config.length > 0 ? `const api = new Api({ ${config.join(', ')} })` : 'const api = new Api()'
 }
 export function createApiREADME(
   baseUrl: string,

@@ -135,7 +135,7 @@ export class Api {
     }
 
     private _makeApiUrl(path: string): string {
-        return `${this._apiUrl}${this._apiBasePath}/${path}`;
+        return `${this._apiUrl}${this._apiBasePath}${path === '' && this._apiBasePath? "":"/"}${path}`;
     }
 
     async isApiRunning(): Promise<boolean> {
