@@ -539,7 +539,7 @@ StartLimitInterval=0
 Type=simple
 User={uname}
 Environment="DISPLAY=:99"
-ExecStart=/usr/bin/{package_name} --port {port} {'--api_path_prefix ' + api_path_prefix if api_path_prefix else ''}
+ExecStart=/usr/bin/{package_name} --only-start-api --port {port} {'--api_path_prefix ' + api_path_prefix if api_path_prefix else ''}
 Restart=on-failure
 RestartSec=10
 [Install]
