@@ -69,8 +69,6 @@ function normalizePath(path: string): string {
     .join("/")
     .replace(/\/+/g, "/");
 }
-
-// @ts-ignore
 function cleanBasePath(apiBasePath: string | null | undefined){
   
   if (typeof apiBasePath === "string") {
@@ -89,9 +87,9 @@ function cleanBasePath(apiBasePath: string | null | undefined){
 
     return path;
   }
+  return ''
 
 }
-
 export class Api {
     private _apiUrl: string;
     private _apiBasePath: string;
