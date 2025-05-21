@@ -646,7 +646,7 @@ def wait_till_desktop_api_up(ip, api_base_path):
         time.sleep(interval)
     # If the function hasn't returned after the loop, raise an exception
     raise Exception(
-        f'The Desktop Api at http://{ip}{api_base_path or "/"} is not running. You have surely forgotten to enable the Api in "api-config.ts".'
+        f'The Desktop Api at http://{ip}{api_base_path or "/"} is not running. You have surely forgotten to enable the Api in "api-config.ts". Kindly enable it in "api-config.ts".'
     )
 
 # python -m bota.vm 
