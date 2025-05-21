@@ -194,13 +194,12 @@ def is_zip(url):
     except:
       return False, None
     
-def is_google_chrome_installed():
-    import shutil
-    return shutil.which("google-chrome") is not None
-
 def is_package_installed(package):
     import shutil
     return shutil.which(package) is not None
+
+def is_google_chrome_installed():
+    return is_package_installed("google-chrome")
 
 def install_chrome(uname):
     if is_google_chrome_installed():
