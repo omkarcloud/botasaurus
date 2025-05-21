@@ -28,7 +28,7 @@ jobs:
     - name: Install dependencies and build
       working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
       run: |
-        npm i
+        npm i --legacy-peer-deps
         npm run build
 
     - name: Get built asset names
