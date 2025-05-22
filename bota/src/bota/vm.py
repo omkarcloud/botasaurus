@@ -570,9 +570,14 @@ sudo systemctl restart apache2"""
 
     click.echo("Successfully installed the Desktop App.")
     click.echo("Now, Checking API Status...")
-    ip = get_vm_ip()
+    
+    ip =  f"127.0.0.1:{port}" if skip_apache_request_routing else get_vm_ip()
     wait_till_desktop_api_up(ip, api_base_path)
-    click.echo(f"Hurray! your desktop app is up and running. Visit http://{ip}{api_base_path or '/'} to see the API Docs.")
+    
+    if skip_apache_request_routing:
+        click.echo(f"Hurray! your desktop app is up and running at http://{ip}{api_base_path or '/'}")
+    else:
+        click.echo(f"Hurray! your desktop app is up and running. Visit http://{ip}{api_base_path or '/'} to see the API Docs.")
 
 def clean_base_path(api_base_path):
     api_base_path = os.path.normpath(api_base_path) if api_base_path else ""
@@ -590,14 +595,27 @@ def delete_installer(default_name):
     if os.path.exists(default_name):
         os.remove(default_name)
 
+def read_file(path):
+    with open(path, 'r', encoding="utf-8") as fp:
+        content = fp.read()
+        return content
+        
+def read_conf():
+    return read_file("/etc/apache2/sites-available/000-default.conf")
+
+
+def make_apache_content():
+    return read_file("/etc/apache2/sites-available/000-default.conf")
+
 def setup_apache_load_balancer_desktop_app(port, api_base_path):
+    root_path = api_base_path or '/'
     apache_conf = f"""<VirtualHost *:80>
     ServerAdmin webmaster@localhost
     DocumentRoot /var/www/html
     ErrorLog ${{APACHE_LOG_DIR}}/error.log
     CustomLog ${{APACHE_LOG_DIR}}/access.log combined
-    ProxyPass {api_base_path or '/'} http://127.0.0.1:{port}{api_base_path or '/'}
-    ProxyPassReverse {api_base_path or '/'} http://127.0.0.1:{port}{api_base_path or '/'}
+    ProxyPass {root_path} http://127.0.0.1:{port}{root_path}
+    ProxyPassReverse {root_path} http://127.0.0.1:{port}{root_path}
 </VirtualHost>"""
     write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
 
