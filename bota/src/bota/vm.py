@@ -610,6 +610,10 @@ def clean_conf(apache_conf, root_path):
     # return apache_conf
     return re.sub(r'[ \t]+</VirtualHost>', '</VirtualHost>', apache_conf)
 
+def collapse_empty_lines(conf: str) -> str:
+    # Replace multiple consecutive newlines (with optional whitespace) with a single newline
+    return re.sub(r'\n\s*\n+', '\n\n', conf.strip()) + '\n'
+
 def sub_at_start(apache_conf, root_path, api_target):
     return re.sub(
             r'(<VirtualHost\b.*?>)', 
@@ -628,10 +632,10 @@ def make_apache_content(apache_conf, root_path, api_target):
 
     # Add new ProxyPass and ProxyPassReverse directives based on the root_path
     if root_path == "/":
-        return remove_empty_lines(sub_at_end(apache_conf, root_path, api_target))
+        return collapse_empty_lines(sub_at_end(apache_conf, root_path, api_target))
     else:
         # Add new directives right after the VirtualHost opening tag
-        return remove_empty_lines(sub_at_start(apache_conf, root_path, api_target))
+        return collapse_empty_lines(sub_at_start(apache_conf, root_path, api_target))
 
 def setup_apache_load_balancer_desktop_app(port, api_base_path):
     root_path = api_base_path or '/'
