@@ -368,6 +368,10 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
          * @param data The data to be received by the scraper.
          * @return The result from the scraper.
          */
+
+        if (scraperName.startsWith('/')) {
+            scraperName = scraperName.slice(1);
+        }
         const url = this._makeApiUrl(scraperName);
         try {
             const response = await axios.get(url, { params: data });
