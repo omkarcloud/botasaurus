@@ -492,7 +492,20 @@ def get_filename_from_url(url):
         return os.path.basename(urlparse(url).path.rstrip("/"))
 
 def kill_process(name):
-    # Ask user for the name of process
+    """
+    Terminates all processes matching the given name.
+
+    Args:
+    name (str): The name of the process to terminate.
+
+    Behavior:
+    - Iterates through all processes to find those matching the given name.
+    - Extracts the process ID (PID) and sends a SIGKILL signal to terminate it.
+    - If an error occurs during termination, it prints an error message.
+
+    Note:
+    This function uses the `ps` command to find processes and may not work on non-Unix systems.
+    """
     import os, signal
     try:
         # iterating through each instance of the process
@@ -504,9 +517,8 @@ def kill_process(name):
             
             # terminating process 
             os.kill(int(pid), signal.SIGKILL) 
-            print("Killing",pid)
-    except:
-        print("Error Encountered while running script")
+    except Exception as e:
+        print(f"Error Encountered while killing {name}", e)
 
 def install_desktop_app_in_vm(
         debian_installer_url,
