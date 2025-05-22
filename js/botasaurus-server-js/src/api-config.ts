@@ -33,24 +33,24 @@ function addCorsHeaders(reply: any) {
     reply.header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token");
 }
 
-function addScraperRoutes(app:FastifyInstance, apiBasePath: string) {
+function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
     Object.values(Server.scrapers).forEach(scraper => {
+        // Get the main route path
         const routePath = `${apiBasePath}/${kebabCase(scraper.scraper_name)}`
         const fn = scraper.function
         const key = Server.isScraperBasedRateLimit ? scraper.scraper_name : scraper.scraper_type
 
-        app.get(routePath, async (request, reply) => {
+        const scrapingFunction = async (request: any, reply: any) => {
             try {
-                const params: Record<string, any> = {};
+                const params: Record<string, any> = {}
                 for (const [key, value] of Object.entries(request.query as any)) {
                     if (key.endsWith("[]")) {
-                        params[key.slice(0, -2)] =  Array.isArray(value) ? value : [value];
+                        params[key.slice(0, -2)] = Array.isArray(value) ? value : [value]
                     } else {
-                        params[key] = value;
+                        params[key] = value
                     }
                 }
-                
-                
+
                 // Validate params against scraper's input definition
                 const [validatedData, metadata] = validateDirectCallRequest(scraper.scraper_name, params)
 
@@ -100,7 +100,6 @@ function addScraperRoutes(app:FastifyInstance, apiBasePath: string) {
                         finalResults = results.data
                     }
 
-
                     // Cache results if appropriate
                     if (Server.cache && !isResultDontCached) {
                         try {
@@ -118,15 +117,29 @@ function addScraperRoutes(app:FastifyInstance, apiBasePath: string) {
                 }
             } catch (error: any) {
                 if (error instanceof JsonHTTPResponseWithMessage) {
-                    throw error; // Re-throw the error to be handled elsewhere
-                }        
+                    throw error // Re-throw the error to be handled elsewhere
+                }
                 console.error('Scraping failed:', error)
                 return reply.status(500).send({
                     error: 'Scraping failed',
                     message: error.message
                 })
             }
-        })
+        }
+        
+        // Register main route
+        app.get(routePath, scrapingFunction)
+        
+        // Get any aliases for this scraper
+        const aliases = ApiConfig.routeAliases.get(scraper.function) || []
+        
+        // Register all aliases if they exist
+        if (aliases.length > 0) {
+            aliases.forEach(alias => {
+                const fullAliasPath = `${apiBasePath}${cleanBasePath(alias)}`
+                app.get(fullAliasPath, scrapingFunction)
+            })
+        }
     })
 }
 export function buildApp(scrapers:any[], apiBasePath: string): FastifyInstance {
@@ -361,6 +374,7 @@ class ApiConfig {
     static apiOnlyMode: boolean;
     static routeSetupFn?: (server: FastifyInstance) => void;
     static apiBasePath: string = ''; // Default empty
+    static routeAliases: Map<Function, string[]> = new Map();
 
   /**
    * Enables API
@@ -434,6 +448,26 @@ class ApiConfig {
         this.apiBasePath = cleanBasePath(basePath) as any;
     }
 
+
+    /**
+     * Adds aliases for a specific scraper's routes.
+     * @param {Scraper} scraper - The scraper instance to add aliases for
+     * @param {...string} aliases - One or more alias paths (e.g., '/hotels', '/lodging')
+     * @example
+     * ApiConfig.addScraperAliases(hotelScraper, '/hotels', '/resort');
+     */
+    static addScraperAliases(scraper: Function, ...aliases: string[]): void {
+        if (!this.routeAliases.has(scraper)) {
+            this.routeAliases.set(scraper, aliases);
+        } else {
+        const aliasArray = this.routeAliases.get(scraper)!;
+        aliases.forEach(alias => {
+            if (alias && !aliasArray.includes(alias)) {
+                aliasArray.push(alias);
+            }
+        });
+     }
+    }    
 }
 
 export default ApiConfig ;

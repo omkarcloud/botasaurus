@@ -375,8 +375,8 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
         const url = this._makeApiUrl(scraperName);
         try {
             const response = await axios.get(url, { params: data });
-
-            this._writeJson(`${scraperName}-result`, response.data);
+            const fileScraperName = scraperName.replaceAll('/', '-');
+            this._writeJson(`${fileScraperName}-result`, response.data);
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
