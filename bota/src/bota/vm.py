@@ -491,6 +491,23 @@ def get_filename_from_url(url):
         from urllib.parse import urlparse
         return os.path.basename(urlparse(url).path.rstrip("/"))
 
+def kill_process(name):
+    # Ask user for the name of process
+    import os, signal
+    try:
+        # iterating through each instance of the process
+        for line in os.popen(f'ps ax | grep "usr/bin/{name}" | grep -v grep'): 
+            fields = line.split()
+            
+            # extracting Process ID from the output
+            pid = fields[0] 
+            
+            # terminating process 
+            os.kill(int(pid), signal.SIGKILL) 
+            print("Killing",pid)
+    except:
+        print("Error Encountered while running script")
+
 def install_desktop_app_in_vm(
         debian_installer_url,
         port,
@@ -514,7 +531,8 @@ def install_desktop_app_in_vm(
     
     subprocess.run(["wget", debian_installer_url], check=True, stderr=subprocess.STDOUT)
     package_name = subprocess.check_output(f"dpkg-deb -f ./{default_name} Package", shell=True).decode().strip()
-    if is_package_installed(package_name):
+    is_already_installed = is_package_installed(package_name)
+    if is_already_installed:
         install_command = f"sudo dpkg -i ./{default_name}"
     else:
         install_command = f"sudo apt --fix-broken install ./{default_name} -y"
@@ -547,15 +565,14 @@ Type=simple
 User={uname}
 Environment="DISPLAY=:99"
 ExecStart=/usr/bin/{package_name} --only-start-api --port {port} {'--api-base-path ' + api_base_path if api_base_path else ''}
-Restart=on-failure
-RestartSec=10
+Restart=always
+RestartSec=1
 [Install]
 WantedBy=multi-user.target"""
     write_file_sudo(package_service_content, f"/etc/systemd/system/{package_service_name}")
 
     if not skip_apache_request_routing:
         setup_apache_load_balancer_desktop_app(port, api_base_path)
-
     # Enable and start services
     systemctl_commands = f"""
 sudo systemctl daemon-reload
@@ -569,6 +586,9 @@ sudo a2enmod proxy
 sudo a2enmod proxy_http
 sudo systemctl restart apache2"""
     subprocess.run(remove_empty_lines(systemctl_commands), shell=True, check=True, stderr=subprocess.STDOUT)
+
+    if is_already_installed:
+        kill_process(package_name)
 
     click.echo("Successfully installed the Desktop App.")
     click.echo("Now, Checking API Status...")
