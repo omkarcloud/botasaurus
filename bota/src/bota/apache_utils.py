@@ -1,7 +1,9 @@
-
 import re
+
 def clean_conf(apache_conf, root_path):
+    apache_conf = re.sub(r'\n\s.*ProxyPass\s+' + re.escape(root_path) + r'\s+.*\n', '\n', apache_conf)
     apache_conf = re.sub(r'ProxyPass\s+' + re.escape(root_path) + r'\s+.*\n', '', apache_conf)
+    apache_conf = re.sub(r'\n\s.*ProxyPassReverse\s+' + re.escape(root_path) + r'\s+.*\n', '\n', apache_conf)
     apache_conf = re.sub(r'ProxyPassReverse\s+' + re.escape(root_path) + r'\s+.*\n', '', apache_conf)
     # return apache_conf
     return re.sub(r'[ \t]+</VirtualHost>', '</VirtualHost>', apache_conf)
