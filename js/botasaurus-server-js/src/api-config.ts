@@ -136,13 +136,13 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
         // Register all aliases if they exist
         if (aliases.length > 0) {
             aliases.forEach(alias => {
-                const fullAliasPath = `${apiBasePath}${cleanBasePath(alias)}`
+                const fullAliasPath = `${apiBasePath}${alias}`
                 app.get(fullAliasPath, scrapingFunction)
             })
         }
     })
 }
-export function buildApp(scrapers:any[], apiBasePath: string): FastifyInstance {
+export function buildApp(scrapers:any[], apiBasePath: string, routeAliases:any): FastifyInstance {
     const app = fastify({logger: true});
 
     // Add CORS handling
@@ -175,7 +175,7 @@ export function buildApp(scrapers:any[], apiBasePath: string): FastifyInstance {
         
     // Routes
     app.get(apiBasePath || "/", (_, reply) => {
-      const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="https://botasaurus-api.omkar.cloud/favicon.ico"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><meta name="description" content="API documentation for using web scrapers"><link rel="apple-touch-icon" href="https://botasaurus-api.omkar.cloud/logo192.png"><title>Api Docs</title><script>window.scrapers=${JSON.stringify(scrapers)};window.apiBasePath="${apiBasePath || ''}";</script><script defer="defer" src="https://botasaurus-api.omkar.cloud/static/js/main.7693ffcb.js"></script><link href="https://botasaurus-api.omkar.cloud/static/css/main.69260e80.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>`;
+      const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="https://botasaurus-api.omkar.cloud/favicon.ico"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><meta name="description" content="API documentation for using web scrapers"><link rel="apple-touch-icon" href="https://botasaurus-api.omkar.cloud/logo192.png"><title>Api Docs</title><script>window.scrapers=${JSON.stringify(scrapers)};window.apiBasePath="${apiBasePath || ''}";window.routeAliases=${JSON.stringify(routeAliases)};</script><script defer="defer" src="https://botasaurus-api.omkar.cloud/static/js/main.7693ffcb.js"></script><link href="https://botasaurus-api.omkar.cloud/static/css/main.69260e80.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>`;
     
       return reply.type('text/html').send(html);
     });
@@ -329,12 +329,12 @@ export function buildApp(scrapers:any[], apiBasePath: string): FastifyInstance {
     return app;
 }
 let server: FastifyInstance;
-async function startServer(port:number, scrapers:any[], apiBasePath: string): Promise<void> {
+async function startServer(port:number, scrapers:any[], apiBasePath: string, routeAliases:any): Promise<void> {
         try {
             if (server) {
                 await stopServer()
             }
-            server = buildApp(scrapers, apiBasePath);
+            server = buildApp(scrapers, apiBasePath, routeAliases);
             
             await server.listen({port, 
                 host: '0.0.0.0' // bind on all interfaces
@@ -450,24 +450,24 @@ class ApiConfig {
 
 
     /**
-     * Adds aliases for a specific scraper's routes.
-     * @param {Scraper} scraper - The scraper instance to add aliases for
-     * @param {...string} aliases - One or more alias paths (e.g., '/hotels', '/lodging')
+     * Adds an alias for a specific scraper's route.
+     * @param {Function} scraper - The scraper function to add an alias for
+     * @param {string} alias - Alias path (e.g., '/hotels/search')
      * @example
-     * ApiConfig.addScraperAliases(hotelScraper, '/hotels', '/resort');
+     * ApiConfig.addScraperAlias(hotelsSearchScraper, '/hotels/search');
      */
-    static addScraperAliases(scraper: Function, ...aliases: string[]): void {
+    static addScraperAlias(scraper: Function, alias: string): void {
+        if (!alias) return;
+        
         if (!this.routeAliases.has(scraper)) {
-            this.routeAliases.set(scraper, aliases);
+            this.routeAliases.set(scraper, [cleanBasePath(alias)]);
         } else {
-        const aliasArray = this.routeAliases.get(scraper)!;
-        aliases.forEach(alias => {
-            if (alias && !aliasArray.includes(alias)) {
-                aliasArray.push(alias);
+            const aliasArray = this.routeAliases.get(scraper)!;
+            if (!aliasArray.includes(alias)) {
+                aliasArray.push(cleanBasePath(alias));
             }
-        });
-     }
-    }    
+}
+    }
 }
 
 export default ApiConfig ;
