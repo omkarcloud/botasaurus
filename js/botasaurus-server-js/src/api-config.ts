@@ -450,9 +450,9 @@ class ApiConfig {
 
 
     /**
-     * Adds an alias for a specific scraper's route.
-     * @param {Function} scraper - The scraper function to add an alias for
-     * @param {string} alias - Alias path (e.g., '/hotels/search')
+     * Adds an alias for a specific scraper's direct call route bypassing Task System.
+     * @param {Function} scraper - The scraper function to add an alias for.
+     * @param {string} alias - The alias path (e.g., '/hotels/search').
      * @example
      * ApiConfig.addScraperAlias(hotelsSearchScraper, '/hotels/search');
      */
