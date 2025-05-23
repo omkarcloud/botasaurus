@@ -143,6 +143,11 @@ function joinStrings(strings: string[], separator: string = 'or'): string {
     return `${joinedStrings} ${separator} ${lastElement}`
   }
 }
+
+function humaniseRoutes(final: string[]) {
+  return joinStrings(final.map(item => `\`${item}\``))
+}
+
 function createSortString(sorts: any[], defaultSort: string): string {
   return `\n sort: null, // sort can be one of: ${joinStrings(sorts.map((view) => {
     if (view.id === defaultSort) {
@@ -291,7 +296,8 @@ export function createApiREADME(
   defaultSort: string,
   route_path: string,
   max_runs: number | null,
-  apiBasePath: string
+  apiBasePath: string, 
+  routeAliases:string[]
 ): string {
   const maxRunsMessage = max_runs === null
     ? "This scraper supports unlimited concurrent tasks."
@@ -304,6 +310,11 @@ export function createApiREADME(
     : max_runs === 1
       ? "Allow only **1** concurrent run of this scraper."
       : `Allow up to **${max_runs}** concurrent runs of this scraper.`;
+
+  const route_path_cleaned = `/${route_path}`
+  const final = routeAliases.concat([route_path_cleaned])
+
+  const humanFinal = humaniseRoutes(final)
 
   return `# API Integration
 
@@ -417,15 +428,15 @@ await api.deleteTasks({ taskIds: [4, 5, 6] })
 
 ## Direct Call (Bypassing Task System)
 
-If you prefer a lightweight, immediate way to run the scraper without the overhead of creating, scheduling, and running tasks, you can make a direct \`GET\` request to the \`${apiBasePath}/${route_path}\` endpoint.
+If you prefer a lightweight, immediate way to run the scraper without the overhead of creating, scheduling, and running tasks, you can make a direct \`GET\` request to the ${humanFinal} endpoint.
 
 
 \`\`\`javascript
-const result = await api.get('${route_path}', ${jsObjectToJsObjectString(defaultData)})
+const result = await api.get('${final[0]}', ${jsObjectToJsObjectString(defaultData)})
 
 \`\`\`
 This will:
-- Make a **GET** request to the \`${apiBasePath}/${route_path}\` endpoint.
+- Make a **GET** request to the \`${final[0]}\` endpoint.
 - Bypass task creation, scheduling, and running overhead.
 - Validate the input data before execution.
 - Cache the results based on the provided parameters.

@@ -26,7 +26,9 @@ const ContentContainer = ({ selectedScraper, hasSingleScraper }: { selectedScrap
 
   const readmeContent = createApiREADME(baseUrl, selectedScraper.scraper_name,hasSingleScraper, defdata, sorts, filters, views, default_sort, selectedScraper.route_path, selectedScraper.max_runs,
   // @ts-ignore
-    window.apiBasePath ?? ''
+    window.apiBasePath ?? '',
+  // @ts-ignore
+    window.routeAliases[selectedScraper.scraper_name] ?? []
   )
 
   return <MarkdownComponent content={readmeContent} />
