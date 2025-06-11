@@ -6,6 +6,7 @@ from .utils import is_errors_instance, NotFoundException
 from .list_utils import flatten
 from .dontcache import is_dont_cache
 from botasaurus_driver.driver import Driver
+from pathlib import Path
 
 def close_driver(driver: Driver):
             try:
@@ -58,6 +59,7 @@ def browser(
     create_driver: Optional[Callable] = None,
     host: Optional[str] = None,
     port: Optional[int] = None,
+    browser_executable_path: Optional[str] = None
 ) -> Callable:
     def decorator_browser(func: Callable) -> Callable:
         if not hasattr(func, '_scraper_type'):
@@ -70,7 +72,9 @@ def browser(
             print_running()
 
             nonlocal parallel, data, cache, block_images_and_css, block_images, window_size, metadata, add_arguments, extensions, tiny_profile, wait_for_complete_page_load, lang, headless, beep, close_on_crash, async_queue, run_async, profile, proxy, user_agent, reuse_driver, raise_exception, must_raise_exceptions, output, output_formats, max_retry, retry_wait, create_driver, create_error_logs, enable_xvfb_virtual_display, host, port, remove_default_browser_check_argument
-
+            browser_executable_path = browser_executable_path if browser_executable_path and Path(browser_executable_path).is_file() else None
+                
+            
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
             cache = kwargs.get("cache", cache)
@@ -180,6 +184,7 @@ def browser(
                         host=host,
                         port=port,
                         remove_default_browser_check_argument=remove_default_browser_check_argument,
+                        browser_executable_path = browser_executable_path
                     )
 
                 result = None
