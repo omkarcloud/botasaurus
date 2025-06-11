@@ -1,47 +1,80 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.101",
+  "version": "4.1.102",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
+    "./convert-to-english": "./dist/convert-to-english.js",
+    "./executor": "./dist/executor.js",
+    "./routes-db-logic": "./dist/routes-db-logic.js",
+    "./task-routes": "./dist/task-routes.js",
+    "./utils": "./dist/utils.js",
+    "./filters": "./dist/filters.js",
+    "./writer": "./dist/writer.js",
+    "./sorts": "./dist/sorts.js",
+    "./errors": "./dist/errors.js",
+    "./task-results": "./dist/task-results.js",
+    "./ui": "./dist/ui.js",
     "./validation": "./dist/validation.js",
     "./null-utils": "./dist/null-utils.js",
-    "./views": "./dist/views.js",
-    "./sorts": "./dist/sorts.js",
-    "./task-results": "./dist/task-results.js",
-    "./convert-to-english": "./dist/convert-to-english.js",
     "./change-case": "./dist/change-case.js",
-    "./task-helper": "./dist/task-helper.js",
-    "./routes-db-logic": "./dist/routes-db-logic.js",
-    "./server": "./dist/server.js",
-    "./task-routes": "./dist/task-routes.js",
-    "./ndjson": "./dist/ndjson.js",
-    "./executor": "./dist/executor.js",
-    "./api-config": "./dist/api-config.js",
-    "./run": "./dist/run.js",
-    "./task-executor": "./dist/task-executor.js",
-    "./filters": "./dist/filters.js",
-    "./db-setup": "./dist/db-setup.js",
     "./models": "./dist/models.js",
-    "./controls-adapter": "./dist/controls-adapter.js",
-    "./env": "./dist/env.js",
-    "./ndjson-http": "./dist/ndjson-http.js",
-    "./errors": "./dist/errors.js",
-    "./apply-pagination": "./dist/apply-pagination.js",
-    "./utils": "./dist/utils.js",
-    "./writer-http": "./dist/writer-http.js",
+    "./ndjson": "./dist/ndjson.js",
+    "./task-executor": "./dist/task-executor.js",
+    "./api-config": "./dist/api-config.js",
     "./download": "./dist/download.js",
-    "./writer": "./dist/writer.js",
-    "./ui": "./dist/ui.js",
+    "./controls-adapter": "./dist/controls-adapter.js",
+    "./views": "./dist/views.js",
+    "./writer-http": "./dist/writer-http.js",
+    "./ndjson-http": "./dist/ndjson-http.js",
+    "./paths": "./dist/paths.js",
+    "./db-setup": "./dist/db-setup.js",
+    "./server": "./dist/server.js",
+    "./task-helper": "./dist/task-helper.js",
     "./scraper-type": "./dist/scraper-type.js",
-    "./paths": "./dist/paths.js"
+    "./apply-pagination": "./dist/apply-pagination.js",
+    "./env": "./dist/env.js",
+    "./run": "./dist/run.js"
   },
   "typesVersions": {
     "*": {
       "*": [
         "dist/*"
+      ],
+      "convert-to-english": [
+        "dist/convert-to-english.d.ts"
+      ],
+      "executor": [
+        "dist/executor.d.ts"
+      ],
+      "routes-db-logic": [
+        "dist/routes-db-logic.d.ts"
+      ],
+      "task-routes": [
+        "dist/task-routes.d.ts"
+      ],
+      "utils": [
+        "dist/utils.d.ts"
+      ],
+      "filters": [
+        "dist/filters.d.ts"
+      ],
+      "writer": [
+        "dist/writer.d.ts"
+      ],
+      "sorts": [
+        "dist/sorts.d.ts"
+      ],
+      "errors": [
+        "dist/errors.d.ts"
+      ],
+      "task-results": [
+        "dist/task-results.d.ts"
+      ],
+      "ui": [
+        "dist/ui.d.ts"
       ],
       "validation": [
         "dist/validation.d.ts"
@@ -49,92 +82,59 @@
       "null-utils": [
         "dist/null-utils.d.ts"
       ],
-      "views": [
-        "dist/views.d.ts"
-      ],
-      "sorts": [
-        "dist/sorts.d.ts"
-      ],
-      "task-results": [
-        "dist/task-results.d.ts"
-      ],
-      "convert-to-english": [
-        "dist/convert-to-english.d.ts"
-      ],
       "change-case": [
         "dist/change-case.d.ts"
-      ],
-      "task-helper": [
-        "dist/task-helper.d.ts"
-      ],
-      "routes-db-logic": [
-        "dist/routes-db-logic.d.ts"
-      ],
-      "server": [
-        "dist/server.d.ts"
-      ],
-      "task-routes": [
-        "dist/task-routes.d.ts"
-      ],
-      "ndjson": [
-        "dist/ndjson.d.ts"
-      ],
-      "executor": [
-        "dist/executor.d.ts"
-      ],
-      "api-config": [
-        "dist/api-config.d.ts"
-      ],
-      "run": [
-        "dist/run.d.ts"
-      ],
-      "task-executor": [
-        "dist/task-executor.d.ts"
-      ],
-      "filters": [
-        "dist/filters.d.ts"
-      ],
-      "db-setup": [
-        "dist/db-setup.d.ts"
       ],
       "models": [
         "dist/models.d.ts"
       ],
-      "controls-adapter": [
-        "dist/controls-adapter.d.ts"
+      "ndjson": [
+        "dist/ndjson.d.ts"
       ],
-      "env": [
-        "dist/env.d.ts"
+      "task-executor": [
+        "dist/task-executor.d.ts"
       ],
-      "ndjson-http": [
-        "dist/ndjson-http.d.ts"
-      ],
-      "errors": [
-        "dist/errors.d.ts"
-      ],
-      "apply-pagination": [
-        "dist/apply-pagination.d.ts"
-      ],
-      "utils": [
-        "dist/utils.d.ts"
-      ],
-      "writer-http": [
-        "dist/writer-http.d.ts"
+      "api-config": [
+        "dist/api-config.d.ts"
       ],
       "download": [
         "dist/download.d.ts"
       ],
-      "writer": [
-        "dist/writer.d.ts"
+      "controls-adapter": [
+        "dist/controls-adapter.d.ts"
       ],
-      "ui": [
-        "dist/ui.d.ts"
+      "views": [
+        "dist/views.d.ts"
+      ],
+      "writer-http": [
+        "dist/writer-http.d.ts"
+      ],
+      "ndjson-http": [
+        "dist/ndjson-http.d.ts"
+      ],
+      "paths": [
+        "dist/paths.d.ts"
+      ],
+      "db-setup": [
+        "dist/db-setup.d.ts"
+      ],
+      "server": [
+        "dist/server.d.ts"
+      ],
+      "task-helper": [
+        "dist/task-helper.d.ts"
       ],
       "scraper-type": [
         "dist/scraper-type.d.ts"
       ],
-      "paths": [
-        "dist/paths.d.ts"
+      "apply-pagination": [
+        "dist/apply-pagination.d.ts"
+      ],
+      "env": [
+        "dist/env.d.ts"
+      ],
+      "run": [
+        "dist/run.d.ts"
       ]
     }
   },
