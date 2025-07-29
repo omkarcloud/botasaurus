@@ -2628,6 +2628,8 @@ Now, follow these steps to run your scraper in a virtual machine:
 
    ![Install bota](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/install-bota.gif)
 
+    With this a static IP address will be created for your VM, which you can use to access your app later.
+    
 4. Go to [Google Click to Deploy](https://console.cloud.google.com/marketplace/product/click-to-deploy-images/nodejs), create a deployment and configure it as follows or as appropriate based on your workload:
    ```
    Zone: us-central1-a # Use the zone from the region you selected in the previous step.

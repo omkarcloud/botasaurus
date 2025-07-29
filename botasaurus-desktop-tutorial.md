@@ -99,7 +99,7 @@ Let's dive into the code to understand the process in detail.
 
 #### Step 1: Create the Scraper Function
 
-In `src/scraper/src/scraper.ts`, paste the following code to create `stockPriceScraper` which will:
+In `src/scraper/src/scraper.ts`, replace all contents with the following code to create `stockPriceScraper` which will:
 
 1. Receive a `data` object and extract the "stock_symbol".
 2. Create a link for the Yahoo Finance URL based on the stock symbol.
@@ -108,7 +108,7 @@ In `src/scraper/src/scraper.ts`, paste the following code to create `stockPriceS
 ![Highlighted Yahoo Finance Element](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/yahoo-finance-element.png)  
 5. Return the stock price in a structured format.
 
-Additionally, we name the scraper `stockPriceScraper`, which is required for Botasaurus to find the input controls, which we will create later.
+Additionally, we name the scraper `stockPriceScraper`, which is required for Botasaurus to find the input controls, which we will create in Step 3.
 
 ```ts
 import { playwright } from 'botasaurus/playwright';
