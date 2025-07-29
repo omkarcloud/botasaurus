@@ -16,7 +16,7 @@ const ContentContainer = ({ selectedScraper, hasSingleScraper }: { selectedScrap
   const views = selectedScraper.views
   const default_sort = selectedScraper.default_sort
 
-  //@ts-ignore
+  // eslint-disable-next-line
   const controls = useMemo(() => createControls(selectedScraper.input_js),[selectedScraper.scraper_name])
 
   //@ts-ignore
