@@ -3,6 +3,7 @@ import os
 from hashlib import md5
 from shutil import rmtree
 from json.decoder import JSONDecodeError
+from .output import get_output_directory, get_output_path
 from .decorators_utils import create_directory_if_not_exists
 from .utils import read_json, relative_path, write_json as format_write_json
 from .dontcache import DontCache
@@ -185,7 +186,10 @@ def _delete_items_by_filter(func, items, should_delete_item):
                 collected_honeypots.append(testitems[i])
 
         if collected_honeypots:
-            path = "./output/items_to_be_deleted.json"
+            if get_output_directory() == "output/":
+                path = "./output/items_to_be_deleted.json"
+            else: 
+                path = get_output_path("items_to_be_deleted.json")
             format_write_json(collected_honeypots, path)
             while True:
                 result = input(f"Should we delete {len(collected_honeypots)} items in {path}? (Y/n): ")
@@ -228,7 +232,10 @@ def _delete_items_by_filter_no_items(func, should_delete_item):
                 collected_honeypots.append(testitems[i])
 
         if collected_honeypots:
-            path = "./output/items_to_be_deleted.json"
+            if get_output_directory() == "output/":
+                path = "./output/items_to_be_deleted.json"
+            else: 
+                path = get_output_path("items_to_be_deleted.json")
             format_write_json(collected_honeypots, path)
             while True:
                 result = input(f"Should we delete {len(collected_honeypots)} items in {path}? (Y/n): ")

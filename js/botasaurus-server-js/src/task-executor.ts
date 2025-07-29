@@ -24,6 +24,8 @@ class TaskExecutor {
         } else {
             this.currentCapacity = { browser: 0, request: 0, task: 0 }
         }
+
+        Server.validateRateLimit()
     }
 
     public async start(): Promise<void> {

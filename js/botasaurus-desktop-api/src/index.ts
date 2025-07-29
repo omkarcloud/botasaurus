@@ -90,13 +90,13 @@ function cleanBasePath(apiBasePath: string | null | undefined){
   return ''
 
 }
-export class Api {
+export default class Api {
     private _apiUrl: string;
     private _apiBasePath: string;
     private _createResponseFiles: boolean;
     private readonly DEFAULT_API_URL = "http://127.0.0.1:8000";
 
-    constructor({ apiUrl,  createResponseFiles = true, apiBasePath = "", }: { apiUrl?: string;  createResponseFiles?: boolean ;apiBasePath?: string;} = { createResponseFiles: true }) {
+    constructor({ apiUrl,  createResponseFiles = false, apiBasePath = "", }: { apiUrl?: string;  createResponseFiles?: boolean ;apiBasePath?: string;} = { createResponseFiles: true }) {
         /**
          * Initializes the API client with a specified server URL, base path, and an option to create response files.
          *

@@ -374,17 +374,20 @@ class Controls {
   addProxySection({
     label = "Proxy Configuration",
     isList = false,
-  }: { label?: string; isList?: boolean } = {}) {
+    ...childProps
+  }: ControlInput<any, { isList?: boolean }> = {}) {
     return this.section(label, (section) => {
       if (isList) {
         section.listOfLinks("proxy", {
-          label: "Proxies",
           placeholder: "http://your_proxy_address:your_proxy_port",
-          isMetadata: true
+          isMetadata: true,
+          ...childProps,
+          label: "Proxies",
         })
       } else {
         section.link("proxy", {
-          isMetadata: true
+          isMetadata: true,
+          ...childProps,
         })
       }
     })
@@ -922,17 +925,22 @@ function runValidation(id:any, validate: (value: any, otherData: any) => string 
   }
 }
 
-function createControls(input_js: string) {
+function createControls(input_js: string | Function) {
   // Create a new instance of Controls
   const controls = new Controls()
 
-  // Define a function that will accept the 'controls' instance and add controls to it
-  const getInputFunc = new Function(
-    "controls",
-    input_js + "\n return getInput(controls);"
-  )
+  let getInputFunc: Function;
 
-  // Execute the dynamically created function, passing the 'controls' instance
+  if (typeof input_js === 'function') {
+    // If input_js is already a function, use it directly
+    getInputFunc = input_js;
+  } else {
+    // If input_js is a string, create a function from it (legacy behavior)
+    const code = input_js + "\n return getInput(controls);"
+    getInputFunc = new Function("controls", code);
+  }
+
+  // Execute the function, passing the 'controls' instance
   getInputFunc(controls)
 
   // Return the modified 'controls' instance with all added controls

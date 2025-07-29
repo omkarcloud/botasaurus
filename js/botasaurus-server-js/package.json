@@ -1,56 +1,79 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.102",
+  "version": "4.1.110",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./convert-to-english": "./dist/convert-to-english.js",
+    "./validation": "./dist/validation.js",
     "./executor": "./dist/executor.js",
-    "./routes-db-logic": "./dist/routes-db-logic.js",
+    "./task-helper": "./dist/task-helper.js",
+    "./filters": "./dist/filters.js",
+    "./sorts": "./dist/sorts.js",
+    "./views": "./dist/views.js",
+    "./scraper-type": "./dist/scraper-type.js",
+    "./errors": "./dist/errors.js",
+    "./change-case": "./dist/change-case.js",
+    "./writer": "./dist/writer.js",
+    "./writer-http": "./dist/writer-http.js",
     "./task-routes": "./dist/task-routes.js",
     "./utils": "./dist/utils.js",
-    "./filters": "./dist/filters.js",
-    "./writer": "./dist/writer.js",
-    "./sorts": "./dist/sorts.js",
-    "./errors": "./dist/errors.js",
-    "./task-results": "./dist/task-results.js",
-    "./ui": "./dist/ui.js",
-    "./validation": "./dist/validation.js",
-    "./null-utils": "./dist/null-utils.js",
-    "./change-case": "./dist/change-case.js",
-    "./models": "./dist/models.js",
-    "./ndjson": "./dist/ndjson.js",
-    "./task-executor": "./dist/task-executor.js",
+    "./convert-to-english": "./dist/convert-to-english.js",
     "./api-config": "./dist/api-config.js",
+    "./ndjson": "./dist/ndjson.js",
+    "./task-results": "./dist/task-results.js",
+    "./null-utils": "./dist/null-utils.js",
+    "./task-executor": "./dist/task-executor.js",
     "./download": "./dist/download.js",
-    "./controls-adapter": "./dist/controls-adapter.js",
-    "./views": "./dist/views.js",
-    "./writer-http": "./dist/writer-http.js",
-    "./ndjson-http": "./dist/ndjson-http.js",
-    "./paths": "./dist/paths.js",
+    "./routes-db-logic": "./dist/routes-db-logic.js",
     "./db-setup": "./dist/db-setup.js",
-    "./server": "./dist/server.js",
-    "./task-helper": "./dist/task-helper.js",
-    "./scraper-type": "./dist/scraper-type.js",
-    "./apply-pagination": "./dist/apply-pagination.js",
+    "./ui": "./dist/ui.js",
+    "./models": "./dist/models.js",
+    "./paths": "./dist/paths.js",
     "./env": "./dist/env.js",
-    "./run": "./dist/run.js"
+    "./server": "./dist/server.js",
+    "./ndjson-http": "./dist/ndjson-http.js",
+    "./run": "./dist/run.js",
+    "./apply-pagination": "./dist/apply-pagination.js"
   },
   "typesVersions": {
     "*": {
       "*": [
         "dist/*"
       ],
-      "convert-to-english": [
-        "dist/convert-to-english.d.ts"
+      "validation": [
+        "dist/validation.d.ts"
       ],
       "executor": [
         "dist/executor.d.ts"
       ],
-      "routes-db-logic": [
-        "dist/routes-db-logic.d.ts"
+      "task-helper": [
+        "dist/task-helper.d.ts"
+      ],
+      "filters": [
+        "dist/filters.d.ts"
+      ],
+      "sorts": [
+        "dist/sorts.d.ts"
+      ],
+      "views": [
+        "dist/views.d.ts"
+      ],
+      "scraper-type": [
+        "dist/scraper-type.d.ts"
+      ],
+      "errors": [
+        "dist/errors.d.ts"
+      ],
+      "change-case": [
+        "dist/change-case.d.ts"
+      ],
+      "writer": [
+        "dist/writer.d.ts"
+      ],
+      "writer-http": [
+        "dist/writer-http.d.ts"
       ],
       "task-routes": [
         "dist/task-routes.d.ts"
@@ -58,83 +81,56 @@
       "utils": [
         "dist/utils.d.ts"
       ],
-      "filters": [
-        "dist/filters.d.ts"
-      ],
-      "writer": [
-        "dist/writer.d.ts"
-      ],
-      "sorts": [
-        "dist/sorts.d.ts"
-      ],
-      "errors": [
-        "dist/errors.d.ts"
-      ],
-      "task-results": [
-        "dist/task-results.d.ts"
-      ],
-      "ui": [
-        "dist/ui.d.ts"
-      ],
-      "validation": [
-        "dist/validation.d.ts"
-      ],
-      "null-utils": [
-        "dist/null-utils.d.ts"
-      ],
-      "change-case": [
-        "dist/change-case.d.ts"
-      ],
-      "models": [
-        "dist/models.d.ts"
-      ],
-      "ndjson": [
-        "dist/ndjson.d.ts"
-      ],
-      "task-executor": [
-        "dist/task-executor.d.ts"
+      "convert-to-english": [
+        "dist/convert-to-english.d.ts"
       ],
       "api-config": [
         "dist/api-config.d.ts"
       ],
+      "ndjson": [
+        "dist/ndjson.d.ts"
+      ],
+      "task-results": [
+        "dist/task-results.d.ts"
+      ],
+      "null-utils": [
+        "dist/null-utils.d.ts"
+      ],
+      "task-executor": [
+        "dist/task-executor.d.ts"
+      ],
       "download": [
         "dist/download.d.ts"
       ],
-      "controls-adapter": [
-        "dist/controls-adapter.d.ts"
-      ],
-      "views": [
-        "dist/views.d.ts"
-      ],
-      "writer-http": [
-        "dist/writer-http.d.ts"
-      ],
-      "ndjson-http": [
-        "dist/ndjson-http.d.ts"
-      ],
-      "paths": [
-        "dist/paths.d.ts"
+      "routes-db-logic": [
+        "dist/routes-db-logic.d.ts"
       ],
       "db-setup": [
         "dist/db-setup.d.ts"
       ],
-      "server": [
-        "dist/server.d.ts"
+      "ui": [
+        "dist/ui.d.ts"
       ],
-      "task-helper": [
-        "dist/task-helper.d.ts"
+      "models": [
+        "dist/models.d.ts"
       ],
-      "scraper-type": [
-        "dist/scraper-type.d.ts"
-      ],
-      "apply-pagination": [
-        "dist/apply-pagination.d.ts"
+      "paths": [
+        "dist/paths.d.ts"
       ],
       "env": [
         "dist/env.d.ts"
       ],
+      "server": [
+        "dist/server.d.ts"
+      ],
+      "ndjson-http": [
+        "dist/ndjson-http.d.ts"
+      ],
       "run": [
         "dist/run.d.ts"
+      ],
+      "apply-pagination": [
+        "dist/apply-pagination.d.ts"
       ]
     }
   },
@@ -183,11 +179,11 @@
   "scripts": {
     "dev": "tsc -w",
     "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
-    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus-server-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus-server/dist/",
+    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-server-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus-server/dist/",
     "build-mv-starter": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-server-js/dist/* ~/Documents/botasaurus-desktop-starter/node_modules/botasaurus-server/dist/",
     "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
-    "update": "npm update botasaurus",
+    "update": "npm update botasaurus botasaurus-controls",
     "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
     "prepublishOnly": "npm run build",
     "local-proxy": "node ./dist/run_locally.js",

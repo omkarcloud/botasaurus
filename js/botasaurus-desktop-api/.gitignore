@@ -1,4 +1,6 @@
 build
+dist
+build-docs
 node_modules
 *.log
 *.pid
@@ -6,15 +8,21 @@ node_modules
 .DS_Store
 lib
 coverage
+.nyc_output
 logs
 pids
 .idea
-yarn.lock
-docs
-.nyc_output
-dist
 .vscode
-todo.md
-temp.js
-todo copy.md
+yarn.lock
+tmp
+jsconfig.json
+types
+docs/api
+docs/typedefs
+.history
+.docusaurus
 tsconfig.tsbuildinfo
+crawlee_storage
+storage
+.turbo
+changelog.md

@@ -282,6 +282,9 @@ function makeAPI(baseUrl, apiBasePath) {
   if (apiBasePath) {
     config.push(`apiBasePath: '${apiBasePath}'`)
   }
+  
+  config.push(`createResponseFiles: true`)
+
 
   return config.length > 0 ? `const api = new Api({ ${config.join(', ')} })` : 'const api = new Api()'
 }
@@ -297,7 +300,8 @@ export function createApiREADME(
   route_path: string,
   max_runs: number | null,
   apiBasePath: string, 
-  routeAliases:string[]
+  routeAliases:string[],
+  enable_cache: boolean
 ): string {
   const maxRunsMessage = max_runs === null
     ? "This scraper supports unlimited concurrent tasks."
@@ -336,7 +340,7 @@ npm install botasaurus-desktop-api
 First, import the \`Api\` class from the library:
 
 \`\`\`javascript
-import { Api } from 'botasaurus-desktop-api'
+import Api from 'botasaurus-desktop-api'
 
 \`\`\`
 Then, create an instance of the \`Api\` class:
@@ -349,12 +353,9 @@ async function main() {
 main()
 \`\`\`
 
-Additionally, the API client will create response JSON files in the \`output/responses/\` directory to help with debugging and development. If you want to disable this feature in production, you can set \`createResponseFiles=false\`.
+Additionally, the API client will create response JSON files in the \`output/responses/\` directory to help with debugging and development.
 
-\`\`\`javascript
-const api = ${makeResponseFn(baseUrl, apiBasePath)}
-
-\`\`\`
+In production, remove the \`createResponseFiles: true\` parameter.
 
 ### Creating Tasks
 
@@ -437,14 +438,13 @@ const result = await api.get('${final[0]}', ${jsObjectToJsObjectString(defaultDa
 \`\`\`
 This will:
 - Make a **GET** request to the \`${final[0]}\` endpoint.
-- Bypass task creation, scheduling, and running overhead.
-- Validate the input data before execution.
-- Cache the results based on the provided parameters.
-- ${maxRunsMessage2}
+- Execute the scraper immediately, bypassing task creation, scheduling, and running overhead.
+- Validate input data before execution, returning a \`400\` error for invalid requests.
+${enable_cache ? '- Cache the results based on the provided parameters.\n' : ''}- ${maxRunsMessage2}
 
 This method is especially useful when:
 
-- You simply want to call the scraper and get the result.
+- You simply want to call the scraper and get the result, without the task management overhead.
 - You plan to resell the API via platforms like **RapidAPI**, where the task abstraction is unnecessary.
 
 ## Examples
@@ -453,7 +453,7 @@ Here are some example usages of the API client:
 
 \`\`\`javascript
 import fs from 'fs'
-import { Api } from 'botasaurus-desktop-api'
+import Api from 'botasaurus-desktop-api'
 
 async function main() {
   // Create an instance of the API client

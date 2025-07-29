@@ -21,14 +21,14 @@ export function tryIntConversion(value: any, errorMessage: string): number {
     throw new JsonHTTPResponseWithMessage(errorMessage);
 }
 
-export async function serialize(data: any){
+export async function serialize(data: any, withResult: boolean = true){
     if (isNullish(data)) {
         return null;
     }
     if (Array.isArray(data)) {
-        return Promise.all( data.map(item => item.toJson()));
+        return Promise.all( data.map(item => item.toJson(withResult)));
     }
-    return data.toJson();
+    return data.toJson(withResult);
 }
 
 export function createTaskNotFoundError(taskId: number): JsonHTTPResponseWithMessage {
@@ -269,7 +269,7 @@ export function validateResultsRequest(jsonData: any, allowedSorts: string[], al
 }
 
 
-export function validateDownloadParams(jsonData: any, allowedSorts: string[], allowedViews: string[], defaultSort: string): [string, any, string | null, string | undefined, boolean] {
+export function validateDownloadParams(jsonData: any, allowedSorts: string[], allowedViews: string[], defaultSort: string): [string, any, string | null, string | undefined, boolean, string | null] {
     ensureJsonBodyIsDict(jsonData);
 
     let fmt = jsonData.format;
@@ -296,7 +296,12 @@ export function validateDownloadParams(jsonData: any, allowedSorts: string[], al
         throw new JsonHTTPResponseWithMessage('convert_to_english must be a boolean');
     }
 
-    return [fmt, filters, sort, view, convertToEnglish];
+    let downloadFolder = jsonData.downloadFolder;
+    if (downloadFolder !== null && downloadFolder !== undefined && !isStringOfMinLength(downloadFolder)) {
+        throw new JsonHTTPResponseWithMessage('downloadFolder must be a string or null');
+    }
+
+    return [fmt, filters, sort, view, convertToEnglish, downloadFolder];
 }
 
 

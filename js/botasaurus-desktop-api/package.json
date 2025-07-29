@@ -1,56 +1,26 @@
 {
   "name": "botasaurus-desktop-api",
-  "version": "4.1.71",
+  "version": "4.1.79",
   "description": "The Botasaurus Desktop API Client provides programmatic access to Botasaurus Desktop scrapers with a developer-friendly API.",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "browser": "dist/bundle.js",
+  "unpkg": "dist/bundle.js",
   "exports": {
-    ".": "./dist/index.js",
-    "./utils": "./dist/utils.js"
-  },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "dist/*"
-      ],
-      "utils": [
-        "dist/utils.d.ts"
-      ]
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/bundle.js"
+    },
+    "./utils": {
+      "import": "./dist/utils.mjs",
+      "require": "./dist/utils.js",
+      "types": "./dist/utils.d.ts",
+      "browser": "./dist/utils.js"
     }
-  },
-  "engines": {
-    "node": ">=15.10.0"
-  },
-  "files": [
-    "dist"
-  ],
-  "devDependencies": {
-    "@apify/eslint-config-ts": "^0.2.3",
-    "@apify/tsconfig": "^0.1.0",
-    "@types/node": "^16.4.13",
-    "@typescript-eslint/eslint-plugin": "^8.31.1",
-    "@typescript-eslint/parser": "^8.31.1",
-    "eslint": "^8.10.0",
-    "rimraf": "^5.0.1",
-    "ts-node": "^10.2.0",
-    "typescript": "^5.8.3"
-  },
-  "scripts": {
-    "dev": "tsc -w",
-    "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
-    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-desktop-api/dist/* ~/Documents/playground/my-project-name/node_modules/botasaurus-desktop-api/dist/",
-    "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
-    "clean": "rimraf dist tsconfig.tsbuildinfo",
-    "update": "npm update botasaurus",
-    "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
-    "prepublishOnly": "npm run build",
-    "local-proxy": "node ./dist/run_locally.js",
-    "mtest": "node test/test.mjs",
-    "upload": "python3 increment_version.py && rm -rf dist/ && npm publish",
-    "test": "nyc cross-env NODE_OPTIONS=--insecure-http-parser mocha --bail",
-    "test:watch": "nyc cross-env NODE_OPTIONS=--insecure-http-parser mocha --bail --watch",
-    "lint": "eslint src",
-    "lint-fix": "eslint src --fix"
   },
   "author": {
     "name": "Chetan",
@@ -64,7 +34,74 @@
   "bugs": {
     "url": "https://github.com/omkarcloud/botasaurus/issues"
   },
+  "keywords": [
+    "botasaurus-desktop-api"
+  ],
+  "homepage": "https://github.com/omkarcloud/botasaurus",
+  "files": [
+    "dist",
+    "!dist/*.tsbuildinfo"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:node && npm run build:browser",
+    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-desktop-api/dist/* ~/Documents/playground/my-project-name/node_modules/botasaurus-desktop-api/dist/",
+    "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
+    "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
+    "prepublishOnly": "npm run build",
+    "upload": "python3 increment_version.py && rm -rf dist/ && npm publish",
+    "postbuild": "gen-esm-wrapper dist/index.js dist/index.mjs && gen-esm-wrapper dist/utils.js dist/utils.mjs",
+    "clean": "rimraf dist",
+    "test": "npm run build && jest",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "tsc-check-tests": "tsc --noEmit --project test/tsconfig.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build:node": "tsc",
+    "build:browser": "rsbuild build"
+  },
   "dependencies": {
-    "axios": "^1.9.0"
-  }
+    "axios": "^1.6.7",
+    "tslib": "^2.5.0"
+  },
+  "devDependencies": {
+    "@apify/eslint-config": "^1.0.0",
+    "@apify/tsconfig": "^0.1.1",
+    "@babel/cli": "^7.21.0",
+    "@babel/core": "^7.21.0",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/register": "^7.21.0",
+    "@crawlee/puppeteer": "^3.2.2",
+    "@rsbuild/core": "^1.3.6",
+    "@rsbuild/plugin-node-polyfill": "^1.3.0",
+    "@stylistic/eslint-plugin-ts": "^4.2.0",
+    "@types/async-retry": "^1.4.5",
+    "@types/content-type": "^1.1.5",
+    "@types/express": "^4.17.17",
+    "@types/fs-extra": "^11.0.1",
+    "@types/jest": "^29.4.0",
+    "@types/node": "^22.0.0",
+    "ajv": "^8.17.1",
+    "babel-loader": "^10.0.0",
+    "body-parser": "^1.20.3",
+    "compression": "^1.7.4",
+    "eslint": "^9.24.0",
+    "eslint-config-prettier": "^10.1.2",
+    "express": "^4.21.1",
+    "fs-extra": "^11.1.0",
+    "gen-esm-wrapper": "^1.1.2",
+    "globals": "^16.0.0",
+    "jest": "^29.4.3",
+    "prettier": "^3.5.3",
+    "process": "^0.11.10",
+    "puppeteer": "^24.0.0",
+    "rimraf": "^6.0.0",
+    "source-map-support": "^0.5.21",
+    "ts-jest": "^29.0.5",
+    "ts-loader": "^9.4.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.29.1"
+  },
+  "packageManager": "npm@10.9.2"
 }

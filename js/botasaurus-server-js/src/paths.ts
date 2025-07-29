@@ -12,18 +12,28 @@ type ElectronConfig = {
 const isElectron = !!global.ELECTRON_CONFIG;
 
 // @ts-ignore
-const electronConfig: ElectronConfig = global.ELECTRON_CONFIG as unknown as ElectronConfig;
+export const electronConfig: ElectronConfig = global.ELECTRON_CONFIG as unknown as ElectronConfig;
 const isElectronAndDev: boolean = isElectron && electronConfig.isDev;
 
-export function getPathToDownloadsDirectory(filename: string): string {
-    const downloadsPath = electronConfig.downloadsPath;
-    const appFolderPath = path.join(downloadsPath, electronConfig.productName);
 
-    if (!fs.existsSync(appFolderPath)) {
-        fs.mkdirSync(appFolderPath);
+export function getPathToDownloadsDirectory(filename: string, downloadFolder?: string | null): string {
+    let targetPath: string;
+    
+    if (downloadFolder && downloadFolder.trim() !== '') {
+        // Use custom download folder
+        targetPath = downloadFolder;
+        targetPath = path.join(targetPath, electronConfig.productName);
+    } else {
+        // Use default downloads path
+        const downloadsPath = electronConfig.downloadsPath;
+        targetPath = path.join(downloadsPath, electronConfig.productName);
     }
 
-    const filePath = path.join(appFolderPath, filename);
+    if (!fs.existsSync(targetPath)) {
+        fs.mkdirSync(targetPath, { recursive: true });
+    }
+
+    const filePath = path.join(targetPath, filename);
 
     return filePath;
 }

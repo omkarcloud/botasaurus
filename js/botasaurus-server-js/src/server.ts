@@ -1,6 +1,5 @@
 import { BaseSort, Sort } from './sorts';
 import { ScraperType } from './scraper-type';
-import { ControlsAdapter } from './controls-adapter';
 import { isObject } from './utils';
 import { _hash } from 'botasaurus/cache';
 import * as fs from 'fs';
@@ -9,7 +8,7 @@ import { kebabCase, capitalCase as titleCase } from 'change-case';
 import { BaseFilter } from './filters'
 import { View } from './views'
 import { getInputFilePath, getReadmePath } from './paths'
-import { FileTypes } from 'botasaurus-controls'
+import { createControls, FileTypes } from 'botasaurus-controls'
 function getReadme(): string {
   try {
     const readmeFile = getReadmePath();
@@ -62,7 +61,6 @@ type EmailSupportOptions = {
 
 type Scraper = {
   name: string;
-  input_js: string;
   function: Function;
   scraper_name: string;
   scraper_type: "browser" | "request" | "task";
@@ -86,6 +84,7 @@ class _Server {
   public isScraperBasedRateLimit: boolean = false;
   public whatsAppSupport: WhatsAppSupportOptions | null = null;
   public emailSupport: EmailSupportOptions | null = null;
+  private scraperToInputJs: Record<string, Function> = {};
 
   getConfig(): Record<string, any> {
     if (!this.config) {
@@ -155,8 +154,8 @@ class _Server {
     this.emailSupport = options;
   }
 
-  createControls(inputJs: string) {
-    return ControlsAdapter.createControls(inputJs);
+  setScraperToInputJs(scraperToInputJs: Record<string, Function>): void {
+    this.scraperToInputJs = scraperToInputJs;
   }
 
   getControls(scraperName: string): any {
@@ -165,16 +164,12 @@ class _Server {
   }
 
   updateCache(scraperName: string): void {
-    const scraper = this.getScraper(scraperName);
-    const inputJs = scraper.input_js;
 
     if (
-      !(scraperName in this.controlsCache) ||
-      this.controlsCache[scraperName].input_js !== inputJs
+      !(scraperName in this.controlsCache)
     ) {
       this.controlsCache[scraperName] = {
-        input_js: inputJs,
-        controls: this.createControls(inputJs),
+        controls: createControls(this.scraperToInputJs[scraperName]),
       };
     }
   }
@@ -287,12 +282,10 @@ class _Server {
     
     productName = isNotNullish(productName) ? productName : titleCase(scraperFunctionName);
 
-    const inputJs = this.getInputJs(scraperFunctionName);
     // @ts-ignore
     const scraper_type = scraper._scraperType
     this.scrapers[scraperFunctionName] = {
       name: productName as any,
-      input_js: inputJs,
       function: scraper,
       scraper_name: scraperFunctionName,
       scraper_type: scraper_type,
@@ -315,7 +308,6 @@ class _Server {
     for (const [scraperName, scraper] of Object.entries(this.scrapers)) {
       const inputJs = this.getInputJs(scraperName);
       const inputJsHash = _hash(inputJs);
-      scraper.input_js = inputJs;
 
       const viewsJson = scraper.views.map((view: any) => view.toJson());
       const defaultSort = scraper.default_sort;
@@ -433,7 +425,27 @@ class _Server {
     this.rateLimit = rateLimit;
   }
   
+  validateRateLimit(): void {
+    if (this.isScraperBasedRateLimit) {
+      const scraperNames = new Set(this.getScrapersNames());
+      const invalidKeys = Object.keys(this.rateLimit).filter(
+        (key) => !scraperNames.has(key)
+      );
 
+      if (invalidKeys.length > 0) {
+        const invalidKeysMessage = invalidKeys.length === 1 
+          ? `Scraper with name '${invalidKeys[0]}' does not exist.` 
+          : `Scrapers with names ${invalidKeys.join(', ')} do not exist.`;
+
+        const formattedLimit = JSON.stringify(this.rateLimit).replaceAll(",", ", ").replaceAll(":", ": ");
+
+        
+        throw new Error(
+          `Your rate limit is set to ${formattedLimit}, but ${invalidKeysMessage}`
+        );
+      }
+    }
+  }
   getRateLimit(): { browser?: number; request?: number; task?: number } | Record<string, number> {
     return this.rateLimit;
   }

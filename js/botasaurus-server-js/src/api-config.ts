@@ -17,54 +17,73 @@ import {
     patchTask,
     getUiTaskResults,
 } from "./task-routes";
-import { executor } from "./executor"
-import { Server } from "./server"
-import { kebabCase } from 'change-case';
-import { validateDirectCallRequest } from "./validation"
-import { sleep } from 'botasaurus/utils'
-import { DirectCallCacheService } from "./task-results"
-import { cleanBasePath, isNotEmptyObject } from "./utils"
-import { isDontCache } from "botasaurus/dontcache"
-import { JsonHTTPResponseWithMessage } from "./errors"
+import { executor } from "./executor";
+import { Server } from "./server";
+import { kebabCase } from "change-case";
+import { validateDirectCallRequest } from "./validation";
+import { sleep } from "botasaurus/utils";
+import { DirectCallCacheService } from "./task-results";
+import { cleanBasePath, isNotEmptyObject } from "./utils";
+import { isDontCache } from "botasaurus/dontcache";
+import { JsonHTTPResponseWithMessage } from "./errors";
 
 function addCorsHeaders(reply: any) {
     reply.header("Access-Control-Allow-Origin", "*");
-    reply.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-    reply.header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token");
+    reply.header(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    );
+    reply.header(
+        "Access-Control-Allow-Headers",
+        "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token"
+    );
 }
 
 function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
-    Object.values(Server.scrapers).forEach(scraper => {
+    Object.values(Server.scrapers).forEach((scraper) => {
         // Get the main route path
-        const routePath = `${apiBasePath}/${kebabCase(scraper.scraper_name)}`
-        const fn = scraper.function
-        const key = Server.isScraperBasedRateLimit ? scraper.scraper_name : scraper.scraper_type
+        const routePath = `${apiBasePath}/${kebabCase(scraper.scraper_name)}`;
+        const fn = scraper.function;
+        const key = Server.isScraperBasedRateLimit
+            ? scraper.scraper_name
+            : scraper.scraper_type;
 
         const scrapingFunction = async (request: any, reply: any) => {
             try {
-                const params: Record<string, any> = {}
-                for (const [key, value] of Object.entries(request.query as any)) {
+                const params: Record<string, any> = {};
+                for (const [key, value] of Object.entries(
+                    request.query as any
+                )) {
                     if (key.endsWith("[]")) {
-                        params[key.slice(0, -2)] = Array.isArray(value) ? value : [value]
+                        params[key.slice(0, -2)] = Array.isArray(value)
+                            ? value
+                            : [value];
                     } else {
-                        params[key] = value
+                        params[key] = value;
                     }
                 }
 
                 // Validate params against scraper's input definition
-                const [validatedData, metadata] = validateDirectCallRequest(scraper.scraper_name, params)
+                const [validatedData, metadata] = validateDirectCallRequest(
+                    scraper.scraper_name,
+                    params
+                );
 
-                let cacheKey: string | undefined
+                let cacheKey: string | undefined;
                 if (Server.cache) {
                     // Check cache
-                    cacheKey = DirectCallCacheService.createCacheKey(scraper.scraper_name, validatedData)
+                    cacheKey = DirectCallCacheService.createCacheKey(
+                        scraper.scraper_name,
+                        validatedData
+                    );
 
                     if (DirectCallCacheService.has(cacheKey)) {
                         try {
-                            const cachedResult = DirectCallCacheService.get(cacheKey)
-                            return cachedResult ?? { result: null }
+                            const cachedResult =
+                                DirectCallCacheService.get(cacheKey);
+                            return cachedResult ?? { result: null };
                         } catch (error) {
-                            console.error(error)
+                            console.error(error);
                             // Continue with normal execution if cache fails
                         }
                     }
@@ -72,12 +91,12 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
 
                 // Wait for capacity if needed
                 while (!executor.hasCapacity(key)) {
-                    await sleep(0.1)
+                    await sleep(0.1);
                 }
 
                 // Execute scraper
-                executor.incrementCapacity(key)
-                const mt = isNotEmptyObject(metadata) ? { metadata } : {}
+                executor.incrementCapacity(key);
+                const mt = isNotEmptyObject(metadata) ? { metadata } : {};
                 try {
                     const results = await fn(validatedData, {
                         ...mt,
@@ -89,61 +108,66 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                         output: null,
                         createErrorLogs: false,
                         returnDontCacheAsIs: true,
-                    })
+                    });
 
-                    let isResultDontCached = false
-                    let finalResults = results
+                    let isResultDontCached = false;
+                    let finalResults = results;
 
                     // Handle don't cache flag
                     if (isDontCache(results)) {
-                        isResultDontCached = true
-                        finalResults = results.data
+                        isResultDontCached = true;
+                        finalResults = results.data;
                     }
 
                     // Cache results if appropriate
                     if (Server.cache && !isResultDontCached) {
                         try {
                             // @ts-ignore
-                            DirectCallCacheService.put(cacheKey, finalResults)
+                            DirectCallCacheService.put(cacheKey, finalResults);
                         } catch (cacheError) {
-                            console.error('Cache storage error:', cacheError)
+                            console.error("Cache storage error:", cacheError);
                             // Continue even if caching fails
                         }
                     }
 
-                    return finalResults ?? { result: null }
+                    return finalResults ?? { result: null };
                 } finally {
-                    executor.decrementCapacity(key)
+                    executor.decrementCapacity(key);
                 }
             } catch (error: any) {
                 if (error instanceof JsonHTTPResponseWithMessage) {
-                    throw error // Re-throw the error to be handled elsewhere
+                    throw error; // Re-throw the error to be handled elsewhere
                 }
-                console.error('Scraping failed:', error)
+                console.error("Scraping failed:", error);
                 return reply.status(500).send({
-                    error: 'Scraping failed',
-                    message: error.message
-                })
+                    error: "Scraping failed",
+                    message: error.message,
+                });
             }
-        }
-        
+        };
+
         // Register main route
-        app.get(routePath, scrapingFunction)
-        
+        app.get(routePath, scrapingFunction);
+
         // Get any aliases for this scraper
-        const aliases = ApiConfig.routeAliases.get(scraper.function) || []
-        
+        const aliases = ApiConfig.routeAliases.get(scraper.function) || [];
+
         // Register all aliases if they exist
         if (aliases.length > 0) {
-            aliases.forEach(alias => {
-                const fullAliasPath = `${apiBasePath}${alias}`
-                app.get(fullAliasPath, scrapingFunction)
-            })
+            aliases.forEach((alias) => {
+                const fullAliasPath = `${apiBasePath}${alias}`;
+                app.get(fullAliasPath, scrapingFunction);
+            });
         }
-    })
+    });
 }
-export function buildApp(scrapers:any[], apiBasePath: string, routeAliases:any): FastifyInstance {
-    const app = fastify({logger: true});
+export function buildApp(
+    scrapers: any[],
+    apiBasePath: string,
+    routeAliases: any,
+    enable_cache: boolean,
+): FastifyInstance {
+    const app = fastify({ logger: true });
 
     // Add CORS handling
     app.addHook("onRequest", (request, reply, done) => {
@@ -160,24 +184,27 @@ export function buildApp(scrapers:any[], apiBasePath: string, routeAliases:any):
     // Add error handler for JsonHTTPResponseWithMessage
     app.setErrorHandler((error, _, reply) => {
         if (error instanceof JsonHTTPResponseWithMessage) {
-            reply
-                .code(error.status)
-                .headers(error.headers)
-                .send(error.body);
+            reply.code(error.status).headers(error.headers).send(error.body);
         } else {
             console.error(error);
             // Default error handling
             reply.status(500).send({
-                message: error.message || 'Internal Server Error'
+                message: error.message || "Internal Server Error",
             });
         }
     });
-        
+
     // Routes
     app.get(apiBasePath || "/", (_, reply) => {
-      const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="https://botasaurus-api.omkar.cloud/favicon.ico"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><meta name="description" content="API documentation for using web scrapers"><link rel="apple-touch-icon" href="https://botasaurus-api.omkar.cloud/logo192.png"><title>Api Docs</title><script>window.scrapers=${JSON.stringify(scrapers)};window.apiBasePath="${apiBasePath || ''}";window.routeAliases=${JSON.stringify(routeAliases)};</script><script defer="defer" src="https://botasaurus-api.omkar.cloud/static/js/main.b0d01f56.js"></script><link href="https://botasaurus-api.omkar.cloud/static/css/main.69260e80.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>`;
-    
-      return reply.type('text/html').send(html);
+        const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="https://botasaurus-api.omkar.cloud/favicon.ico"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000000"><meta name="description" content="API documentation for using web scrapers"><link rel="apple-touch-icon" href="https://botasaurus-api.omkar.cloud/logo192.png"><title>Api Docs</title><script>window.enable_cache=${enable_cache};window.scrapers=${JSON.stringify(
+            scrapers
+        )};window.apiBasePath="${
+            apiBasePath || ""
+        }";window.routeAliases=${JSON.stringify(
+            routeAliases
+        )};</script><script defer="defer" src="https://botasaurus-api.omkar.cloud/static/js/main.b0d01f56.js"></script><link href="https://botasaurus-api.omkar.cloud/static/css/main.69260e80.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>`;
+
+        return reply.type("text/html").send(html);
     });
 
     app.post(`${apiBasePath}/tasks/create-task-async`, async (request, _) => {
@@ -200,10 +227,7 @@ export function buildApp(scrapers:any[], apiBasePath: string, routeAliases:any):
 
     app.get(
         `${apiBasePath}/tasks/:taskId`,
-        async (
-            request: FastifyRequest<{ Params: { taskId: number } }>,
-            _
-        ) => {
+        async (request: FastifyRequest<{ Params: { taskId: number } }>, _) => {
             const taskId = request.params.taskId;
             const result = await getTask(taskId);
             return result;
@@ -237,11 +261,7 @@ export function buildApp(scrapers:any[], apiBasePath: string, routeAliases:any):
 
     app.patch(
         `${apiBasePath}/tasks/:taskId/abort`,
-        async (
-            request: FastifyRequest<{ Params: { taskId: number } }>,
-            _
-        ) => {
-            
+        async (request: FastifyRequest<{ Params: { taskId: number } }>, _) => {
             const taskId = request.params.taskId;
             const result = await abortSingleTask(taskId);
             return result;
@@ -250,10 +270,7 @@ export function buildApp(scrapers:any[], apiBasePath: string, routeAliases:any):
 
     app.delete(
         `${apiBasePath}/tasks/:taskId`,
-        async (
-            request: FastifyRequest<{ Params: { taskId: number } }>,
-            _
-        ) => {
+        async (request: FastifyRequest<{ Params: { taskId: number } }>, _) => {
             const taskId = request.params.taskId;
             const result = await deleteSingleTask(taskId);
             return result;
@@ -274,11 +291,14 @@ export function buildApp(scrapers:any[], apiBasePath: string, routeAliases:any):
 
     app.get(`${apiBasePath}/ui/app-props`, getAppProps);
 
-    app.post(`${apiBasePath}/ui/tasks/is-any-task-updated`, async (request, _) => {
-        const jsonData = request.body;
-        const result = await isAnyTaskUpdated(jsonData);
-        return result;
-    });
+    app.post(
+        `${apiBasePath}/ui/tasks/is-any-task-updated`,
+        async (request, _) => {
+            const jsonData = request.body;
+            const result = await isAnyTaskUpdated(jsonData);
+            return result;
+        }
+    );
 
     app.post(`${apiBasePath}/ui/tasks/is-task-updated`, async (request, _) => {
         const jsonData = request.body;
@@ -317,45 +337,49 @@ export function buildApp(scrapers:any[], apiBasePath: string, routeAliases:any):
         }
     );
 
-
-
     // Add direct scraper routes for each scraper
-    addScraperRoutes(app, apiBasePath)
+    addScraperRoutes(app, apiBasePath);
     if (ApiConfig.routeSetupFn) {
         ApiConfig.routeSetupFn(app);
     }
 
-
     return app;
 }
 let server: FastifyInstance;
-async function startServer(port:number, scrapers:any[], apiBasePath: string, routeAliases:any): Promise<void> {
-        try {
-            if (server) {
-                await stopServer()
-            }
-            server = buildApp(scrapers, apiBasePath, routeAliases);
-            
-            await server.listen({port, 
-                host: '0.0.0.0' // bind on all interfaces
-    
-            });
-            console.log(`Server running on http://127.0.0.1:${port}${apiBasePath || '/'} 🟢`);
-        } catch (err) {
-            server = null as unknown as FastifyInstance;
-            console.error(err);
-            process.exit(1);
+async function startServer(
+    port: number,
+    scrapers: any[],
+    apiBasePath: string,
+    routeAliases: any, 
+    enable_cache: boolean,
+): Promise<void> {
+    try {
+        if (server) {
+            await stopServer();
         }
-    
+        server = buildApp(scrapers, apiBasePath, routeAliases, enable_cache);
+
+        await server.listen({
+            port,
+            host: "0.0.0.0", // bind on all interfaces
+        });
+        console.log(
+            `Server running on http://127.0.0.1:${port}${apiBasePath || "/"} 🟢`
+        );
+    } catch (err) {
+        server = null as unknown as FastifyInstance;
+        console.error(err);
+        process.exit(1);
+    }
 }
 
 async function stopServer(): Promise<void> {
     if (server) {
         try {
             // this way better as prevents multiple Server stopped calls
-            const prev = server
+            const prev = server;
             server = null as unknown as FastifyInstance;
-            await prev.close()
+            await prev.close();
             console.log(`Server stopped 🔴`);
         } catch (err) {
             console.error(err);
@@ -371,103 +395,119 @@ async function stopServer(): Promise<void> {
 class ApiConfig {
     static apiPort: number = 8000;
     static autoStart: boolean = true;
-    static apiOnlyMode: boolean;
     static routeSetupFn?: (server: FastifyInstance) => void;
-    static apiBasePath: string = ''; // Default empty
+    static apiBasePath: string = ""; // Default empty
     static routeAliases: Map<Function, string[]> = new Map();
 
-  /**
-   * Enables API
-   * @example
-   * ApiConfig.enableApi();
-  */
-  static enableApi(): void {
-    // @ts-ignore
-    global.ApiConfig = ApiConfig;
-    // @ts-ignore
-    global.startServer = startServer;
-    // @ts-ignore
-    global.stopServer = stopServer;
-    
-  }
-
-  /**
-   * Runs the application in API-only mode (disables desktop GUI interface).
-   * Useful for headless/server environments where GUI is not needed.
-   * @example
-   * ApiConfig.onlyStartApi(); // Runs only the API server
-   */
-    static onlyStartApi(): void {
-        this.apiOnlyMode = true;
+    /**
+     * Enables API
+     * @example
+     * ApiConfig.enableApi();
+     */
+    static enableApi(): void {
+        // @ts-ignore
+        global.ApiConfig = ApiConfig;
+        // @ts-ignore
+        global.startServer = startServer;
+        // @ts-ignore
+        global.stopServer = stopServer;
     }
-
 
     /**
-     * Adds custom routes to the API server
-     * @param {(server: FastifyInstance) => void} routeSetupFn - Function that receives FastifyInstance to add custom routes
+     * Sets the port for the API server.
+     * @param {number} [port=8000] - The port number to use
      * @example
-     * ApiConfig.addCustomRoutes((server) => {
-     *   server.get('/custom', (_, reply) => reply.send({ custom: 'route' }));
-     * });
+     * ApiConfig.setApiPort(8080); // Uses port 8080
+     * ApiConfig.setApiPort();      // Uses default port 8000
      */
-    static addCustomRoutes(routeSetupFn: (server: FastifyInstance) => void): void {
-        this.routeSetupFn = routeSetupFn;
-    }
-
-  /**
-   * Disables automatic API server startup on application launch.
-   * When enabled, API must be manually started from the API Tab in desktop GUI.
-   * @example
-   * ApiConfig.disableApiAutostart(); // API will not run until manually started from desktop GUI
-   * 
-   */
-  static disableApiAutostart(): void {
-    this.autoStart = false;
-}
-
-  /**
-   * Sets the port for the API server.
-   * @param {number} [port=8000] - The port number to use
-   * @example
-   * ApiConfig.setApiPort(8080); // Uses port 8080
-   * ApiConfig.setApiPort();      // Uses default port 8000
-   */
     static setApiPort(port: number = 8000): void {
         this.apiPort = port;
     }
 
 
     /**
+     * Disables automatic API server startup on application launch.
+     * When enabled, API must be manually started from the API Tab in desktop GUI.
+     * @example
+     * ApiConfig.disableApiAutostart(); // API will not run until manually started from desktop GUI
+     *
+     */
+    static disableApiAutostart(): void {
+        this.autoStart = false;
+    }
+
+    /**
      * Sets the base path to be prefixed for all API routes.
      * Useful for mounting the API under a specific subpath like `/v1`.
-     * @param {string} basePath - The base path to prefix (e.g., "/v1")
+     * @param {string} path - The base path to prefix (e.g., "/v1")
      * @example
      * ApiConfig.setApiBasePath("/v1"); // All routes will now be prefixed with /v1
      */
-    static setApiBasePath(basePath: string): void {
-        this.apiBasePath = cleanBasePath(basePath) as any;
+    static setApiBasePath(path: string): void {
+        this.apiBasePath = cleanBasePath(path) as any;
     }
-
 
     /**
      * Adds an alias for a specific scraper's direct call route bypassing Task System.
      * @param {Function} scraper - The scraper function to add an alias for.
-     * @param {string} alias - The alias path (e.g., '/hotels/search').
+     * @param {string} endpoint - The alias path (e.g., '/hotels/search').
      * @example
      * ApiConfig.addScraperAlias(hotelsSearchScraper, '/hotels/search');
      */
-    static addScraperAlias(scraper: Function, alias: string): void {
-        if (!alias) return;
-        
+    static addScraperAlias(scraper: Function, endpoint: string): void {
+        if (!endpoint) return;
+
         if (!this.routeAliases.has(scraper)) {
-            this.routeAliases.set(scraper, [cleanBasePath(alias)]);
+            this.routeAliases.set(scraper, [cleanBasePath(endpoint)]);
         } else {
             const aliasArray = this.routeAliases.get(scraper)!;
-            if (!aliasArray.includes(alias)) {
-                aliasArray.push(cleanBasePath(alias));
+            if (!aliasArray.includes(endpoint)) {
+                aliasArray.push(cleanBasePath(endpoint));
             }
-}
+        }
+    }
+
+    /**
+     * Adds custom routes to the API server using Fastify's routing system.
+     * 
+     * The function receives a FastifyInstance object, which you can use to define your routes.
+     * 
+     * When to use:
+     * - Authentication middleware
+     * - Custom data processing endpoints
+     * - Adding Webhook receivers
+     * 
+     * @param {(server: FastifyInstance) => void} routeSetupFn - Function that receives FastifyInstance to add custom routes
+     * @example
+     * // Adding a custom health check endpoint
+     * ApiConfig.addCustomRoutes((server) => {
+     *   server.get('/health', (request, reply) => {
+     *     return reply.send({ status: 'OK'});
+     *   });
+     * });
+     * 
+     * @example
+     * // Adding a validation middleware
+     * ApiConfig.addCustomRoutes((server) => {
+     *   server.addHook('onRequest', (request, reply, done) => {
+     *     // Check for secret
+     *     const secret = request.headers['x-secret'] as string;
+     * 
+     *     if (secret === '49cb1de3-419b-4647-bf06-22c9e1110313') {
+     *       // Valid secret, proceed
+     *       return done(); 
+     *     } else {
+     *       return reply.status(401).send({
+     *         message: 'Unauthorized: Invalid secret.',
+     *       });
+     *     }
+     *   });
+     * });
+     */
+    static addCustomRoutes(
+        routeSetupFn: (server: FastifyInstance) => void
+    ): void {
+        this.routeSetupFn = routeSetupFn;
     }
 }
-
-export default ApiConfig ;
+export default ApiConfig;

@@ -1,5 +1,5 @@
 from json import dumps
-from .decorators_utils import create_output_directory_if_not_exists
+from .decorators_utils import create_directory_if_not_exists
 from .utils import (
     read_file as _read_file,
     relative_path,
@@ -15,12 +15,37 @@ def is_slash_not_in_filename(filename):
     return "/" not in filename and "\\" not in filename
 
 
+_output_directory = "output/"
+def get_output_directory():
+    """
+    Get the current output directory.
+    """
+    return _output_directory
+
+def set_output_directory(directory):
+    """
+    Set a new output directory.
+    :param directory: The new directory to set as the output directory.
+    """
+    global _output_directory
+    _output_directory = directory
+
+output_check_done = False
+def create_output_directory_if_not_exists():
+    global output_check_done
+    if not output_check_done:
+        output_check_done = True
+        create_directory_if_not_exists(get_output_directory())
+        
 def append_output_if_needed(filename):
     create_output_directory_if_not_exists()
     filename = str(filename).strip()
     if is_slash_not_in_filename(filename):
-        return "output/" + filename
+        return get_output_path(filename)
     return filename
+
+def get_output_path(filename):
+    return os.path.join(_output_directory, filename)
 
 
 def fix_json_filename(filename):
@@ -229,7 +254,8 @@ def write_csv(data, filename, log=True):
             fieldnames = get_fields(data)
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()  # write the header row
-            writer.writerows(data)  # write each row of data
+            for i in data:
+                writer.writerow(i)  # write each row of data
         if log:
             print(f"View written CSV file at {filename_new}")
 

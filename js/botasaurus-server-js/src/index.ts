@@ -1,5 +1,4 @@
 import {} from './apply-pagination'
-import {} from './controls-adapter'
 import {} from './convert-to-english'
 import {} from './db-setup'
 import {} from './download'

@@ -2,22 +2,74 @@ import Datastore from '@seald-io/nedb';
 
 // Assuming TaskResults is implemented elsewhere
 import { TaskResults } from './task-results';
-import { db_path } from './utils'
+import { db_path, id_path } from './utils'
 import './db-setup'
-import { getBotasaurusStorage } from 'botasaurus/botasaurus-storage'
+import fs from 'fs';
 import { isNullish } from './null-utils'
 // Database setup
 const db = new Datastore({ filename: db_path, autoload: true , timestampData:true});
-function initAutoIncrementDb() {
-  const s = getBotasaurusStorage()
-  // maybe do max of all items id, and current id, guess not needed nowconst id = s.getItem("id", 1)
+
+// Global ID variable
+let globalId: number;
+
+// Extract common function to get largest ID from database
+function getLargestIdFromDb(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    db.find({}).sort({ id: -1 }).limit(1).exec((err, docs) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      const largestId = docs.length > 0 ? parseInt(docs[0].id) || 0 : 0;
+      resolve(largestId);
+    });
+  });
+}
+
+// Extract function to parse ID from string content
+function parseIdFromString(content: string): number | null {
+  const id = parseInt(content.trim());
+  return isNaN(id) ? null : id;
+}
+
+// Extract function to read ID from file
+function readIdFromFile(): number | null {
+  try {
+    const content = fs.readFileSync(id_path, 'utf-8');
+    return parseIdFromString(content);
+  } catch (error) {
+    return null;
+  }
+}
+
+// Get ID function according to specification
+async function getId(): Promise<number> {
+  if (!fs.existsSync(id_path)) {
+    // File doesn't exist, get largest ID from database
+    return getLargestIdFromDb();
+  }
+  
+  // Try to read ID from file
+  const fileId = readIdFromFile();
+  
+  // If we couldn't get a valid ID from file, fall back to database
+  if (fileId === null) {
+    return getLargestIdFromDb();
+  }
+  
+  return fileId;
+}
+
+// Initialize auto increment database
+async function initAutoIncrementDb() {
+  globalId = await getId();
   
   // @ts-ignore
   db.getAutoincrementId = () => {
-    const id = s.getItem("id", 0) + 1;
-    s.setItem("id", id);
-    return id;
-};
+    globalId = globalId + 1;
+    fs.writeFileSync(id_path, globalId.toString());
+    return globalId;
+  };
 }
 // @ts-ignore
 const getAutoincrementId = () => db.getAutoincrementId()
@@ -197,11 +249,15 @@ class Task {
 
 
 
+export function isFailedAndNonAllTask(status: any, is_all_task: any) {
+  return status === TaskStatus.FAILED && !is_all_task
+}
+
 async function fetchTaskResult(status: string, result: {}, obj: Task, taskId: number) {
   if (status === TaskStatus.PENDING) {
     result = { result: null }
   } else if (status !== TaskStatus.IN_PROGRESS || obj.is_all_task) {
-    if (status !== TaskStatus.FAILED && !obj.is_all_task) {
+    if (isFailedAndNonAllTask(status, obj.is_all_task)) {
       const taskResult = await TaskResults.getTask(taskId) as any
       result = { result: taskResult[0] }
     } else {

@@ -19,6 +19,7 @@ const pathTaskResultsTasks = getPath( 'task_results', 'tasks');
 const pathTaskResultsCache = getPath( 'task_results', 'cache');
 const pathTaskResultsCacheDirect = getPath( 'task_results', 'direct_cache');
 const cacheStoragePath = getPath( 'task_results', 'cache_storage.json');
+const id_path = getPath('task_results', 'last_task_id.txt');
 const db_path = getPath('db.nedb');
 
 function isNotEmptyObject(obj: object): boolean {
@@ -99,4 +100,4 @@ function cleanBasePath(apiBasePath: string | null | undefined){
 
 }
 
-export { callOnce, db_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile, cleanBasePath};
+export { callOnce, db_path, id_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile, cleanBasePath};

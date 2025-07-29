@@ -1,4 +1,5 @@
-import { createTask, createTaskName, db, getAutoincrementId, isoformat, serializeTask, serializeUiDisplayTask, serializeUiOutputTask, Task, TaskStatus } from './models';
+import fs from 'fs';
+import { createTask, createTaskName, db, getAutoincrementId, isFailedAndNonAllTask, isoformat, serializeTask, serializeUiDisplayTask, serializeUiOutputTask, Task, TaskStatus } from './models';
 import { isNotNullish, isNullish } from './null-utils';
 import { isObject, isNotEmptyObject } from './utils';
 import { kebabCase } from 'change-case';
@@ -20,6 +21,7 @@ import { convertUnicodeDictToAsciiDict } from './convert-to-english'
 import { downloadResults, downloadResultsHttp } from './download'
 import { getBotasaurusStorage } from 'botasaurus/botasaurus-storage'
 import { Launcher } from 'chrome-launcher/dist/chrome-launcher';
+import { electronConfig } from './paths'
 
 // Wrap NeDB operations in promises since it uses callbacks
 const wrapDbOperationInPromise = (operation: any): Promise<any> => {
@@ -38,7 +40,8 @@ async function performCreateAllTask(
   is_sync: boolean,
   scraper_name: string,
   scraper_type: string,
-  all_task_sort_id: number
+  all_task_sort_id: number,
+  withResult: boolean = true
 ): Promise<[any, string]> {
   const allTask = new Task({
     id: await getAutoincrementId(),
@@ -60,12 +63,12 @@ async function performCreateAllTask(
 
   return wrapDbOperationInPromise((cb:any) => db.insert(allTask, cb))
     .then(async (newDoc) => {
-      return [await serialize(createTask(newDoc)), newDoc.id]
+      return [await serialize(createTask(newDoc), withResult), newDoc.id]
     });
 }
 
 
-async function performCreateTasks(tasks: any[], cachedTasks?: any[]): Promise<any> {
+async function performCreateTasks(tasks: any[], cachedTasks?: any[], withResult: boolean = true, giveFirstResultOnly: boolean = false,): Promise<any> {
   return new Promise((resolve, reject) => {
     db.insert(tasks, async (err, newDocs) => {
       if (err) {
@@ -76,7 +79,11 @@ async function performCreateTasks(tasks: any[], cachedTasks?: any[]): Promise<an
           await parallelCreateFiles(fileList);
         }
         
-        resolve(await serialize(newDocs.map(createTask)));
+        if (giveFirstResultOnly) {
+          resolve(newDocs.slice(0, 1))
+        }else {
+        resolve(await serialize(newDocs.map(createTask), withResult));
+        }
       }
     });
   });
@@ -280,7 +287,7 @@ async function performPatchTask(action: string, taskId: number): Promise<void> {
 
 export const OK_MESSAGE = { message: 'OK' };
 
-async function createAsyncTask(validatedData: [string, any, any, any]): Promise<any> {
+async function createAsyncTask(validatedData: [string, any, any, any], withResult: boolean = true, giveFirstResultOnly: boolean = false, ): Promise<any> {
   const [scraper_name, data, metadata, enable_cache] = validatedData;
 
   const [tasksWithAllTask, tasks, split_task] = await createTasks(
@@ -288,7 +295,9 @@ async function createAsyncTask(validatedData: [string, any, any, any]): Promise<
     data,
     metadata,
     enable_cache, 
-    false
+    false,
+    withResult, 
+    giveFirstResultOnly,
   );
 
   if (split_task) {
@@ -298,15 +307,15 @@ async function createAsyncTask(validatedData: [string, any, any, any]): Promise<
   }
 }
 
-async function executeAsyncTask(jsonData: any): Promise<any> {
-  const result = await createAsyncTask(validateTaskRequest(jsonData));
+async function executeAsyncTask(jsonData: any, withResult: boolean = true,giveFirstResultOnly: boolean = false, ): Promise<any> {
+  const result = await createAsyncTask(validateTaskRequest(jsonData), withResult, giveFirstResultOnly);
   return result;
 }
 
-async function executeAsyncTasks(jsonData: any[]): Promise<any[]> {
+async function executeAsyncTasks(jsonData: any[], withResult: boolean = true, giveFirstResultOnly: boolean = false, ): Promise<any[]> {
   const validatedDataItems = jsonData.map(validateTaskRequest);
   const result = await Promise.all(
-    validatedDataItems.map(createAsyncTask)
+    validatedDataItems.map(data => createAsyncTask(data, withResult, giveFirstResultOnly))
   );
   return result;
 }
@@ -337,7 +346,9 @@ async function createTasks(
   data: any,
   metadata: any,
   enable_cache:any, 
-  is_sync: boolean
+  is_sync: boolean,
+  withResult: boolean = true, 
+  giveFirstResultOnly: boolean = false, 
 ): Promise<[any[], any[], boolean]> {
   if (scraper.isGoogleChromeRequired) {
     checkChrome()    
@@ -370,7 +381,8 @@ async function createTasks(
       is_sync,
       scraper_name,
       scraper_type,
-      all_task_sort_id
+      all_task_sort_id,
+      withResult,
     );
     const new_id = all_task_sort_id -1
     // make all task comes at the top
@@ -452,7 +464,7 @@ async function createTasks(
   let cachedTasksLen: number;
   if (enable_cache) {
     [tasks, cachedTasks, cachedTasksLen] = (await createCachedTasks(tasksData)) as any;
-    tasks = await performCreateTasks(tasks, cachedTasks);
+    tasks = await performCreateTasks(tasks, cachedTasks, withResult, giveFirstResultOnly);
   } else {
     tasks = tasksData.map((task_data, idx) => {
       const sort_id = all_task_sort_id - (idx + 1);
@@ -460,7 +472,7 @@ async function createTasks(
     });
     cachedTasksLen = 0;
 
-    tasks = await performCreateTasks(tasks);
+    tasks = await performCreateTasks(tasks, undefined, withResult, giveFirstResultOnly);
   }
 
   if (cachedTasksLen > 0) {
@@ -865,12 +877,21 @@ async function performGetTaskResults(taskId: number): Promise<[string, boolean, 
   
   
     // @ts-ignore
-    const [fmt, filters, sort, view, convertToEnglish] = validateDownloadParams(
+    let [fmt, filters, sort, view, convertToEnglish, downloadFolder] = validateDownloadParams(
       jsonData,
       Server.getSortIds(scraper_name),
       Server.getViewIds(scraper_name),
       Server.getDefaultSort(scraper_name)
     );
+    if (!reply) {
+      downloadFolder = downloadFolder ?? electronConfig.downloadsPath;
+      if (!fs.existsSync(downloadFolder)) {
+        return {
+          path: downloadFolder,
+          error: "PATH_NOT_EXISTS"
+        }
+      }
+    }
 
     const views = Server.getViews(scraper_name)
     // @ts-ignore
@@ -898,7 +919,7 @@ async function performGetTaskResults(taskId: number): Promise<[string, boolean, 
       if (reply){
         return downloadResultsHttp(reply,null as any, fmt, filename, taskId, is_large, streamFn);
       }
-      return downloadResults(null as any, fmt, filename, taskId, is_large, streamFn);
+      return downloadResults(null as any, fmt, filename, taskId, is_large, streamFn, downloadFolder);
     } else {
       if (!Array.isArray(results)) {
         throw new JsonHTTPResponseWithMessage('No Results');
@@ -926,7 +947,7 @@ async function performGetTaskResults(taskId: number): Promise<[string, boolean, 
       if (reply){
         return downloadResultsHttp(reply,cleanedResults, fmt, filename, null as any, is_large, null);
       }
-      return downloadResults(cleanedResults, fmt, filename, null as any, is_large, null);
+      return downloadResults(cleanedResults, fmt, filename, null as any, is_large, null, downloadFolder);
     }
 }
   // Save MEMORY
@@ -1228,9 +1249,6 @@ async function executePatchTask(page: number, jsonData: any): Promise<any> {
     }
   }
   
-function isFailedAndNonAllTask(status: any, is_all_task: any) {
-  return status === TaskStatus.FAILED && !is_all_task
-}
 
 function checkViewForListField(view: string | null, scraper_name: string): any {
   return view && findView(Server.getViews(scraper_name), view)!.containsListField

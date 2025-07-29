@@ -69,8 +69,6 @@ def download_results(results, fmt, filename):
         headers["Content-Type"] = "application/json"
         headers["Content-Disposition"] = f'attachment; filename="{filename}.json"'
         return DownloadResponse(body=dumps(results), status=200, headers=headers)
-    
-    
 
     if results:
         fieldnames = list(results[0].keys())

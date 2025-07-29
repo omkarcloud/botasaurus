@@ -4,13 +4,27 @@ import { relativePath } from "./decorators-utils";
 function getBotasaurusStoragePath(): string {
     return relativePath('botasaurus_storage.json');
 }
+function safeWrite(data: string,  filePath: string, tempPath: string,): void {
+    fs.writeFileSync(tempPath, data,  { encoding: "utf-8" });
+    try {
+        fs.renameSync(tempPath, filePath);
+    } catch (error) {
+        if (fs.existsSync(tempPath)) {
+            fs.unlinkSync(tempPath);
+        }
+        return fs.writeFileSync(filePath, data,  { encoding: "utf-8" });
+    }
+}
+
 
 class JSONStorageBackend {
     private jsonPath: string;
+    private tempPath: string;
     private jsonData: Record<string, any>;
 
     constructor(path: string = getBotasaurusStoragePath()) {
         this.jsonPath = path;
+        this.tempPath = path + ".temp";
         this.jsonData = {};
         this.refresh();
     }
@@ -20,11 +34,17 @@ class JSONStorageBackend {
             this.commitToDisk();
         }
         const fileContent = fs.readFileSync(this.jsonPath, 'utf-8');
-        this.jsonData = JSON.parse(fileContent);
+        try {
+            this.jsonData = JSON.parse(fileContent);    
+        } catch (error) {
+            // file corruption
+            this.jsonData = {}
+            return
+        }
     }
 
     private commitToDisk(): void {
-        fs.writeFileSync(this.jsonPath, JSON.stringify(this.jsonData, null, 4));
+        safeWrite(JSON.stringify(this.jsonData, null, 4), this.jsonPath, this.tempPath)
     }
 
     getItem(key: string, defaultValue: any = null): any {

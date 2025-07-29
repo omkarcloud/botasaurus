@@ -7,27 +7,6 @@ def increment_minor_version(version):
     patch += 1
     return f"{major}.{minor}.{patch}"
 
-
-def get_ts_files():
-    ts_files = []
-    for root, _, files in os.walk("./src"):
-        for file in files:
-            if file.endswith(".ts") and file != "index.ts":
-                ts_files.append(os.path.splitext(file)[0])
-    return ts_files
-
-
-
-def get_exports():
-    modules = get_ts_files()
-    return {f"./{module}": f"./dist/{module}.js" for module in modules}
-
-
-def get_typesVersions():
-    modules = get_ts_files()
-    return {module: [f"dist/{module}.d.ts"] for module in modules}
-
-
 def main():
     package_json_path = "./package.json"
 
@@ -44,17 +23,6 @@ def main():
 
     current_version = data["version"]
     new_version = increment_minor_version(current_version)
-    # data["version"] = new_version
-    data["exports"] = {
-        ".": "./dist/index.js",
-        **get_exports(),
-    }
-    data["typesVersions"] = {
-        "*": {
-            "*": ["dist/*"],
-            **get_typesVersions(),
-        }
-    }
 
     with open(package_json_path, "w") as file:
         json.dump(data, file, indent=2)

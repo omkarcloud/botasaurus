@@ -37,6 +37,7 @@ def browser(
     wait_for_complete_page_load: bool = True,
     add_arguments: Optional[Union[List[str], Callable[[Any, List[str]], None]]] = None,
     remove_default_browser_check_argument: bool = False,
+    chrome_executable_path: Optional[str] = None, 
     extensions: Optional[Union[List[Any], Callable[[Any], List[Any]]]] = None,
     lang: Optional[Union[Callable[[Any], str], str]] = None,
     headless: Optional[Union[Callable[[Any], bool], bool]] = False,
@@ -59,7 +60,6 @@ def browser(
     create_driver: Optional[Callable] = None,
     host: Optional[str] = None,
     port: Optional[int] = None,
-    browser_executable_path: Optional[str] = None
 ) -> Callable:
     def decorator_browser(func: Callable) -> Callable:
         if not hasattr(func, '_scraper_type'):
@@ -71,9 +71,7 @@ def browser(
         def wrapper_browser(*args, **kwargs) -> Any:
             print_running()
 
-            nonlocal parallel, data, cache, block_images_and_css, block_images, window_size, metadata, add_arguments, extensions, tiny_profile, wait_for_complete_page_load, lang, headless, beep, close_on_crash, async_queue, run_async, profile, proxy, user_agent, reuse_driver, raise_exception, must_raise_exceptions, output, output_formats, max_retry, retry_wait, create_driver, create_error_logs, enable_xvfb_virtual_display, host, port, remove_default_browser_check_argument
-            browser_executable_path = browser_executable_path if browser_executable_path and Path(browser_executable_path).is_file() else None
-                
+            nonlocal parallel, data, cache, block_images_and_css, block_images, window_size, metadata, add_arguments,chrome_executable_path, extensions, tiny_profile, wait_for_complete_page_load, lang, headless, beep, close_on_crash, async_queue, run_async, profile, proxy, user_agent, reuse_driver, raise_exception, must_raise_exceptions, output, output_formats, max_retry, retry_wait, create_driver, create_error_logs, enable_xvfb_virtual_display, host, port, remove_default_browser_check_argument
             
             parallel = kwargs.get("parallel", parallel)
             data = kwargs.get("data", data)
@@ -81,6 +79,7 @@ def browser(
             block_images = kwargs.get("block_images", block_images)
             block_images_and_css = kwargs.get("block_images_and_css", block_images_and_css)
             add_arguments = kwargs.get("add_arguments", add_arguments)
+            chrome_executable_path = kwargs.get("chrome_executable_path", chrome_executable_path) 
             extensions = kwargs.get("extensions", extensions)
             window_size = kwargs.get("window_size", window_size)
             metadata = kwargs.get("metadata", metadata)
@@ -174,6 +173,7 @@ def browser(
                         block_images=block_images,
                         block_images_and_css=block_images_and_css,
                         wait_for_complete_page_load=wait_for_complete_page_load,
+                        chrome_executable_path = chrome_executable_path,
                         extensions=evaluated_extensions,
                         arguments=args,
                         user_agent=evaluated_user_agent,
@@ -184,7 +184,6 @@ def browser(
                         host=host,
                         port=port,
                         remove_default_browser_check_argument=remove_default_browser_check_argument,
-                        browser_executable_path = browser_executable_path
                     )
 
                 result = None

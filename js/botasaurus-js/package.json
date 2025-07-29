@@ -1,52 +1,40 @@
 {
   "name": "botasaurus",
-  "version": "4.0.115",
+  "version": "4.0.118",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
+    "./output": "./dist/output.js",
     "./list-utils": "./dist/list-utils.js",
-    "./formats": "./dist/formats.js",
-    "./dontcache": "./dist/dontcache.js",
-    "./playwright": "./dist/playwright.js",
-    "./page": "./dist/page.js",
-    "./cache": "./dist/cache.js",
     "./botasaurus-storage": "./dist/botasaurus-storage.js",
     "./decorators-common": "./dist/decorators-common.js",
-    "./string-utils": "./dist/string-utils.js",
-    "./env": "./dist/env.js",
-    "./decorators-utils": "./dist/decorators-utils.js",
-    "./beep-utils": "./dist/beep-utils.js",
-    "./utils": "./dist/utils.js",
-    "./increment": "./dist/increment.js",
-    "./task": "./dist/task.js",
     "./on-close": "./dist/on-close.js",
+    "./dontcache": "./dist/dontcache.js",
+    "./formats": "./dist/formats.js",
+    "./utils": "./dist/utils.js",
+    "./beep-utils": "./dist/beep-utils.js",
+    "./decorators-utils": "./dist/decorators-utils.js",
+    "./page": "./dist/page.js",
+    "./cache": "./dist/cache.js",
+    "./increment": "./dist/increment.js",
     "./paths": "./dist/paths.js",
-    "./output": "./dist/output.js"
+    "./env": "./dist/env.js",
+    "./playwright": "./dist/playwright.js",
+    "./string-utils": "./dist/string-utils.js",
+    "./task": "./dist/task.js"
   },
   "typesVersions": {
     "*": {
       "*": [
         "dist/*"
       ],
+      "output": [
+        "dist/output.d.ts"
+      ],
       "list-utils": [
         "dist/list-utils.d.ts"
-      ],
-      "formats": [
-        "dist/formats.d.ts"
-      ],
-      "dontcache": [
-        "dist/dontcache.d.ts"
-      ],
-      "playwright": [
-        "dist/playwright.d.ts"
-      ],
-      "page": [
-        "dist/page.d.ts"
-      ],
-      "cache": [
-        "dist/cache.d.ts"
       ],
       "botasaurus-storage": [
         "dist/botasaurus-storage.d.ts"
@@ -54,35 +42,47 @@
       "decorators-common": [
         "dist/decorators-common.d.ts"
       ],
-      "string-utils": [
-        "dist/string-utils.d.ts"
+      "on-close": [
+        "dist/on-close.d.ts"
       ],
-      "env": [
-        "dist/env.d.ts"
+      "dontcache": [
+        "dist/dontcache.d.ts"
       ],
-      "decorators-utils": [
-        "dist/decorators-utils.d.ts"
-      ],
-      "beep-utils": [
-        "dist/beep-utils.d.ts"
+      "formats": [
+        "dist/formats.d.ts"
       ],
       "utils": [
         "dist/utils.d.ts"
       ],
+      "beep-utils": [
+        "dist/beep-utils.d.ts"
+      ],
+      "decorators-utils": [
+        "dist/decorators-utils.d.ts"
+      ],
+      "page": [
+        "dist/page.d.ts"
+      ],
+      "cache": [
+        "dist/cache.d.ts"
+      ],
       "increment": [
         "dist/increment.d.ts"
-      ],
-      "task": [
-        "dist/task.d.ts"
-      ],
-      "on-close": [
-        "dist/on-close.d.ts"
       ],
       "paths": [
         "dist/paths.d.ts"
       ],
-      "output": [
-        "dist/output.d.ts"
+      "env": [
+        "dist/env.d.ts"
+      ],
+      "playwright": [
+        "dist/playwright.d.ts"
+      ],
+      "string-utils": [
+        "dist/string-utils.d.ts"
+      ],
+      "task": [
+        "dist/task.d.ts"
       ]
     }
   },
@@ -131,7 +131,7 @@
   "scripts": {
     "dev": "tsc -w",
     "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
-    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-js/dist/* ~/Documents/botasaurus-desktop-starter/node_modules/botasaurus/dist/",
+    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus/dist/",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
     "prepublishOnly": "npm run build",

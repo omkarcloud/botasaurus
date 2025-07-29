@@ -26,12 +26,12 @@ function getApi() {
   return OK_MESSAGE;
 }
 
-async function createAsyncTask(jsonData: any) {
+async function createAsyncTask(jsonData: any, withResult: boolean = true,giveFirstResultOnly: boolean = false,) {
   if (Array.isArray(jsonData)) {
-    const result = await executeAsyncTasks(jsonData);
+    const result = await executeAsyncTasks(jsonData, withResult, giveFirstResultOnly);
     return result;
   } else {
-    const result = await executeAsyncTask(jsonData);
+    const result = await executeAsyncTask(jsonData, withResult, giveFirstResultOnly);
     return result;
   }
 }

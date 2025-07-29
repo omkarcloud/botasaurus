@@ -5,8 +5,9 @@ import subprocess
 import requests
 from requests.exceptions import ReadTimeout
 import traceback
+import re
 
-from .apache_utils import make_apache_content
+from .apache_utils import make_apache_content, read_conf, remove_apache_proxy_config
 def find_ip(attempts=5, proxy=None) -> str:
     """Finds the public IP address of the current connection."""
     url = 'https://checkip.amazonaws.com/'
@@ -213,8 +214,8 @@ echo "alias python=python3" >> /home/{uname}/.bashrc
 
 sudo apt-get update
 wget  https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-sudo apt-get install -y lsof wget gnupg2 apt-transport-https ca-certificates software-properties-common adwaita-icon-theme alsa-topology-conf alsa-ucm-conf at-spi2-core dbus-user-session dconf-gsettings-backend dconf-service fontconfig fonts-liberation glib-networking glib-networking-common glib-networking-services gsettings-desktop-schemas gtk-update-icon-cache hicolor-icon-theme libasound2 libasound2-data libatk-bridge2.0-0 libatk1.0-0 libatk1.0-data libatspi2.0-0 libauthen-sasl-perl libavahi-client3 libavahi-common-data libavahi-common3 libcairo-gobject2 libcairo2 libclone-perl libcolord2 libcups2 libdata-dump-perl libdatrie1 libdconf1 libdrm-amdgpu1 libdrm-common libdrm-intel1 libdrm-nouveau2 libdrm-radeon1 libdrm2 libencode-locale-perl libepoxy0 libfile-basedir-perl libfile-desktopentry-perl libfile-listing-perl libfile-mimeinfo-perl libfont-afm-perl libfontenc1 libgbm1 libgdk-pixbuf-2.0-0 libgdk-pixbuf2.0-bin libgdk-pixbuf2.0-common libgl1 libgl1-mesa-dri libglapi-mesa libglvnd0 libglx-mesa0 libglx0 libgraphite2-3 libgtk-3-0 libgtk-3-bin libgtk-3-common libharfbuzz0b libhtml-form-perl libhtml-format-perl libhtml-parser-perl libhtml-tagset-perl libhtml-tree-perl libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl libhttp-message-perl libhttp-negotiate-perl libice6 libio-html-perl libio-socket-ssl-perl libio-stringy-perl libipc-system-simple-perl libjson-glib-1.0-0 libjson-glib-1.0-common liblcms2-2 libllvm11 liblwp-mediatypes-perl liblwp-protocol-https-perl libmailtools-perl libnet-dbus-perl libnet-http-perl libnet-smtp-ssl-perl libnet-ssleay-perl libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libpangoft2-1.0-0 libpciaccess0 libpixman-1-0 libproxy1v5 librest-0.7-0 librsvg2-2 librsvg2-common libsensors-config libsensors5 libsm6 libsoup-gnome2.4-1 libsoup2.4-1 libtext-iconv-perl libthai-data libthai0 libtie-ixhash-perl libtimedate-perl libtry-tiny-perl libu2f-udev liburi-perl libvte-2.91-0 libvte-2.91-common libvulkan1 libwayland-client0 libwayland-cursor0 libwayland-egl1 libwayland-server0 libwww-perl libwww-robotrules-perl libx11-protocol-perl libx11-xcb1 libxaw7 libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0 libxcb-present0 libxcb-randr0 libxcb-render0 libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxft2 libxi6 libxinerama1 libxkbcommon0 libxkbfile1 libxml-parser-perl libxml-twig-perl libxml-xpathengine-perl libxmu6 libxmuu1 libxrandr2 libxrender1 libxshmfence1 libxt6 libxtst6 libxv1 libxxf86dga1 libxxf86vm1 libz3-4 mesa-vulkan-drivers perl-openssl-defaults shared-mime-info termit x11-common x11-utils xdg-utils xvfb
-sudo dpkg -i google-chrome-stable_current_amd64.deb
+sudo apt-get install -y lsof xvfb
+sudo apt --fix-broken install ./google-chrome-stable_current_amd64.deb -y
 rm -rf google-chrome-stable_current_amd64.deb
 """    
     subprocess.run(remove_empty_lines(install_dependencies),     shell=True, 
@@ -491,6 +492,82 @@ def get_filename_from_url(url):
         from urllib.parse import urlparse
         return os.path.basename(urlparse(url).path.rstrip("/"))
 
+def wget(debian_installer_url, temp_filename):
+    subprocess.run(["wget", "-O", temp_filename, debian_installer_url], 
+                      check=True, stderr=subprocess.STDOUT)
+
+def get_package_name_from_debian_url(debian_installer_url):
+    """
+    Downloads a debian installer file temporarily and extracts the package name.
+    
+    Args:
+        debian_installer_url (str): URL to the debian installer
+        
+    Returns:
+        str: Package name extracted from the debian file
+    """
+    # Validate URL first
+    validate_url(debian_installer_url)
+    
+    temp_filename = get_filename_from_url(debian_installer_url)
+    delete_installer(temp_filename)
+    try:
+        # Download the file temporarily
+        wget(debian_installer_url, temp_filename)
+        
+        # Extract package name
+        package_name = subprocess.check_output(
+            f"dpkg-deb -f ./{temp_filename} Package", 
+            shell=True
+        ).decode().strip()
+        
+        return package_name
+        
+    finally:
+        delete_installer(temp_filename)
+
+
+def get_api_base_path_from_content(content):
+        # Find ExecStart line using regex
+        exec_start_match = re.search(r'^ExecStart=(.*)$', content, re.MULTILINE)
+        if not exec_start_match:
+            return None
+        
+        exec_start_line = exec_start_match.group(1)
+        
+        # Extract --api-base-path value using regex
+        api_base_path_match = re.search(r'--api-base-path\s+([^\s]+)', exec_start_line)
+        if api_base_path_match:
+            a = api_base_path_match.group(1)
+            if a:
+              a = a.strip()
+            return a
+        
+        return "/" 
+
+def get_api_base_path_from_service(service_file_path):
+
+    """
+    Reads a systemd service file and extracts the --api-base-path value from ExecStart.
+    
+    Args:
+        service_file_path (str): Path to the systemd service file
+        
+    Returns:
+        str or None: The api-base-path value if found, "/" if ExecStart exists but no --api-base-path, 
+                     None if service doesn't exist, no ExecStart found, or error occurs
+    """
+    try:
+        if not os.path.exists(service_file_path):
+            return None
+            
+        with open(service_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return get_api_base_path_from_content(content)
+    except Exception as e:
+        # If any error occurs, return None
+        return None
+
 def kill_process(name):
     """
     Terminates all processes matching the given name.
@@ -520,11 +597,71 @@ def kill_process(name):
     except Exception as e:
         print(f"Error Encountered while killing {name}", e)
 
+
+
+
+def remove_service(service_file_path):
+    """
+    removes a systemd service.
+    
+    Args:
+        service_name (str): Name of the service (with .service extension)
+    """
+    if os.path.exists(service_file_path):
+            subprocess.run(
+                ["sudo", "rm", service_file_path],
+                check=True,
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL
+            )
+
+def stop_service(service_name):
+    """
+    Stops a systemd service.
+    
+    Args:
+        service_name (str): Name of the service (with .service extension)
+    """
+    try:
+        # Stop the service
+        subprocess.run(
+            ["sudo", "systemctl", "stop", service_name],
+            check=False,  # Don't fail if service is already stopped
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL
+        )
+        
+        # Disable the service
+        subprocess.run(
+            ["sudo", "systemctl", "disable", service_name],
+            check=False,  # Don't fail if service is already disabled
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL
+        )
+        
+        click.echo(f"Successfully removed service: {service_name}")
+        
+    except Exception as e:
+        click.echo(f"Warning: Could not fully remove service {service_name}: {e}")
+
+def stop_desktop_app_services(package_name):
+    """
+    Removes systemd services associated with a desktop app.
+    
+    Args:
+        package_name (str): Name of the package
+    """
+    # Remove the package service
+    package_service_name = f"{package_name}.service"
+    stop_service(package_service_name)
+    
+
 def install_desktop_app_in_vm(
         debian_installer_url,
         port,
         skip_apache_request_routing,
-        api_base_path
+        api_base_path,
+        custom_args
     ):
     # Validate api_base_path
     api_base_path = clean_base_path(api_base_path)
@@ -537,11 +674,11 @@ def install_desktop_app_in_vm(
     install_chrome(uname)
     default_name = get_filename_from_url(debian_installer_url)
 
-    delete_installer(default_name)
     
 
-    
-    subprocess.run(["wget", debian_installer_url], check=True, stderr=subprocess.STDOUT)
+    # remove any interrupted downloads
+    delete_installer(default_name)
+    wget(debian_installer_url, default_name)
     package_name = subprocess.check_output(f"dpkg-deb -f ./{default_name} Package", shell=True).decode().strip()
     is_already_installed = is_package_installed(package_name)
     if is_already_installed:
@@ -549,8 +686,8 @@ def install_desktop_app_in_vm(
     else:
         install_command = f"sudo apt --fix-broken install ./{default_name} -y"
     subprocess.run(install_command, shell=True, check=True, stderr=subprocess.STDOUT)
+    delete_installer(default_name)
     
-
     # Create systemd service for Xvfb
     xvfb_service_name = f"xvfb.service"
     xvfb_service_content = f"""[Unit]
@@ -576,7 +713,7 @@ StartLimitInterval=0
 Type=simple
 User={uname}
 Environment="DISPLAY=:99"
-ExecStart=/usr/bin/{package_name} --only-start-api --port {port} {'--api-base-path ' + api_base_path if api_base_path else ''}
+ExecStart=/usr/bin/{package_name} --no-sandbox --only-start-api --port {port}{' --api-base-path ' + api_base_path if api_base_path else ''}{' ' +custom_args if custom_args else ''}
 Restart=always
 RestartSec=1
 [Install]
@@ -599,6 +736,7 @@ sudo a2enmod proxy_http
 sudo systemctl restart apache2"""
     subprocess.run(remove_empty_lines(systemctl_commands), shell=True, check=True, stderr=subprocess.STDOUT)
 
+
     if is_already_installed:
         kill_process(package_name)
 
@@ -606,7 +744,7 @@ sudo systemctl restart apache2"""
     click.echo("Now, Checking API Status...")
     
     ip =  f"127.0.0.1:{port}" if skip_apache_request_routing else get_vm_ip()
-    wait_till_desktop_api_up(ip, api_base_path)
+    wait_till_desktop_api_up(ip, api_base_path, package_service_name)
     
     if skip_apache_request_routing:
         click.echo(f"Hurray! your desktop app is up and running at http://{ip}{api_base_path or '/'}")
@@ -629,14 +767,6 @@ def delete_installer(default_name):
     if os.path.exists(default_name):
         os.remove(default_name)
 
-def read_file(path):
-    with open(path, 'r', encoding="utf-8") as fp:
-        content = fp.read()
-        return content
-        
-def read_conf():
-    return read_file("/etc/apache2/sites-available/000-default.conf")
-
 def setup_apache_load_balancer_desktop_app(port, api_base_path):
     root_path = api_base_path or '/'
     api_target = f"http://127.0.0.1:{port}{root_path}"
@@ -655,18 +785,19 @@ def validate_url(url):
         except requests.exceptions.RequestException as e2:
             raise Exception(f"The URL {url} does not point to a valid Debian installer.")
 
-def wait_till_desktop_api_up(ip, api_base_path):
+def wait_till_desktop_api_up(ip, api_base_path, package_service_name):
     """
     Polls the given IP address every 10 seconds for 180 seconds to check if it's up.
 
     Args:
     ip (str): The IP address to check.
     api_base_path (str): The API path prefix.
+    package_service_name (str): The name of the service package.
 
     Raises:
     Exception: If the IP is not up after 180 seconds.
     """
-    timeout = 60  # Total time to wait in seconds
+    timeout = 30  # Total time to wait in seconds
     interval = 1  # Time to wait between checks in seconds
     end_time = time.time() + timeout
 
@@ -686,13 +817,95 @@ def wait_till_desktop_api_up(ip, api_base_path):
             pass
 
         time.sleep(interval)
+    
     # If the function hasn't returned after the loop, raise an exception
-    raise Exception(
-        f'The Desktop Api at http://{ip}{api_base_path or "/"} is not running. You have surely forgotten to enable the Api in "api-config.ts". Kindly enable it in "api-config.ts".'
-    )
+    api_url = f"http://{ip}{api_base_path or '/'}"
+    error_message = f"""
+The Desktop API at {api_url} is not running. This may be because:
+
+1. You have forgotten to enable the API in "api-config.ts". 
+   If so, kindly enable it in "api-config.ts".
+
+2. The service failed to start due to a startup error. 
+   Kindly check logs by running: journalctl -u {package_service_name} -b
+"""
+    raise Exception(error_message.strip())
+
+def uninstall_desktop_app_in_vm(debian_installer_url, package_name, skip_apache_request_routing):
+    """
+    Uninstalls a desktop app from the VM.
+    
+    Args:
+        debian_installer_url (str, optional): URL to the debian installer
+        package_name (str, optional): Name of the package to uninstall
+    """
+    # Determine package name
+    if debian_installer_url:
+        click.echo("Extracting package name from Debian installer URL...")
+        final_package_name = get_package_name_from_debian_url(debian_installer_url)
+    else:
+        final_package_name = package_name
+    
+    click.echo(f"Uninstalling package: {final_package_name}")
+    
+    # 1. Stop and remove systemd services
+    click.echo("Stopping and removing systemd services...")
+    stop_desktop_app_services(final_package_name)
+    
+    # 2. Kill any running processes
+    click.echo("Stopping running processes...")
+    kill_process(final_package_name)
+    
+    service_file_path = f"/etc/systemd/system/{final_package_name}.service"
+    
+    path = get_api_base_path_from_service(service_file_path)
+    # 3. Uninstall the package
+    click.echo("Removing package...")
+    try:
+        subprocess.check_output(
+                ["sudo", "apt", "remove", "-y", "--purge", final_package_name],
+                stderr=subprocess.STDOUT,
+            )
+        click.echo(f"Successfully removed package: {final_package_name}")
+    except subprocess.CalledProcessError as e:
+        if e.stdout:
+            if "Unable to locate package" in str(e.stdout.decode('utf-8')):
+                pass
+            else:
+                raise
+        else: 
+            raise
+        if not skip_apache_request_routing and path:
+            # 4. Clean up Apache proxy configuration
+            click.echo("Cleaning up Apache proxy configuration...")
+            
+            cleaned_conf = remove_apache_proxy_config(path) # Also clean root path just in case
+            write_file_sudo(cleaned_conf, "/etc/apache2/sites-available/000-default.conf")
+                
+            systemctl_reload_commands = """
+            sudo systemctl daemon-reload
+            sudo systemctl restart apache2
+            """
+        else:
+            systemctl_reload_commands = """
+            sudo systemctl daemon-reload
+            """
+        
+        remove_service(service_file_path)
+        subprocess.run(remove_empty_lines(systemctl_reload_commands), shell=True, check=True, stderr=subprocess.STDOUT)
+        click.echo(f"Successfully uninstalled {final_package_name}.")
 
 # python -m bota.vm 
 if __name__ == "__main__":
+#     print(get_api_base_path_from_content("""
+# StartLimitInterval=0
+# [Service]
+# Type=simple
+# Environment="DISPLAY=:99"
+# ExecStart=/usr/bin/aa --no-sandbox --only-start-api --port --api-base-path
+# RestartSec=1
+# [Install]
+# """))
     pass
     # launch_file_path, service_name = create_main("botasaurus-starter", "USERNAME", 'unlimited',)
     # setup_systemctl_for_data_scraper(launch_file_path, service_name)

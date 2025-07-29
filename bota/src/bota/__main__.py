@@ -6,7 +6,7 @@ import click
 from os import path, makedirs
 
 from .package_storage import get_package_storage
-from .vm import extractRepositoryName, install_desktop_app_in_vm, install_scraper_in_vm, install_ui_scraper_in_vm
+from .vm import extractRepositoryName, install_desktop_app_in_vm, install_scraper_in_vm, install_ui_scraper_in_vm, uninstall_desktop_app_in_vm
 
 @click.group(context_settings=dict(max_content_width=160))
 def cli():
@@ -283,7 +283,15 @@ def project_exists(project_id):
     except Exception as e:
         print(f"An error occurred while checking the project: {e}")
         return False
-
+def is_int(x: str) -> bool:
+    if not x:
+        return False
+    
+    # Handle negative/positive signs
+    if x[0] in ['+', '-']:
+        return x[1:].isdigit() if len(x) > 1 else False
+    
+    return x.isdigit()
 def set_and_get_project_id():
     project_ids = get_project_ids()
     if len(project_ids) == 0:
@@ -297,15 +305,25 @@ def set_and_get_project_id():
     else:
         click.echo("Multiple projects found. Please select one:")
         for idx, project_id in enumerate(project_ids):
-            click.echo(f"{idx + 1}: {project_id}")
+            click.echo(f"{idx + 1}. {project_id}")
         while True:
-            selection = click.prompt("Enter the number of the project you want to use", type=int)
-            if 1 <= selection <= len(project_ids):
-                selected_project_id = project_ids[selection - 1]
+            selection = click.prompt("Enter the number or project ID of the project you want to use").strip()
+            # Check if selection is a number
+            if (is_int(selection)):
+              idx = int(selection)
+              if 1 <= idx <= len(project_ids):
+                selected_project_id = project_ids[idx - 1]
                 get_package_storage().set_item("project_id", selected_project_id)
                 return selected_project_id
+              else:
+                click.echo("Invalid number. Please select a number from the list.")
+            # Check if selection matches a project ID directly
             else:
-                click.echo("Invalid selection. Please select a number from the list.")
+              if selection in project_ids:
+                get_package_storage().set_item("project_id", selection)
+                return selection
+              else:
+                click.echo("Invalid project ID. Please enter a valid number or project ID from the list.")
 
 @catch_gcloud_not_found_error
 def get_project_id():
@@ -315,7 +333,7 @@ def get_project_id():
             return project_id
     
     pj =  set_and_get_project_id()
-    click.echo(f"You have selected {pj} project.")
+    click.echo(f'You have selected {pj} project. To change use "python -m bota switch-project"')
     return pj
 
 @catch_gcloud_not_found_error
@@ -344,7 +362,7 @@ def get_region():
    region = get_package_storage().get_item("region")
    if not region:
        rgn =  set_get_region()
-       click.echo(f"You have selected {rgn} region.")
+       click.echo(f'You have selected {rgn} region. To change use "python -m bota switch-region"')
        return rgn
    return region
 
@@ -759,35 +777,40 @@ def create_ip(name):
         click.echo(f"------ Creating IP address {name} ------")
         create_external_ip_regional(name, project_id, region)
         click.echo("Successfully created IP address.")
-
 @cli.command()
-@click.option("--name", prompt="Enter VM name", required=True, help="The name of the VM to delete the IP address for.")
 @click.option(
-    "--force", is_flag=True, help="Force deletion of the IP address without confirmation. Use this option with caution."
+  "--force", is_flag=True, help="Force deletion of the IP address without confirmation. Use this option with caution."
 )
-def delete_ip(name, force):
-    """Deletes an IP address for a VM"""
-    project_id = get_project_id()
-    name = name.strip().rstrip('-ip')
-    region = get_region()
-    if not does_ip_exists_regional(name, project_id, region):
-        ips = list_all_ips_regional(project_id, region)
-        if ips:
-          ips = ', '.join(ips)
-          click.echo(f"IP address {name}-ip not found. Available IP addresses are: {ips}.")
-        else: 
-          click.echo(f"IP address {name}-ip not found.")
-        return
+def delete_ip(force):
+  """Deletes an IP address for a VM"""
+  project_id = get_project_id()
+  region = get_region()
+  
+  # Get available IPs
+  ips = list_all_ips_regional(project_id, region)
+  if not ips:
+    click.echo(f"No IP addresses found in region '{region}'.")
+    return
+    
+  ips_str = ', '.join(ips)
+  name = None
+  while not name:
+    name = click.prompt(f"Enter name of IP address to delete. Available IP addresses are: {ips_str}").strip().rstrip('-ip')
 
-    if not force:
-        if not click.confirm(f"Are you sure you want to delete the IP address '{name}'?"):
-            click.echo("Deletion aborted.")
-            return
-
-    click.echo(f"------ Deleting IP address {name} ------")
-
-    delete_external_ip_regional(name,  project_id, region) 
-    click.echo("Successfully deleted IP address.")
+  if not does_ip_exists_regional(name, project_id, region):
+    if ips:
+      ips_str = ', '.join(ips) 
+      click.echo(f"IP address {name}-ip not found. Available IPs are: {ips_str}.")
+    else:
+      click.echo(f"IP address {name}-ip not found.")
+    return
+  if not force:
+    if not click.confirm(f"Are you sure you want to delete the IP address '{name}'?"):
+      click.echo("Deletion aborted.")
+      return
+  click.echo(f"------ Deleting IP address {name} ------")
+  delete_external_ip_regional(name, project_id, region) 
+  click.echo("Successfully deleted IP address.")
 
 @cli.command()
 @click.option("--cluster-name", prompt="Enter cluster name", required=True, help="The name of the Kubernetes cluster to be created.")
@@ -1175,7 +1198,6 @@ def install_scraper(repo_url, max_retry, name):
   click.echo("------------")
 
   install_scraper_in_vm(repo_url, folder_name, max_retry)
-
 @cli.command()
 @click.option(
     "--debian-installer-url",
@@ -1191,17 +1213,23 @@ def install_scraper(repo_url, max_retry, name):
     help="Port on which the desktop app will run. Defaults to 8000",
 )
 @click.option(
-    "--skip-apache-request-routing",
-    is_flag=True,
-    help="Skip setting up Apache request routing",
-)
-@click.option(
     "--api-base-path",
     default=None,
     type=str,
     help="Specifies the initial URL segment that prefixes all API endpoint paths",
 )
-def install_desktop_app(debian_installer_url, port, skip_apache_request_routing, api_base_path):
+@click.option(
+    "--custom-args",
+    default=None,
+    type=str,
+    help="Custom arguments to pass when launching the app (e.g., --custom-args \"--enable-x-feature --log-level debug\")",
+)
+@click.option(
+    "--skip-apache-request-routing",
+    is_flag=True,
+    help="Skip setting up Apache request routing",
+)
+def install_desktop_app(debian_installer_url, port, api_base_path, custom_args, skip_apache_request_routing):
     """
     Installs a desktop app in the VM using the provided .deb installer URL
     """
@@ -1214,6 +1242,8 @@ def install_desktop_app(debian_installer_url, port, skip_apache_request_routing,
     click.echo("Performing the following steps to install the desktop app:")
     click.echo(f"    - Downloading and installing the desktop app from {debian_installer_url}")
     click.echo("    - Setting up systemctl to run app at all times")
+    if custom_args:
+        click.echo(f"    - Configuring app to launch with custom arguments: {custom_args}")
     if not skip_apache_request_routing:
         click.echo("    - Configuring Apache request routing")
     click.echo("------------")    
@@ -1222,7 +1252,53 @@ def install_desktop_app(debian_installer_url, port, skip_apache_request_routing,
         debian_installer_url.strip(),
         port,
         skip_apache_request_routing,
-        api_base_path.strip() if api_base_path else None
+        api_base_path.strip() if api_base_path else None,
+        custom_args.strip() if custom_args else None
+    )
+
+@cli.command()
+@click.option(
+    "--debian-installer-url",
+    required=False,
+    type=str,
+    help="URL to the .deb package for the desktop app to uninstall",
+)
+@click.option(
+    "--package-name",
+    required=False, 
+    type=str,
+    help="Name of the package to uninstall (alternative to debian-installer-url)",
+)
+@click.option(
+    "--skip-apache-request-routing",
+    is_flag=True,
+    help="Skip cleaning up Apache request routing",
+)
+def uninstall_desktop_app(debian_installer_url, package_name, skip_apache_request_routing):
+    """
+    Uninstalls a desktop app from the VM
+    """
+    if not debian_installer_url and not package_name:
+        raise click.UsageError("Either --package-name or --debian-installer-url must be provided.")
+    
+    if debian_installer_url and package_name:
+        raise click.UsageError("Please provide only one of --debian-installer-url or --package-name, not both")
+
+    click.echo("------------")
+    click.echo("Performing the following steps to uninstall the desktop app:")
+    click.echo("    - Stopping and removing systemd services")
+    if package_name:
+      click.echo(f"    - Uninstalling the {package_name} package")
+    else:
+      click.echo("    - Uninstalling the desktop app package")  
+    click.echo("    - Cleaning up Apache request routing")
+    click.echo("------------")
+    
+    # Call the actual implementation
+    uninstall_desktop_app_in_vm(
+        debian_installer_url.strip() if debian_installer_url else None,
+        package_name.strip() if package_name else None,
+        skip_apache_request_routing,
     )
 
 @cli.command()

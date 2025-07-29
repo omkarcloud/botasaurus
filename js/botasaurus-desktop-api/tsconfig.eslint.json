@@ -1,7 +1,7 @@
 {
-	"extends": "./tsconfig.json",
-	"include": [
-		"src",
-		"jest.config.ts"
-	]
+    "extends": "./tsconfig.json",
+    "include": ["src/**/*", "test", ".github/scripts", "jest.config.js", "eslint.config.mjs", "rsbuild.config.ts"],
+    "compilerOptions": {
+        "allowJs": true
+    }
 }

@@ -4,8 +4,8 @@ import { getPathToDownloadsDirectory } from './paths'
 import { TaskResults } from './task-results'
 
 // Handles the download result based on format
-export function downloadResults(results: Array<Record<string, any>>, fmt: string, filename: string, taskId: any, is_large: boolean, streamFn: any) {
-    const filePath = getPathToDownloadsDirectory(filename);
+export function downloadResults(results: Array<Record<string, any>>, fmt: string, filename: string, taskId: any, is_large: boolean, streamFn: any, downloadFolder?: string | null) {
+    const filePath = getPathToDownloadsDirectory(filename, downloadFolder);
 
     if (fmt === "json") {
         if (is_large) {

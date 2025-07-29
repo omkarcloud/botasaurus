@@ -43,13 +43,13 @@ def print_running():
         first_run = True
         print("Running")
     
-
 class AsyncQueueResult:
     def __init__(self, worker_thread, task_queue, result_list):
         self._worker_thread = worker_thread
         self._task_queue = task_queue
         self.result_list = result_list
         self._seen_items = set()
+        self._finished = False  # Flag to track if get() was called
 
     def get_unique(self, items):
         single_item = False
@@ -76,6 +76,9 @@ class AsyncQueueResult:
         return new_items[0] if single_item and new_items else new_items
 
     def put(self, *args, **kwargs):
+        if self._finished:
+            raise RuntimeError("Cannot put items after get() was called")
+        
         if args:
             unique_args = self.get_unique(args[0])
             args_to_put = (unique_args, *args[1:])
@@ -87,6 +90,7 @@ class AsyncQueueResult:
     def get(self):
         import sys
         self._task_queue.put(None)
+        self._finished = True  # Mark as finished
         thread = self._worker_thread
         try:
             # Must see https://stackoverflow.com/questions/4136632/how-to-kill-a-child-thread-with-ctrlc
@@ -97,8 +101,6 @@ class AsyncQueueResult:
         self._task_queue.join()
 
         return flatten(self.result_list)
-
-
 
 def run_parallel(run, ls, n_workers, use_threads):
     from joblib import Parallel, delayed

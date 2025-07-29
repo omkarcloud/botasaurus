@@ -18,7 +18,7 @@ const ContentContainer = ({ selectedScraper, hasSingleScraper }: { selectedScrap
 
   const controls = useMemo(
     () => createControls(selectedScraper.input_js),
-    [selectedScraper]
+    [selectedScraper.scraper_name]
   )
 
   //@ts-ignore
@@ -28,7 +28,9 @@ const ContentContainer = ({ selectedScraper, hasSingleScraper }: { selectedScrap
   // @ts-ignore
     window.apiBasePath ?? '',
   // @ts-ignore
-    window.routeAliases[selectedScraper.scraper_name] ?? []
+    window.routeAliases[selectedScraper.scraper_name] ?? [],
+    // @ts-ignore
+    window.enable_cache,
   )
 
   return <MarkdownComponent content={readmeContent} />
