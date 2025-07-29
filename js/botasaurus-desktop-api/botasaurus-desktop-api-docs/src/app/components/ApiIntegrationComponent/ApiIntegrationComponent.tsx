@@ -55,7 +55,7 @@ const ScraperContainer = ({ scrapers }: { scrapers: any[] }) => {
 const ApiIntegrationComponent = () => {
   // @ts-ignore
   const scrapers = window.scrapers
-  if (!scrapers || scrapers.length ===0) {
+  if (!scrapers || scrapers.length === 0) {
     return <EmptyScraper />
   }
 
