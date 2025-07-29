@@ -250,28 +250,6 @@ fs.writeFileSync(filename, buffer)
   }
 }
 
-function makeResponseFn(baseUrl: string, apiBasePath: string) {
-  if (baseUrl && apiBasePath) {
-    return `new Api({
-  apiUrl: '${baseUrl}',
-  apiBasePath: '${apiBasePath}',
-  createResponseFiles: false,
-})`
-  } else if (baseUrl) {
-    return `new Api({
-  apiUrl: '${baseUrl}',
-  createResponseFiles: false,
-})`
-  } else if (apiBasePath) {
-    return `new Api({
-  apiBasePath: '${apiBasePath}',
-  createResponseFiles: false,
-})`
-  } else {
-    return `new Api({ createResponseFiles: false })`
-  }
-}
-
 function makeAPI(baseUrl, apiBasePath) {
   const config: string[] = []
 

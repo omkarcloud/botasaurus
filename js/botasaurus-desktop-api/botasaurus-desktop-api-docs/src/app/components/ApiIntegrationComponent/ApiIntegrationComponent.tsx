@@ -16,10 +16,8 @@ const ContentContainer = ({ selectedScraper, hasSingleScraper }: { selectedScrap
   const views = selectedScraper.views
   const default_sort = selectedScraper.default_sort
 
-  const controls = useMemo(
-    () => createControls(selectedScraper.input_js),
-    [selectedScraper.scraper_name]
-  )
+  //@ts-ignore
+  const controls = useMemo(() => createControls(selectedScraper.input_js),[selectedScraper.scraper_name])
 
   //@ts-ignore
   const defdata = controls.getDefaultData()
