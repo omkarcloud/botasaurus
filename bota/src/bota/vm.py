@@ -785,9 +785,35 @@ def validate_url(url):
         except requests.exceptions.RequestException as e2:
             raise Exception(f"The URL {url} does not point to a valid Debian installer.")
 
+def api_config_disabled(service_name, seconds):
+        """
+        Checks if the API is disabled by looking for specific error messages in service logs.
+        
+        Args:
+            service_name (str): Name of the systemd service
+            
+        Returns:
+            bool: True if API is disabled, False otherwise
+        """
+        try:
+            logs = subprocess.check_output(
+                f"sudo journalctl -u {service_name} --since '{seconds} seconds ago'",
+                shell=True, text=True
+            )
+            return "Kindly enable the API in" in logs
+        except subprocess.CalledProcessError:
+            return False
+def generate_api_not_enabled_message():
+    return f"""The API is not enabled in "api-config.ts".
+To enable it:
+1. Follow the instructions at:
+   https://www.omkar.cloud/botasaurus/docs/botasurus-desktop/botasaurus-desktop-api/adding-api#how-to-add-an-api-to-your-app
+2. Once enabled, rebuild and reinstall the app in your VM."""
+    
 def wait_till_desktop_api_up(ip, api_base_path, package_service_name):
     """
-    Polls the given IP address every 10 seconds for 180 seconds to check if it's up.
+    Polls the given IP address every second for 30 seconds to check if it's up.
+    Checks for API configuration issues after 12 seconds.
 
     Args:
     ip (str): The IP address to check.
@@ -795,11 +821,13 @@ def wait_till_desktop_api_up(ip, api_base_path, package_service_name):
     package_service_name (str): The name of the service package.
 
     Raises:
-    Exception: If the IP is not up after 180 seconds.
+    Exception: If the IP is not up after 30 seconds.
     """
     timeout = 30  # Total time to wait in seconds
     interval = 1  # Time to wait between checks in seconds
     end_time = time.time() + timeout
+    api_config_check_time = 10  # Check for API config issues after 10 seconds
+    api_config_checked = False
 
     while time.time() < end_time:
         try:
@@ -816,20 +844,27 @@ def wait_till_desktop_api_up(ip, api_base_path, package_service_name):
             # If a connection error occurs, just wait and try again
             pass
 
+        # Check for API configuration issues after 12 seconds
+        elapsed_time = timeout - (end_time - time.time())
+        if elapsed_time >= api_config_check_time and not api_config_checked:
+            if api_config_disabled(package_service_name,  api_config_check_time + 5):
+                raise Exception(generate_api_not_enabled_message())
+            api_config_checked = True
+
         time.sleep(interval)
     
-    # If the function hasn't returned after the loop, raise an exception
+    # After timeout, check if it's an API configuration issue
     api_url = f"http://{ip}{api_base_path or '/'}"
-    error_message = f"""
-The Desktop API at {api_url} is not running. This may be because:
+    
+    if api_config_disabled(package_service_name, timeout + 5):
+        error_message = generate_api_not_enabled_message()
+    else:
+        error_message = f"""The Desktop API at {api_url} is not running.
 
-1. You have forgotten to enable the API in "api-config.ts". 
-   If so, kindly enable it in "api-config.ts".
-
-2. The service failed to start due to a startup error. 
-   Kindly check logs by running: journalctl -u {package_service_name} -b
-"""
-    raise Exception(error_message.strip())
+To troubleshoot, view the logs by running:
+journalctl -u {package_service_name} -b"""
+    
+    raise Exception(error_message)
 
 def uninstall_desktop_app_in_vm(debian_installer_url, package_name, skip_apache_request_routing):
     """

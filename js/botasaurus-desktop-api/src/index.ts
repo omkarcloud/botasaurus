@@ -94,13 +94,13 @@ export default class Api {
     private _apiUrl: string;
     private _apiBasePath: string;
     private _createResponseFiles: boolean;
-    private readonly DEFAULT_API_URL = "http://127.0.0.1:8000";
+    private readonly DEFAULT_API_URL = "http://localhost:8000";
 
     constructor({ apiUrl,  createResponseFiles = false, apiBasePath = "", }: { apiUrl?: string;  createResponseFiles?: boolean ;apiBasePath?: string;} = { createResponseFiles: true }) {
         /**
          * Initializes the API client with a specified server URL, base path, and an option to create response files.
          *
-         * @param apiUrl The base URL for the API server. If not specified, defaults to "http://127.0.0.1:8000".
+         * @param apiUrl The base URL for the API server. If not specified, defaults to "http://localhost:8000".
          * @param createResponseFiles Indicates if the client should create response files for each API call. This is useful for debugging or development purposes. Defaults to True.
          * @param apiBasePath Base path to prefix API endpoints (e.g., "/v1").
          */

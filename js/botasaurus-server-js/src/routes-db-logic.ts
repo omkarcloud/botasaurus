@@ -643,10 +643,10 @@ async function save(x: [number, string]) {
     let per_page = queryParams.per_page;
   
     if (isNotNullish(per_page)) {
-      per_page = tryIntConversion(per_page, "Invalid 'per_page' parameter. It must be a positive integer.");
+      per_page = tryIntConversion(per_page, `Invalid 'per_page' parameter value: "${page}". It must be a positive integer.`);
       if (!isValidPositiveInteger(per_page)) {
         throw new JsonHTTPResponseWithMessage(
-          "Invalid 'per_page' parameter. It must be a positive integer."
+          `Invalid 'per_page' parameter value: "${page}". It must be a positive integer.`
         );
       }
     } else {
@@ -655,10 +655,10 @@ async function save(x: [number, string]) {
     }
   
     if (isNotNullish(page)) {
-      page = tryIntConversion(page, "Invalid 'page' parameter. It must be a positive integer.");
+      page = tryIntConversion(page, `Invalid 'page' parameter value: "${page}". It must be a positive integer.`);
       if (!isValidPositiveInteger(page)) {
         throw new JsonHTTPResponseWithMessage(
-          "Invalid 'page' parameter. It must be a positive integer."
+          `Invalid 'page' parameter value: "${page}". It must be a positive integer.`
         );
       }
     } else {

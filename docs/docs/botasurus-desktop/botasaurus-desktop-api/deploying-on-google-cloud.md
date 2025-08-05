@@ -161,7 +161,7 @@ python3 -m bota uninstall-desktop-app --debian-installer-url https://yahoo-finan
 **Method 2: Using Package Name**
 
 1. Find your package **name** in `package.json`:
-   ![Example of package.json file](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/package-json-example.png)
+   ![Example of package.json file](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/gcp/package-json-example.png)
 
 2. Uninstall using the package **name**:
    ```bash
@@ -208,27 +208,27 @@ Running VMs is expensive, but there are a few decent ways to reduce costs:
 
 - Use Spot VMs for personal/non-critical workloads. Spot VMs are up to 60-91% cheaper than standard VMs, but they can be stopped by Google at any time if the resources are needed elsewhere.
 
+   The Botasaurus task management system is fault-tolerant, making it well-suited for Spot VMs.
 
-The Botasaurus task management system is fault-tolerant, making it well-suited for Spot VMs.
+   **Spot VMs are perfect for:**
+   - Personal scraping
+   - Batch jobs where you can check the results later
 
-**Spot VMs are perfect for:**
-- Personal scraping
-- Batch jobs where you can check the results later
+   **Avoid Spot VMs when:**
+   - Running customer-facing APIs that require high availability
+   - Running mission-critical applications that cannot tolerate downtime
 
-**Avoid Spot VMs when:**
-- Running customer-facing APIs that require high availability
-- Running mission-critical applications that cannot tolerate downtime
+   To use a Spot VM, when creating VM, go to **Advanced** > **Provisioning model** and select **Spot**.
 
-To use a Spot VM, when creating VM, go to **Advanced** > **Provisioning model** and select **Spot**.
-
-![Spot VM Option](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/spot-vm-option.png)
+   ![spot vm](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/gcp/spot-vm.png)
 
 - If you have a stable, long-term workload, you can achieve significant savings by committing to 1-year (37% discount) or 3-year terms (55-70% discount).
 
-:::tip CUDs: Pros and Cons
-**Pro:** Significant discounts for predictable workloads.
-**Con:** You are locked into paying for the committed resources for the entire term, even if you stop using the VM. We recommend running a VM with on-demand pricing for 2 months to confirm your needs before committing.
-:::
+
+      :::tip CUDs: Pros and Cons
+      **Pro:** Significant discounts for predictable workloads.
+      **Con:** You are locked into paying for the committed resources for the entire term, even if you stop using the VM. We recommend running a VM with on-demand pricing for 2 months to confirm your needs before committing.
+      :::
 
 
 ### Should I Choose On-Demand, 1-Year CUD, or 3-Year CUD?
@@ -361,16 +361,16 @@ Before purchasing CUDs, carefully analyze your resource needs:
    | e2-standard-2| 2     |
    | e2-standard-4| 4     |
 
-   :::warn[Use Pricing Calculator vCPU Values]
+   :::warning[Use Pricing Calculator vCPU Values]
    The vCPU count displayed when creating an instance is incorrect:
 
    ![Example of vCPU count in Create Page](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/gcp/gcp-cud-create.png)
 
-   Always use the vCPU count from the [Pricing Calculator](https://cloud.google.com/products/calculator?hl=en&dl=CjhDaVF5WldVMFlUZzNPUzFqTm1Ka0xUUTBOelF0WVRBM1pDMW1NREE1TURNNVltTTBaRE1RQVE9PRAIGiRFNUZGNEQ3OC1EMTdELTRGMDktOUMzOC00NUIyNDhDOTU1MTU) when purchasing CUDs:
+   **Always** use the vCPU count from the [Pricing Calculator](https://cloud.google.com/products/calculator?hl=en&dl=CjhDaVF5WldVMFlUZzNPUzFqTm1Ka0xUUTBOelF0WVRBM1pDMW1NREE1TURNNVltTTBaRE1RQVE9PRAIGiRFNUZGNEQ3OC1EMTdELTRGMDktOUMzOC00NUIyNDhDOTU1MTU) when purchasing CUDs:
 
    ![Example of vCPU count in Pricing Calculator](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/gcp/calc-vcpu-count.png)
    :::
-4. Find your instance's memory size in GB using the same [Pricing Calculator](https://cloud.google.com/products/calculator?hl=en&dl=CjhDaVF5WldVMFlUZzNPUzFqTm1Ka0xUUTBOelF0WVRBM1pDMW1NREE1TURNNVltTTBaRE1RQVE9PRAIGiRFNUZGNEQ3OC1EMTdELTRGMDktOUMzOC00NUIyNDhDOTU1MTU).
+4. Next, find your instance's memory size in GB using the same [Pricing Calculator](https://cloud.google.com/products/calculator?hl=en&dl=CjhDaVF5WldVMFlUZzNPUzFqTm1Ka0xUUTBOelF0WVRBM1pDMW1NREE1TURNNVltTTBaRE1RQVE9PRAIGiRFNUZGNEQ3OC1EMTdELTRGMDktOUMzOC00NUIyNDhDOTU1MTU).
 
 5. Calculate your total resource needs by multiplying the per-instance resources by the number of instances you plan to run.
 
@@ -429,7 +429,8 @@ Before purchasing CUDs, carefully analyze your resource needs:
 
 After creation, both CUDs will appear on the [Commitments page](https://console.cloud.google.com/compute/commitments):
 
-![Commitments Page](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/gcp/commitments-page.png)
+<!-- TODO:MAKE -->
+![Commitments Page](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/gcp/commitments-with-cud-page.png)
 
 You can see your CUD utilization and savings on the [CUD Analysis Page](https://console.cloud.google.com/billing/commitments/analysis).
 
@@ -443,10 +444,10 @@ This occurs because your maximum number of CUDs allowed in a region is 0. To res
 1. Visit the [Quotas page](https://console.cloud.google.com/iam-admin/quotas) and in search enter **commitments**.
 ![Quotas page](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/gcp/quotas-page.png)
 
-2. Scroll down to your region (e.g., `us-central1`) and click the **Edit Quotas** button.
+2. Scroll down to your region (e.g., 6us-central1`) and click the **Edit Quotas** button.
 ![Edit Quotas](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/gcp/edit-quotas.png)
 
-3. Enter a higher quota, such as `6`. 
+3. Enter a higher quota, such as **6**. 
 
 4. For **Request Description**, enter:
 

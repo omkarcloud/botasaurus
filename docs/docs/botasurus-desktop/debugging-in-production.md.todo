@@ -1,0 +1,77 @@
+---
+sidebar_position: 27
+---
+
+# Debugging in Production
+
+In mine and your life, 3 things are guaranteed: death, taxes, and bugs. This sections deals with how we can resolve bugs in production, fast. 
+
+
+## Bug Tracking
+
+A bug tracking software captures and organizes errors, as they happen to users, so you fix problems before they cause widespread user abandonment.
+![Bug Tracking](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/debugging-in-production/bug-tracking.png)
+
+Bug Tracking is really great because 
+- Most users won’t report bugs—they’ll just abandon your app. Bug tracking helps fix issues you never would have known about otherwise
+- It's much time saving to look up an error in Sentry, and resolve it than waiting for a user to tell us how they got the error, then reproducing it, finding the stack trace, and resolving it.
+
+I have saved many hours of my life, due to Bug Tracking. 
+
+I use Sentry, because it's free, and captures errors with full context (stack traces, user actions, environment details), making it easier to fix issues.
+
+### How to Use Sentry?
+
+1. Sign up at [Sentry.io](https://sentry.io/).
+2. Create a new project, choose "Electron" as the platform.
+3. 
+[detailed writeup, with images, once sourcemaps seen and decided. ]
+
+<!-- ## Minification, not know as maybe, sourcemaps resolve that need, likely not show. if not add it, -->
+
+### How to see a JavaScript code of a Installer?
+
+### Windows 
+1.  Find the application's shortcut on your Desktop or in the Start Menu.
+2.  **Right-click** on the shortcut and select **"Open file location"**.
+![Open File Location](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/debugging-in-production/open-file-location.png)
+5. Drag and Drop `resources` folder in VS Code.
+6. Run command 
+```
+npx asar extract app.asar ./source-code
+```
+7. You can find the source code in `./source-code/dist` folder.
+![Extracted Source Code](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/debugging-in-production/extracted-source-code.png)
+
+### Mac
+1. Go to `Applications` folder. 
+![Mac Applications Folder](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/debugging-in-production/mac-applications-folder.png)
+2. Show package contents of the app.
+![Show Package Contents](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/debugging-in-production/show-package-contents.png)
+3. Navigate to `Contents/`.
+5. Drag and Drop `Resources` folder in VS Code.
+![Drag and Drop Resources Folder](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/debugging-in-production/drag-and-drop-resources.png)
+6. Run command 
+```
+npx asar extract app.asar ./source-code
+```
+7. You can find the source code in `./source-code/dist` folder.
+![Extracted Source Code](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/debugging-in-production/extracted-source-code.png)
+
+
+<!-- TODO: MAKE IMAGES ALL -->
+<!-- Use yahoo-finance-extractor in all -->
+### Ubuntu
+
+1. Go to `/opt/App Name/`.
+2. There will be a folder named `resources`.
+3. Drag and Drop `resources` folder in VS Code.
+6. Run command 
+```
+npx asar extract app.asar ./source-code
+```
+7. You can find the source code in `./source-code/dist` folder.
+![Extracted Source Code](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/debugging-in-production/extracted-source-code.png)    
+
+
+

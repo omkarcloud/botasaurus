@@ -26,7 +26,7 @@ Then, create an instance of the `Api` class:
 api = Api()
 ```
 
-You can also provide an optional `api_url` parameter to specify the base URL for the API server. If the `api_url` parameter is not provided, it defaults to `http://127.0.0.1:8000`.
+You can also provide an optional `api_url` parameter to specify the base URL for the API server. If the `api_url` parameter is not provided, it defaults to `http://localhost:8000`.
 
 ```python
 api = Api('https://example.com/')

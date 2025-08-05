@@ -3,6 +3,7 @@ import { convertNestedToJsonInPlace,convertNestedItemToJson, getFields,convertNe
 import { CSVWriteStream, JSONWriteStream, readNdJsonCallback } from './ndjson'
 import { isNullish } from './null-utils'
 import ExcelJS, {Worksheet} from 'exceljs'
+import path from 'path'
 
 function trimFilename(filename: string): string {
   filename = filename.trim()
@@ -19,7 +20,7 @@ function fixJsonFilename(filename: string): string {
 }
 
 function isFileOpenError(error: any) {
-  return error.code === 'EACCES' || error.code === 'EPERM' || (error.message && error.message.includes('EBUSY'))
+  return error.code === 'EACCES'|| error.code === 'EBUSY' || error.code === 'EPERM' || (error.message && error.message.includes('EBUSY'))
 }
 
 
@@ -72,7 +73,8 @@ async function writeJsonStreamed(inputFileNamePath: any, filename: string, strea
 
   } catch (error: any) {
     if (isFileOpenError(error)) {
-      console.log(`${filename} is currently open in another application. Please close the application and press 'Enter' to save.`)
+      const baseFilename = path.basename(filename)
+      throw new Error(`${baseFilename} is currently open in another application. Please close the application and try again.`)
     }
     throw error
   }
@@ -102,7 +104,8 @@ async function writeJson(data: any, filename: string): Promise<string> {
 
   } catch (error: any) {
     if (isFileOpenError(error)) {
-      console.log(`${filename} is currently open in another application. Please close the application and press 'Enter' to save.`)
+      const baseFilename = path.basename(filename)
+      throw new Error(`${baseFilename} is currently open in another application. Please close the application and try again.`)
     }
     throw error
   }
@@ -137,7 +140,8 @@ async function writeCsvStreamed(inputFileNamePath: any, filename: string, stream
     await writer.end()
   } catch (error) {
     if (isFileOpenError(error)) {
-      console.log(`${filenameNew} is currently open in another application (e.g., Excel). Please close the application and press 'Enter' to save.`)
+      const baseFilename = path.basename(filenameNew)
+      throw new Error(`${baseFilename} is currently open in another application (e.g., Excel). Please close the application and try again.`)
     }
     throw error
   }
@@ -170,7 +174,8 @@ async function writeCsv(data: any[], filename: string): Promise<string> {
     await writer.end();
   } catch (error) {
     if (isFileOpenError(error)) {
-      console.log(`${filenameNew} is currently open in another application (e.g., Excel). Please close the application and press 'Enter' to save.`);
+      const baseFilename = path.basename(filenameNew)
+      throw new Error(`${baseFilename} is currently open in another application (e.g., Excel). Please close the application and try again.`)
     }
     throw error;
   }
@@ -198,7 +203,8 @@ async function writeExcel(data: any[], filename: string ): Promise<string> {
 
   } catch (error) {
     if (isFileOpenError(error)) {
-      console.log(`${filename} is currently open in another application (e.g., Excel). Please close the application and press 'Enter' to save.`)
+      const baseFilename = path.basename(filename)
+      throw new Error(`${baseFilename} is currently open in another application (e.g., Excel). Please close the application and try again.`)
     }
     throw error
   }
@@ -214,7 +220,8 @@ async function writeExcelStreamed(inputFileNamePath: any, filename: string, stre
 
   } catch (error) {
     if (isFileOpenError(error)) {
-      console.log(`${filename} is currently open in another application (e.g., Excel). Please close the application and press 'Enter' to save.`)
+      const baseFilename = path.basename(filename)
+      throw new Error(`${baseFilename} is currently open in another application (e.g., Excel). Please close the application and try again.`)
     }
     throw error
   }

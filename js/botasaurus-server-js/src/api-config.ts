@@ -364,7 +364,7 @@ async function startServer(
             host: "0.0.0.0", // bind on all interfaces
         });
         console.log(
-            `Server running on http://127.0.0.1:${port}${apiBasePath || "/"} 🟢`
+            `Server running on http://localhost:${port}${apiBasePath || "/"} 🟢`
         );
     } catch (err) {
         server = null as unknown as FastifyInstance;

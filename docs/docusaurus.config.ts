@@ -127,10 +127,10 @@ const config: Config = {
       ],
       copyright: `Copyright © ${new Date().getFullYear()} Omkar Cloud.`,
     },
-    prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.oneDark,
-    },
+    // prism: {
+    //   // theme: prismThemes.github,
+    //   darkTheme: prismThemes.oneDark,
+    // },
   } satisfies Preset.ThemeConfig,
 };
 

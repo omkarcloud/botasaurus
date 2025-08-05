@@ -25,10 +25,10 @@ class Api:
         """
         Initializes the API client with a specified server URL and an option to create response files.
         
-        :param api_url: The base URL for the API server. If not specified, defaults to "http://127.0.0.1:8000".
+        :param api_url: The base URL for the API server. If not specified, defaults to "http://localhost:8000".
         :param create_response_files: Indicates if the client should create response files for each API call. This is useful for debugging or development purposes. Defaults to True.
         """
-        DEFAULT_API_URL = "http://127.0.0.1:8000"
+        DEFAULT_API_URL = "http://localhost:8000"
         self._api_url = remove_after_first_slash(api_url) if api_url else  DEFAULT_API_URL
         self._create_response_files = create_response_files  # Flag for creating response files
         if not self.is_api_running():
