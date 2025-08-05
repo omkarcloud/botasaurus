@@ -1,1 +1,1 @@
-Moved to [https://www.omkar.cloud/botasaurus/docs/botasaurus-desktop](https://www.omkar.cloud/botasaurus/docs/botasaurus-desktop/introduction)
+Moved to https://www.omkar.cloud/botasaurus/docs/botasaurus-desktop/introduction
