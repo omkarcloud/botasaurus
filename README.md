@@ -601,7 +601,7 @@ By simply configuring these three decorators (`@browser`, `@request`, and `@task
 
 2. Offering a Python-based UI scraper that allows non-technical users to run scrapers online by simply visiting a website link. (As described in the previous FAQ)  
 
-3. Make it easy to create desktop applications for Mac, Windows, and Linux, using JavaScript. More details can be found in the [Botasaurus Desktop Documentation here](http://localhost:3000/botasaurus/docs/botasaurus-desktop/introduction).
+3. Make it easy to create desktop applications for Mac, Windows, and Linux, using JavaScript. More details can be found in the [Botasaurus Desktop Documentation here](https://www.omkar.cloud/botasaurus/docs/botasaurus-desktop/introduction).
 
 ### How to use decorators in Botasaurus?
 
