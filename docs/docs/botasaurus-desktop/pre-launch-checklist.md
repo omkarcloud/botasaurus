@@ -81,12 +81,12 @@ Export your icon into the following PNG sizes and place them in the appropriate 
 
 **For macOS (.icns):**
 - Go to [CloudConvert PNG to ICNS](https://cloudconvert.com/png-to-icns)
-- Upload your `1024x1024.png` file ([recommended size for macOS](https://www.electronforge.io/guides/create-and-add-icons#supported-formats))
+- Upload `assets/icons/1024x1024.png` file ([recommended size for macOS](https://www.electronforge.io/guides/create-and-add-icons#supported-formats))
 - Save as `assets/icon.icns`
 
 **For Windows (.ico):**
 - Go to [FreeConvert PNG to ICO](https://www.freeconvert.com/png-to-ico)
-- Upload your `256x256.png` file ([recommended size for Windows](https://www.electronforge.io/guides/create-and-add-icons#supported-formats))
+- Upload `assets/icons/256x256.png` file ([recommended size for Windows](https://www.electronforge.io/guides/create-and-add-icons#supported-formats))
 - Save as `assets/icon.ico`
 
 **For Linux:**

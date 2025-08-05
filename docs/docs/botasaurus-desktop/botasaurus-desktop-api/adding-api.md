@@ -12,7 +12,7 @@ Botasaurus allows you to expose your scrapers as APIs, enabling you to:
 
 ## How to Add an API to Your App
 
-To enable API call `ApiConfig.enableApi()` in your `src/scraper/backend/api-config.ts` file:
+To enable API call `ApiConfig.enableApi()` in `src/scraper/backend/api-config.ts` file:
 
 ```ts title="src/scraper/backend/server.ts"
 import ApiConfig from "botasaurus-server/api-config";

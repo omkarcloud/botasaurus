@@ -7,7 +7,7 @@ Caching saves the results of a scraper run. When you run the scraper again with 
 
 ## How to Enable Caching
 
-To enable caching for all scrapers, add `Server.enableCache()` to your `src/scraper/backend/server.ts` file:
+To enable caching for all scrapers, add `Server.enableCache()` to `src/scraper/backend/server.ts` file:
 
 ```ts title="src/scraper/backend/server.ts"
 import { Server } from "botasaurus-server/server"
