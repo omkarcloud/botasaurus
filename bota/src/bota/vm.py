@@ -807,7 +807,7 @@ def generate_api_not_enabled_message():
     return f"""The API is not enabled in "api-config.ts".
 To enable it:
 1. Follow the instructions at:
-   https://www.omkar.cloud/botasaurus/docs/botasurus-desktop/botasaurus-desktop-api/adding-api#how-to-add-an-api-to-your-app
+   https://www.omkar.cloud/botasaurus/docs/botasaurus-desktop/botasaurus-desktop-api/adding-api#how-to-add-an-api-to-your-app
 2. Once enabled, rebuild and reinstall the app in your VM."""
     
 def wait_till_desktop_api_up(ip, api_base_path, package_service_name):
