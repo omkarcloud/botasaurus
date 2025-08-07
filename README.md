@@ -48,7 +48,7 @@ In the video below, watch as we **bypass some of the best bot detection systems*
 - ✅ [Cloudflare Web Application Firewall (WAF)](https://nopecha.com/demo/cloudflare)  
 - ✅ [BrowserScan Bot Detection](https://www.browserscan.net/bot-detection)  
 - ✅ [Fingerprint Bot Detection](https://fingerprint.com/products/bot-detection/)  
-- ✅ [Datadome Bot Detection](https://antoinevastel.com/bots/datadome)  
+- ✅ [Datadome Bot Detection]((https://fingerprint-scan.com/))  
 - ✅ [Cloudflare Turnstile CAPTCHA](https://turnstile.zeroclover.io/)
 
 <p align="center">
