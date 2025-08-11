@@ -166,16 +166,32 @@ Before deleting the instance, download any important data to avoid permanent los
 
 To prevent ongoing costs, you must delete both the EC2 instance and release the Elastic IP address as follows:
 
-1. Go to [EC2 Instances](https://console.aws.amazon.com/ec2/v2/home#Instances:)
+1. **Cancel the Spot Request** *(Spot VMs only)*
+   If you have enabled Spot Instances, cancel the Spot request before deleting the instance. Otherwise, they will keep respawning, again and again. To cancel the Spot request:
+
+   - Go to [Spot Requests](https://console.aws.amazon.com/ec2/v2/home#SpotInstances:)
+   - Select your Spot request
+   - Click **Actions** > **Cancel request**
+   - Click **Confirm** to cancel
+
+   ![Cancel Spot Request](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/aws/cancel-spot-request-ec2.gif)
+
+2. **Terminate the EC2 Instance**
+
+   - Go to [EC2 Instances](https://console.aws.amazon.com/ec2/v2/home#Instances:)
    - Select your instance
    - Click **Instance state** > **Terminate (delete) instance**
    - Click **Terminate (delete)** to confirm
-![Delete VM](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/aws/delete-vm-ec2.gif)
 
+   ![Delete VM](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/aws/delete-vm-ec2.gif)
 
-2. Go to [Elastic IPs](https://console.aws.amazon.com/ec2/v2/home#Addresses:)
+3. **Release the Elastic IP Address**
+
+   - Go to [Elastic IPs](https://console.aws.amazon.com/ec2/v2/home#Addresses:)
    - Select your Elastic IP
    - Click **Actions** > **Release Elastic IP address**
    - Click **Release** to confirm
-![Delete IP](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/aws/delete-ip-ec2.gif)
+
+   ![Delete IP](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/aws/delete-ip-ec2.gif)
+
 That's it! You have successfully deleted the EC2 instance and released the Elastic IP. You will not incur any further charges.
