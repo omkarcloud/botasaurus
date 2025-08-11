@@ -7,8 +7,16 @@ import { isNotNullish } from './null-utils'
 import { kebabCase, capitalCase as titleCase } from 'change-case';
 import { BaseFilter } from './filters'
 import { View } from './views'
-import { getInputFilePath, getReadmePath } from './paths'
+import { electronConfig, getInputFilePath, getReadmePath } from './paths'
 import { createControls, FileTypes } from 'botasaurus-controls'
+
+export function createEmailUrl({ email, subject, body }:any) {
+  const emailSubject = encodeURIComponent(subject)
+  const emailBody = encodeURIComponent(body)
+  const emailURL = `mailto:${email}?subject=${emailSubject}&body=${emailBody}`
+  return emailURL
+}
+
 function getReadme(): string {
   try {
     const readmeFile = getReadmePath();
@@ -88,15 +96,29 @@ class _Server {
 
   getConfig(): Record<string, any> {
     if (!this.config) {
+      if (electronConfig.productName === 'Todo My App Name') {
       this.config = {
         header_title: 'Botasaurus',
-        description: 'Build Awesome Scrapers with Botasaurus, The All in One Scraping Framework.',
         right_header: {
           text: 'Love It? Star It! ★',
           link: 'https://github.com/omkarcloud/botasaurus',
         },
         readme: getReadme(),
-      };
+      };  
+      }else {
+        this.config = {
+        header_title: electronConfig.productName,
+        right_header: this.emailSupport ? {
+          text: 'Need Help? Mail Us!',
+          link: createEmailUrl(this.emailSupport),
+        } : {
+          text: '',
+          link: '',
+        },
+        readme: getReadme(),
+      };  
+      }
+      
     }
     this.config.enable_cache = this.cache
     return this.config;
@@ -105,11 +127,9 @@ class _Server {
   configure(
   {  
     headerTitle = '',
-    description = '',
     rightHeader = {"text": "", "link": ""},
     readme = '',}:{
       headerTitle?: string;
-      description?: string;
       rightHeader?: { text?: string; link?: string };
       readme?: string;
     } 
@@ -129,7 +149,6 @@ class _Server {
 
     this.config = {
       "header_title":headerTitle,
-      "description":description,
       "right_header":rightHeader,
       "readme":readme,
     };
@@ -278,8 +297,6 @@ class _Server {
     if (['tasks', 'ui'].includes(scraperFunctionName.toLowerCase())) {
       throw new Error(`The scraper name '${scraperFunctionName}' is reserved. Please change the Scraper Name.`);
     }
-    
-    
     productName = isNotNullish(productName) ? productName : titleCase(scraperFunctionName);
 
     // @ts-ignore

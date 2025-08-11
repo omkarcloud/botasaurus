@@ -16,7 +16,7 @@ Here’s a breakdown of each option:
 
 ### Show User Data
 
-Opens the folder containing all application data, which is useful for debugging issues.
+Opens the folder containing all application data, which is useful for debugging any issues your users encounter in production.
 
 It includes:
 

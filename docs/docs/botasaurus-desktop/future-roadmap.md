@@ -7,6 +7,10 @@ sidebar_position: 100
 ## Upcoming Features (2025-2026)
 - Improve the tasks dashboard with search functionality and multi-select capabilities
 - Replace Google Chrome dependency with a portable Chromium bundle similar to Playwright's implementation
+- Add browser fingerprinting
+- Add XPath support and other Playwright features currently missing from Botasaurus Driver
+- Port Botasaurus Driver from Python to JavaScript
+- Develop a Node.js version of Botasaurus Web
 - Create video and docs showing code signing using DigiCert certificates.
 - Create video and docs showing code signing for Mac OS, specific to Botasaurus Desktop.
 

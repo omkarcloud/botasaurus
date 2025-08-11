@@ -1,7 +1,18 @@
 import * as fs from 'fs';
+import { totalmem } from 'os';
 import * as path from 'path';
 import {isMaster} from './env';
 import { getTargetDirectoryPath } from './paths'
+import { getBotasaurusStorage } from 'botasaurus/botasaurus-storage'
+
+function getTotalMemory() {
+  let mem = getBotasaurusStorage().getItem("memory")
+  if (!mem) {
+      mem = totalmem()
+      getBotasaurusStorage().setItem("memory", mem);
+  }
+  return mem;
+}
 
 const targetDirectory = getTargetDirectoryPath()
 
@@ -46,13 +57,24 @@ function callOnce(fn: Function): Function {
 // 800 MB = 800 * 1024 * 1024 bytes
 const MAX_SIZE_LIMIT = 800 * 1024 * 1024;
 // const MAX_SIZE_LIMIT = 10 * 1024 * 1024;
+
+const FIVE_GB = 5 * 1024 * 1024 * 1024;
+const FOUR_HUNDRED_MB = 400 * 1024 * 1024;
+
 function isLargeFile(filePath:string) {
-  // return true
   try {
       // Get file stats
       const stats = fs.statSync(filePath);
       // Compare file size with limit
-      return stats.size > MAX_SIZE_LIMIT;
+      if(stats.size > MAX_SIZE_LIMIT){
+        return true
+      }
+
+      if (stats.size > FOUR_HUNDRED_MB && getTotalMemory() < FIVE_GB) {
+        return true;
+      }
+
+      return false;
   } catch (err) {
       console.error(err);
       return false;
