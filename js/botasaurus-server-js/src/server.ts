@@ -58,6 +58,11 @@ type WhatsAppSupportOptions = {
 function replaceFileTypesInCode(code: string): string {
   // 1. Gatekeeper: If the code doesn't mention 'FileTypes', do nothing.
   // This is a quick exit for efficiency.
+  
+  code = code.replace(
+    /(const|let|var)\s*\{\s*FileTypes\s*\}\s*=\s*require\s*\(\s*['"`]botasaurus-controls['"`]\s*\)\s*;?/g,
+    ""
+  );
   if (!code.includes('FileTypes')) {
     return code;
   }
