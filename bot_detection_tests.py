@@ -28,7 +28,7 @@ def test_datadome_bot_detection(driver: Driver):
     Visits a demo page protected by Datadome.
     """
     print("Running Datadome Bot Detection test...")
-    driver.get("https://antoinevastel.com/bots/datadome")
+    driver.get("https://fingerprint-scan.com/")
     driver.sleep(3)
     print("✅ Datadome Bot Detection test completed")
 
