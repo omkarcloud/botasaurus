@@ -492,7 +492,7 @@ class Controls {
     return this.add(id, "filePicker", {
         ...props,
         limit,
-        accept: accept && accept.length > 0 ? accept : null,
+        accept: accept && accept.length > 0 ? accept.flat() : null,
         multiple:multiple ?? true,
         defaultValue: [],
     } as any);
