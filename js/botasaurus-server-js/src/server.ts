@@ -42,24 +42,55 @@ export function getScraperErrorMessage(validScraperNames: string[], scraperName:
 }
 
 
-/**
- * Replaces require statements with a specified JSON object in the given JavaScript code.
- * 
- * @param {string} code - The JavaScript code as a string.
- * @returns {string} - The modified JavaScript code.
- */
-function replaceRequireWithJSON(code:string) {
-  // Define the JSON object to replace the require statement
-  const replacement = JSON.stringify({"FileTypes":FileTypes});
 
-  // Replace require statements with the specified JSON object
-  return code.replace(/require\s*\(\s*['"`]botasaurus-controls['"`]\s*\)\s*;?/g, replacement);
-}
 type WhatsAppSupportOptions = {
   number: string; // 10-digit phone number (without country code)
   countryCallingCode: string; // Country calling code (e.g., 81 for Japan, 1 for the US)
   message: string; // Default message for WhatsApp
 };
+/**
+ * Replaces FileTypes constants (e.g., FileTypes.IMAGE) in a string of code
+ * with their corresponding JSON array values.
+ *
+ * @param {string} code - The JavaScript/TypeScript code as a string.
+ * @returns {string} - The modified code with FileTypes replaced, or the original code if no replacements are needed.
+ */
+function replaceFileTypesInCode(code: string): string {
+  // 1. Gatekeeper: If the code doesn't mention 'FileTypes', do nothing.
+  // This is a quick exit for efficiency.
+  if (!code.includes('FileTypes')) {
+    return code;
+  }
+
+  let modifiedCode = code;
+
+  // 2. Iterate over each key in our FileTypes object (e.g., "IMAGE", "EXCEL").
+  for (const key of Object.keys(FileTypes)) {
+    // TypeScript needs this assertion to know 'key' is a valid key of FileTypes
+    const value = FileTypes[key as keyof typeof FileTypes];
+    
+    // Convert the array to its JSON string representation.
+    // e.g., for 'IMAGE', this becomes "['jpeg','jpg','png',...]"
+    const replacementString = JSON.stringify(value);
+
+    // 3. Create robust regular expressions to find all occurrences.
+    // We create two regexes to handle both common ways of accessing object properties.
+
+    // Regex for dot notation: FileTypes.IMAGE
+    // \b is a word boundary to prevent matching something like "MyFileTypes.IMAGE"
+    const dotNotationRegex = new RegExp(`\\bFileTypes\\.${key}\\b`, 'g');
+    
+    // Regex for bracket notation: FileTypes['IMAGE'], FileTypes["IMAGE"], FileTypes[`IMAGE`]
+    // It handles optional whitespace around the brackets and quotes.
+    const bracketNotationRegex = new RegExp(`\\bFileTypes\\[\\s*['"\`]${key}['"\`]\\s*\\]`, 'g');
+
+    // 4. Perform the replacements.
+    modifiedCode = modifiedCode.replace(dotNotationRegex, replacementString);
+    modifiedCode = modifiedCode.replace(bracketNotationRegex, replacementString);
+  }
+
+  return modifiedCode;
+}
 
 type EmailSupportOptions = {
   email: string; // Support email address
@@ -351,7 +382,7 @@ class _Server {
     let inputJs: string | null = null;
 
     if (fs.existsSync(inputJsPath)) {
-      inputJs = replaceRequireWithJSON(fs.readFileSync(inputJsPath, 'utf-8'));
+      inputJs = replaceFileTypesInCode(fs.readFileSync(inputJsPath, 'utf-8'));
     } else {
       const scraperFilePath = getInputFilePath(scraperName) 
       throw new Error(`Input js file not found for ${scraperName}, at path ${scraperFilePath}. Kindly create it.`);

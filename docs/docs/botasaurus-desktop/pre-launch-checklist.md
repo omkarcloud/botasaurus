@@ -25,7 +25,12 @@ Use your IDE's global search feature (<ShortCut/>+Shift+F) to replace all placeh
 
 ![Find and Replace Example](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/pre-launch-checklist/find-replace-example.png)
 :::
-### 2. Replace Icon Assets
+
+### 2. Upload to S3
+
+If you haven't already, [upload installers to S3](./packaging-publishing.md)
+
+### 3. Replace Icon Assets
 
 Replace default icons with your own brand icons. 
 
@@ -109,7 +114,7 @@ If you don't have a brand icon yet and don't want to invest time in creating one
 Once you have users, you can invest time in creating a custom icon.
 :::
 
-### 3. Add Customer Support
+### 4. Add Customer Support
 
 Giving great customer support is your duty. Give it your best shot.
 
