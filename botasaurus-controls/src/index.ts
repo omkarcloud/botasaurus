@@ -798,10 +798,7 @@ private parse(data: any) {
         if (!errorMessages.length && type === "filePicker") {
           const acceptedFileTypes = (control as any).accept;
           if (acceptedFileTypes && acceptedFileTypes.length > 0) {
-            const invalidFiles = value.filter((file: any) => {
-              return isInvalidFileType(file, acceptedFileTypes)
-            });
-        
+            const invalidFiles = getInvalidFiles(value, acceptedFileTypes)        
             if (invalidFiles.length > 0) {
               const acceptedFileTypesString = acceptedFileTypes.join(", ");
               const foundFileTypesString = invalidFiles.map((file: any) => file.name.split(".").pop()?.toLowerCase()).join(", ");
@@ -917,6 +914,15 @@ function isInvalidFileType(file: any, acceptedFileTypes: any) {
   return !acceptedFileTypes.includes(fileExtension)
 }
 
+function getInvalidFiles(files:any, acceptedFileTypes:any) {
+  const invalidFiles = [];
+  for (let i = 0; i < files.length; i++) {
+    if (isInvalidFileType(files[i], acceptedFileTypes)) {
+      invalidFiles.push(files[i]);
+    }
+  }
+  return invalidFiles;
+}
 function runValidation(id:any, validate: (value: any, otherData: any) => string | string[] | undefined, value: any, data: any) {
   try {
     return validate(value, data)
