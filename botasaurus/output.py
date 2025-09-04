@@ -628,7 +628,8 @@ def get_metadata(file_name):
         '.dmg': {'Content-Type': 'application/x-apple-diskimage'},
         '.exe': {'Content-Type': 'application/x-msdownload'},
         '.deb': {'Content-Type': 'application/vnd.debian.binary-package'},
-        '.rpm': {'Content-Type': 'application/x-rpm'}
+        '.rpm': {'Content-Type': 'application/x-rpm'},
+        '.pdf': {'Content-Type': 'application/pdf'}
     }
     
     return extension_mapping.get(extension, None)

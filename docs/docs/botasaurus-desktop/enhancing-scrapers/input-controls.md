@@ -183,21 +183,46 @@ Use `choose` instead of `select` when you have fewer than 3 options for better u
 Allows users to upload one or more files. Supports the `accept`, `multiple`, and `limit` parameters.
 
 **Example**
-```ts
-.filePicker("product_images", {
-  accept: FileTypes.IMAGE, // restrict to image files
-  limit: 20,               // maximum 20 files
-  isRequired: true,        // at least 1 file is required
-})
+```js
+/**
+ * @typedef {import('botasaurus-controls').Controls} Controls
+ * @typedef {import('botasaurus-controls').FileTypes} FileTypes
+ */
+
+const { FileTypes } = require('botasaurus-controls');
+
+/**
+ * @param {Controls} controls
+ */
+function getInput(controls) {
+  controls.filePicker("product_images", {
+    accept: FileTypes.IMAGE, // restrict to image files ('jpeg','jpg','png','gif','bmp','svg','webp')
+    limit: 20,               // maximum 20 files
+    isRequired: true,        // at least 1 file is required
+  })
+}
 ```
 
 To allow only one file to be selected, set `multiple` to `false`:
-```ts
-.filePicker("product_image", {
-  accept: FileTypes.IMAGE,
-  multiple: false,
-  isRequired: true, // a file is required
-})
+
+```js
+/**
+ * @typedef {import('botasaurus-controls').Controls} Controls
+ * @typedef {import('botasaurus-controls').FileTypes} FileTypes
+ */
+
+const { FileTypes } = require('botasaurus-controls');
+
+/**
+ * @param {Controls} controls
+ */
+function getInput(controls) {
+  controls.filePicker("product_image", {
+    accept: FileTypes.IMAGE,
+    multiple: false,
+    isRequired: true, // a file is required
+  })
+}
 ```
 
 ### `section`

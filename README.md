@@ -1538,7 +1538,7 @@ Here's an example of how to use the `metadata` option:
 from botasaurus.task import task
 
 @task()
-def scrape_heading_task(driver: Driver, data, metadata):
+def scrape_heading_task(data, metadata):
     print("metadata:", metadata)
     print("data:", data)
 
