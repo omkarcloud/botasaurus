@@ -125,7 +125,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `© {new Date().getFullYear()}, Omkar Cloud is owned by Chetan Jain IT Solutions, All Rights Reserved.`,
+      copyright: `© ${new Date().getFullYear()}, Omkar Cloud is owned by Chetan Jain IT Solutions, All Rights Reserved.`
     },
     // prism: {
     //   // theme: prismThemes.github,
