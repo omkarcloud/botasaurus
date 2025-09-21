@@ -13,6 +13,7 @@ jobs:
     
     steps:
       - name: Trigger Botasaurus Deployment
-        run: curl -X POST -H "Content-Type: application/json" "$DEPLOYMENT_URL"
+        run: |
+          curl -X POST -H 'Content-Type: application/json' "$DEPLOYMENT_URL"
         env:
           DEPLOYMENT_URL: ${{ secrets.DEPLOYMENT_URL }}
