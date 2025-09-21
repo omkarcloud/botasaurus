@@ -1,9 +1,9 @@
 name: Trigger Deployment
 
-
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
     paths:
       - 'docs/**'
 
@@ -12,5 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Trigger Botasaurus Deployment
-      run: curl -X POST -H "Content-Type: application/json" ${{ secrets.DEPLOYMENT_URL }}
+      - name: Trigger Botasaurus Deployment
+        run: curl -X POST -H "Content-Type: application/json" "$DEPLOYMENT_URL"
+        env:
+          DEPLOYMENT_URL: ${{ secrets.DEPLOYMENT_URL }}
