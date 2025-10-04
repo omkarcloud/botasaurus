@@ -680,6 +680,16 @@ def install_desktop_app_in_vm(
     delete_installer(default_name)
     wget(debian_installer_url, default_name)
     package_name = subprocess.check_output(f"dpkg-deb -f ./{default_name} Package", shell=True).decode().strip()
+    if custom_args and package_name == 'google-maps-extractor-api' and re.search(r'--auth-token\s+YOUR_AUTH_TOKEN\b', custom_args):
+        raise Exception(
+            "Authentication Error: YOUR_AUTH_TOKEN is a placeholder and must be replaced with your actual token.\n\n"
+            "To get your authentication token:\n"
+            "1. Log in to your omkar.cloud account\n"
+            "2. Once logged in, view the README - the YOUR_AUTH_TOKEN placeholder will be automatically replaced with your actual authentication token\n"
+            "3. Copy that actual token and use it in the --custom-args parameter\n\n"
+            "Example:\n"
+            'python3 -m bota install-desktop-app --debian-installer-url https://google-maps-extractor-with-api-omkar-cloud.s3.amazonaws.com/Google+Maps+Extractor+Api-amd64.deb --custom-args "--auth-token eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6OTk5OSwidG9vbF9pZCI6MzMsImRlbW8iOnRydWV9.9wg6VYsPxGKsa6UNbxUPQEevnrckJd00UKWmYTNUy2I"'
+        )
     is_already_installed = is_package_installed(package_name)
     if is_already_installed:
         install_command = f"sudo dpkg -i ./{default_name}"
