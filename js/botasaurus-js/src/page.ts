@@ -31,6 +31,10 @@ export async function createPlaywrightChrome(headless: boolean, userAgent:string
     if (userAgent) {
         flags.push(`--user-agent=${userAgent}`);
     }
+    const hasNoSandbox = process.argv.some(x => x === "--no-sandbox")
+    if (hasNoSandbox) { 
+        flags.push("--no-sandbox");
+    }
 
     const { port, kill } = await ChromeLauncher.launch({
         chromeFlags: flags,
