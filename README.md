@@ -1431,7 +1431,14 @@ In such situations, the only solution is to switch to a different proxy provider
 
 Some good proxy providers we personally use are:
 
-- For Rotating Datacenter Proxies: **BrightData Datacenter Proxies**, which cost around $0.6 per GB on a pay-as-you-go basis. No KYC is required.
+- For Rotating Datacenter Proxies: 
+
+    - **[requests-ip-rotator](https://pypi.org/project/requests-ip-rotator/):**
+    Routes your API requests through AWS API Gateway, leveraging AWS’s large IP pool to automatically rotate IPs. The cost is negligible even for large-scale scraping (millions of pages). **Highly recommended** — this should be your default choice for datacenter proxy rotation.
+
+    - **BrightData Datacenter Proxies:**
+    Paid alternative costing around **$0.6 per GB** (pay-as-you-go). Offers a smaller proxy pool compared to AWS.
+    
 - For Rotating Residential Proxies: **IPRoyal Royal Residential Proxies**, which cost around $7 per GB on a pay-as-you-go basis. No KYC is required.
 
 As always, nothing good in life comes free. Proxies are expensive, and will take up almost all of your scraping costs. 

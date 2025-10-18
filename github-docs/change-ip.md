@@ -26,12 +26,17 @@ Here's how you can enable and disable airplane mode to change your IP:
 
 For devices connected to a Wi-Fi network, turning off the router and then turning it back on will change the IP. It is a slow method, and the router will take 2-3 minutes to re-establish connection.
 
-**#3 Use Proxies**
+**#3 Use AWS Api Gateway**
+If your goal is to use datacenter IPs for sending requests, use the [requests-ip-rotator](https://pypi.org/project/requests-ip-rotator/) library. It routes your API requests through AWS API Gateway, leveraging AWS’s large IP pool to automatically rotate IPs.
+
+Commercial datacenter proxies are expensive and cost around **$0.6/GB**, but this approach provides same benefit at a much much lower cost. Very Much Recommended. 
+
+**#4 Use Proxies**
 Paid services like BrightData, Oxylab, and IPRoyal provide a pool of residential IPes. However, they can be quite expensive, with prices averaging around $15 per GB for residential IPs.
 
 If you opt for this method and are scraping large amounts of data, consider disabling the loading of CSS and images to reduce costs.
 
-**#4 Use Tor Network**
+**#5 Use Tor Network**
 The Tor network is a decentralized network that anonymizes your internet traffic by routing it through multiple volunteer-operated relays.
 
 If you have access to a Windows device, you can use the [AnonSurf Application](https://github.com/ultrafunkamsterdam/AnonSurf) by ultrafunkamsterdam.
