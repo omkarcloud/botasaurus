@@ -316,14 +316,15 @@ export function validateAndGetTaskId(id: any): number {
     }
     
     if (isStringOfAtLeast1Len(id)) {
-        
-        id = tryIntConversion(id, "Task id is invalid");
+        const idStr = isObject(id) ? JSON.stringify(id) : id;
+        id = tryIntConversion(id, `Task id '${idStr}' is invalid.`);
         
     }
 
 
     if (!isValidId(id)) {
-        throw new JsonHTTPResponseWithMessage("Task id is invalid");
+        const idStr = isObject(id) ? JSON.stringify(id) : id;
+        throw new JsonHTTPResponseWithMessage(`Task id '${idStr}' is invalid.`);
     }
 
     return id;
@@ -340,7 +341,8 @@ export function validatePatchTask(jsonData: any): number[] {
     }
 
     if (!isListOfValidIds(taskIds)) {
-        throw new JsonHTTPResponseWithMessage("'task_ids' must be a list of integers");
+        const taskIdsStr = isObject(taskIds) || Array.isArray(taskIds) ? JSON.stringify(taskIds) : taskIds;
+        throw new JsonHTTPResponseWithMessage(`'task_ids' with value '${taskIdsStr}' must be a list of integers representing scraping task ids.`);
     }
 
     return taskIds;
@@ -365,11 +367,12 @@ export function validateUiPatchTask(jsonData: any): [string, number[]] {
     }
 
     if (isNullish(taskIds)) {
-        throw new JsonHTTPResponseWithMessage("'task_ids' must be provided");
+        throw new JsonHTTPResponseWithMessage("'task_ids' must be provided. Task IDs are unique identifiers for scraping tasks.");
     }
 
     if (!isListOfValidIds(taskIds)) {
-        throw new JsonHTTPResponseWithMessage("'task_ids' must be a list of integers");
+        const taskIdsStr = isObject(taskIds) || Array.isArray(taskIds) ? JSON.stringify(taskIds) : taskIds;
+        throw new JsonHTTPResponseWithMessage(`'task_ids' with value '${taskIdsStr}' must be a list of integers representing scraping tasks.`);
     }
 
     return [action, taskIds];

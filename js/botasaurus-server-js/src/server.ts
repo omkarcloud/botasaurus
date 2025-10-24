@@ -48,6 +48,7 @@ type WhatsAppSupportOptions = {
   countryCallingCode: string; // Country calling code (e.g., 81 for Japan, 1 for the US)
   message: string; // Default message for WhatsApp
 };
+
 /**
  * Replaces FileTypes constants (e.g., FileTypes.IMAGE) in a string of code
  * with their corresponding JSON array values.

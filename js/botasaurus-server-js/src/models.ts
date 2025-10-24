@@ -97,7 +97,7 @@ function removeDuplicatesByKey(dictList: any[], key: string): any[] {
     const seen = new Set();
     const newDictList: any[] = [];
     for (const d of dictList) {
-      if (key in d) {
+      if (key in d && !isNullish(d[key])) {
         if (!seen.has(d[key])) {
           seen.add(d[key]);
           newDictList.push(d);
