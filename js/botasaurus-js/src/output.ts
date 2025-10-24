@@ -542,6 +542,7 @@ export {
 convertNestedToJsonForExcelInPlace,
 convertNestedToJsonInPlace,
 cleanDataInPlace, 
+normalizeItem, 
 }
 
 // zipFiles,
