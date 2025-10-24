@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { isNotNullish } from "./null-utils";
+import { isNotNullish, isNullish } from "./null-utils";
 import { createTask, db, Task } from "./models";
 import { TaskResults } from "./task-results";
 import { TaskStatus } from "./models";
@@ -139,7 +139,7 @@ async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId:numb
                 }
 
                 if (removeDuplicatesBy) {
-                    if (removeDuplicatesBy in item) {
+                    if (removeDuplicatesBy in item && !isNullish(item[removeDuplicatesBy])) {
                         if (!seen.has(item[removeDuplicatesBy])) {
                             seen.add(item[removeDuplicatesBy])
                             await ndjsonWriteStream.push(item)
