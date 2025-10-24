@@ -6,6 +6,7 @@ import { TaskStatus } from "./models";
 import { NDJSONWriteStream } from "./ndjson"
 import { isLargeFile } from './utils'
 import { sleep } from 'botasaurus/utils'
+import { normalizeItem } from 'botasaurus/output'
 
 export function createProjection(ets: string[]) {
     return ets.reduce((acc: any, field) => {
@@ -14,16 +15,11 @@ export function createProjection(ets: string[]) {
     }, {});
 }
 
-function normalizeKeys(firstObjectKeysMapping: any, item: any) {
-    for (const key of firstObjectKeysMapping) {
-        item[key] = item[key] === undefined ? null : item[key]
-    }
-}
 
-function populateMissingKeys(item: any, firstObjectKeysMapping: any) {
-    for (const key of Object.keys(item)) {
-        if (!(key in firstObjectKeysMapping)) {
-            firstObjectKeysMapping[key] = null
+function populateMissingKeys(newKeys: string[], allKeysMapping: any) {
+    for (const key of newKeys) {
+        if (!(key in allKeysMapping)) {
+            allKeysMapping[key] = null
         }
     }
 }
@@ -91,43 +87,46 @@ function renameTemporaryFile(tempFilePath: string, taskFilePathTemp: string) {
     })
 }
 
-function arraysEqual(a:any, b:any) {
-    if (a === b) return true;
-    if (a == null || b == null) return false;
-    if (a.length !== b.length) return false;
-  
-    // If you don't care about the order of the elements inside
-    // the array, you should sort both arrays here.
-    // Please note that calling sort on an array will modify that array.
-    // you might want to clone your array first.
-  
-    for (var i = 0; i < a.length; ++i) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  }
-  
 async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId:number, removeDuplicatesBy: string | null) {
         let itemsCount = 0
-        let shouldNormalize = false
-        let firstItem:any = null
-        let firstObjectKeysMapping: any = null
-        let firstObjectKeys: any = null
+        let allKeysMapping: any = null
+        let allKeys: any = null
+        let firstItemKeyCount = 0
         const taskFilePath = TaskResults.generateTaskFilePath(parentId)
 
+        // First pass: collect all unique keys from all objects
         await TaskResults.streamMultipleTask(ids, (item) => {
-            if (firstItem === null) {
-                firstItem = item
-                firstObjectKeysMapping = createKeyToNullMapping(firstItem)
-                firstObjectKeys= Object.keys(firstItem)
-            }
-
-            if (!arraysEqual(firstObjectKeys, Object.keys(item))) {
-                shouldNormalize = true
-                populateMissingKeys(item, firstObjectKeysMapping)
+            const itemKeys = Object.keys(item)
+            
+            if (allKeysMapping === null) {
+                // First item: initialize with its keys
+                allKeysMapping = createKeyToNullMapping(item)
+                firstItemKeyCount = itemKeys.length
+            } else {
+                const currentKeyCount = Object.keys(allKeysMapping).length
+                
+                if (itemKeys.length !== currentKeyCount) {
+                    // Different number of keys - collect new ones
+                    populateMissingKeys(itemKeys, allKeysMapping)
+                } else {
+                    // Same number of keys, but check if there are any new keys (different keys, not just different order)
+                    for (const key of itemKeys) {
+                        if (!(key in allKeysMapping)) {
+                            // Found a new key, collect all keys from this item
+                            populateMissingKeys(itemKeys, allKeysMapping)
+                            break
+                        }
+                    }
+                }
             }
         })
 
+        // After first pass, get the complete list of all keys
+        if (allKeysMapping !== null) {
+            allKeys = Object.keys(allKeysMapping)
+        }
+
+        const shouldNormalize = allKeys && allKeys.length !== firstItemKeyCount
 
         const tempfile = taskFilePath + '.temp'
         const ndjsonWriteStream = new NDJSONWriteStream(tempfile)
@@ -135,7 +134,7 @@ async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId:numb
         try {
             await TaskResults.streamMultipleTask(ids, async (item) => {
                 if (shouldNormalize) {
-                    normalizeKeys(firstObjectKeys, item)
+                    item = normalizeItem(allKeys, item)
                 }
 
                 if (removeDuplicatesBy) {
