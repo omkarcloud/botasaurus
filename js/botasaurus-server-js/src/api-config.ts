@@ -23,9 +23,11 @@ import { kebabCase } from "change-case";
 import { validateDirectCallRequest } from "./validation";
 import { sleep } from "botasaurus/utils";
 import { DirectCallCacheService } from "./task-results";
-import { cleanBasePath, isNotEmptyObject } from "./utils";
+import { cleanBasePath, isNotEmptyObject, isObject } from "./utils";
 import { isDontCache } from "botasaurus/dontcache";
 import { JsonHTTPResponseWithMessage } from "./errors";
+import { cleanDataInPlace } from "botasaurus/output";
+import { removeDuplicatesByKey } from "./models";
 
 function addCorsHeaders(reply: any) {
     reply.header("Access-Control-Allow-Origin", "*");
@@ -69,71 +71,179 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                     params
                 );
 
-                let cacheKey: string | undefined;
-                if (Server.cache) {
-                    // Check cache
-                    cacheKey = DirectCallCacheService.createCacheKey(
-                        scraper.scraper_name,
-                        validatedData
-                    );
+                // Check if scraper has split_task
+                const splitTask = scraper.split_task;
+                const scraperName = scraper.scraper_name;
 
-                    if (DirectCallCacheService.has(cacheKey)) {
-                        try {
-                            const cachedResult =
-                                DirectCallCacheService.get(cacheKey);
-                            return cachedResult ?? { result: null };
-                        } catch (error) {
-                            console.error(error);
-                            // Continue with normal execution if cache fails
-                        }
-                    }
+                // If split_task exists, split the data
+                let dataItems: any[];
+                if (splitTask) {
+                    dataItems = splitTask(validatedData);
+                } else {
+                    dataItems = [validatedData];
                 }
 
-                // Wait for capacity if needed
-                while (!executor.hasCapacity(key)) {
-                    await sleep(0.1);
-                }
-
-                // Execute scraper
-                executor.incrementCapacity(key);
                 const mt = isNotEmptyObject(metadata) ? { metadata } : {};
-                try {
-                    const results = await fn(validatedData, {
-                        ...mt,
-                        parallel: null,
-                        cache: false,
-                        beep: false,
-                        raiseException: true,
-                        closeOnCrash: true,
-                        output: null,
-                        createErrorLogs: false,
-                        returnDontCacheAsIs: true,
-                    });
+                let shouldDecrementCapacity = false;
 
-                    let isResultDontCached = false;
-                    let finalResults = results;
-
-                    // Handle don't cache flag
-                    if (isDontCache(results)) {
-                        isResultDontCached = true;
-                        finalResults = results.data;
+                function restoreCapacity() {
+                    if (shouldDecrementCapacity) {
+                        executor.decrementCapacity(key);
+                        shouldDecrementCapacity = false;
                     }
+                }
 
-                    // Cache results if appropriate
-                    if (Server.cache && !isResultDontCached) {
-                        try {
-                            // @ts-ignore
-                            DirectCallCacheService.put(cacheKey, finalResults);
-                        } catch (cacheError) {
-                            console.error("Cache storage error:", cacheError);
-                            // Continue even if caching fails
+                // Collect results with metadata
+                let collectedResults: Array<{
+                    isFromCache: boolean;
+                    isDontCache: boolean;
+                    result: any;
+                    cacheKey?: string;
+                }> = [];
+                try {
+                    // Execute function for each data item
+                    for (const dataItem of dataItems) {
+                        let cacheKey: string | undefined;
+                        let isFromCache = false;
+                        let resultData: any = null;
+                        let isDontCacheFlag = false;
+
+                        // Check cache for this specific data item
+                        if (Server.cache) {
+                            cacheKey = DirectCallCacheService.createCacheKey(
+                                scraperName,
+                                dataItem
+                            );
+
+                            if (DirectCallCacheService.has(cacheKey)) {
+                                try {
+                                    resultData = DirectCallCacheService.get(
+                                        cacheKey
+                                    ) ?? { result: null };
+                                    isFromCache = true;
+                                } catch (error) {
+                                    console.error(error);
+                                    // Continue with normal execution if cache fails
+                                }
+                            }
+                        }
+
+                        // Execute if not from cache
+                        if (!isFromCache) {
+                            // Wait for capacity if needed (only on first execution)
+                            if (!shouldDecrementCapacity) {
+                                while (!executor.hasCapacity(key)) {
+                                    await sleep(0.1);
+                                }
+                                executor.incrementCapacity(key);
+                                shouldDecrementCapacity = true;
+                            }
+
+                            const result = await fn(dataItem, {
+                                ...mt,
+                                parallel: null,
+                                cache: false,
+                                beep: false,
+                                raiseException: true,
+                                closeOnCrash: true,
+                                output: null,
+                                createErrorLogs: false,
+                                returnDontCacheAsIs: true,
+                            });
+
+                            // Handle don't cache flag
+                            if (isDontCache(result)) {
+                                isDontCacheFlag = true;
+                                resultData = result.data;
+                            } else {
+                                resultData = result;
+                            }
+                        }
+
+                        // Collect result
+                        collectedResults.push({
+                            isFromCache,
+                            isDontCache: isDontCacheFlag,
+                            result: resultData,
+                            cacheKey,
+                        });
+                    }
+                } finally {
+                    restoreCapacity();
+                }
+
+                // Determine if we should return first object
+                const firstResult =
+                    collectedResults.length > 0
+                        ? collectedResults[0].result
+                        : null;
+                const returnFirstObject = !splitTask && isObject(firstResult);
+
+                if (Server.cache) {
+                    // Handle caching for each item
+                    for (const item of collectedResults) {
+                        // Skip if from cache or don't cache
+                        if (item.isFromCache || item.isDontCache) {
+                            continue;
+                        }
+
+                        // If not an object, clean and remove duplicates
+                        if (!isObject(item.result)) {
+                            item.result = cleanDataInPlace(item.result);
+                            const removeDuplicatesBy =
+                                Server.getRemoveDuplicatesBy(scraperName);
+                            if (removeDuplicatesBy) {
+                                item.result = removeDuplicatesByKey(
+                                    item.result,
+                                    removeDuplicatesBy
+                                );
+                            }
+                        }
+
+                        // Save to cache
+                        if (item.cacheKey) {
+                            try {
+                                DirectCallCacheService.put(
+                                    item.cacheKey,
+                                    item.result
+                                );
+                            } catch (cacheError) {
+                                console.error(
+                                    "Cache storage error:",
+                                    cacheError
+                                );
+                            }
                         }
                     }
-
-                    return finalResults ?? { result: null };
-                } finally {
-                    executor.decrementCapacity(key);
                 }
+
+                if (returnFirstObject) {
+                    return collectedResults[0].result;
+                }
+
+                // Aggregate all results
+                let aggregatedResults: any[] = [];
+                for (const item of collectedResults) {
+                    if (Array.isArray(item.result)) {
+                        aggregatedResults.push(...item.result);
+                    } else {
+                        aggregatedResults.push(item.result);
+                    }
+                }
+                // Release references, else cleanDataInPlace will be useless due to double references
+                collectedResults = []
+                // Final pass: clean and remove duplicates
+                aggregatedResults = cleanDataInPlace(aggregatedResults);
+                const removeDuplicatesBy =
+                    Server.getRemoveDuplicatesBy(scraperName);
+                if (removeDuplicatesBy) {
+                    aggregatedResults = removeDuplicatesByKey(
+                        aggregatedResults,
+                        removeDuplicatesBy
+                    );
+                }
+
+                return aggregatedResults;
             } catch (error: any) {
                 if (error instanceof JsonHTTPResponseWithMessage) {
                     throw error; // Re-throw the error to be handled elsewhere
@@ -165,7 +275,7 @@ export function buildApp(
     scrapers: any[],
     apiBasePath: string,
     routeAliases: any,
-    enable_cache: boolean,
+    enable_cache: boolean
 ): FastifyInstance {
     const app = fastify({ logger: true });
 
@@ -350,8 +460,8 @@ async function startServer(
     port: number,
     scrapers: any[],
     apiBasePath: string,
-    routeAliases: any, 
-    enable_cache: boolean,
+    routeAliases: any,
+    enable_cache: boolean
 ): Promise<void> {
     try {
         if (server) {
@@ -424,7 +534,6 @@ class ApiConfig {
         this.apiPort = port;
     }
 
-
     /**
      * Disables automatic API server startup on application launch.
      * When enabled, API must be manually started from the API Tab in desktop GUI.
@@ -469,14 +578,14 @@ class ApiConfig {
 
     /**
      * Adds custom routes to the API server using Fastify's routing system.
-     * 
+     *
      * The function receives a FastifyInstance object, which you can use to define your routes.
-     * 
+     *
      * When to use:
      * - Authentication middleware
      * - Custom data processing endpoints
      * - Adding Webhook receivers
-     * 
+     *
      * @param {(server: FastifyInstance) => void} routeSetupFn - Function that receives FastifyInstance to add custom routes
      * @example
      * // Adding a custom health check endpoint
@@ -485,17 +594,17 @@ class ApiConfig {
      *     return reply.send({ status: 'OK'});
      *   });
      * });
-     * 
+     *
      * @example
      * // Adding a validation middleware
      * ApiConfig.addCustomRoutes((server) => {
      *   server.addHook('onRequest', (request, reply, done) => {
      *     // Check for secret
      *     const secret = request.headers['x-secret'] as string;
-     * 
+     *
      *     if (secret === '49cb1de3-419b-4647-bf06-22c9e1110313') {
      *       // Valid secret, proceed
-     *       return done(); 
+     *       return done();
      *     } else {
      *       return reply.status(401).send({
      *         message: 'Unauthorized: Invalid secret.',
