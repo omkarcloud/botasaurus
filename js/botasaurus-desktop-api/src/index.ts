@@ -90,25 +90,47 @@ function cleanBasePath(apiBasePath: string | null | undefined){
   return ''
 
 }
+/**
+ * Configuration options for the Api client
+ */
+export interface ApiConfig {
+    /** The base URL for the API server. If not specified, defaults to "http://localhost:8000". */
+    apiUrl?: string;
+    /** Indicates if the client should create response files for each API call. Useful for debugging. Defaults to true. */
+    createResponseFiles?: boolean;
+    /** Base path to prefix API endpoints (e.g., "/v1"). */
+    apiBasePath?: string;
+    /** Enable or disable caching for all requests. Overrides the server's cache setting. */
+    enableCache?: boolean;
+}
+
 export default class Api {
     private _apiUrl: string;
     private _apiBasePath: string;
     private _createResponseFiles: boolean;
+    private _enableCache: boolean | undefined;
     private readonly DEFAULT_API_URL = "http://localhost:8000";
 
-    constructor({ apiUrl,  createResponseFiles = false, apiBasePath = "", }: { apiUrl?: string;  createResponseFiles?: boolean ;apiBasePath?: string;} = { createResponseFiles: true }) {
+    constructor({ 
+        apiUrl, 
+        createResponseFiles = false, 
+        apiBasePath = "",
+        enableCache
+    }: ApiConfig = { createResponseFiles: true }) {
         /**
-         * Initializes the API client with a specified server URL, base path, and an option to create response files.
+         * Initializes the API client with a specified server URL, base path, caching options, and an option to create response files.
          *
          * @param apiUrl The base URL for the API server. If not specified, defaults to "http://localhost:8000".
-         * @param createResponseFiles Indicates if the client should create response files for each API call. This is useful for debugging or development purposes. Defaults to True.
+         * @param createResponseFiles Indicates if the client should create response files for each API call. This is useful for debugging or development purposes. Defaults to true.
          * @param apiBasePath Base path to prefix API endpoints (e.g., "/v1").
+         * @param enableCache Enable or disable caching for all API requests. Overrides the server's cache setting.
          */
         this._apiUrl = apiUrl
             ? removeAfterFirstSlash(apiUrl)
             : this.DEFAULT_API_URL;
         this._createResponseFiles = createResponseFiles;
         this._apiBasePath = cleanBasePath(apiBasePath) as any;
+        this._enableCache = enableCache;
 
         // Check if API is running (note: this is synchronous in the original, but should be async in TS)
         this.isApiRunning().then((isRunning) => {
@@ -136,6 +158,10 @@ export default class Api {
 
     private _makeApiUrl(path: string): string {
         return `${this._apiUrl}${this._apiBasePath}${path === '' && this._apiBasePath? "":"/"}${path}`;
+    }
+
+    private _getCacheParams(): { enable_cache: boolean } | {} {
+        return typeof this._enableCache === 'boolean' ? { enable_cache: this._enableCache } : {};
     }
 
     async isApiRunning(): Promise<boolean> {
@@ -169,6 +195,7 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
         const payload = {
             data,
             scraper_name: scraperName,
+            ...this._getCacheParams(),
         };
         try {
             const response = await axios.post(url, payload);
@@ -195,6 +222,7 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
         const payload = {
             data,
             scraper_name: scraperName,
+            ...this._getCacheParams(),
         };
         try {
             const response = await axios.post(url, payload);
@@ -218,7 +246,11 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
          * @return A list of created task objects.
          */
         const url = this._makeApiUrl("tasks/create-task-async");
-        const payload = dataItems.map((data) => ({ data, scraper_name: scraperName }));
+        const payload = dataItems.map((data) => ({ 
+            data, 
+            scraper_name: scraperName,
+            ...this._getCacheParams()
+        }));
         try {
             const response = await axios.post(url, payload);
 
@@ -241,7 +273,11 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
          * @return A list of created task objects, each with its processing result.
          */
         const url = this._makeApiUrl("tasks/create-task-sync");
-        const payload = dataItems.map((data) => ({ data, scraper_name: scraperName }));
+        const payload = dataItems.map((data) => ({ 
+            data, 
+            scraper_name: scraperName,
+            ...this._getCacheParams()
+        }));
         try {
             const response = await axios.post(url, payload);
 
@@ -373,8 +409,12 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
             scraperName = scraperName.slice(1);
         }
         const url = this._makeApiUrl(scraperName);
+        const params = {
+            ...data,
+            ...this._getCacheParams()
+        };
         try {
-            const response = await axios.get(url, { params: data });
+            const response = await axios.get(url, { params });
             const fileScraperName = scraperName.replaceAll('/', '-');
             this._writeJson(`${fileScraperName}-result`, response.data);
             return response.data;

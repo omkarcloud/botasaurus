@@ -248,7 +248,7 @@ const parseBoolean = (value:any) => {
           return true;
         }
   }
-  return value;
+  return null
 }
 const parseNumber = (value:any)=>{
   if (typeof value === 'string') {

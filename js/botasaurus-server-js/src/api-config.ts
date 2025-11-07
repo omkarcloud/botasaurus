@@ -66,7 +66,7 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                 }
 
                 // Validate params against scraper's input definition
-                const [validatedData, metadata] = validateDirectCallRequest(
+                const [validatedData, metadata, enableCache] = validateDirectCallRequest(
                     scraper.scraper_name,
                     params
                 );
@@ -109,7 +109,7 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                         let isDontCacheFlag = false;
 
                         // Check cache for this specific data item
-                        if (Server.cache) {
+                        if (enableCache) {
                             cacheKey = DirectCallCacheService.createCacheKey(
                                 scraperName,
                                 dataItem
@@ -119,7 +119,7 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                                 try {
                                     resultData = DirectCallCacheService.get(
                                         cacheKey
-                                    ) ?? { result: null };
+                                    );
                                     isFromCache = true;
                                 } catch (error) {
                                     console.error(error);
@@ -179,7 +179,7 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                         : null;
                 const returnFirstObject = !splitTask && isObject(firstResult);
 
-                if (Server.cache) {
+                if (enableCache) {
                     // Handle caching for each item
                     for (const item of collectedResults) {
                         // Skip if from cache or don't cache

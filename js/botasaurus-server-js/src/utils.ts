@@ -121,5 +121,21 @@ function cleanBasePath(apiBasePath: string | null | undefined){
   return ''
 
 }
+const negativeValues = new Set(["false", "no", "n", "0", "nah", "nope", "never", "negative", "f"]);
+const affirmativeValues = new Set(["true", "yes", "y", "1", "yeah", "yep", "sure", "ok", "okay", "affirmative", "t"]);
 
-export { callOnce, db_path, id_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile, cleanBasePath};
+const parseBoolean = (value:any) => {
+  if (typeof value === 'string') {
+
+        const normalizedValue = value.trim().toLowerCase();
+        if (negativeValues.has(normalizedValue)) {
+          return false;
+        }
+        if (affirmativeValues.has(normalizedValue)) {
+          return true;
+        }
+  }
+  return null;
+}
+
+export { parseBoolean, callOnce, db_path, id_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile, cleanBasePath};

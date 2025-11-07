@@ -1,7 +1,7 @@
 import {  JsonHTTPResponseWithMessage } from './errors';
 import { getScraperErrorMessage, Server } from './server';
 import { isNotNullish, isNullish } from './null-utils';
-import { isObject, isNotEmptyObject } from './utils';
+import { isObject, isNotEmptyObject, parseBoolean } from './utils';
 
 
 export function tryIntConversion(value: any, errorMessage: string): number {
@@ -157,7 +157,7 @@ export function validateTaskRequest(jsonData: any): [string, any, any, any] {
 
 
 
-export function validateDirectCallRequest(scraperName:string, data:any): [any, any] {
+export function validateDirectCallRequest(scraperName:string, data:any): [any, any, boolean] {
     
     const controls = Server.getControls(scraperName);
 
@@ -173,7 +173,8 @@ export function validateDirectCallRequest(scraperName:string, data:any): [any, a
     const validatedData = result.data;
     const metadata = result.metadata;
 
-    return [validatedData, metadata];
+    const enableCache = parseBoolean(data.enable_cache) ?? Server.cache;
+    return [validatedData, metadata, enableCache];
 }
 
 export function isValidPositiveInteger(param: any): boolean {

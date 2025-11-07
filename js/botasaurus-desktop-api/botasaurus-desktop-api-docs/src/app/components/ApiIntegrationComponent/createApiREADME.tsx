@@ -90,6 +90,50 @@ function filtersToJsObjectString(filters: any[], indent: number = defaultIndenta
   const formattedString = `{\n` + entries.join('\n') + `\n${bracketsIndentationStr}}`
   return formattedString
 }
+
+function createCachingText(enable_cache: boolean): string {
+  if (enable_cache) {
+    return `## Caching
+
+The API automatically **caches** results to minimize redundant scraping. This means:
+- Scraper results are stored based on input data
+- Subsequent requests with the same input data return cached data instantly
+
+### Changing Cache Settings
+
+You can change this caching behavior when initializing the API client:
+
+\`\`\`typescript
+// Option 1: Disable caching for fresh results
+const api = new Api({ enableCache: false })
+
+// Option 2: Keep caching enabled (default)
+const api = new Api({ enableCache: true })
+\`\`\``;
+  } else {
+    return `## Caching
+
+The API does not **cache results**, so you get fresh results on every request.
+
+### Changing Cache Settings
+
+You can change this caching behavior when initializing the API client:
+
+\`\`\`typescript
+// Option 1: Enable caching to improve performance
+const api = new Api({ enableCache: true })
+
+// Option 2: Keep caching disabled for fresh results (default)
+const api = new Api({ enableCache: false })
+\`\`\`
+
+When caching is enabled:
+- Scraper results are stored based on input data
+- Subsequent requests with the same input data return cached data instantly`;
+  }
+  
+}
+
 function createApiTaskText(scraperName: string, hasSingleScraper: boolean, defaultData: any, maxRunsMessage): string {
   const x = hasSingleScraper ? '' : `scraperName: '${scraperName}', `
 
@@ -418,7 +462,7 @@ This will:
 - Make a **GET** request to the \`${final[0]}\` endpoint.
 - Execute the scraper immediately, bypassing task creation, scheduling, and running overhead.
 - Validate input data before execution, returning a \`400\` error for invalid requests.
-${enable_cache ? '- Cache the results based on the provided parameters.\n' : ''}- ${maxRunsMessage2}
+${enable_cache ? '- Cache the results based on the provided input data.\n' : ''}- ${maxRunsMessage2}
 
 This method is especially useful when:
 
@@ -481,6 +525,8 @@ async function main() {
 
 main()
 \`\`\`
+
+${createCachingText(enable_cache)}
 
 ## That's It!
 

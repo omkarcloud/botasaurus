@@ -117,6 +117,7 @@ def get_files_without_json_extension(directory_path):
     files_without_json_extension = [file.rstrip('.json') for file in files]
     
     return files_without_json_extension
+
 def is_affirmative(input_string):
     # List of affirmative representations
     affirmative_values = {"true", "yes", "y", "1", "yeah", "yep", "sure", "ok", "okay", "affirmative", "t"}
