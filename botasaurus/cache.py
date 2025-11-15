@@ -373,6 +373,68 @@ class Cache:
             return [Cache.hash(item) for item in items]
 
     @staticmethod
+    def _get_cache_modified_time(func, key_data):
+        """
+        Private function to get the timestamp when cache was stored.
+        Returns the modification time of the cache file as a datetime object.
+        """
+        from datetime import datetime
+        
+        _create_cache_directory_if_not_exists(func)
+        path = _get_cache_path(func, key_data)
+        
+        if not _has(path):
+            raise CacheMissException(path)
+        
+        # Get file modification time
+        timestamp = os.path.getmtime(path)
+        return datetime.fromtimestamp(timestamp)
+
+    @staticmethod
+    def is_cache_older_than(func, key_data, days=0, seconds=0, microseconds=0, 
+                            milliseconds=0, minutes=0, hours=0, weeks=0):
+        """
+        Check if cached item is older than the specified time period.
+        
+        Args:
+            func: The function name or object
+            key_data: The cache key
+            days: Number of days (default: 0)
+            seconds: Number of seconds (default: 0)
+            microseconds: Number of microseconds (default: 0)
+            milliseconds: Number of milliseconds (default: 0)
+            minutes: Number of minutes (default: 0)
+            hours: Number of hours (default: 0)
+            weeks: Number of weeks (default: 0)
+        
+        Returns:
+            bool: True if cache is older than specified time period, False otherwise
+            
+        Raises:
+            CacheMissException: If cache doesn't exist
+        """
+        from datetime import datetime, timedelta
+        
+        # Create timedelta from parameters
+        time_delta = timedelta(
+            days=days,
+            seconds=seconds,
+            microseconds=microseconds,
+            milliseconds=milliseconds,
+            minutes=minutes,
+            hours=hours,
+            weeks=weeks
+        )
+        
+        # Get cache timestamp
+        cache_time = Cache._get_cache_modified_time(func, key_data)
+        
+        # Compare with current time
+        age = datetime.now() - cache_time
+        
+        return age > time_delta
+
+    @staticmethod
     def delete(func, key_data):
         """Remove a specific cache file."""
         _create_cache_directory_if_not_exists(func)
