@@ -373,7 +373,7 @@ class Cache:
             return [Cache.hash(item) for item in items]
 
     @staticmethod
-    def _get_cache_modified_time(func, key_data):
+    def _get_item_modified_time(func, key_data):
         """
         Private function to get the timestamp when cache was stored.
         Returns the modification time of the cache file as a datetime object.
@@ -391,7 +391,7 @@ class Cache:
         return datetime.fromtimestamp(timestamp)
 
     @staticmethod
-    def is_cache_older_than(func, key_data, days=0, seconds=0, microseconds=0, 
+    def is_item_older_than(func, key_data, days=0, seconds=0, microseconds=0, 
                             milliseconds=0, minutes=0, hours=0, weeks=0):
         """
         Check if cached item is older than the specified time period.
@@ -427,7 +427,7 @@ class Cache:
         )
         
         # Get cache timestamp
-        cache_time = Cache._get_cache_modified_time(func, key_data)
+        cache_time = Cache._get_item_modified_time(func, key_data)
         
         # Compare with current time
         age = datetime.now() - cache_time
