@@ -2,18 +2,38 @@ from typing import Callable, Optional
 from functools import wraps
 import traceback
 from time import sleep, time
+from datetime import timedelta
 from .utils import is_errors_instance
 
 from .cache import Cache, _get,CacheMissException, _has, _get_cache_path, _create_cache_directory_if_not_exists
 from .dontcache import is_dont_cache
 
-def cache(_func=None, *, cache=True):
+def cache(_func=None, *, cache=True, expires_in: Optional[timedelta] = None):
+    """
+    Cache decorator to store and retrieve function results.
+    
+    Args:
+        cache: Enable caching (True/False/'REFRESH' to force refresh)
+        expires_in: Optional timedelta specifying how long the cache is valid.
+                   Example: , timedelta(days=7), timedelta(minutes=30)
+                   If the cached item is older than this duration, it will be treated as expired
+                   and the function will be executed again.
+    
+    Example:
+        from datetime import timedelta
+        
+        @cache(cache=True, expires_in=timedelta(hours=24))
+        def fetch_data(url):
+            # This result will be cached for 24 hours
+            return expensive_operation(url)
+    """
     def decorator_cache(func):
         @wraps(func)    
         def wrapper_cache(*args, **kwargs):
-            nonlocal cache
+            nonlocal cache, expires_in
 
             cache = kwargs.pop("cache", cache)
+            expires_in = kwargs.pop("expires_in", expires_in)
 
             if cache:
                 _create_cache_directory_if_not_exists(func)
@@ -23,7 +43,23 @@ def cache(_func=None, *, cache=True):
                     path = _get_cache_path(func, [args, kwargs])
                     if _has(path):
                         try:
-                            return _get(path)
+                            # Check if cache has expired
+                            if expires_in is not None:
+                                if Cache.is_item_older_than(
+                                    func, 
+                                    [args, kwargs],
+                                    days=expires_in.days,
+                                    seconds=expires_in.seconds,
+                                    microseconds=expires_in.microseconds,
+                                ):
+                                    # Cache expired, delete it and re-execute
+                                    Cache.delete(func, [args, kwargs])
+                                else:
+                                    # Cache is still valid, return it
+                                    return _get(path)
+                            else:
+                                # No expiration set, return cache
+                                return _get(path)
                         except CacheMissException:
                             pass
 
