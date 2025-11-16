@@ -431,6 +431,7 @@ class Cache:
         
         # Compare with current time
         age = datetime.now() - cache_time
+        
         return age > time_delta
 
     @staticmethod
