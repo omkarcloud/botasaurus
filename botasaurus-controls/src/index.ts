@@ -432,10 +432,12 @@ class Controls {
   }
 
   switch(id: string, props: Omit<ControlInput<boolean>, "required"> = {}) {
+    // @ts-ignore
     return this.add<boolean>(id, "switch", { defaultValue: false,parse:parseBoolean, ...props })
   }
 
   checkbox(id: string, props: Omit<ControlInput<boolean>, "required"> = {}) {
+    // @ts-ignore
     return this.add<boolean>(id, "checkbox", { defaultValue: false,parse:parseBoolean,  ...props })
   }
 
