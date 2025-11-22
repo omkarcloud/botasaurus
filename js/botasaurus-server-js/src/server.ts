@@ -130,6 +130,7 @@ class _Server {
   public whatsAppSupport: WhatsAppSupportOptions | null = null;
   public emailSupport: EmailSupportOptions | null = null;
   private scraperToInputJs: Record<string, Function> = {};
+  public endpoints: Record<string, Function> = {};
 
   getConfig(): Record<string, any> {
     if (!this.config) {
@@ -208,6 +209,10 @@ class _Server {
 
   addEmailSupport(options: EmailSupportOptions) {
     this.emailSupport = options;
+  }
+
+  addSearchOptionsEndpoints(endpoints: Record<string, Function>): void {
+    this.endpoints = { ...this.endpoints, ...endpoints };
   }
 
   setScraperToInputJs(scraperToInputJs: Record<string, Function>): void {

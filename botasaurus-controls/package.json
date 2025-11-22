@@ -24,6 +24,7 @@
   "scripts": {
     "build": "rimraf dist && tsc && rimraf dist/tsconfig.tsbuildinfo &&  python3 fix.py",
     "prepublishOnly": "npm run build",
+    "build-mv-starter": "npm run build && mv -f ~/Documents/grow/botasaurus/botasaurus-controls/dist/* ~/Documents/botasaurus-desktop-starter/node_modules/botasaurus-controls/dist/",
     "lint": "eslint src test",
     "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
     "upload": "python3 increment_version.py && rm -rf dist/ && npm publish",

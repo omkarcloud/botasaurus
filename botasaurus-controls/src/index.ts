@@ -216,6 +216,9 @@ export type WithChooseOptions = {
 // Define a type for control properties that include options
 type WithOptions = {
   options?: Option[]
+  searchMethod?: string
+  canCreateOptions?: boolean
+  canBulkAdd?: boolean
 }
 
 export type Control<V, P = {}> = {
@@ -236,6 +239,129 @@ type SectionControls = Omit<Controls, "section">
 
 const negativeValues = new Set(["false", "no", "n", "0", "nah", "nope", "never", "negative", "f"]);
 const affirmativeValues = new Set(["true", "yes", "y", "1", "yeah", "yep", "sure", "ok", "okay", "affirmative", "t"]);
+
+/**
+ * Validates that exactly one of 'options' or 'searchMethod' is provided
+ * @param id - The control id for error messages
+ * @param controlType - The type of control ('Select' or 'MultiSelect')
+ * @param props - The control props containing options and/or searchMethod
+ * @returns The trimmed searchMethod if provided, or undefined
+ */
+function validateOptionsOrSearchMethod(id: string, controlType: string, props: ControlInput<any, WithOptions>) {
+  const hasOptions = props.options && props.options.length > 0;
+  let trimmedSearchMethod: string | undefined = undefined;
+  
+  // Trim searchMethod if it's a string
+  if (typeof props.searchMethod === 'string') {
+    trimmedSearchMethod = props.searchMethod.trim();
+  }
+  
+
+  if (!hasOptions && !trimmedSearchMethod) {
+    throw new Error(
+      `${controlType} control with id "${id}" requires either 'options' or 'searchMethod'`
+    )
+  }
+
+  if (hasOptions && trimmedSearchMethod) {
+    throw new Error(
+      `${controlType} control with id "${id}" cannot have both 'options' and 'searchMethod'. Please provide only one.`
+    )
+  }
+
+  return trimmedSearchMethod;
+}
+
+
+/**
+ * Validates that an item is a valid select option object with only value and label properties
+ * @param item - The item to validate
+ * @returns true if valid, false otherwise
+ */
+function isValidSelectOptionWithOnlyValue(item: any): boolean {
+  if (typeof item !== "object" || !item) return false;
+  
+  const hasValue = isNotNullish(item.value) && typeof item.value === "string" && item.value.trim() !== "";
+  
+  return hasValue;
+}
+
+
+/**
+ * Validates that an item is a valid select option object with only value and label properties
+ * @param item - The item to validate
+ * @returns true if valid, false otherwise
+ */
+function isValidSelectOptionObject(item: any): boolean {
+  if (typeof item !== "object" || !item) return false;
+  
+  const hasValue = isNotNullish(item.value) && typeof item.value === "string" && item.value.trim() !== "";
+  const hasLabel = isNotNullish(item.label) && typeof item.label === "string";
+  
+  return hasValue && hasLabel;
+}
+
+/**
+ * Validates a single select default value for searchMethod-based selects
+ * @param value - The value to validate
+ * @param id - The control id for error messages
+ */
+function validateSearchSelectDefaultValue(value: any, id: string): void {
+  if (isNotNullish(value) && typeof value !== "string") {
+    if (!isValidSelectOptionObject(value)) {
+      throw new Error(
+        `The Default Value of Select control with id "${id}" must be a string, null, or an object with 'value' and 'label' properties. Received: ${JSON.stringify(value)}`
+      );
+    }
+  }
+}
+
+/**
+ * Validates multiSelect default values for searchMethod-based selects
+ * @param items - The array of items to validate
+ * @param id - The control id for error messages
+ */
+function validateSearchMultiSelectDefaultValue(items: any[], id: string): void {
+  for (const item of items) {
+    if (typeof item !== "string" && !isValidSelectOptionObject(item)) {
+      throw new Error(
+        `The Default Value of MultiSelect control with id "${id}" must be a list of strings or objects with 'value' and 'label' properties. Received: ${JSON.stringify(items)}`
+      );
+    }
+  }
+}
+
+/**
+ * Extracts the value property from an object if it exists
+ * @param item - The item to extract from
+ * @returns The value property or the item itself
+ */
+function extractValueFromObject(item: any): any {
+  if (typeof item === 'object' && isNotNullish(item) && isNotNullish(item.value)) {
+    return item.value;
+  }
+  return item;
+}
+
+/**
+ * Helper function to extract value from object format for searchMethod-based controls
+ * @param control - The control object
+ * @param value - The value to extract from
+ * @returns The extracted value
+ */
+function extractSearchMethodValue(control: any, value: any) {
+  // @ts-ignore
+  if (control.searchMethod && control.type === 'select') {
+    return extractValueFromObject(value)
+  }
+  // @ts-ignore
+  else if (control.searchMethod && control.type === 'multiSelect') {
+    if (Array.isArray(value)) {
+      return value.map(extractValueFromObject)
+    }
+  }
+  return value
+}
 
 const parseBoolean = (value:any) => {
   if (typeof value === 'string') {
@@ -314,7 +440,7 @@ class Controls {
       props["disabledMessage"] = ensureEndsWithDot(props["disabledMessage"]!.trim())
     }
     
-    this.raiseTypeValidationErrorMessage(type, props.defaultValue)
+    this.raiseTypeValidationErrorMessage(type, props.defaultValue, props)
 
     if (type === "checkbox" || type === "switch") {
       if (props.hasOwnProperty("isRequired")) {
@@ -329,7 +455,9 @@ class Controls {
       type,
       label,
     }
-    if (hasOptions(type) && isNotValidSelectOrChooseValue(element.defaultValue, element)) {
+    // @ts-ignore
+    // Skip default value validation if searchMethod is provided
+    if (hasOptions(type) && !element.searchMethod && isNotValidSelectOrChooseValue(element.defaultValue, element)) {
       throw new Error(`Control with ID '${id}' does not have an option with value '${element.defaultValue}'.`)
     }
 
@@ -405,7 +533,7 @@ class Controls {
   // Method to add a list of text fields
   listOfTexts(id: string, props: ListOfTextControlInput<string[]> = {}) {
     const defaultValue = ensureListOfStrings(props.defaultValue || [""], id)
-    const limit = ensureIsNullishOrNumber(props.limit, "limit")
+    const limit = ensureIsNullishOrNumber(props.limit, id)
     this.add<string[]>(id, "listOfTexts", {
       ...props,
       limit,
@@ -452,7 +580,7 @@ class Controls {
   // Method to add a list of link fields
   listOfLinks(id: string, props: ListOfLinkControlInput<string[]> = {}) {
     const defaultValue = ensureListOfStrings(props.defaultValue || [""], id)
-    const limit = ensureIsNullishOrNumber(props.limit, "limit")
+    const limit = ensureIsNullishOrNumber(props.limit, id)
 
     this.add<string[]>(id, "listOfLinks", {
       ...props,
@@ -476,21 +604,26 @@ class Controls {
     })
   }
   select(id: string, props: ControlInput<string, WithOptions> = {}) {
-    if (!props.options || !props.options.length) {
-      throw new Error(
-        `Select control with id "${id}" requires at least one option`
-      )
+    const trimmedSearchMethod = validateOptionsOrSearchMethod(id, 'Select', props);
+    
+    // Validate defaultValue for searchMethod-based selects
+    if (trimmedSearchMethod) {
+      validateSearchSelectDefaultValue(props.defaultValue, id);
     }
+    
+    // Remove searchMethod from props before spreading to avoid duplication
+    const { searchMethod, ...restProps } = props as any;
 
     return this.add<string>(id, "select", {
-      ...props,
+      ...restProps,
+      searchMethod: trimmedSearchMethod,
       defaultValue: props.defaultValue ?? null as any,
     })
   }
 
 
   filePicker(id: string, { accept = [], multiple = true, ...props }: FilePickerOptions = {}) {
-    const limit = ensureIsNullishOrNumber(props.limit, "limit");
+    const limit = ensureIsNullishOrNumber(props.limit, id);
     return this.add(id, "filePicker", {
         ...props,
         limit,
@@ -513,24 +646,39 @@ class Controls {
   }
 
   multiSelect(id: string, props: ControlInput<string[], WithOptions> & LimitOptions = {}) {
-    if (!props.options || !props.options.length) {
-      throw new Error(
-        `MultiSelect control with id "${id}" requires at least one option`
-      )
-    }
-    props.defaultValue = props.defaultValue ?? []
+    const trimmedSearchMethod = validateOptionsOrSearchMethod(id, 'MultiSelect', props);
 
+    props.defaultValue = props.defaultValue ?? []
+    if (props.canBulkAdd) {
+      props.canCreateOptions = true;
+    }
     if (props.defaultValue) {
-        if (!Array.isArray(props.defaultValue) || !props.defaultValue.every(x => typeof x === "string")) {
+        if (!Array.isArray(props.defaultValue)) {
+            throw new Error(
+              `The Default Value of MultiSelect control with id "${id}" must be an array. Received: ${JSON.stringify(props.defaultValue)}`
+            );
+        }
+        
+        // Validate defaultValue based on whether searchMethod is used
+        if (trimmedSearchMethod) {
+          validateSearchMultiSelectDefaultValue(props.defaultValue, id);
+        } else {
+          // For static options, only allow strings
+          if (!props.defaultValue.every(x => typeof x === "string")) {
             throw new Error(
               `The Default Value of MultiSelect control with id "${id}" must be a list of strings. Received: ${JSON.stringify(props.defaultValue)}`
             );
+          }
         }
     }
-    const limit = ensureIsNullishOrNumber(props.limit, "limit")
+    const limit = ensureIsNullishOrNumber(props.limit, id)
+    
+    // Remove searchMethod from props before spreading to avoid duplication
+    const { searchMethod, ...restProps } = props as any;
 
     return this.add<string[]>(id, "multiSelect", {
-      ...props,
+      ...restProps,
+      searchMethod: trimmedSearchMethod,
       limit,
       defaultValue: props.defaultValue,
     })
@@ -595,26 +743,36 @@ private parse(data: any) {
   
   return parsedData;
 }
-  //@ts-ignore
-  private getBackendValidationResult(data: any, tryParsing = false) {
+
+  getParsedControlData(data: any, tryParsing = false) {
     const mergedData: { [key: string]: any } = {}
     // Merge provided data with default data, picking only the keys that correspond to defined controls
     if (tryParsing) {
       this.iterateControls((control) => {
         const controlId = control.id
-        mergedData[controlId] = data.hasOwnProperty(controlId)
-          ? data[controlId]
-          : null
+        let value = data.hasOwnProperty(controlId) ? data[controlId] : null
+        
+        value = extractSearchMethodValue(control, value)
+        
+        mergedData[controlId] = value
       })
     } else {
       const defaultData = this.getDefaultData()
       this.iterateControls((control) => {
         const controlId = control.id
-        mergedData[controlId] = data.hasOwnProperty(controlId)
-          ? data[controlId]
-          : defaultData[controlId]
+        let value = data.hasOwnProperty(controlId) ? data[controlId] : defaultData[controlId]
+        
+        value = extractSearchMethodValue(control, value)
+        
+        mergedData[controlId] = value
       })
     }
+    return mergedData
+  }
+
+  //@ts-ignore
+  private getBackendValidationResult(data: any, tryParsing = false) {
+    const mergedData = this.getParsedControlData(data, tryParsing)
 
     let parsedData = mergedData
     if (tryParsing) {
@@ -684,7 +842,8 @@ private parse(data: any) {
       // Type-specific validation
       const typeValidationErrorMessage = this.getTypeValidationErrorMessage(
         type,
-        value
+        value,
+        control
       )
 
       if (typeValidationErrorMessage) {
@@ -792,7 +951,8 @@ private parse(data: any) {
 
         if (hasOptions(type) && !errorMessages.length) {
             // @ts-ignore
-            if (isNotValidSelectOrChooseValue(value, control)) {
+            // Skip option validation if searchMethod is provided
+            if (!control.searchMethod && isNotValidSelectOrChooseValue(value, control)) {
               errorMessages.push(`"No option value named ${value} exists.`);
             }
         }
@@ -846,7 +1006,7 @@ private parse(data: any) {
     return validationResults
   }
 
-  private getTypeValidationErrorMessage(type: string, value: any) {
+  private getTypeValidationErrorMessage(type: string, value: any, control: any) {
     switch (type) {
       case "text":
       case "search":
@@ -865,9 +1025,36 @@ private parse(data: any) {
           return "This field must be of type boolean."
         break
       case "choose":
-      case "select":
         if (typeof value !== "string" && value !== null)
           return "This field must be of type string or null."
+        break
+      case "select":
+        // For searchMethod-based selects, allow object format {value, label}
+        if (control.searchMethod) {
+          if (isNotNullish(value) && typeof value !== "string" && !isValidSelectOptionWithOnlyValue(value)) {
+            return "This field must be a string, null, or an object with 'value' property."
+          }
+        } else {
+          if (typeof value !== "string" && value !== null)
+            return "This field must be of type string or null."
+        }
+        break
+      case "multiSelect":
+        // For searchMethod-based multiselects, allow array of strings or objects
+        if (control.searchMethod) {
+          if (!Array.isArray(value)) {
+            return "This field must be an array."
+          }
+          for (const item of value) {
+            if (typeof item !== "string" && !isValidSelectOptionWithOnlyValue(item)) {
+              return "Each item must be a string or an object with 'value' property."
+            }
+          }
+        } else {
+          if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
+            return "This field must be an array of strings."
+          }
+        }
         break
       case "listOfTexts":
         if (
@@ -890,8 +1077,8 @@ private parse(data: any) {
     return
   }
 
-  private raiseTypeValidationErrorMessage(type: string, value: any) {
-    const message = this.getTypeValidationErrorMessage(type, value)
+  private raiseTypeValidationErrorMessage(type: string, value: any, control: any) {
+    const message = this.getTypeValidationErrorMessage(type, value, control)
     if (message) {
       throw new Error(message)
     }

@@ -17,6 +17,7 @@ import {
   performPatchTask,
   OK_MESSAGE,
 } from './routes-db-logic';
+import { Server } from './server'
 
 function home() {
   return { redirect: '/api' };
@@ -125,6 +126,53 @@ async function getUiTaskResults(taskId: number, queryParams: any, jsonData: any,
   return final;
 }
 
+async function getSearchOptions(searchMethod: string, query: string, data: any) {
+  try {
+    
+    // Check if the search method exists
+    if (!Server.endpoints[searchMethod]) {
+      return { error: `Search method '${searchMethod}' is not registered using Server.addSearchOptionsEndpoints().` };
+    }
+
+    // Call the search method
+    const result = await Server.endpoints[searchMethod](query, data);
+
+    // Validate the result is an array of objects with value and label
+    if (!Array.isArray(result)) {
+      return { error: `Search method '${searchMethod}' must return an array of objects.` };
+    }
+
+    for (const item of result) {
+      if (typeof item !== 'object' || !item.hasOwnProperty('value') || !item.hasOwnProperty('label')) {
+        return { error: `Each object in the result must have 'value' and 'label' properties.` };
+      }
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error(`Error in getSearchOptions for method '${searchMethod}':`, error);
+
+    // Check if it's an Axios error
+    if (error.isAxiosError || error.response) {
+      const status = error.response?.status;
+      const statusText = error.response?.statusText || 'Unknown error';
+      
+      if (status === 400) {
+        return { error: `Bad Request: ${statusText}` };
+      } else if (status === 404) {
+        return { error: `Not Found: ${statusText}` };
+      } else if (status === 500) {
+        return { error: `Server Error: ${statusText}` };
+      } else if (status) {
+        return { error: `Request failed with status ${status}: ${statusText}` };
+      }
+    }
+
+    // Generic error
+    return { error: error.message || 'An unexpected error occurred while fetching search options.' };
+  }
+}
+
 export {
   home,
   getApi,
@@ -144,4 +192,5 @@ export {
   getTasksForUiDisplay,
   patchTask,
   getUiTaskResults,
+  getSearchOptions,
 };

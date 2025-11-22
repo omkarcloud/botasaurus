@@ -94,9 +94,10 @@ A number field that enforces a minimum value of 1.
 ```
 
 ### `select`
-A single-select dropdown menu. It requires an `options` array.
+A single-select dropdown menu. It requires either an `options` array or a `searchMethod` for dynamic option fetching.
 
-**Example**
+
+**Example - Static Options**
 ```ts
 .select("category", {
   options: [
@@ -108,10 +109,66 @@ A single-select dropdown menu. It requires an `options` array.
 })
 ```
 
-### `multiSelect`
-A multi-select dropdown menu. It requires an `options` array. The optional `limit` parameter sets the maximum number of selections.
+**Example - Dynamic Options**
+```ts
+.select("city", {
+  searchMethod: "getCityOptions",  // Backend method that fetches options
+  canCreateOptions: true,          // Allow users to create custom options
+  defaultValue: {value: 'US__CA__SF', label: "San Francisco"},
+})
+```
 
-**Example**
+**Default Value Format:**
+- For static `options`: Use a string value (e.g., `"tech"`)
+- For `searchMethod`: Use an object with `value` and `label` properties:
+  ```ts
+  defaultValue: {value: 'US__CA__SF', label: "San Francisco"}
+  ```
+
+**Additional Parameters:**
+- `canCreateOptions` (optional, default: `false`) - Allows users to type and create custom values
+- `searchMethod` (optional) - Name of the backend handler function for dynamic option fetching
+
+#### How to Dynamically fetch Options with `searchMethod`
+
+To use `searchMethod`, you need to define async handler functions and add them using `Server.addSearchOptionsEndpoints()`.
+
+**Backend Implementation:**
+```ts
+import { Server } from 'botasaurus-server/server';
+import axios from 'axios';
+
+const baseUrl = "http://0.0.0.0:3000";
+
+async function getCityOptions(query: string, data: any) {
+  const params = {
+    query,
+  };
+
+  try {
+    const response = await axios.get(`${baseUrl}/search/cities`, { params });
+    return response.data; // Must return array of { value, label }
+  } catch (error) {
+    throw error; // Propagate errors for proper handling
+  }
+}
+
+// Register the search endpoint
+Server.addSearchOptionsEndpoints({
+  getCityOptions,
+});
+```
+
+**Handler Requirements:**
+- Receives two parameters: `query` (string) and `data` (object with all form field values)
+- Must return an array of objects with `value` and `label` properties
+- Errors (including Axios errors) are automatically caught and displayed to users
+
+### `multiSelect`
+A multi-select dropdown menu. It requires either an `options` array or a `searchMethod` for dynamic option fetching. The optional `limit` parameter sets the maximum number of selections.
+
+
+**Example - Static Options**
 ```ts
 .multiSelect("tags", {
   options: [
@@ -122,6 +179,44 @@ A multi-select dropdown menu. It requires an `options` array. The optional `limi
   defaultValue: ["tech", "ai"],
 })
 ```
+
+**Example - Dynamic Search with Bulk Add**
+```ts
+.multiSelect("cities", {
+  searchMethod: "getCityOptions",   // Backend method that fetches options
+  canCreateOptions: true,           // Allow users to create custom options
+  canBulkAdd: true,                 // Enable bulk add/edit functionality
+  defaultValue: [{value: 'US__CA__SF', label: "San Francisco"}],
+})
+```
+
+**Default Value Format:**
+- For static `options`: Use an array of strings (e.g., `["tech", "ai"]`)
+- For `searchMethod`: Use an array of objects with `value` and `label` properties:
+  ```ts
+  defaultValue: [
+    {value: 'US__CA__SF', label: "San Francisco"},
+    {value: 'US__NY__NYC', label: "New York"}
+  ]
+  ```
+
+**Additional Parameters:**
+- `limit` (optional) - Maximum number of items that can be selected
+- `canCreateOptions` (optional, default: `false`) - Allows users to type and create custom values
+- `canBulkAdd` (optional, default: `false`) - Enables bulk add/edit functionality with a "Bulk Add" or "Bulk Edit" button below the control
+- `searchMethod` (optional) - Name of the backend handler function for dynamic option fetching
+
+**Bulk Add Functionality:**
+
+When `canBulkAdd` is enabled, a button appears below the multi-select control allowing users to paste multiple values at once. Bulk add supports multiple input formats:
+- **JSON array**: `["New York", "San Francisco", "Chicago"]`
+- **Comma separated**: `New York, San Francisco, Chicago`
+- **Newline separated**:
+  ```
+  New York
+  San Francisco
+  Chicago
+  ```
 
 ### `checkbox`
 A Boolean checkbox. Defaults to `false` if no `defaultValue` is provided.

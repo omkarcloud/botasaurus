@@ -20,7 +20,7 @@ const ContentContainer = ({ selectedScraper, hasSingleScraper }: { selectedScrap
   const controls = useMemo(() => createControls(selectedScraper.input_js),[selectedScraper.scraper_name])
 
   //@ts-ignore
-  const defdata = controls.getDefaultData()
+  const defdata = controls.getParsedControlData(controls.getDefaultData())
 
   const readmeContent = createApiREADME(baseUrl, selectedScraper.scraper_name,hasSingleScraper, defdata, sorts, filters, views, default_sort, selectedScraper.route_path, selectedScraper.max_runs,
   // @ts-ignore
