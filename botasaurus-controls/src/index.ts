@@ -248,7 +248,7 @@ const affirmativeValues = new Set(["true", "yes", "y", "1", "yeah", "yep", "sure
  * @returns The trimmed searchMethod if provided, or undefined
  */
 function validateOptionsOrSearchMethod(id: string, controlType: string, props: ControlInput<any, WithOptions>) {
-  const hasOptions = props.options && props.options.length > 0;
+  const hasOptions = !!props.options
   let trimmedSearchMethod: string | undefined = undefined;
   
   // Trim searchMethod if it's a string
@@ -269,10 +269,42 @@ function validateOptionsOrSearchMethod(id: string, controlType: string, props: C
     )
   }
 
+  if (hasOptions) {
+    validateOptions(props.options as any, controlType, id)
+  }
+
   return trimmedSearchMethod;
 }
 
 
+
+function validateOptions(options:any[], controlType: string, id: string) {
+  if (!Array.isArray(options)) {
+    throw new Error(
+      `${controlType} control with id '${id}' requires an array of options`
+    )
+  }
+  if (!options.length) {
+    throw new Error(
+      `${controlType} control with id '${id}' requires at least one option`
+    )
+  }
+
+  options.forEach(option => {
+    if (!isValidSelectOptionObject(option)) {
+
+      if (options.every(option => !isValidSelectOptionObject(option))) {
+        throw new Error(
+          `The Option of ${controlType} control with id "${id}" must be an object with 'value' and 'label' properties. Received: ${JSON.stringify(options)}`
+        )
+      }
+
+      throw new Error(
+        `Each Option of ${controlType} control with id "${id}" must be an object with 'value' and 'label' properties. Received: ${JSON.stringify(option)}`
+      )
+    }
+  })
+}
 /**
  * Validates that an item is a valid select option object with only value and label properties
  * @param item - The item to validate
@@ -592,11 +624,8 @@ class Controls {
     return this
   }
   choose(id: string, props: ControlInput<string, WithChooseOptions> = {}) {
-    if (!props.options || !props.options.length) {
-      throw new Error(
-        `Choose control with id '${id}' requires at least one option`
-      )
-    }
+    
+    validateOptions(props.options as any, 'Choose', id)
 
     return this.add<string>(id, "choose", {
       ...props,

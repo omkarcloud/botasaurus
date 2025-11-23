@@ -133,7 +133,16 @@ A single-select dropdown menu. It requires either an `options` array or a `searc
 
 To use `searchMethod`, you need to define async handler functions and add them using `Server.addSearchOptionsEndpoints()`.
 
-**Backend Implementation:**
+**Input JS Implementation:**
+```ts
+.select("city", {
+  searchMethod: "getCityOptions",  // Backend method that fetches options
+  canCreateOptions: true,          // Allow users to create custom options
+  defaultValue: {value: 'US__CA__SF', label: "San Francisco"},
+})
+```
+
+**`server.ts` Implementation:**
 ```ts
 import { Server } from 'botasaurus-server/server';
 import axios from 'axios';
