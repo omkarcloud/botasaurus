@@ -63,7 +63,7 @@ def read_json(filename):
 
 
 
-def write_temp_json(data, log=True):
+def write_temp_json(data, log=True, indent=4):
     filename = "temp"
 
     try:
@@ -73,7 +73,7 @@ def write_temp_json(data, log=True):
         if not filename.endswith(".json"):
             filename = filename + ".json"
 
-        _write_json(data, filename)
+        _write_json(data, filename, indent)
 
         if log:
             print(f"View written JSON file at {filename}")
@@ -99,7 +99,7 @@ def file_exists(filename):
         return False
 
 
-def write_json(data, filename, log=True):
+def write_json(data, filename, log=True, indent=4):
     # if type(data) is list and len(data) == 0:
     #     # if log:
     #     print("No JSON File written as data list is empty.")
@@ -112,7 +112,7 @@ def write_json(data, filename, log=True):
         if not filename.endswith(".json"):
             filename = filename + ".json"
 
-        _write_json(data, filename)
+        _write_json(data, filename, indent)
 
         if log:
             print(f"View written JSON file at {filename}")

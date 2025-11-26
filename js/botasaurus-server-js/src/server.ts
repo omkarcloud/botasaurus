@@ -513,11 +513,11 @@ class _Server {
     this.cache = true;
   }
 
-  createTasks({ scraperName, data, metadata }: {
+  async createTasks({ scraperName, data, metadata }: {
     scraperName: string;
     data: any;
     metadata: any;
-  }): [any[], boolean, boolean] {
+  }): Promise<[any[], boolean, boolean]> {
     const scraper = this.scrapers[scraperName];
 
     const tasks: any[] = [];
@@ -526,7 +526,7 @@ class _Server {
     const splitTask = scraper.split_task;
 
     if (splitTask) {
-      const splitData = splitTask(data);
+      const splitData = await splitTask(data);
       for (const item of splitData) {
         const taskName = scraper.get_task_name ? scraper.get_task_name(item) : 'Unnamed Task';
         tasks.push({ name: taskName, data: item, metadata });

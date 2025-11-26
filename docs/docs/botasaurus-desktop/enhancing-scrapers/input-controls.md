@@ -146,8 +146,9 @@ To use `searchMethod`, you need to define async handler functions and add them u
 ```ts
 import { Server } from 'botasaurus-server/server';
 import axios from 'axios';
+import { config } from '../../main/config';
 
-const baseUrl = "http://0.0.0.0:3000";
+const baseUrl = config.isDev ? "http://0.0.0.0:3000" : "https://api.my-app.com";
 
 async function getCityOptions(query: string, data: any) {
   const params = {

@@ -78,7 +78,7 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                 // If split_task exists, split the data
                 let dataItems: any[];
                 if (splitTask) {
-                    dataItems = splitTask(validatedData);
+                    dataItems = await splitTask(validatedData);
                 } else {
                     dataItems = [validatedData];
                 }

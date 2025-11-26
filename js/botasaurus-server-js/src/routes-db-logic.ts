@@ -366,7 +366,7 @@ async function createTasks(
 
   let tasksData: any[];
   if (split_task) {
-    tasksData = split_task(deepCloneDict(data));
+    tasksData = await split_task(deepCloneDict(data));
     if (tasksData.length === 0) {
       return [[], [], split_task];
     }
