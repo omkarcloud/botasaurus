@@ -1,52 +1,64 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.131",
+  "version": "4.1.132",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./validation": "./dist/validation.js",
-    "./executor": "./dist/executor.js",
+    "./ndjson": "./dist/ndjson.js",
+    "./writer-http": "./dist/writer-http.js",
+    "./sorts": "./dist/sorts.js",
+    "./env": "./dist/env.js",
+    "./paths": "./dist/paths.js",
+    "./server": "./dist/server.js",
     "./task-helper": "./dist/task-helper.js",
     "./filters": "./dist/filters.js",
-    "./sorts": "./dist/sorts.js",
-    "./views": "./dist/views.js",
-    "./scraper-type": "./dist/scraper-type.js",
     "./errors": "./dist/errors.js",
-    "./change-case": "./dist/change-case.js",
-    "./writer": "./dist/writer.js",
-    "./writer-http": "./dist/writer-http.js",
-    "./task-routes": "./dist/task-routes.js",
-    "./utils": "./dist/utils.js",
-    "./convert-to-english": "./dist/convert-to-english.js",
-    "./api-config": "./dist/api-config.js",
-    "./ndjson": "./dist/ndjson.js",
-    "./task-results": "./dist/task-results.js",
-    "./null-utils": "./dist/null-utils.js",
-    "./task-executor": "./dist/task-executor.js",
-    "./download": "./dist/download.js",
     "./routes-db-logic": "./dist/routes-db-logic.js",
-    "./db-setup": "./dist/db-setup.js",
-    "./ui": "./dist/ui.js",
-    "./models": "./dist/models.js",
-    "./paths": "./dist/paths.js",
-    "./env": "./dist/env.js",
-    "./server": "./dist/server.js",
+    "./task-results": "./dist/task-results.js",
+    "./views": "./dist/views.js",
+    "./convert-to-english": "./dist/convert-to-english.js",
+    "./validation": "./dist/validation.js",
+    "./writer": "./dist/writer.js",
+    "./utils": "./dist/utils.js",
     "./ndjson-http": "./dist/ndjson-http.js",
-    "./run": "./dist/run.js",
-    "./apply-pagination": "./dist/apply-pagination.js"
+    "./task-routes": "./dist/task-routes.js",
+    "./task-executor": "./dist/task-executor.js",
+    "./db-setup": "./dist/db-setup.js",
+    "./scraper-type": "./dist/scraper-type.js",
+    "./apply-pagination": "./dist/apply-pagination.js",
+    "./change-case": "./dist/change-case.js",
+    "./models": "./dist/models.js",
+    "./null-utils": "./dist/null-utils.js",
+    "./download": "./dist/download.js",
+    "./ui": "./dist/ui.js",
+    "./api-config": "./dist/api-config.js",
+    "./executor": "./dist/executor.js",
+    "./run": "./dist/run.js"
   },
   "typesVersions": {
     "*": {
       "*": [
         "dist/*"
       ],
-      "validation": [
-        "dist/validation.d.ts"
+      "ndjson": [
+        "dist/ndjson.d.ts"
       ],
-      "executor": [
-        "dist/executor.d.ts"
+      "writer-http": [
+        "dist/writer-http.d.ts"
+      ],
+      "sorts": [
+        "dist/sorts.d.ts"
+      ],
+      "env": [
+        "dist/env.d.ts"
+      ],
+      "paths": [
+        "dist/paths.d.ts"
+      ],
+      "server": [
+        "dist/server.d.ts"
       ],
       "task-helper": [
         "dist/task-helper.d.ts"
@@ -54,83 +66,71 @@
       "filters": [
         "dist/filters.d.ts"
       ],
-      "sorts": [
-        "dist/sorts.d.ts"
-      ],
-      "views": [
-        "dist/views.d.ts"
-      ],
-      "scraper-type": [
-        "dist/scraper-type.d.ts"
-      ],
       "errors": [
         "dist/errors.d.ts"
-      ],
-      "change-case": [
-        "dist/change-case.d.ts"
-      ],
-      "writer": [
-        "dist/writer.d.ts"
-      ],
-      "writer-http": [
-        "dist/writer-http.d.ts"
-      ],
-      "task-routes": [
-        "dist/task-routes.d.ts"
-      ],
-      "utils": [
-        "dist/utils.d.ts"
-      ],
-      "convert-to-english": [
-        "dist/convert-to-english.d.ts"
-      ],
-      "api-config": [
-        "dist/api-config.d.ts"
-      ],
-      "ndjson": [
-        "dist/ndjson.d.ts"
-      ],
-      "task-results": [
-        "dist/task-results.d.ts"
-      ],
-      "null-utils": [
-        "dist/null-utils.d.ts"
-      ],
-      "task-executor": [
-        "dist/task-executor.d.ts"
-      ],
-      "download": [
-        "dist/download.d.ts"
       ],
       "routes-db-logic": [
         "dist/routes-db-logic.d.ts"
       ],
-      "db-setup": [
-        "dist/db-setup.d.ts"
+      "task-results": [
+        "dist/task-results.d.ts"
       ],
-      "ui": [
-        "dist/ui.d.ts"
+      "views": [
+        "dist/views.d.ts"
       ],
-      "models": [
-        "dist/models.d.ts"
+      "convert-to-english": [
+        "dist/convert-to-english.d.ts"
       ],
-      "paths": [
-        "dist/paths.d.ts"
+      "validation": [
+        "dist/validation.d.ts"
       ],
-      "env": [
-        "dist/env.d.ts"
+      "writer": [
+        "dist/writer.d.ts"
       ],
-      "server": [
-        "dist/server.d.ts"
+      "utils": [
+        "dist/utils.d.ts"
       ],
       "ndjson-http": [
         "dist/ndjson-http.d.ts"
       ],
-      "run": [
-        "dist/run.d.ts"
+      "task-routes": [
+        "dist/task-routes.d.ts"
+      ],
+      "task-executor": [
+        "dist/task-executor.d.ts"
+      ],
+      "db-setup": [
+        "dist/db-setup.d.ts"
+      ],
+      "scraper-type": [
+        "dist/scraper-type.d.ts"
       ],
       "apply-pagination": [
         "dist/apply-pagination.d.ts"
+      ],
+      "change-case": [
+        "dist/change-case.d.ts"
+      ],
+      "models": [
+        "dist/models.d.ts"
+      ],
+      "null-utils": [
+        "dist/null-utils.d.ts"
+      ],
+      "download": [
+        "dist/download.d.ts"
+      ],
+      "ui": [
+        "dist/ui.d.ts"
+      ],
+      "api-config": [
+        "dist/api-config.d.ts"
+      ],
+      "executor": [
+        "dist/executor.d.ts"
+      ],
+      "run": [
+        "dist/run.d.ts"
       ]
     }
   },
