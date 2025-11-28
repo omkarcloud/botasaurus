@@ -291,13 +291,14 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
         }
     }
 
-    async getTasks({ page = 1, perPage, withResults = true }: { page?: number; perPage?: number; withResults?: boolean } = { page: 1, withResults: true }): Promise<PaginatedResponse<Task>> {
+    async getTasks({ page = 1, perPage, withResults = true, parentTaskId }: { page?: number; perPage?: number; withResults?: boolean; parentTaskId?: number } = { page: 1, withResults: true }): Promise<PaginatedResponse<Task>> {
         /**
          * Fetches tasks from the server, with optional result inclusion, pagination, and filtering.
          *
          * @param page The page number for pagination.
          * @param perPage The number of tasks to return per page.
          * @param withResults Whether to include the task results in the response.
+         * @param parentTaskId Filter tasks by parent task ID.
          * @return A dictionary containing the task results and pagination information.
          */
         const url = this._makeApiUrl("tasks");
@@ -306,6 +307,7 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
         };
         if (page !== undefined && page !== null) params.page = page;
         if (perPage !== undefined && perPage !== null) params.per_page = perPage;
+        if (parentTaskId !== undefined && parentTaskId !== null) params.parent_task_id = parentTaskId;
         try {
             const response = await axios.get(url, { params });
 
