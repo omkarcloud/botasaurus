@@ -291,7 +291,7 @@ const api = new Api({ apiUrl: 'https://example.com' })`);
         }
     }
 
-    async getTasks({ page = 1, perPage, withResults = true, parentTaskId }: { page?: number; perPage?: number; withResults?: boolean; parentTaskId?: number } = { page: 1, withResults: true }): Promise<PaginatedResponse<Task>> {
+    async getTasks({ page = 1, perPage, withResults = false, parentTaskId }: { page?: number; perPage?: number; withResults?: boolean; parentTaskId?: number } = { page: 1, withResults: true }): Promise<PaginatedResponse<Task>> {
         /**
          * Fetches tasks from the server, with optional result inclusion, pagination, and filtering.
          *
