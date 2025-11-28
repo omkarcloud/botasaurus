@@ -3,5 +3,3 @@ export const ScraperType = {
     REQUEST: "request",
     TASK: "task"
 } as const;
-
-
