@@ -292,7 +292,7 @@ export function buildApp(
         return payload;
     });
     // Add error handler for JsonHTTPResponseWithMessage
-    app.setErrorHandler((error, _, reply) => {
+    app.setErrorHandler((error:any, _, reply) => {
         if (error instanceof JsonHTTPResponseWithMessage) {
             reply.code(error.status).headers(error.headers).send(error.body);
         } else {
