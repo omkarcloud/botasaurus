@@ -102,10 +102,12 @@ async function queryTasks(
   withResults: boolean,
   page?: any,
   per_page?: any,
-  serializer: (task: any, withResults: boolean) => Promise<any> = serializeTask
+  serializer: (task: any, withResults: boolean) => Promise<any> = serializeTask,
+  parent_task_id?: number | null
 ): Promise<any> {
   const projectionFields = createProjection(ets);
-  const total_count = await wrapDbOperationInPromise((cb:any) => db.count({}, cb));
+  const queryFilter = isNotNullish(parent_task_id) ? { parent_task_id } : {};
+  const total_count = await wrapDbOperationInPromise((cb:any) => db.count(queryFilter, cb));
 
   if (isNullish(per_page)) {
     per_page = total_count === 0 ? 1 : total_count;
@@ -119,7 +121,7 @@ async function queryTasks(
   page = isNullish(page) ? 1 : Math.max(Math.min(page, total_pages), 1);
 
   const tasks = await wrapDbOperationInPromise((cb:any) => {
-    let query = db.find({}).projection(projectionFields).sort({ sort_id: -1 });
+    let query = db.find(queryFilter).projection(projectionFields).sort({ sort_id: -1 });
     
     if (isNotNullish(per_page)) {
       const start = (page - 1) * per_page;
@@ -636,37 +638,47 @@ async function save(x: [number, string]) {
     }
     return null;
   }
-  async function executeGetTasks(queryParams: Record<string, any>): Promise<any> {
-    const withResults = (queryParams.with_results || 'true').toLowerCase() === 'true';
-  
-    let page = queryParams.page;
-    let per_page = queryParams.per_page;
-  
-    if (isNotNullish(per_page)) {
-      per_page = tryIntConversion(per_page, `Invalid 'per_page' parameter value: "${page}". It must be a positive integer.`);
-      if (!isValidPositiveInteger(per_page)) {
-        throw new JsonHTTPResponseWithMessage(
-          `Invalid 'per_page' parameter value: "${page}". It must be a positive integer.`
-        );
-      }
-    } else {
-      page = 1;
-      per_page = null;
+async function executeGetTasks(queryParams: Record<string, any>): Promise<any> {
+  const withResults = (queryParams.with_results || 'true').toLowerCase() === 'true';
+
+  let page = queryParams.page;
+  let per_page = queryParams.per_page;
+  let parent_task_id = queryParams.parent_task_id;
+
+  if (isNotNullish(per_page)) {
+    per_page = tryIntConversion(per_page, `Invalid 'per_page' parameter value: "${page}". It must be a positive integer.`);
+    if (!isValidPositiveInteger(per_page)) {
+      throw new JsonHTTPResponseWithMessage(
+        `Invalid 'per_page' parameter value: "${page}". It must be a positive integer.`
+      );
     }
-  
-    if (isNotNullish(page)) {
-      page = tryIntConversion(page, `Invalid 'page' parameter value: "${page}". It must be a positive integer.`);
-      if (!isValidPositiveInteger(page)) {
-        throw new JsonHTTPResponseWithMessage(
-          `Invalid 'page' parameter value: "${page}". It must be a positive integer.`
-        );
-      }
-    } else {
-      page = 1;
-    }
-  
-    return queryTasks(getEts(withResults), withResults, page, per_page);
+  } else {
+    page = 1;
+    per_page = null;
   }
+
+  if (isNotNullish(page)) {
+    page = tryIntConversion(page, `Invalid 'page' parameter value: "${page}". It must be a positive integer.`);
+    if (!isValidPositiveInteger(page)) {
+      throw new JsonHTTPResponseWithMessage(
+        `Invalid 'page' parameter value: "${page}". It must be a positive integer.`
+      );
+    }
+  } else {
+    page = 1;
+  }
+
+  if (isNotNullish(parent_task_id)) {
+    parent_task_id = tryIntConversion(parent_task_id, `Invalid 'parent_task_id' parameter value: "${parent_task_id}". It must be a positive integer.`);
+    if (!isValidPositiveInteger(parent_task_id)) {
+      throw new JsonHTTPResponseWithMessage(
+        `Invalid 'parent_task_id' parameter value: "${parent_task_id}". It must be a positive integer.`
+      );
+    }
+  }
+
+  return queryTasks(getEts(withResults), withResults, page, per_page, serializeTask, parent_task_id);
+}
   
   function isValidAllTasks(tasks: any[]): boolean {
     if (!Array.isArray(tasks)) {
