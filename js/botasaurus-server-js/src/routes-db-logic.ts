@@ -1,3 +1,4 @@
+import { isAffirmative } from 'botasaurus/cache'
 import fs from 'fs';
 import { createTask, createTaskName, db, getAutoincrementId, isFailedAndNonAllTask, isoformat, serializeTask, serializeUiDisplayTask, serializeUiOutputTask, Task, TaskStatus } from './models';
 import { isNotNullish, isNullish } from './null-utils';
@@ -22,6 +23,7 @@ import { downloadResults, downloadResultsHttp } from './download'
 import { getBotasaurusStorage } from 'botasaurus/botasaurus-storage'
 import { Launcher } from 'chrome-launcher/dist/chrome-launcher';
 import { electronConfig } from './paths'
+
 
 // Wrap NeDB operations in promises since it uses callbacks
 const wrapDbOperationInPromise = (operation: any): Promise<any> => {
@@ -639,7 +641,8 @@ async function save(x: [number, string]) {
     return null;
   }
 async function executeGetTasks(queryParams: Record<string, any>): Promise<any> {
-  const withResults = (queryParams.with_results || 'true').toLowerCase() === 'true';
+  
+  const withResults = isAffirmative(queryParams.with_results || 'false');;
 
   let page = queryParams.page;
   let per_page = queryParams.per_page;
