@@ -1,6 +1,6 @@
 {
   "name": "botasaurus-desktop-api",
-  "version": "4.1.88",
+  "version": "4.1.89",
   "description": "The Botasaurus Desktop API Client provides programmatic access to Botasaurus Desktop scrapers with a developer-friendly API.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
