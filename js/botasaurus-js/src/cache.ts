@@ -307,5 +307,6 @@ export {
   _deleteItems,
   readJson,
   _readJsonFiles, 
-  _hash
+  _hash,
+  isAffirmative,
 };
