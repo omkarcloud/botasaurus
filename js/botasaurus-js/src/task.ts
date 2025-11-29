@@ -228,13 +228,24 @@ export function task<I=any>(options: TaskOptions<I>) {
 }
 
 export function taskQueue<I=any>(options: TaskOptions<I>& { sequential?: boolean }) {
-    const run = createTask<I>(options, true)
+    // Extract parallel from options - it controls queue-level concurrency, not passed to createTask
+    const { parallel: parallelOption, ...taskOptions } = options
+    const run = createTask<I>(taskOptions as TaskOptions<I>, true)
     const performTask = () => {
         let seenItems = new Set()
         let lastPromise: Promise<any> = Promise.resolve()
-        let promises: any[] = []
-        const sequential = 'sequential' in options ? options.sequential : true
+        const state = { promises: [] as any[] }
+        let sequential = 'sequential' in options ? options.sequential : false
+        
+        // Create concurrency limiter for parallel mode
+        const maxLimit = determineMaxLimit(parallelOption)
 
+        let limit: pLimit.Limit
+        if (maxLimit <=1) {
+            sequential = true
+        } else {
+            limit = pLimit(maxLimit)
+        }
 
         function getUnique(items: any[]) {
             let singleItem = false
@@ -269,6 +280,11 @@ export function taskQueue<I=any>(options: TaskOptions<I>& { sequential?: boolean
             return singleItem && newItems.length ? newItems[0] : newItems
         }
 
+        const cleanup = () => {
+            seenItems.clear()
+            lastPromise = Promise.resolve()
+        }
+
         return {
             put: function (data: any, overrideOptions: Omit<TaskOptions<any>, 'run'> = {}) {
                 const uniqueData = getUnique(data)
@@ -277,53 +293,78 @@ export function taskQueue<I=any>(options: TaskOptions<I>& { sequential?: boolean
                     // runs sequentially
                     promise = lastPromise.then(() => run(uniqueData, overrideOptions))
                     lastPromise = promise
+
+                    state.promises.push(promise)
+                    return promise.then(x=>x.result)
                 } else {
-                    // runs in parallel
-                    promise = run(uniqueData, overrideOptions)
+                    if (Array.isArray(uniqueData)) {
+                        promise = Promise.all(uniqueData.map(x=> limit(() => run(x, overrideOptions))))
+                        state.promises.push(promise.then(results=>({originalData: uniqueData, result: results.map((x: any)=>x.result)})))
+                        return promise.then(results=>results.map((x: any)=>x.result))
+                    } else {
+                        promise = limit(() => run(uniqueData, overrideOptions))
+                        
+                        state.promises.push(promise)
+                        return promise.then(x=>x.result)
+                    }
                 }
-                promises.push(promise)
-                return promise.then(x=>x.result)
             },
             get: async function () {
-                // return flatten(self.result_list)
-                const result_list = []
-                const orignal_data = []
-
-                try {
-                    const results = await Promise.all(promises)
-                    for (let index = 0; index < results.length; index++) {
-                        const { originalData, result } = results[index]
-                        if (Array.isArray(originalData)) {
-                            orignal_data.push(...originalData)
-                        } else {
-                            orignal_data.push(originalData)
-                        }
-
-                        if (Array.isArray(originalData)) {
-                            result_list.push(...result)
-                        } else {
-                            result_list.push(result)
-                        }
-                    }
-
-                    promises = []
-                    seenItems.clear()
-                    lastPromise = Promise.resolve()
-                    const { output = 'default', outputFormats = null } = options
-                    // fix if output is []
-                    const final = flatten(result_list)
-                    writeOutput(output, outputFormats, orignal_data, final, run.__name__)
-                    return final
-                } catch (error) {
-                    promises = []
-                    seenItems.clear()
-                    lastPromise = Promise.resolve()
-                    throw error
-                }
-
+                return drainQueue(state, cleanup, options, run.__name__)
             }
         }
     }
     performTask._isQueue = true
     return performTask
+}
+
+export function determineMaxLimit(parallelOption: number | ((data: any) => number) | undefined) {
+    const parallelCount = typeof parallelOption === 'function' ? parallelOption(null) : (parallelOption ?? 1)
+
+    const maxLimit = Math.max(1, parallelCount)
+    return maxLimit
+}
+
+export async function drainQueue(
+    state: { promises: Promise<any>[] },
+    cleanup: () => void,
+    options: { output?: string | ((data: any, result: any) => void) | null, outputFormats?: FormatType[] | null },
+    fnName: string
+) {
+    const result_list: any[] = []
+    const orignal_data: any[] = []
+
+    try {
+        // Drain the queue - keep processing until no new promises are added
+        while (state.promises.length > 0) {
+            const currentPromises = state.promises
+            state.promises = []
+            
+            const results = await Promise.all(currentPromises)
+            for (let index = 0; index < results.length; index++) {
+                const { originalData, result } = results[index]
+                if (Array.isArray(originalData)) {
+                    orignal_data.push(...originalData)
+                } else {
+                    orignal_data.push(originalData)
+                }
+
+                if (Array.isArray(originalData)) {
+                    result_list.push(...result)
+                } else {
+                    result_list.push(result)
+                }
+            }
+        }
+
+        cleanup()
+        const { output = 'default', outputFormats = null } = options
+        const final = flatten(result_list)
+        writeOutput(output, outputFormats, orignal_data, final, fnName)
+        return final
+    } catch (error) {
+        state.promises = []
+        cleanup()
+        throw error
+    }
 }

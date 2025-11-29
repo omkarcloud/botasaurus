@@ -31,7 +31,10 @@ class TaskExecutor {
     public async start(): Promise<void> {
         await this.fixInProgressTasks()
         await this.completePendingButCompletedAllTask()
-        
+        this.startTaskWorker()
+    }
+
+    protected startTaskWorker(): void {
         if (Server.isScraperBasedRateLimit) {
             setImmediate(this.taskWorkerScraperBased.bind(this))
         } else {
@@ -145,12 +148,12 @@ class TaskExecutor {
             console.error(error)
         }
     }
-    private async taskWorkerScraperBased(): Promise<void> {
+    protected async taskWorkerScraperBased(): Promise<void> {
         await this.processScraperBasedTasks();
         setTimeout(this.taskWorkerScraperBased.bind(this), 1000);
     }
 
-    private async taskWorkerScraperTypeBased(): Promise<void> {
+    protected async taskWorkerScraperTypeBased(): Promise<void> {
         await this.processScraperTypeBasedTasks();
         setTimeout(this.taskWorkerScraperTypeBased.bind(this), 1000);
     }
@@ -318,7 +321,7 @@ class TaskExecutor {
         this.currentCapacity[key] = (this.currentCapacity[key] ?? 0) - 1;
     }
     
-    private async runTask(task: any): Promise<void> {
+    protected async runTask(task: any): Promise<void> {
         const key = Server.isScraperBasedRateLimit ? task.scraper_name : task.scraper_type
         const taskId = task.id
         const scraperName = task.scraper_name

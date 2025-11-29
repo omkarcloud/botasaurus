@@ -28,10 +28,10 @@ import {
     _get,
     _remove,
 } from "./cache";
-import { flatten } from "./list-utils";
 import { FormatType } from "./formats";
 import { createPlaywrightChrome, PlaywrightChrome } from "./page";
 import { getBotasaurusStorage } from "./botasaurus-storage"
+import { determineMaxLimit, drainQueue } from "./task"
 
 type PlaywrightRunOptions<I = any> = {
     page: Page;
@@ -392,12 +392,24 @@ export function playwright<I = any>(options: PlaywrightOptions<I>) {
 export function playwrightQueue<I = any>(
     options: PlaywrightOptions<I> & { sequential?: boolean }
 ) {
-    const run = createPlaywright<I>(options, true);
+    // Extract parallel from options - it controls queue-level concurrency, not passed to createPlaywright
+    const { parallel: parallelOption, ...playwrightOptions } = options
+    const run = createPlaywright<I>(playwrightOptions as PlaywrightOptions<I>, true);
     const performPlaywright = () => {
         let seenItems = new Set();
         let lastPromise: Promise<any> = Promise.resolve();
-        let promises: any[] = [];
-        const sequential = "sequential" in options ? options.sequential : true;
+        const state = { promises: [] as any[] };
+        let sequential = "sequential" in options ? options.sequential : false;
+        
+        // Create concurrency limiter for parallel mode
+        const maxLimit = determineMaxLimit(parallelOption)
+
+        let limit: pLimit.Limit
+        if (maxLimit <= 1) {
+            sequential = true
+        } else {
+            limit = pLimit(maxLimit)
+        }
 
         function getUnique(items: any[]) {
             let singleItem = false;
@@ -438,6 +450,11 @@ export function playwrightQueue<I = any>(
             return singleItem && newItems.length ? newItems[0] : newItems;
         }
 
+        const cleanup = () => {
+            seenItems.clear();
+            lastPromise = Promise.resolve();
+        };
+
         return {
             put: function (
                 data: any,
@@ -451,56 +468,24 @@ export function playwrightQueue<I = any>(
                         run(uniqueData, overrideOptions)
                     );
                     lastPromise = promise;
+
+                    state.promises.push(promise);
+                    return promise.then((x) => x.result);
                 } else {
-                    // runs in parallel
-                    promise = run(uniqueData, overrideOptions);
+                    if (Array.isArray(uniqueData)) {
+                        promise = Promise.all(uniqueData.map(x => limit(() => run(x, overrideOptions))))
+                        state.promises.push(promise.then(results => ({ originalData: uniqueData, result: results.map((x: any) => x.result) })))
+                        return promise.then(results => results.map((x: any) => x.result))
+                    } else {
+                        promise = limit(() => run(uniqueData, overrideOptions))
+                        
+                        state.promises.push(promise)
+                        return promise.then((x) => x.result);
+                    }
                 }
-                promises.push(promise);
-                return promise.then((x) => x.result);
             },
             get: async function () {
-                // return flatten(self.result_list)
-                const result_list = [];
-                const orignal_data = [];
-
-                try {
-                    const results = await Promise.all(promises);
-                    for (let index = 0; index < results.length; index++) {
-                        const { originalData, result } = results[index];
-                        if (Array.isArray(originalData)) {
-                            orignal_data.push(...originalData);
-                        } else {
-                            orignal_data.push(originalData);
-                        }
-
-                        if (Array.isArray(originalData)) {
-                            result_list.push(...result);
-                        } else {
-                            result_list.push(result);
-                        }
-                    }
-
-                    promises = [];
-                    seenItems.clear();
-                    lastPromise = Promise.resolve();
-                    const { output = "default", outputFormats = null } =
-                        options;
-                    // fix if output is []
-                    const final = flatten(result_list);
-                    writeOutput(
-                        output,
-                        outputFormats,
-                        orignal_data,
-                        final,
-                        run.__name__
-                    );
-                    return final;
-                } catch (error) {
-                    promises = [];
-                    seenItems.clear();
-                    lastPromise = Promise.resolve();
-                    throw error;
-                }
+                return drainQueue(state, cleanup, options, run.__name__);
             },
             close: async () => {
                 await run.close();

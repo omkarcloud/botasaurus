@@ -485,26 +485,35 @@ class _Server {
   }
   
   validateRateLimit(): void {
+    const toBeValidatedObject = this.rateLimit
+    const kind  = 'rate limit'
+
+    this.validateAgainstLimit(toBeValidatedObject, kind)
+  }
+  
+  validateAgainstLimit(toBeValidatedObject: Record<string, number> | { browser?: number; request?: number; task?: number }, kind:  'rate limit' | 'task timeout') {
     if (this.isScraperBasedRateLimit) {
-      const scraperNames = new Set(this.getScrapersNames());
-      const invalidKeys = Object.keys(this.rateLimit).filter(
+      const scraperNames = new Set(this.getScrapersNames())
+      const invalidKeys = Object.keys(toBeValidatedObject).filter(
         (key) => !scraperNames.has(key)
-      );
+      )
 
       if (invalidKeys.length > 0) {
-        const invalidKeysMessage = invalidKeys.length === 1 
-          ? `Scraper with name '${invalidKeys[0]}' does not exist.` 
-          : `Scrapers with names ${invalidKeys.join(', ')} do not exist.`;
+        const invalidKeysMessage = invalidKeys.length === 1
+          ? `Scraper with name '${invalidKeys[0]}' does not exist.`
+          : `Scrapers with names ${invalidKeys.join(', ')} do not exist.`
 
-        const formattedLimit = JSON.stringify(this.rateLimit).replaceAll(",", ", ").replaceAll(":", ": ");
+        const formattedLimit = JSON.stringify(this.rateLimit).replaceAll(",", ", ").replaceAll(":", ": ")
 
-        
+
+
         throw new Error(
-          `Your rate limit is set to ${formattedLimit}, but ${invalidKeysMessage}`
-        );
+          `Your ${kind} is set to ${formattedLimit}, but ${invalidKeysMessage}`
+        )
       }
     }
   }
+
   getRateLimit(): { browser?: number; request?: number; task?: number } | Record<string, number> {
     return this.rateLimit;
   }
