@@ -1,11 +1,12 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.136",
+  "version": "4.1.137",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
+    "./worker-executor": "./dist/worker-executor.js",
     "./ndjson": "./dist/ndjson.js",
     "./writer-http": "./dist/writer-http.js",
     "./sorts": "./dist/sorts.js",
@@ -17,6 +18,7 @@
     "./errors": "./dist/errors.js",
     "./routes-db-logic": "./dist/routes-db-logic.js",
     "./task-results": "./dist/task-results.js",
+    "./master-executor": "./dist/master-executor.js",
     "./views": "./dist/views.js",
     "./convert-to-english": "./dist/convert-to-english.js",
     "./validation": "./dist/validation.js",
@@ -41,6 +43,9 @@
     "*": {
       "*": [
         "dist/*"
+      ],
+      "worker-executor": [
+        "dist/worker-executor.d.ts"
       ],
       "ndjson": [
         "dist/ndjson.d.ts"
@@ -74,6 +79,9 @@
       ],
       "task-results": [
         "dist/task-results.d.ts"
+      ],
+      "master-executor": [
+        "dist/master-executor.d.ts"
       ],
       "views": [
         "dist/views.d.ts"
