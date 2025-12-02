@@ -16,7 +16,7 @@ export function createEmailUrl({ email, subject, body }:any) {
   const emailURL = `mailto:${email}?subject=${emailSubject}&body=${emailBody}`
   return emailURL
 }
-
+const validScraperTypes = new Set([ScraperType.REQUEST, ScraperType.BROWSER, ScraperType.TASK]);
 function getReadme(): string {
   try {
     const readmeFile = getReadmePath();
@@ -268,10 +268,9 @@ class _Server {
     }
 
     // @ts-ignore
-    if (scraper._scraperType !== ScraperType.REQUEST &&scraper._scraperType !== ScraperType.BROWSER &&scraper._scraperType !== ScraperType.TASK
-    ) {
-      // @ts-ignore
-      throw new Error(`Invalid scraper type: ${scraper._scraperType}. Must be 'browser', 'request' or 'task'.`,);
+    const scraperType = scraper._scraperType;
+    if (!this.isValidScraperType(scraperType)) {
+      throw new Error(`Invalid scraper type: ${scraperType}. Must be 'browser', 'request' or 'task'.`);
     }
 
     if (createAllTask && typeof splitTask !== 'function') {
@@ -359,6 +358,10 @@ class _Server {
       remove_duplicates_by: removeDuplicatesBy,
       isGoogleChromeRequired: isGoogleChromeRequired || (scraper_type === ScraperType.BROWSER)
     };
+  }
+
+  isValidScraperType(scraperType: any) {
+    return validScraperTypes.has(scraperType);
   }
 
   getScrapersConfig(): any[] {

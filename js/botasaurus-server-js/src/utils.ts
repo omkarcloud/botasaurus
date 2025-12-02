@@ -54,8 +54,10 @@ function callOnce(fn: Function): Function {
     }
   };
 }
-// 800 MB = 800 * 1024 * 1024 bytes
-const MAX_SIZE_LIMIT = 800 * 1024 * 1024;
+
+// We use 500 MB as the max size limit because via testing on mac that we found that, above 500 like 550MB, causes Crashes
+// 500 MB = 500 * 1024 * 1024 bytes
+const MAX_SIZE_LIMIT = 500 * 1024 * 1024;
 // const MAX_SIZE_LIMIT = 10 * 1024 * 1024;
 
 const FIVE_GB = 5 * 1024 * 1024 * 1024;
@@ -138,4 +140,15 @@ const parseBoolean = (value:any) => {
   return null;
 }
 
-export { parseBoolean, callOnce, db_path, id_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile, cleanBasePath};
+
+
+// Wrap NeDB operations in promises since it uses callbacks
+function wrapDbOperationInPromise<A=any>(operation: any): Promise<A> {
+  return new Promise((resolve, reject) => {
+    operation((err: Error, result: any) => {
+      if (err) reject(err)
+      else resolve(result)
+    })
+  })
+}
+export { wrapDbOperationInPromise, parseBoolean, callOnce, db_path, id_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile, cleanBasePath};

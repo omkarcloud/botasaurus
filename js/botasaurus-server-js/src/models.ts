@@ -81,7 +81,7 @@ db.ensureIndex({ fieldName: 'sort_id',});
 // db.ensureIndex({ fieldName: 'scraper_name' }); // can add later
 db.ensureIndex({ fieldName: 'scraper_type' });
 db.ensureIndex({ fieldName: 'is_all_task' });
-db.ensureIndex({ fieldName: 'is_sync' });
+db.ensureIndex({ fieldName: 'priority' });
 
 const TaskStatus = {
     PENDING: 'pending',
@@ -170,7 +170,7 @@ export function serializeTaskForRunTask(obj: Task){
     scraper_name: obj.scraper_name,
     scraper_type: obj.scraper_type,
     is_all_task: obj.is_all_task,
-    is_sync: obj.is_sync,
+    priority: obj.priority,
     is_large: obj.is_large,
     parent_task_id: obj.parent_task_id,
     data: obj.data,
@@ -193,7 +193,7 @@ async function serializeTask(obj: Task, withResult: boolean): Promise<any> {
     scraper_name: obj.scraper_name,
     scraper_type: obj.scraper_type,
     is_all_task: obj.is_all_task,
-    is_sync: obj.is_sync,
+    priority: obj.priority,
     is_large: obj.is_large,
     parent_task_id: obj.parent_task_id,
     duration: calculateDuration(obj),
@@ -216,7 +216,7 @@ class Task {
     scraper_name!: string;
     scraper_type!: string;
     is_all_task!: boolean;
-    is_sync!: boolean;
+    priority!: number;
     is_large?: boolean;
     parent_task_id!: number | null;
     started_at!: Date | null;

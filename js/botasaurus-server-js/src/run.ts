@@ -1,9 +1,9 @@
-import { executor } from './executor';
+import { getExecutor } from './executor';
 let hasRun = false;
 
 export default function run() {
     if (hasRun) return;
     hasRun = true;
-    executor.load();
-    return executor.start();
+    getExecutor().load();
+    return getExecutor().start();
 }

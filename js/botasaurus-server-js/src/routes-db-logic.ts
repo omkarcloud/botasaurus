@@ -2,7 +2,7 @@ import { isAffirmative } from 'botasaurus/cache'
 import fs from 'fs';
 import { createTask, createTaskName, db, getAutoincrementId, isFailedAndNonAllTask, isoformat, serializeTask, serializeUiDisplayTask, serializeUiOutputTask, Task, TaskStatus } from './models';
 import { isNotNullish, isNullish } from './null-utils';
-import { isObject, isNotEmptyObject } from './utils';
+import { isObject, isNotEmptyObject, wrapDbOperationInPromise } from './utils';
 import { kebabCase } from 'change-case';
 import { deepCloneDict, isStringOfMinLength, serialize, validateScraperName, validateTaskRequest, validateResultsRequest, validateDownloadParams, isValidPositiveInteger, isValidPositiveIntegerIncludingZero,isListOfValidIds,  isValidId, validateUiPatchTask, createTaskNotFoundError, tryIntConversion } from './validation';
 import { TaskHelper, createProjection } from './task-helper';
@@ -15,7 +15,8 @@ import { _applyViewForUi, _applyViewForUiLargeTask, findView, transformRecord, g
 
 // import { downloadResults } from './download';
 // import { convertUnicodeDictToAsciiDict } from './convert-to-english';
-import { executor } from './executor'
+import { getExecutor } from './executor'
+import { TaskPriority } from './task-executor'
 import { sleep } from 'botasaurus/utils'
 import { JsonHTTPResponseWithMessage } from './errors'
 import { convertUnicodeDictToAsciiDict } from './convert-to-english'
@@ -25,21 +26,11 @@ import { Launcher } from 'chrome-launcher/dist/chrome-launcher';
 import { electronConfig } from './paths'
 
 
-// Wrap NeDB operations in promises since it uses callbacks
-const wrapDbOperationInPromise = (operation: any): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    operation((err: Error, result: any) => {
-      if (err) reject(err);
-      else resolve(result);
-    });
-  });
-};
-
 
 async function performCreateAllTask(
   data: any,
   metadata: any,
-  is_sync: boolean,
+  priority: number,
   scraper_name: string,
   scraper_type: string,
   all_task_sort_id: number,
@@ -53,7 +44,7 @@ async function performCreateAllTask(
     scraper_name,
     scraper_type,
     is_all_task: true,
-    is_sync,
+    priority,
     is_large:false,
     parent_task_id: null,
     data,
@@ -92,7 +83,7 @@ async function performCreateTasks(tasks: any[], cachedTasks?: any[], withResult:
 }
 
 async function performCompleteTask(all_task_id: number, removeDuplicatesBy: any): Promise<void> {
-  await executor.completeAsMuchAllTaskAsPossible(all_task_id, removeDuplicatesBy);
+  await getExecutor().completeAsMuchAllTaskAsPossible(all_task_id, removeDuplicatesBy);
 }
 
 async function isTaskDone(taskId: number): Promise<boolean> {
@@ -299,7 +290,7 @@ async function createAsyncTask(validatedData: [string, any, any, any], withResul
     data,
     metadata,
     enable_cache, 
-    false,
+    TaskPriority.DEFAULT_PRIORITY,
     withResult, 
     giveFirstResultOnly,
   );
@@ -350,7 +341,7 @@ async function createTasks(
   data: any,
   metadata: any,
   enable_cache:any, 
-  is_sync: boolean,
+  priority: number,
   withResult: boolean = true, 
   giveFirstResultOnly: boolean = false, 
 ): Promise<[any[], any[], boolean]> {
@@ -382,7 +373,7 @@ async function createTasks(
     [allTask, all_task_id] = await performCreateAllTask(
       data,
       metadata,
-      is_sync,
+      priority,
       scraper_name,
       scraper_type,
       all_task_sort_id,
@@ -401,7 +392,7 @@ async function createTasks(
     scraper_name,
     scraper_type,
     is_all_task: false,
-    is_sync,
+    priority,
     is_large:false,
     parent_task_id: all_task_id,
     started_at:null, 
@@ -434,7 +425,7 @@ async function createTasks(
         scraper_name,
         scraper_type,
         is_all_task: false,
-        is_sync,
+        priority,
         is_large:isLarge,
         parent_task_id: all_task_id,
         started_at: now_time,
@@ -542,7 +533,7 @@ async function save(x: [number, string]) {
       data,
       metadata,
       enableCache, 
-      true
+      TaskPriority.URGENT_PRIORITY
     );
   
     const waitTasks = tasksWithAllTask && tasksWithAllTask[0].is_all_task
@@ -569,7 +560,7 @@ async function save(x: [number, string]) {
     const ts = await Promise.all(
       validatedDataItems.map(async (validatedDataItem) => {
         const [scraper_name, data, metadata, enableCache] = validatedDataItem;
-        return createTasks(Server.getScraper(scraper_name), data, metadata, enableCache, true);
+        return createTasks(Server.getScraper(scraper_name), data, metadata, enableCache, TaskPriority.URGENT_PRIORITY);
       })
     );
   
@@ -609,7 +600,7 @@ async function save(x: [number, string]) {
       'result_count',
       'scraper_type',
       'is_all_task',
-      'is_sync',
+      'priority',
       'is_large',
       'parent_task_id',
       'data',
@@ -649,10 +640,10 @@ async function executeGetTasks(queryParams: Record<string, any>): Promise<any> {
   let parent_task_id = queryParams.parent_task_id;
 
   if (isNotNullish(per_page)) {
-    per_page = tryIntConversion(per_page, `Invalid 'per_page' parameter value: "${page}". It must be a positive integer.`);
+    per_page = tryIntConversion(per_page, `Invalid 'per_page' parameter value: "${per_page}". It must be a positive integer.`);
     if (!isValidPositiveInteger(per_page)) {
       throw new JsonHTTPResponseWithMessage(
-        `Invalid 'per_page' parameter value: "${page}". It must be a positive integer.`
+        `Invalid 'per_page' parameter value: "${per_page}". It must be a positive integer.`
       );
     }
   } else {

@@ -1,25 +1,35 @@
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * Removes everything after (and including) the first single slash (/) in a string,
+ * but skips over '//' (double slashes), which are used in protocols like 'http://'.
+ * This is primarily used to extract the base URL (protocol + host) from a full URL.
+ * 
+ * Example:
+ *   removeAfterFirstSlash("https://example.com/api/v1") // "https://example.com"
+ *   removeAfterFirstSlash("http://foo/bar/baz") // "http://foo"
+ *   removeAfterFirstSlash("localhost:8000/api/v1") // "localhost:8000"
+ *   removeAfterFirstSlash("https://example.com") // "https://example.com"
+ */
 function removeAfterFirstSlash(inputString: string): string {
     let i = 0;
     const strLen = inputString.length;
-    while (true) {
-        if (i < strLen) {
-            const char = inputString[i];
-            if (char === '/') {
-                if (i + 1 < inputString.length && inputString[i + 1] === '/') {
-                    i += 2;
-                    continue;
-                } else {
-                    return inputString.substring(0, i);
-                }
+    while (i < strLen) {
+        const char = inputString[i];
+        if (char === '/') {
+            // Check for double slash (e.g., 'http://')
+            if (i + 1 < strLen && inputString[i + 1] === '/') {
+                i += 2;
+                continue;
+            } else {
+                // Single slash: trim here
+                return inputString.substring(0, i);
             }
-            i++;
-        } else {
-            break;
         }
+        i++;
     }
+    // No single slash found (or only part of protocol), return the whole input
     return inputString;
 }
 

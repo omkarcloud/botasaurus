@@ -34,7 +34,7 @@ export interface Task {
     scraper_name: string;
     scraper_type: string;
     is_all_task: boolean;
-    is_sync: boolean;
+    priority: number;
     is_large: boolean;
     parent_task_id: number | null;
     duration: number | null;

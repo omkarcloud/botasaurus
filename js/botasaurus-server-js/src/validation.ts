@@ -311,42 +311,50 @@ export function isListOfValidIds(obj: any): boolean {
     return Array.isArray(obj) && obj.every(isValidId);
 }
 
-export function validateAndGetTaskId(id: any): number {
+export function validateAndGetTaskId(id: any, propertyName: string = "Task id"): number {
     if (isNullish(id)) {
-        throw new JsonHTTPResponseWithMessage("Task id must be provided")        
+        throw new JsonHTTPResponseWithMessage(`${propertyName} must be provided`)        
     }
     
     if (isStringOfAtLeast1Len(id)) {
         const idStr = isObject(id) ? JSON.stringify(id) : id;
-        id = tryIntConversion(id, `Task id '${idStr}' is invalid.`);
+        id = tryIntConversion(id, `${propertyName} '${idStr}' is invalid.`);
         
     }
 
 
-    if (!isValidId(id)) {
-        const idStr = isObject(id) ? JSON.stringify(id) : id;
-        throw new JsonHTTPResponseWithMessage(`Task id '${idStr}' is invalid.`);
-    }
+    validateTaskId(id, propertyName)
 
     return id;
 }
 
+
+function validateTaskId(id: any, propertyName: string ) {
+    if (!isValidId(id)) {
+        const idStr = isObject(id) ? JSON.stringify(id) : id
+        throw new JsonHTTPResponseWithMessage(`${propertyName} '${idStr}' is invalid.`)
+    }
+}
 
 export function validatePatchTask(jsonData: any): number[] {
     ensureJsonBodyIsDict(jsonData);
 
     const taskIds = jsonData.task_ids;
 
+    validateTaskIds(taskIds)
+
+    return taskIds;
+}
+
+function validateTaskIds(taskIds: any, propertyName: string = "task_ids") {
     if (isNullish(taskIds)) {
-        throw new JsonHTTPResponseWithMessage("'task_ids' must be provided");
+        throw new JsonHTTPResponseWithMessage(`'${propertyName}' must be provided`)
     }
 
     if (!isListOfValidIds(taskIds)) {
-        const taskIdsStr = isObject(taskIds) || Array.isArray(taskIds) ? JSON.stringify(taskIds) : taskIds;
-        throw new JsonHTTPResponseWithMessage(`'task_ids' with value '${taskIdsStr}' must be a list of integers representing scraping task ids.`);
+        const taskIdsStr = isObject(taskIds) || Array.isArray(taskIds) ? JSON.stringify(taskIds) : taskIds
+        throw new JsonHTTPResponseWithMessage(`'${propertyName}' with value '${taskIdsStr}' must be a list of integers representing scraping task ids.`)
     }
-
-    return taskIds;
 }
 
 export function validateUiPatchTask(jsonData: any): [string, number[]] {
@@ -377,4 +385,78 @@ export function validateUiPatchTask(jsonData: any): [string, number[]] {
     }
 
     return [action, taskIds];
+}
+
+// ─────────────────────────────────────────────────────────
+// K8s Validation Functions
+// ─────────────────────────────────────────────────────────
+
+/**
+ * Validates scraper_type query parameter for K8s routes.
+ * @throws JsonHTTPResponseWithMessage if invalid
+ */
+export function validateScraperTypeParam(scraperType: string | undefined): string {
+    if (!scraperType) {
+        throw new JsonHTTPResponseWithMessage('scraper_type query parameter is required', 400);
+    }
+
+    if (!Server.isValidScraperType(scraperType!)) {
+        throw new JsonHTTPResponseWithMessage(`Invalid scraper type: ${scraperType}. Must be 'browser', 'request' or 'task'.`);
+    }
+
+    return scraperType;
+}
+
+/**
+ * Validates scraper_name query parameter for K8s routes.
+ * @throws JsonHTTPResponseWithMessage if invalid
+ */
+export function validateScraperNameParam(scraperName: string | undefined): string {
+    if (!scraperName) {
+        throw new JsonHTTPResponseWithMessage('scraper_name query parameter is required', 400);
+    }
+
+    if (!Server.getScraper(scraperName!)) {
+        const validScraperNames = Server.getScrapersNames();
+        const validNamesString = validScraperNames.join(', ');
+    
+        const errorMessage = getScraperErrorMessage(validScraperNames, scraperName, validNamesString);
+
+        throw new JsonHTTPResponseWithMessage(errorMessage);
+    }
+
+
+    return scraperName;
+}
+
+/**
+ * Validates max_tasks query parameter for K8s routes.
+ * @throws JsonHTTPResponseWithMessage if invalid
+ */
+export function validateMaxTasksParam(maxTasksStr: string | undefined): number | null {
+
+    if (isNullish(maxTasksStr)) {
+        return null    
+    }
+    return validateAndGetTaskId(maxTasksStr, "max_tasks")
+}
+
+/**
+ * Validates that taskId is present in payload for K8s routes.
+ * @throws JsonHTTPResponseWithMessage if missing or invalid
+ */
+export function validateTaskIdInPayload(taskId: any): void {
+    if (isNullish(taskId)) {
+        throw new JsonHTTPResponseWithMessage('taskId must be provided');
+    }
+    validateTaskId(taskId, "taskId")
+}
+
+/**
+ * Validates inProgressTaskIds for K8s worker shutdown route.
+ * @throws JsonHTTPResponseWithMessage if invalid
+ */
+export function validateInProgressTaskIds(inProgressTaskIds: any): number[] {
+    validateTaskIds(inProgressTaskIds, "inProgressTaskIds")
+    return inProgressTaskIds;
 }

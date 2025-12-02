@@ -208,6 +208,7 @@
   },
   "dependencies": {
     "@seald-io/nedb": "latest",
+    "async-mutex": "^0.5.0",
     "botasaurus": "latest",
     "botasaurus-controls": "latest",
     "change-case": "^5.4.4",

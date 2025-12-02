@@ -10,6 +10,85 @@ import { cleanDataInPlace } from 'botasaurus/output'
 import { getScraperErrorMessage, Server } from './server'
 import { isLargeFile, isNotEmptyObject } from './utils'
 
+/**
+ * Task priority levels for queue ordering
+ */
+export enum TaskPriority {
+    DEFAULT_PRIORITY = 0,
+    URGENT_PRIORITY = 1
+}
+export function extractParentIds(tasks: any[]) {
+    const parentIdsSet = new Set<any>();
+    tasks.forEach((task) => {
+        if (task.parent_task_id) {
+            parentIdsSet.add(task.parent_task_id);
+        }
+    });
+    return Array.from(parentIdsSet);
+}
+
+async function queryPendingTasks(maxTasks: number | null, query: any) {
+    if (isNotNullish(maxTasks)) {
+        // @ts-ignore
+        return db.findAsync(query).sort({ priority: -1, sort_id: -1 }).limit(maxTasks) as unknown as Task[]
+
+    } else {
+        return await db.findAsync(query).sort({ priority: -1, sort_id: -1 }) as unknown as Task[]
+
+    }
+}
+
+
+export async function getPendingTasks(query: any, maxTasks: number | null) {
+    const tasks = await queryPendingTasks(maxTasks, query)
+    
+            if (tasks.length === 0) {
+                return [];
+            }
+
+            const validScraperNames = Server.getScrapersNames()
+            const validScraperNamesSet = new Set(validScraperNames)
+
+            for (const task of tasks) {
+                if (!validScraperNamesSet.has(task.scraper_name)) {
+                    const validNamesString = validScraperNames.join(', ')
+                    throw new Error(getScraperErrorMessage(validScraperNames, task.scraper_name, validNamesString))
+                }
+            }            
+
+            const taskIds = tasks.map(t => t.id);
+            const parentIds = extractParentIds(tasks)
+
+            // Mark tasks as IN_PROGRESS
+            await db.updateAsync(
+                { id: { $in: taskIds } },
+                {
+                    $set: {
+                        status: TaskStatus.IN_PROGRESS,
+                        started_at: new Date()
+                    }
+                },
+                { multi: true }
+            );
+
+
+
+            // Update parent tasks if applicable
+            if (parentIds.length > 0) {
+                try {
+                    await db.updateAsync(
+                        { id: { $in: parentIds }, started_at: null },
+                        { $set: { status: TaskStatus.IN_PROGRESS, started_at: new Date() } },
+                        { multi: true }
+                    );
+                } catch (parentErr) {
+                    console.error('Error updating parent tasks:', parentErr);
+                }
+            }
+
+            // Serialize tasks for workers
+            return tasks.map(task => serializeTaskForRunTask(task));
+}
 
 class TaskExecutor {
     currentCapacity: { browser?: number; request?: number; task?: number } | Record<string, number> = {
@@ -115,31 +194,17 @@ class TaskExecutor {
 
     private async fixInProgressTasks(): Promise<void> {
         try {
+            // Reset all IN_PROGRESS tasks back to PENDING on startup
             await new Promise<void>((resolve, reject) => {
-                db.remove(
-                    {
-                        $and: [
-                            { is_sync: true },
-                            { status: { $in: [TaskStatus.PENDING, TaskStatus.IN_PROGRESS] } },
-                        ],
-                    },
+                db.update(
+                    { status: TaskStatus.IN_PROGRESS },
+                    { $set: { status: TaskStatus.PENDING, started_at: null, finished_at: null, } },
                     { multi: true },
                     (err) => {
                         if (err) {
                             reject(err)
                         } else {
-                            db.update(
-                                { status: TaskStatus.IN_PROGRESS },
-                                { $set: { status: TaskStatus.PENDING, started_at: null, finished_at: null } },
-                                { multi: true },
-                                (err) => {
-                                    if (err) {
-                                        reject(err)
-                                    } else {
-                                        resolve()
-                                    }
-                                }
-                            )
+                            resolve()
                         }
                     }
                 )
@@ -187,21 +252,25 @@ class TaskExecutor {
         const [hasCapacity, currentCount, rateLimit]  = this.getCapacityInfo(scraperType)
         if (hasCapacity) {
             await this.executePendingTasks(
-                {
-                    $and: [
-                        { status: TaskStatus.PENDING },
-                        { scraper_type: scraperType },
-                        { is_all_task: false },
-                    ],
-                },
+                this.buildScraperTypeQuery(scraperType),
                 currentCount,
                 rateLimit,
                 scraperType
             )
         }
     }
-    getCapacityInfo(key: string): [boolean, number, number] {
-        const rateLimit: number | undefined = this.getMaxRunningCount(key);
+    protected buildScraperTypeQuery(scraperType: string): any {
+        return {
+            $and: [
+                { status: TaskStatus.PENDING },
+                { scraper_type: scraperType },
+                { is_all_task: false },
+            ],
+        }
+    }
+
+    getCapacityInfo(key: string): [boolean, number, number|null] {
+        const rateLimit: number | null = this.getMaxRunningCount(key);
         const currentCount: number = this.getCurrentRunningCount(key);
         const hasCapacity: boolean = isNullish(rateLimit) || currentCount < rateLimit;
         return [hasCapacity, currentCount, rateLimit];
@@ -213,17 +282,21 @@ class TaskExecutor {
         const [hasCapacity, currentCount, rateLimit]  = this.getCapacityInfo(scraperName)
         if (hasCapacity) {
             await this.executePendingTasks(
-                {
-                    $and: [
-                        { status: TaskStatus.PENDING },
-                        { scraper_name: scraperName },
-                        { is_all_task: false },
-                    ],
-                },
+                this.buildScraperNameQuery(scraperName),
                 currentCount,
                 rateLimit,
                 scraperName
             )
+        }
+    }
+
+    protected buildScraperNameQuery(scraperName: string): any {
+        return {
+            $and: [
+                { status: TaskStatus.PENDING },
+                { scraper_name: scraperName },
+                { is_all_task: false },
+            ],
         }
     }
 
@@ -241,70 +314,18 @@ class TaskExecutor {
     private async executePendingTasks(
         taskFilter: any,
         current: number,
-        limit: number,
+        limit: number|null,
         key: string
     ): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            let query = db.find(taskFilter).sort({ sort_id: -1, is_sync: -1 })
-
-            if (isNotNullish(limit)) {
-                query = query.limit(limit - current)
-            }
-
-            query.exec((err, tasks: any[]) => {
-                if (err) {
-                    return reject(err)
-                } else {
-                    if (tasks.length > 0) {
-                        const validScraperNames = Server.getScrapersNames()
-                        const validScraperNamesSet = new Set(validScraperNames)
-
-                        for (const task of tasks) {
-                            if (!validScraperNamesSet.has(task.scraper_name)) {
-                                const validNamesString = validScraperNames.join(', ')
-                                return reject(new Error(getScraperErrorMessage(validScraperNames, task.scraper_name, validNamesString)))
-                            }
-                        }
-                        const taskIds = tasks.map((task) => task.id)
-                        const parentIds = tasks
-                            .filter((task) => task.parent_task_id)
-                            .map((task) => task.parent_task_id)
-
-                        db.update(
-                            { id: { $in: taskIds } },
-                            {
-                                $set: {
-                                    status: TaskStatus.IN_PROGRESS,
-                                    started_at: new Date(),
-                                },
-                            },
-                            { multi: true },
-                            async (err) => {
-                                if (err) {
-                                    return reject(err)
-                                } else {
-                                    db.update({ id: { $in: parentIds }, started_at: null }, { $set: { status: TaskStatus.IN_PROGRESS, started_at: new Date() } }, { multi: true }, (err) => {
-                                        if (err) {return reject(err)}
-                                        else {
-                                            for (const task of tasks) {
-                                                const final = serializeTaskForRunTask(task)
-                                                this.runTaskAndUpdateState(key, final)
-                                            }
-                                            return resolve()
-                                        }
-                                    })
-                                }
-                            }
-                        )
-                    } else {
-                        return resolve()
-                    }
-                }
-            })
-        })
+        // @ts-ignore
+        const tasks = await getPendingTasks(taskFilter, isNotNullish(limit) ?  limit - current  :null)
+        
+        for (const task of tasks) {
+            this.runTaskAndUpdateCapacity(key, task)
+        }
     }
 
-    private runTaskAndUpdateState(
+    protected runTaskAndUpdateCapacity(
         key: string,
         taskJson: any
     ): void {
@@ -345,7 +366,6 @@ class TaskExecutor {
                     createErrorLogs: false,
                     returnDontCacheAsIs: true,
                 })
-
                 let isResultDontCached = false
                 if (isDontCache(result)) {
                     isResultDontCached = true
@@ -358,40 +378,41 @@ class TaskExecutor {
                     result = removeDuplicatesByKey(result, removeDuplicatesBy)
                 }
 
-                if (isResultDontCached) {
-                    await this.markTaskAsSuccess(
-                        taskId,
-                        result,
-                        false,
-                        scraperName,
-                        taskData
-                    )
-                } else {
-                    await this.markTaskAsSuccess(
-                        taskId,
-                        result,
-                        Server.cache,
-                        scraperName,
-                        taskData
-                    )
-                }
                 this.decrementCapacity(key)
+                await this.reportTaskSuccess(taskId, result, isResultDontCached, scraperName, taskData, parent_task_id, key)
+                
             } catch (error) {
                 this.decrementCapacity(key)
                 exceptionLog = formatExc(error)
                 console.error(error)
-                await this.markTaskAsFailure(taskId, exceptionLog)
-            } finally {
-                if (parent_task_id) {
-                    await this.updateParentTask(taskId, exceptionLog ? [] : result)
-                }
-            }
+                await this.reportTaskFailure(taskId, exceptionLog, parent_task_id, key)
+            } 
         } catch (error) {
             console.error("Error in run_task", error)
         }
     }
 
-    private async updateParentTask(taskId: number, result: any[]) {
+    protected async reportTaskFailure(taskId: any, exceptionLog: any, parent_task_id: any, _key: string) {
+        await this.markTaskAsFailure(taskId, exceptionLog)
+        if (parent_task_id) {
+            await this.updateParentTask(taskId, exceptionLog)
+        }
+    }
+
+    protected async reportTaskSuccess(taskId: any, result: any, isResultDontCached: boolean, scraperName: any, taskData: any, parent_task_id: any, _key: string) {
+        await this.markTaskAsSuccess(
+            taskId,
+            result,
+            isResultDontCached ? false : Server.cache,
+            scraperName,
+            taskData
+        )
+        if (parent_task_id) {
+            await this.updateParentTask(taskId, result)
+        }
+    }
+
+    protected async updateParentTask(taskId: number, result: any[]) {
         const task = await new Promise<Task>((resolve, reject) => {
             db.findOne({ id: taskId }, (err, task: Task) => {
                 if (err) {
@@ -479,7 +500,7 @@ class TaskExecutor {
         }
     }
 
-    private async markTaskAsFailure(
+    protected async markTaskAsFailure(
         taskId: number,
         exceptionLog: string
     ): Promise<void> {
@@ -497,7 +518,7 @@ class TaskExecutor {
         }
     }
 
-    private async markTaskAsSuccess(
+    protected async markTaskAsSuccess(
         taskId: number,
         result: any[],
         cacheTask: boolean,

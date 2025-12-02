@@ -17,17 +17,78 @@ import {
     patchTask,
     getUiTaskResults,
 } from "./task-routes";
-import { executor } from "./executor";
+import { getExecutor } from "./executor";
 import { Server } from "./server";
 import { kebabCase } from "change-case";
-import { validateDirectCallRequest } from "./validation";
+import { 
+    validateDirectCallRequest, 
+    validateScraperTypeParam, 
+    validateScraperNameParam, 
+    validateMaxTasksParam, 
+    validateTaskIdInPayload, 
+    validateInProgressTaskIds 
+} from "./validation";
 import { sleep } from "botasaurus/utils";
 import { DirectCallCacheService } from "./task-results";
 import { cleanBasePath, isNotEmptyObject, isObject } from "./utils";
 import { isDontCache } from "botasaurus/dontcache";
 import { JsonHTTPResponseWithMessage } from "./errors";
 import { cleanDataInPlace } from "botasaurus/output";
-import { removeDuplicatesByKey } from "./models";
+import { db, removeDuplicatesByKey } from "./models";
+import { DEFAULT_TASK_TIMEOUT, MasterExecutor, TaskCompletionPayload, TaskFailurePayload } from "./master-executor";
+import { WorkerExecutor } from "./worker-executor";
+
+/**
+ * Node role in K8s deployment
+ */
+type NodeRole = 'master' | 'worker' | 'standalone';
+
+/**
+ * Check if a string is a valid URL
+ */
+function isValidUrl(urlString: string): boolean {
+    try {
+        new URL(urlString);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Parse command line arguments for --master or --worker flags
+ */
+function isMaster() {
+    const args = process.argv;
+    return args.includes('--master')
+}
+
+function isWorker() {
+    const args = process.argv;
+    return args.includes('--worker')
+}
+
+/**
+ * Check master endpoint health
+ */
+async function checkMasterHealth(masterEndpoint: string){
+    try {
+        const response = await fetch(`${masterEndpoint}/health`, {
+            method: 'GET',
+            signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Health check returned status ${response.status}`);
+        }
+        return true;
+    } catch (error: any) {
+        console.error(`[K8s] Cannot reach master at ${masterEndpoint}`);
+        console.error(`[K8s] Error: ${error.message}`);
+        process.exit(1);
+        return false;
+    }
+}
 
 function addCorsHeaders(reply: any) {
     reply.header("Access-Control-Allow-Origin", "*");
@@ -88,7 +149,7 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
 
                 function restoreCapacity() {
                     if (shouldDecrementCapacity) {
-                        executor.decrementCapacity(key);
+                        getExecutor().decrementCapacity(key);
                         shouldDecrementCapacity = false;
                     }
                 }
@@ -132,10 +193,10 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                         if (!isFromCache) {
                             // Wait for capacity if needed (only on first execution)
                             if (!shouldDecrementCapacity) {
-                                while (!executor.hasCapacity(key)) {
+                                while (!getExecutor().hasCapacity(key)) {
                                     await sleep(0.1);
                                 }
-                                executor.incrementCapacity(key);
+                                getExecutor().incrementCapacity(key);
                                 shouldDecrementCapacity = true;
                             }
 
@@ -271,6 +332,81 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
         }
     });
 }
+
+/**
+ * Register Kubernetes master routes
+ */
+function registerMasterRoutes(app: FastifyInstance) {
+    // Acquire tasks by scraper type (GET request)
+    app.get('/k8s/acquire-tasks-by-type', async (request: FastifyRequest<{ Querystring: { scraper_type: string; max_tasks: string } }>, _) => {
+        const { scraper_type: scraperTypeRaw, max_tasks: maxTasksStr } = request.query;
+        const scraperType = validateScraperTypeParam(scraperTypeRaw);
+        const maxTasks = validateMaxTasksParam(maxTasksStr);
+
+        const executor = getExecutor() as MasterExecutor;
+        const tasks = await executor.acquireTasksByScraperType(scraperType, maxTasks);
+        return { tasks };
+    });
+
+    // Acquire tasks by scraper name (GET request)
+    app.get('/k8s/acquire-tasks-by-name', async (request: FastifyRequest<{ Querystring: { scraper_name: string; max_tasks: string } }>, _) => {
+        const { scraper_name: scraperNameRaw, max_tasks: maxTasksStr } = request.query;
+        const scraperName = validateScraperNameParam(scraperNameRaw);
+        const maxTasks = validateMaxTasksParam(maxTasksStr);
+
+        const executor = getExecutor() as MasterExecutor;
+        const tasks = await executor.acquireTasksByScraperName(scraperName, maxTasks);
+        return { tasks };
+    });
+
+    // Task completed endpoint
+    app.post('/k8s/task-completed', async (request: FastifyRequest<{ Body: TaskCompletionPayload }>, _) => {
+        const payload = request.body;
+        validateTaskIdInPayload(payload.taskId);
+
+        const executor = getExecutor() as MasterExecutor;
+        return executor.handleTaskCompletion(payload);
+    });
+
+    // Task failed endpoint
+    app.post('/k8s/task-failed', async (request: FastifyRequest<{ Body: TaskFailurePayload }>, _) => {
+        const payload = request.body;
+        validateTaskIdInPayload(payload.taskId);
+
+        const executor = getExecutor() as MasterExecutor;
+        return executor.handleTaskFailure(payload);
+    });
+
+    // Worker shutdown endpoint
+    app.post('/k8s/worker-shutdown', async (request: FastifyRequest<{ Body: { inProgressTaskIds: number[] } }>, _) => {
+        const taskIds = validateInProgressTaskIds(request.body?.inProgressTaskIds);
+
+        const executor = getExecutor() as MasterExecutor;
+        return executor.handleWorkerShutdown(taskIds);
+    });
+}
+
+/**
+ * Register health endpoint
+ */
+function registerHealthEndpoint(app: FastifyInstance) {
+    app.get('/health', async (_, reply) => {
+        // Check if worker is shutting down
+        if (ApiConfig.isWorkerNode()) {
+            const executor = getExecutor() as WorkerExecutor;
+            if (executor.isShuttingDown) {
+                return reply.status(503).send({ status: 'shutting_down' });
+            }
+        }
+        try {
+            await db.countAsync({});
+            return { status: 'ok' };
+        } catch (_) {
+            return reply.status(503).send({ status: 'database_unreachable' });
+        }
+    });
+}
+
 export function buildApp(
     scrapers: any[],
     apiBasePath: string,
@@ -303,6 +439,14 @@ export function buildApp(
             });
         }
     });
+
+    // Register health endpoint (always available)
+    registerHealthEndpoint(app);
+
+    // Register K8s master routes if this is the master node
+    if (ApiConfig.isMasterNode()) {
+        registerMasterRoutes(app);
+    }
 
     // Routes
     app.get(apiBasePath || "/", (_, reply) => {
@@ -499,6 +643,38 @@ async function stopServer(): Promise<void> {
 }
 
 /**
+ * Removes everything after (and including) the first single slash (/) in a string,
+ * but skips over '//' (double slashes), which are used in protocols like 'http://'.
+ * This is primarily used to extract the base URL (protocol + host) from a full URL.
+ * 
+ * Example:
+ *   removeAfterFirstSlash("https://example.com/api/v1") // "https://example.com"
+ *   removeAfterFirstSlash("http://foo/bar/baz") // "http://foo"
+ *   removeAfterFirstSlash("localhost:8000/api/v1") // "localhost:8000"
+ *   removeAfterFirstSlash("https://example.com") // "https://example.com"
+ */
+function removeAfterFirstSlash(inputString: string): string {
+    let i = 0;
+    const strLen = inputString.length;
+    while (i < strLen) {
+        const char = inputString[i];
+        if (char === '/') {
+            // Check for double slash (e.g., 'http://')
+            if (i + 1 < strLen && inputString[i + 1] === '/') {
+                i += 2;
+                continue;
+            } else {
+                // Single slash: trim here
+                return inputString.substring(0, i);
+            }
+        }
+        i++;
+    }
+    // No single slash found (or only part of protocol), return the whole input
+    return inputString;
+}
+
+/**
  * Configuration class for API.
  * Controls API-only mode, port settings, and autostart behavior.
  */
@@ -508,6 +684,9 @@ class ApiConfig {
     static routeSetupFn?: (server: FastifyInstance) => void;
     static apiBasePath: string = ""; // Default empty
     static routeAliases: Map<Function, string[]> = new Map();
+
+    // Kubernetes configuration
+    static nodeRole: NodeRole = 'standalone';
 
     /**
      * Enables API
@@ -521,6 +700,130 @@ class ApiConfig {
         global.startServer = startServer;
         // @ts-ignore
         global.stopServer = stopServer;
+    }
+
+
+
+    /**
+     * Enables Kubernetes Master-Worker mode.
+     * 
+     * This method configures the application for distributed task processing:
+     * - If --master flag is passed: Acts as the master node (task distribution)
+     * - If --worker flag is passed: Acts as a worker node (task execution)
+     * - If neither flag is passed: Acts as normal desktop application (default behavior)
+     * 
+     * @param {string} masterEndpoint - The master node endpoint (e.g., "http://master-srv:3000")
+     * @param {number | Record<string, number>} taskTimeout - Task timeout in seconds. Ideally set it to 2× your max expected task duration.
+     *        Can be a single number (applies to all scrapers) or an object mapping scraper names/types to timeouts.
+     *        Default: 8 hours (28800 seconds)
+     * 
+     * @example
+     * // Simple usage with default timeout
+     * ApiConfig.enableKubernetes("http://master-srv:3000");
+     * 
+     * @example
+     * // Custom timeout for all scrapers
+     * ApiConfig.enableKubernetes("http://master-srv:3000", 3600); // 1 hour
+     * 
+     * @example
+     * // Different timeouts per scraper
+     * ApiConfig.enableKubernetes("http://master-srv:3000", {
+     *   "longRunningScraper": 14400,  // 4 hours
+     *   "quickScraper": 1800          // 30 minutes
+     * });
+     */
+    static async enableKubernetes({
+        masterEndpoint,
+        taskTimeout = DEFAULT_TASK_TIMEOUT
+    }: {
+        masterEndpoint: string,
+        taskTimeout?: number | Record<string, number>
+    }): Promise<void> {
+        ApiConfig.enableApi()
+        if (masterEndpoint) {
+            masterEndpoint = removeAfterFirstSlash(masterEndpoint);
+        }
+        // Validate masterEndpoint
+        if (!masterEndpoint || !isValidUrl(masterEndpoint)) {
+            throw new Error(`Invalid masterEndpoint: "${masterEndpoint}". Must be a valid URL (e.g., "https://my-app.my-tunnel.app", "https://my-app.cloudflare-tunnel.app", "https://my-app.ngrok-free.app")`);
+        }
+
+        // Validate taskTimeout
+        if (typeof taskTimeout === 'number') {
+            if (taskTimeout < 60) {
+                console.warn(`[K8s] Warning: taskTimeout (${taskTimeout}s) is less than 60 seconds. This may cause premature task reassignment.`);
+            }
+        }
+
+
+        // Parse command line flags
+
+        if (isMaster()) {
+            // Validate visibility timeout against scrapers if it's an object
+            if (typeof taskTimeout === 'object') {
+                Server.validateAgainstLimit(taskTimeout, 'task timeout');
+            }
+
+            // Set up master executor
+            // @ts-ignore
+            global.executor = new MasterExecutor(taskTimeout);
+            this.nodeRole = 'master';
+            console.log("[K8s] Starting as Kubernetes MASTER node 👑");
+
+            // Test self-connectivity (master calls itself)
+            // @ts-ignore
+            global.checkMasterHealth = () =>{
+                setTimeout(async () => {
+                    const result = await checkMasterHealth(masterEndpoint);
+                    if (result) {
+                        console.log("[K8s] Master health check passed ✓");
+                    } else {
+                        console.log("[K8s] Master health check failed ✗");
+                    }
+            }, 2000); // Delay to allow server to start
+}
+        } else if (isWorker()) {
+            // Set up worker executor
+            // @ts-ignore
+            global.executor = new WorkerExecutor(masterEndpoint);
+            this.nodeRole = 'worker';
+            console.log("[K8s] Starting as Kubernetes WORKER node 🔧");
+
+            // Test master connectivity
+            // @ts-ignore
+            global.checkMasterHealth = () =>{
+                setTimeout(async () => {
+                    const result = await checkMasterHealth(masterEndpoint);
+                    if (result) {
+                        console.log("[K8s] Master health check passed ✓");
+                    } else {
+                        console.log("[K8s] Master health check failed ✗");
+                    }
+            }, 2000); // Delay to allow server to start
+        }
+        } else {
+            // Standalone mode
+            this.nodeRole = 'standalone';
+            console.warn("[K8s] ⚠️  Running as standalone application.");
+            console.warn("[K8s]    To run as master 👑: npm run k8s:master");
+            console.warn("[K8s]    To run as worker 🔧: npm run k8s:worker");
+        }
+    }
+
+    /**
+     * Check if the current node is the master node.
+     * @returns {boolean} true if running as master node
+     */
+    static isMasterNode(): boolean {
+        return this.nodeRole === 'master';
+    }
+
+    /**
+     * Check if the current node is a worker node.
+     * @returns {boolean} true if running as worker node
+     */
+    static isWorkerNode(): boolean {
+        return this.nodeRole === 'worker';
     }
 
     /**
