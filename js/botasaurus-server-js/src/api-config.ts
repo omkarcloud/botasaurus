@@ -69,26 +69,45 @@ function isWorker() {
 }
 
 /**
- * Check master endpoint health
+ * Check master endpoint health, retrying up to 3 times.
  */
-async function checkMasterHealth(masterEndpoint: string){
-    try {
-        const response = await fetch(`${masterEndpoint}/health`, {
-            method: 'GET',
-            signal: AbortSignal.timeout(10000) // 10 second timeout
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Health check returned status ${response.status}`);
+async function checkMasterHealth(masterEndpoint: string) {
+    const MAX_RETRIES = 3;
+    let retryCount = 0;
+    while (retryCount < MAX_RETRIES) {
+        retryCount++;
+        try {
+            const response = await fetch(`${masterEndpoint}/health`, {
+                method: 'GET',
+                signal: AbortSignal.timeout(10000) // 10 second timeout
+            });
+
+            if (!response.ok) {
+                throw new Error(`Health check returned status ${response.status}`);
+            }
+            if (retryCount > 1) {
+                console.debug(`[K8s] Successfully reached master after retry (attempt ${retryCount}/${MAX_RETRIES}): ${masterEndpoint}`);
+            }
+            return true;
+        } catch (error: any) {
+            console.error(error);
+            console.debug(`[K8s] Health check error (attempt ${retryCount}/${MAX_RETRIES}): ${error instanceof Error ? error.message : error} - ${masterEndpoint}`);
+            if (retryCount < MAX_RETRIES) {
+                // Wait briefly before retrying
+                await sleep(3);
+                continue;
+            }
         }
-        return true;
-    } catch (error: any) {
-        console.error(`[K8s] Cannot reach master at ${masterEndpoint}`);
-        console.error(`[K8s] Error: ${error.message}`);
-        process.exit(1);
-        return false;
     }
+
+    console.error(`[K8s] Failed to reach master after ${MAX_RETRIES} attempts: ${masterEndpoint}`);
+    if (!ApiConfig.isMasterNode()) {
+        // If not master node, exit the process
+        process.exit(1);
+    }
+    return false;
 }
+
 
 function addCorsHeaders(reply: any) {
     reply.header("Access-Control-Allow-Origin", "*");
@@ -413,7 +432,11 @@ export function buildApp(
     routeAliases: any,
     enable_cache: boolean
 ): FastifyInstance {
-    const app = fastify({ logger: true });
+    const app = fastify({
+        logger: true,
+        // TODO: change appropriately as needed
+        bodyLimit: 500 * 1024 * 1024 // 500MB
+    });
 
     // Add CORS handling
     app.addHook("onRequest", (request, reply, done) => {

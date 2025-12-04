@@ -29,20 +29,13 @@ export class NDJSONWriteStream {
 
    performWrite(content: any): void | PromiseLike<void> {
     return new Promise((resolve) => {
-      const attemptWrite = (content: string) => {
-        if (!this.writeStream.write(content)) {
-
-          // Wait for the 'drain' event if write returns false
-          this.writeStream.once('drain', () => {
-            //   console.log('Buffer drained. Resuming writing.');
-            //   attemptWrite(); // Retry writing the data
-            resolve() // Resolve the promise if write is successful
-          })
-        } else {
+      if (!this.writeStream.write(content)) {
+        this.writeStream.once('drain', () => {
           resolve() // Resolve the promise if write is successful
-        }
+        })
+      } else {
+        resolve() // Resolve the promise if write is successful
       }
-      attemptWrite(content)
     })
   }
 
