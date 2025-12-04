@@ -376,12 +376,13 @@ function extractValueFromObject(item: any): any {
 }
 
 /**
- * Helper function to extract value from object format for searchMethod-based controls
+ * Helper function to normalize control values - extracts values from object formats 
+ * and parses JSON strings for jsonTextArea controls
  * @param control - The control object
- * @param value - The value to extract from
- * @returns The extracted value
+ * @param value - The value to normalize
+ * @returns The normalized value
  */
-function extractSearchMethodValue(control: any, value: any) {
+function normalizeControlValue(control: any, value: any) {
   // @ts-ignore
   if (control.searchMethod && control.type === 'select') {
     return extractValueFromObject(value)
@@ -391,6 +392,11 @@ function extractSearchMethodValue(control: any, value: any) {
     if (Array.isArray(value)) {
       return value.map(extractValueFromObject)
     }
+  }
+  // Parse JSON string to object for jsonTextArea
+  else if (control.type === 'jsonTextArea') {
+    const { parsed } = parseJSON(value)
+    return parsed
   }
   return value
 }
@@ -423,6 +429,53 @@ const parseListOfTexts = (value:any)=>{
       return []
   }
   return value;
+}
+
+function parseJSON(value: any): { parsed: any; error: string | null } {
+  if (typeof value !== 'string') {
+    return { parsed: value, error: null };
+  }
+  
+  const trimmedValue = value.trim();
+  if (trimmedValue === '') {
+    return { parsed: null, error: null };
+  }
+  
+  try {
+    const parsed = JSON.parse(trimmedValue);
+    return { parsed, error: null };
+  } catch (e: any) {
+    // Provide helpful error messages based on common JSON mistakes
+    const errorMessage = e.message || 'Invalid JSON';
+    
+    // Extract position info if available
+    const positionMatch = errorMessage.match(/position\s+(\d+)/i);
+    const position = positionMatch ? parseInt(positionMatch[1], 10) : null;
+    
+    let helpfulMessage = 'Invalid JSON: ';
+    
+    // Check for common mistakes
+    if (trimmedValue.includes("'") && !trimmedValue.includes('"')) {
+      helpfulMessage += "Use double quotes (\") instead of single quotes (') for strings.";
+    } else if (/,\s*[}\]]/.test(trimmedValue)) {
+      helpfulMessage += "Trailing comma found. Remove the comma before the closing bracket.";
+    } else if (errorMessage.includes('Unexpected token')) {
+      if (position !== null) {
+        const contextStart = Math.max(0, position - 10);
+        const contextEnd = Math.min(trimmedValue.length, position + 10);
+        const context = trimmedValue.substring(contextStart, contextEnd);
+        helpfulMessage += `Unexpected character near position ${position}: "...${context}..."`;
+      } else {
+        helpfulMessage += errorMessage;
+      }
+    } else if (errorMessage.includes('Unexpected end')) {
+      helpfulMessage += "JSON is incomplete. Check for missing closing brackets or quotes.";
+    } else {
+      helpfulMessage += errorMessage;
+    }
+    
+    return { parsed: null, error: helpfulMessage };
+  }
 }
 
 class Controls {
@@ -605,6 +658,10 @@ class Controls {
     return this.add<string>(id, "textarea", { defaultValue: "", ...props })
   }
 
+  jsonTextArea(id: string, props: TextControlInput<string | object> = {}) {
+    return this.add<string | object>(id, "jsonTextArea", { defaultValue: "", ...props })
+  }
+
   link(id: string, props: LinkControlInput<string> = {}) {
     return this.add<string>(id, "link", { defaultValue: "", ...props })
   }
@@ -781,7 +838,7 @@ private parse(data: any) {
         const controlId = control.id
         let value = data.hasOwnProperty(controlId) ? data[controlId] : null
         
-        value = extractSearchMethodValue(control, value)
+        value = normalizeControlValue(control, value)
         
         mergedData[controlId] = value
       })
@@ -791,7 +848,7 @@ private parse(data: any) {
         const controlId = control.id
         let value = data.hasOwnProperty(controlId) ? data[controlId] : defaultData[controlId]
         
-        value = extractSearchMethodValue(control, value)
+        value = normalizeControlValue(control, value)
         
         mergedData[controlId] = value
       })
@@ -827,6 +884,12 @@ private parse(data: any) {
 
       if (control.type === "text" || control.type === "textarea" || control.type === "search") {
         if (canTrim(control)) {
+          value = value.trim()
+        }
+      }
+      else if (control.type === "jsonTextArea") {
+        // Only trim if it's a string, objects are already parsed
+        if (typeof value === "string" && canTrim(control)) {
           value = value.trim()
         }
       }
@@ -928,6 +991,17 @@ private parse(data: any) {
           errorMessages.push(
             "This field must be a valid URL. Example: https://example.com/"
           )
+        }
+
+        // JSON validation for jsonTextArea (only validate if value is a string)
+        if (
+          !errorMessages.length && type === "jsonTextArea" &&
+          isNotEmpty(value)
+        ) {
+          const { error } = parseJSON(value)
+          if (error) {
+            errorMessages.push(error)
+          }
         }
 
         if (
@@ -1043,6 +1117,10 @@ private parse(data: any) {
       case "link":
         if (typeof value !== "string")
           return "This field must be of type string."
+        break
+      case "jsonTextArea":
+
+        // jsonTextArea can be a string or object, or anything
         break
       case "number":
         if (typeof value !== "number" && value !== null)
