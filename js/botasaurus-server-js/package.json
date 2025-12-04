@@ -1,6 +1,6 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.140",
+  "version": "4.1.141",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -29,6 +29,7 @@
     "./task-executor": "./dist/task-executor.js",
     "./db-setup": "./dist/db-setup.js",
     "./scraper-type": "./dist/scraper-type.js",
+    "./upload-to-s3": "./dist/upload-to-s3.js",
     "./apply-pagination": "./dist/apply-pagination.js",
     "./change-case": "./dist/change-case.js",
     "./models": "./dist/models.js",
@@ -37,8 +38,7 @@
     "./ui": "./dist/ui.js",
     "./api-config": "./dist/api-config.js",
     "./executor": "./dist/executor.js",
-    "./run": "./dist/run.js",
-    "./upload-to-s3": "./dist/upload-to-s3.js"
+    "./run": "./dist/run.js"
   },
   "typesVersions": {
     "*": {
@@ -114,6 +114,9 @@
       "scraper-type": [
         "dist/scraper-type.d.ts"
       ],
+      "upload-to-s3": [
+        "dist/upload-to-s3.d.ts"
+      ],
       "apply-pagination": [
         "dist/apply-pagination.d.ts"
       ],
@@ -140,9 +143,6 @@
       ],
       "run": [
         "dist/run.d.ts"
-      ],
-      "upload-to-s3": [
-        "dist/upload-to-s3.d.ts"
       ]
     }
   },
