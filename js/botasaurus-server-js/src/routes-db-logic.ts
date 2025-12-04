@@ -633,7 +633,7 @@ async function save(x: [number, string]) {
   }
 async function executeGetTasks(queryParams: Record<string, any>): Promise<any> {
   
-  const withResults = isAffirmative(queryParams.with_results || 'false');;
+  const withResults = isAffirmative(queryParams.with_results || 'false');
 
   let page = queryParams.page;
   let per_page = queryParams.per_page;
@@ -1032,6 +1032,7 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
   
     if (is_all_task) {
       await TaskHelper.abortChildTasks(taskId);
+      await TaskHelper.collectAndSaveAllTaskForAbortedTask(taskId, removeDuplicatesBy);
     } else {
       if (parentId) {
         const allChildrenCount = await TaskHelper.getAllChildrenCount(parentId, taskId);

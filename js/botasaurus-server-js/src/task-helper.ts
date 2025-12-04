@@ -172,25 +172,30 @@ class TaskHelper {
         const query: any = {
             parent_task_id: parentId,
             status: TaskStatus.COMPLETED,
+            result_count: { $gte: 1 },
         };
 
         if (exceptTaskId) {
             query.id = { $ne: exceptTaskId };
         }
 
-        const results = await new Promise<any[]>((resolve, reject) => {
-            db.find(query).sort({ sort_id: -1}).exec((err: any, docs: any[]) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(docs.map((doc) => doc.id));
-                }
-            })
-        });
-        
-        return results
-       
+        const docs = await db.findAsync(query, { id: 1 }).sort({ sort_id: -1 }) as any[];
+        return docs.map((doc) => doc.id);
     }
+
+    static async getChildrenIdsWithResults(parentId: number): Promise<any[]> {
+        const query = {
+            parent_task_id: parentId,
+            result_count: { $gte: 1 },
+        };
+
+        const docs = await db.findAsync(query, { id: 1 }).sort({ sort_id: -1 }) as any[];
+        const results = docs.map((doc) => doc.id);
+
+        return results;
+    }
+
+    
 
     static async areAllChildTaskDone(parentId: number): Promise<boolean> {
         const doneChildrenCount = await TaskHelper.getDoneChildrenCount(
@@ -472,10 +477,15 @@ class TaskHelper {
             parentId,
             exceptTaskId,
         )
+
+        return await this.finishParentTask(ids, parentId, removeDuplicatesBy, status, shouldFinish)
+    }
+
+    static async finishParentTask(ids: any[], parentId: number, removeDuplicatesBy: string | null, status: string, shouldFinish: boolean) {
         let [itemsCount, path] = await normalizeAndDeduplicateChildrenTasks(ids, parentId, removeDuplicatesBy)
         const isLarge = isLargeFile(path as any)
 
-        const taskUpdateDetails:any = {
+        const taskUpdateDetails: any = {
             result_count: itemsCount,
             status: status,
             is_large: isLarge,
@@ -483,30 +493,27 @@ class TaskHelper {
         if (shouldFinish) {
             // this flow ran by task deletion/abortuin
             const now_date = new Date()
-            taskUpdateDetails['finished_at'] =  now_date
-
-            return this.updateTask(parentId, taskUpdateDetails)
-            // const query = {
-            //     $and: [
-            //         { id: parentId },
-            //         { started_at: null },
-            //     ]
-            // }
-            // const update = {
-            //     "started_at": now_date
-            // }
-            
-            // const updateResult = await this.updateTaskByQuery(query, update)
-            // console.log({query, update, updateResult, })
-            // return updateResult
+            taskUpdateDetails['finished_at'] = now_date
 
         } else {
             // this flow ran by cache completeion
-            return this.updateTask(parentId, taskUpdateDetails);
         }
-        
+
+        return this.updateTask(parentId, taskUpdateDetails)
+    }
+
+    static async collectAndSaveAllTaskForAbortedTask(
+        parentId: number,
+        removeDuplicatesBy: string | null,
+    ) {
+        const ids = await this.getChildrenIdsWithResults(
+            parentId,
+        )
+
+        return await this.finishParentTask(ids, parentId, removeDuplicatesBy, TaskStatus.ABORTED, true)
 
     }
+
     static async readCleanSaveTask(
         parentId: number,
         removeDuplicatesBy: string | null,
