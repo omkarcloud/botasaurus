@@ -17,11 +17,14 @@ export function createProjection(ets: string[]) {
 
 
 function populateMissingKeys(newKeys: string[], allKeysMapping: any) {
+    let wasPopulated = false
     for (const key of newKeys) {
         if (!(key in allKeysMapping)) {
             allKeysMapping[key] = null
+            wasPopulated = true 
         }
     }
+    return wasPopulated
 }
 
 function createKeyToNullMapping(newLocal: any): any {
@@ -50,6 +53,7 @@ async function moveFile(tempFilePath:string, taskFilePath:string) {
             })
         })
     } catch (error) {
+        console.error("MOVE FILE FAILED", error)
         // no need now. 
         // TODO: REMOVE ERRORS ASAP. ONCE WE NO LONGER SEE THAT IN PROGRESS CONTINOUS BUG, noote there is no performance loss here.
         console.error("DELETE FAILED, RETRYING...")
@@ -87,64 +91,112 @@ function renameTemporaryFile(tempFilePath: string, taskFilePathTemp: string) {
     })
 }
 
-async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId:number, removeDuplicatesBy: string | null) {
-        let itemsCount = 0
-        let allKeysMapping: any = null
-        let allKeys: any = null
-        let firstItemKeyCount = 0
-        const taskFilePath = TaskResults.generateTaskFilePath(parentId)
+interface KeyCollectionResult {
+    allKeysMapping: any
+    firstItemKeyCount: number
+    didEarlyExit: boolean
+}
 
-        // First pass: collect all unique keys from all objects
-        await TaskResults.streamMultipleTask(ids, (item) => {
-            const itemKeys = Object.keys(item)
-            
-            if (allKeysMapping === null) {
-                // First item: initialize with its keys
-                allKeysMapping = createKeyToNullMapping(item)
-                firstItemKeyCount = itemKeys.length
+async function collectAllKeys(ids: number[], allowEarlyExit: boolean): Promise<KeyCollectionResult> {
+    let allKeysMapping: any = null
+    let firstItemKeyCount = 0
+    let lastKeysChangedIndex: null | number = null
+    let didEarlyExit = false
+    let timesNewKeysAdded = 0
+    
+    let index = 0
+    // @ts-ignore
+    await TaskResults.streamMultipleTask(ids, (item) => {
+        index++
+        const itemKeys = Object.keys(item)
+        if (allKeysMapping === null) {
+            // First item: initialize with its keys
+            allKeysMapping = createKeyToNullMapping(item)
+            firstItemKeyCount = itemKeys.length
+        } else {
+            const currentKeyCount = Object.keys(allKeysMapping).length
+
+            if (itemKeys.length !== currentKeyCount) {
+                // Different number of keys - collect new ones
+                const wasPopulated = populateMissingKeys(itemKeys, allKeysMapping)
+                if (wasPopulated) {
+                    lastKeysChangedIndex = index
+                    timesNewKeysAdded++
+                }
+
             } else {
-                const currentKeyCount = Object.keys(allKeysMapping).length
-                
-                if (itemKeys.length !== currentKeyCount) {
-                    // Different number of keys - collect new ones
-                    populateMissingKeys(itemKeys, allKeysMapping)
-                } else {
-                    // Same number of keys, but check if there are any new keys (different keys, not just different order)
-                    for (const key of itemKeys) {
-                        if (!(key in allKeysMapping)) {
-                            // Found a new key, collect all keys from this item
-                            populateMissingKeys(itemKeys, allKeysMapping)
-                            break
+                // Same number of keys, but check if there are any new keys (different keys, not just different order)
+                for (const key of itemKeys) {
+                    if (!(key in allKeysMapping)) {
+                        // Found a new key, collect all keys from this item
+                        const wasPopulated = populateMissingKeys(itemKeys, allKeysMapping)
+                        if (wasPopulated) {
+                            lastKeysChangedIndex = index
+                            timesNewKeysAdded++
                         }
+                        break
                     }
                 }
             }
-        })
-
-        // After first pass, get the complete list of all keys
-        if (allKeysMapping !== null) {
-            allKeys = Object.keys(allKeysMapping)
         }
+        if (allowEarlyExit) {
+            // After 10000 items, if keys changed <= 2 times, no normalization needed - exit early
+            if (index >= 10000 && timesNewKeysAdded <= 2) {
+                didEarlyExit = true
+                return false
+            }
 
-        const shouldNormalize = allKeys && allKeys.length !== firstItemKeyCount
+            // 50000 items since changed.
+            if (lastKeysChangedIndex !== null && index - lastKeysChangedIndex > 50000) {
+                didEarlyExit = true
+                return false
+            }
+        }
+    })
 
-        const tempfile = taskFilePath + '.temp'
-        const ndjsonWriteStream = new NDJSONWriteStream(tempfile)
-        const seen = new Set()
-        try {
-            await TaskResults.streamMultipleTask(ids, async (item) => {
-                if (shouldNormalize) {
-                    item = normalizeItem(allKeys, item)
+    return { allKeysMapping, firstItemKeyCount, didEarlyExit }
+}
+
+async function writeDeduplicatedTasks(
+    ids: number[],
+    taskFilePath: string,
+    allKeysMapping: any,
+    firstItemKeyCount: number,
+    didEarlyExit: boolean,
+    removeDuplicatesBy: string | null
+): Promise<number> {
+    let itemsCount = 0
+    let allKeys = allKeysMapping ? Object.keys(allKeysMapping) : null
+    let shouldNormalize = allKeys && allKeys.length !== firstItemKeyCount
+    let needsRerun = false
+
+    const tempfile = taskFilePath + '.temp'
+    const ndjsonWriteStream = new NDJSONWriteStream(tempfile)
+    const seen = new Set()
+
+    try {
+        // @ts-ignore
+        await TaskResults.streamMultipleTask(ids, async (item) => {
+            // If we did early exit, check if this item has new keys
+            if (didEarlyExit) {
+                const itemKeys = Object.keys(item)
+                for (const key of itemKeys) {
+                    if (!(key in allKeysMapping)) {
+                        // Found a new key - need to rerun key collection fully
+                        needsRerun = true
+                        return false
+                    }
                 }
+            }
 
-                if (removeDuplicatesBy) {
-                    if (removeDuplicatesBy in item && !isNullish(item[removeDuplicatesBy])) {
-                        if (!seen.has(item[removeDuplicatesBy])) {
-                            seen.add(item[removeDuplicatesBy])
-                            await ndjsonWriteStream.push(item)
-                            itemsCount++
-                        }
-                    } else {
+            if (shouldNormalize) {
+                item = normalizeItem(allKeys!, item)
+            }
+
+            if (removeDuplicatesBy) {
+                if (removeDuplicatesBy in item && !isNullish(item[removeDuplicatesBy])) {
+                    if (!seen.has(item[removeDuplicatesBy])) {
+                        seen.add(item[removeDuplicatesBy])
                         await ndjsonWriteStream.push(item)
                         itemsCount++
                     }
@@ -152,14 +204,54 @@ async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId:numb
                     await ndjsonWriteStream.push(item)
                     itemsCount++
                 }
-            })
-            await ndjsonWriteStream.end()
-            await moveFile(tempfile, taskFilePath)
-        } catch (error) {
-            console.error('Error occurred while processing tasks:', error)
-            await ndjsonWriteStream.end()
-            throw error
+            } else {
+                await ndjsonWriteStream.push(item)
+                itemsCount++
+            }
+        })
+
+        await ndjsonWriteStream.end()
+
+        if (needsRerun) {
+            // Rerun key collection fully (no early exit)
+            const fullResult = await collectAllKeys(ids, false)
+            // Recursively call write with the complete keys and didEarlyExit=false
+            return writeDeduplicatedTasks(
+                ids,
+                taskFilePath,
+                fullResult.allKeysMapping,
+                fullResult.firstItemKeyCount,
+                false,
+                removeDuplicatesBy
+            )
         }
+
+        await moveFile(tempfile, taskFilePath)
+    } catch (error) {
+        console.error('Error occurred while processing tasks:', error)
+        await ndjsonWriteStream.end()
+        throw error
+    }
+
+    return itemsCount
+}
+
+async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId: number, removeDuplicatesBy: string | null) {
+    const taskFilePath = TaskResults.generateTaskFilePath(parentId)
+
+    // First pass: collect all unique keys from all objects (with early exit allowed)
+    const { allKeysMapping, firstItemKeyCount, didEarlyExit } = await collectAllKeys(ids, true)
+
+    // Second pass: write deduplicated tasks (will rerun key collection if needed)
+    const itemsCount = await writeDeduplicatedTasks(
+        ids,
+        taskFilePath,
+        allKeysMapping,
+        firstItemKeyCount,
+        didEarlyExit,
+        removeDuplicatesBy
+    )
+
     return [itemsCount, taskFilePath]
 }
 
@@ -434,7 +526,7 @@ class TaskHelper {
         });
     }
 
-    static async abortChildTasks(taskId: number): Promise<number> {
+    static async abortChildTasks(taskId: number) {
         const now = new Date();
         await new Promise((resolve, reject) => {
             db.update(
@@ -450,7 +542,7 @@ class TaskHelper {
                 }
             );
         });
-        return await new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
             db.update(
                 { parent_task_id: taskId },
                 { $set: { status: TaskStatus.ABORTED } },
@@ -509,7 +601,6 @@ class TaskHelper {
         const ids = await this.getChildrenIdsWithResults(
             parentId,
         )
-
         return await this.finishParentTask(ids, parentId, removeDuplicatesBy, TaskStatus.ABORTED, true)
 
     }

@@ -186,11 +186,12 @@ export async function appendNdJson(data: any[], taskPath: string) {
   return taskPath
 }
   
-export async function readNdJsonCallback(taskPath: string, onData: (item: any, index:number) => any, limit: number | null | undefined = null) {
+export async function readNdJsonCallback(taskPath: string, onData: (item: any, index: number) => undefined | false | Promise<undefined | false>, limit: number | null | undefined = null): Promise<{processedItems: number, hasExited: boolean}> {
   const fileStream = fs.createReadStream(taskPath, { encoding: 'utf-8' });
   let lineNumber = 0;
   let processedItems = 0;
   let isLimitReached = false
+  let hasExited = false
   const rl = readline.createInterface({
     input: fileStream,
     crlfDelay: Infinity,
@@ -203,8 +204,12 @@ export async function readNdJsonCallback(taskPath: string, onData: (item: any, i
       if (trimmedLine !== '') {
         try {
           const item = JSON.parse(trimmedLine);
-          await onData(item, processedItems);
+          const result = await onData(item, processedItems);
           processedItems++;
+          if (result === false) {
+            hasExited = true
+            break;
+          }
         } catch (error) {
           // Handle potential malformed JSON
           const splitLines = trimmedLine.split('}{');
@@ -220,11 +225,18 @@ export async function readNdJsonCallback(taskPath: string, onData: (item: any, i
                 // Odd index
                 parsedItem = JSON.parse('{' + splitLine);
               }
-              await onData(parsedItem, processedItems);
+              const result = await onData(parsedItem, processedItems);
               processedItems++;
+              if (result === false) {
+                hasExited = true
+                break;
+              }
             } catch (error) {
               console.log(`Failed to parse line ${lineNumber}, part: ${splitLine}`);
             }
+          }
+          if (hasExited) {
+            break;
           }
         }
         
@@ -244,7 +256,7 @@ export async function readNdJsonCallback(taskPath: string, onData: (item: any, i
     // @ts-ignore
     processedItems = limit
   }  
-  return processedItems
+  return {processedItems, hasExited}
 }
 
 
@@ -257,12 +269,21 @@ function fixNdjsonFilename(filename: string): string {
   return filename
 }
 
-export function readNdjson<T = any>(
+/**
+ * Reads an NDJSON file and calls the provided callback for each item.
+ * 
+ * @param filename - Path to the NDJSON file (will auto-append .ndjson if missing)
+ * @param onData - Callback invoked for each item. Return `false` to exit early.
+ * @param limit - Optional maximum number of items to process
+ * @returns The number of items processed
+ */
+export async function readNdjson<T = any>(
   filename: string,
-  onData: (item: any, index: number) => T,
+  onData: (item: T, index: number) => undefined | false,
   limit?: number | null
 ): Promise<number>{
   filename = fixNdjsonFilename(filename)
 
-  return readNdJsonCallback(filename, onData, limit)
+  const {processedItems} = await readNdJsonCallback(filename, onData, limit)
+  return processedItems
 }

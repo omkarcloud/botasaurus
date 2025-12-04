@@ -37,7 +37,8 @@
     "./ui": "./dist/ui.js",
     "./api-config": "./dist/api-config.js",
     "./executor": "./dist/executor.js",
-    "./run": "./dist/run.js"
+    "./run": "./dist/run.js",
+    "./upload-to-s3": "./dist/upload-to-s3.js"
   },
   "typesVersions": {
     "*": {
@@ -139,6 +140,9 @@
       ],
       "run": [
         "dist/run.d.ts"
+      ],
+      "upload-to-s3": [
+        "dist/upload-to-s3.d.ts"
       ]
     }
   },
@@ -187,7 +191,7 @@
   "scripts": {
     "dev": "tsc -w",
     "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
-    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-server-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus-server/dist/",
+    "build-mv-maps": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-server-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus-server/dist/",
     "build-mv-starter": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-server-js/dist/* ~/Documents/botasaurus-desktop-starter/node_modules/botasaurus-server/dist/",
     "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
@@ -215,6 +219,7 @@
     "url": "https://github.com/omkarcloud/botasaurus/issues"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.943.0",
     "@seald-io/nedb": "latest",
     "async-mutex": "^0.5.0",
     "botasaurus": "latest",

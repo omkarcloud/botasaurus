@@ -161,19 +161,23 @@ static saveTask(id: number, data: any){
     return true;
   }  
   
-  static streamTask(id: number, onData: (item: any, index:number) =>any, limit?: number|null){
+  static async streamTask(id: number, onData: (item: any, index:number) =>any, limit?: number|null){
     const taskPath = TaskResults.generateTaskFilePath(id);
     if (!_has(taskPath)) {
       return 0;
     }
-    return readNdJsonCallback(taskPath, onData, limit)
+    const {processedItems} = await readNdJsonCallback(taskPath, onData, limit)
+    return processedItems
   }
 
-  static async streamMultipleTask(ids: number[], onData: (item: any) => any) {
+  static async streamMultipleTask(ids: number[], onData: (item: any, index: number) => any) {
     for (const id of ids) {
       const taskPath = TaskResults.generateTaskFilePath(id);
       if (_has(taskPath)) {
-        await readNdJsonCallback(taskPath, onData);
+        const {hasExited} = await readNdJsonCallback(taskPath, onData);
+        if (hasExited) {
+          break;
+        }
       }
     }
   }
