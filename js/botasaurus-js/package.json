@@ -132,6 +132,7 @@
     "dev": "tsc -w",
     "build": "rimraf dist tsconfig.tsbuildinfo && tsc && rimraf tsconfig.tsbuildinfo",
     "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-js/dist/* ~/Documents/google-maps-extractor-desktop/node_modules/botasaurus/dist/",
+    "build-mv-starter": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-js/dist/* ~/Documents/botasaurus-desktop-starter/node_modules/botasaurus-server/dist/",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
     "prepublishOnly": "npm run build",

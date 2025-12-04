@@ -194,7 +194,7 @@ function convertNestedToJsonForExcelInPlace(inputList: any[]): any[] {
 
 
 function removeNonObjects(data: any[]): any[] {
-  return data.filter((x) => typeof x === 'object' && (x !== null || x !== undefined))
+  return data.filter((x) => typeof x === 'object' && x !== null && x !== undefined)
 }
 
 
@@ -543,6 +543,7 @@ convertNestedToJsonForExcelInPlace,
 convertNestedToJsonInPlace,
 cleanDataInPlace, 
 normalizeItem, 
+appendOutputIfNeeded,
 }
 
 // zipFiles,
