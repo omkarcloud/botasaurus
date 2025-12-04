@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import readline from 'readline'
 import { _readJsonFiles, _has,_remove, _deleteItems, _hash } from 'botasaurus/cache';
+import { appendOutputIfNeeded } from 'botasaurus/output';
 import { isNotNullish } from './null-utils'
 import { stringify } from 'csv-stringify/sync'
 
@@ -244,4 +245,24 @@ export async function readNdJsonCallback(taskPath: string, onData: (item: any, i
     processedItems = limit
   }  
   return processedItems
+}
+
+
+function fixNdjsonFilename(filename: string): string {
+  filename = appendOutputIfNeeded(filename)
+
+  if (!filename.endsWith('.ndjson')) {
+    filename = filename + '.ndjson'
+  }
+  return filename
+}
+
+export function readNdjson<T = any>(
+  filename: string,
+  onData: (item: any, index: number) => T,
+  limit?: number | null
+): Promise<number>{
+  filename = fixNdjsonFilename(filename)
+
+  return readNdJsonCallback(filename, onData, limit)
 }
