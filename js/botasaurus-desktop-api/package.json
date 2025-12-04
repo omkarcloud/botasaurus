@@ -44,7 +44,7 @@
   ],
   "scripts": {
     "build": "npm run clean && npm run build:node && npm run build:browser",
-    "build-mv": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-desktop-api/dist/* ~/Documents/playground/my-project-name/node_modules/botasaurus-desktop-api/dist/",
+    "build-mv-maps": "npm run build && mv -f ~/Documents/grow/botasaurus/js/botasaurus-desktop-api/dist/* ~/Documents/playground/my-project-name/node_modules/botasaurus-desktop-api/dist/",
     "build-dev": "nodemon  --watch \"src/**/*.ts\"  --exec \"npm run build-mv\"",
     "clean-install": "rm -rf dist/ node_modules/ package-lock.json yarn.lock .next/* && npm install",
     "prepublishOnly": "npm run build",

@@ -144,7 +144,7 @@ function createTask<I>(options: TaskOptions<I>, is_async_queue: boolean) {
 
                     if (!closeOnCrash) {
                         await prompt(
-                            "We've paused the browser to help you debug. Press 'Enter' to close."
+                            "We've paused the task to help you debug. Press 'Enter' to close."
                         )
                     }
                 }
@@ -227,6 +227,29 @@ export function task<I=any>(options: TaskOptions<I>) {
     return createTask<I>(options, false)
 }
 
+export function getItemRepr(item: any): string | number {
+    if (Array.isArray(item)) {
+        return JSON.stringify(item)
+    } else if (item instanceof Set) {
+        return JSON.stringify(Array.from(item))
+    } else if (typeof item === 'number' || typeof item === 'string') {
+        return item
+    } else if (item && typeof item === 'object' && !Array.isArray(item)) {
+        return JSON.stringify(item)
+    } else {
+        return JSON.stringify(item)
+    }
+}
+
+export function removeItemFromSeenItemsSet(items: any, seenItems: Set<any>) {
+    if (!Array.isArray(items)) {
+        items = [items]
+    }
+    for (const item of items) {
+        const itemRepr = getItemRepr(item)
+        seenItems.delete(itemRepr)
+    }
+}
 export function taskQueue<I=any>(options: TaskOptions<I>& { sequential?: boolean }) {
     // Extract parallel from options - it controls queue-level concurrency, not passed to createTask
     const { parallel: parallelOption, ...taskOptions } = options
@@ -234,7 +257,7 @@ export function taskQueue<I=any>(options: TaskOptions<I>& { sequential?: boolean
     const performTask = () => {
         let seenItems = new Set()
         let lastPromise: Promise<any> = Promise.resolve()
-        const state = { promises: [] as any[] }
+        const state = { promises: [] as any[], draining: false }
         let sequential = 'sequential' in options ? options.sequential : false
         
         // Create concurrency limiter for parallel mode
@@ -247,6 +270,8 @@ export function taskQueue<I=any>(options: TaskOptions<I>& { sequential?: boolean
             limit = pLimit(maxLimit)
         }
 
+
+
         function getUnique(items: any[]) {
             let singleItem = false
             if (!Array.isArray(items)) {
@@ -257,19 +282,7 @@ export function taskQueue<I=any>(options: TaskOptions<I>& { sequential?: boolean
             let newItems = []
 
             for (let item of items) {
-                let itemRepr
-                if (Array.isArray(item)) {
-                    itemRepr = JSON.stringify(item)
-                } else if (item instanceof Set) {
-                    itemRepr = JSON.stringify(Array.from(item))
-                } else if (typeof item === 'number' || typeof item === 'string') {
-                    itemRepr = item
-                }
-                else if (item && typeof item === 'object' && !Array.isArray(item)) {
-                    itemRepr = JSON.stringify(item)
-                } else {
-                    itemRepr = JSON.stringify(item)
-                }
+                const itemRepr = getItemRepr(item)
 
                 if (!seenItems.has(itemRepr)) {
                     newItems.push(item)
@@ -281,6 +294,8 @@ export function taskQueue<I=any>(options: TaskOptions<I>& { sequential?: boolean
         }
 
         const cleanup = () => {
+            state.promises = []
+            state.draining = false
             seenItems.clear()
             lastPromise = Promise.resolve()
         }
@@ -309,8 +324,11 @@ export function taskQueue<I=any>(options: TaskOptions<I>& { sequential?: boolean
                     }
                 }
             },
-            get: async function () {
-                return drainQueue(state, cleanup, options, run.__name__)
+            get: async function (n: number | null = null) {
+                return drainQueue(state, cleanup, (items) => removeItemFromSeenItemsSet(items,seenItems), options, run.__name__, n)
+            },
+            isCompleted: function () {
+                return state.promises.length === 0 && !state.draining
             }
         }
     }
@@ -326,45 +344,83 @@ export function determineMaxLimit(parallelOption: number | ((data: any) => numbe
 }
 
 export async function drainQueue(
-    state: { promises: Promise<any>[] },
+    state: { promises: Promise<any>[], draining: boolean },
     cleanup: () => void,
+    removeItemFromSeenItemsSet: (item: any) => void,
     options: { output?: string | ((data: any, result: any) => void) | null, outputFormats?: FormatType[] | null },
-    fnName: string
+    fnName: string,
+    n: number | null = null
 ) {
+    if (n !== null && n < 1) {
+        throw new Error('n must be >= 1')
+    }
+    
+    if (!state.promises.length){
+        return []
+    }
+
+    
     const result_list: any[] = []
     const orignal_data: any[] = []
-
+    // Only partial drain if n is specified AND less than current promises count
+    const isPartialDrain = n !== null && n < state.promises.length
+    
+    state.draining = true
     try {
-        // Drain the queue - keep processing until no new promises are added
-        while (state.promises.length > 0) {
-            const currentPromises = state.promises
-            state.promises = []
-            
-            const results = await Promise.all(currentPromises)
-            for (let index = 0; index < results.length; index++) {
-                const { originalData, result } = results[index]
-                if (Array.isArray(originalData)) {
-                    orignal_data.push(...originalData)
-                } else {
-                    orignal_data.push(originalData)
-                }
-
-                if (Array.isArray(originalData)) {
-                    result_list.push(...result)
-                } else {
-                    result_list.push(result)
+        if (isPartialDrain) {
+            // Partial drain - take first n promises
+            let remaining = n!
+            while (state.promises.length > 0 && remaining > 0) {
+                const takeCount = Math.min(remaining, state.promises.length)
+                const currentPromises = state.promises.slice(0, takeCount)
+                state.promises = state.promises.slice(takeCount)
+                remaining -= takeCount
+                
+                const results = await Promise.all(currentPromises)
+                for (let index = 0; index < results.length; index++) {
+                    const { originalData, result } = results[index]
+                    if (Array.isArray(originalData)) {
+                        orignal_data.push(...originalData)
+                        result_list.push(...result)
+                    } else {
+                        orignal_data.push(originalData)
+                        result_list.push(result)
+                    }
+                    removeItemFromSeenItemsSet(originalData)
                 }
             }
+        } else {
+            // Full drain - keep processing until no new promises are added
+            while (state.promises.length > 0) {
+                const currentPromises = state.promises
+                state.promises = []  // Reset before awaiting so new promises can be added
+                const results = await Promise.all(currentPromises)
+                for (let index = 0; index < results.length; index++) {
+                    const { originalData, result } = results[index]
+                    if (Array.isArray(originalData)) {
+                        orignal_data.push(...originalData)
+                        result_list.push(...result)
+                    } else {
+                        orignal_data.push(originalData)
+                        result_list.push(result)
+                    }
+                }
+            }
+            cleanup()
         }
 
-        cleanup()
         const { output = 'default', outputFormats = null } = options
         const final = flatten(result_list)
         writeOutput(output, outputFormats, orignal_data, final, fnName)
+        
         return final
     } catch (error) {
-        state.promises = []
-        cleanup()
+        
+        if (!isPartialDrain) {
+            cleanup()
+        }
         throw error
+    } finally {
+        state.draining = false
     }
 }

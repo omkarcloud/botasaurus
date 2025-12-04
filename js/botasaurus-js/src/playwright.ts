@@ -31,7 +31,7 @@ import {
 import { FormatType } from "./formats";
 import { createPlaywrightChrome, PlaywrightChrome } from "./page";
 import { getBotasaurusStorage } from "./botasaurus-storage"
-import { determineMaxLimit, drainQueue } from "./task"
+import { determineMaxLimit, drainQueue, getItemRepr, removeItemFromSeenItemsSet } from "./task"
 
 type PlaywrightRunOptions<I = any> = {
     page: Page;
@@ -398,7 +398,7 @@ export function playwrightQueue<I = any>(
     const performPlaywright = () => {
         let seenItems = new Set();
         let lastPromise: Promise<any> = Promise.resolve();
-        const state = { promises: [] as any[] };
+        const state = { promises: [] as any[], draining: false };
         let sequential = "sequential" in options ? options.sequential : false;
         
         // Create concurrency limiter for parallel mode
@@ -421,25 +421,7 @@ export function playwrightQueue<I = any>(
             let newItems = [];
 
             for (let item of items) {
-                let itemRepr;
-                if (Array.isArray(item)) {
-                    itemRepr = JSON.stringify(item);
-                } else if (item instanceof Set) {
-                    itemRepr = JSON.stringify(Array.from(item));
-                } else if (
-                    typeof item === "number" ||
-                    typeof item === "string"
-                ) {
-                    itemRepr = item;
-                } else if (
-                    item &&
-                    typeof item === "object" &&
-                    !Array.isArray(item)
-                ) {
-                    itemRepr = JSON.stringify(item);
-                } else {
-                    itemRepr = JSON.stringify(item);
-                }
+                const itemRepr = getItemRepr(item);
 
                 if (!seenItems.has(itemRepr)) {
                     newItems.push(item);
@@ -451,6 +433,8 @@ export function playwrightQueue<I = any>(
         }
 
         const cleanup = () => {
+            state.promises = [];
+            state.draining = false;
             seenItems.clear();
             lastPromise = Promise.resolve();
         };
@@ -484,8 +468,11 @@ export function playwrightQueue<I = any>(
                     }
                 }
             },
-            get: async function () {
-                return drainQueue(state, cleanup, options, run.__name__);
+            get: async function (n: number | null = null) {
+                return drainQueue(state, cleanup, (items) => removeItemFromSeenItemsSet(items, seenItems), options, run.__name__, n);
+            },
+            isCompleted: function () {
+                return state.promises.length === 0 && !state.draining;
             },
             close: async () => {
                 await run.close();
