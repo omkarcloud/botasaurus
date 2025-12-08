@@ -526,6 +526,35 @@ class TaskHelper {
         });
     }
 
+    static async retryTask(taskId: number){
+        return db.updateAsync(
+                { id: taskId },
+            { $set: { status: TaskStatus.PENDING, started_at: null, finished_at: null, result_count: 0 } },
+            {},
+        );
+    }
+
+    static async retryFailedChildTasks(parentId: number){
+        return db.updateAsync(
+                { parent_task_id: parentId, status: TaskStatus.FAILED },
+                { $set: { status: TaskStatus.PENDING, started_at: null, finished_at: null, result_count: 0 } },
+                { multi: true },
+            );
+    }
+
+    static async retryParentTask(parentId: number){
+        await db.updateAsync(
+            { id: parentId },
+            { $set: {  finished_at: null } },
+            {},
+        )
+        await db.updateAsync(
+            { id: parentId, status: TaskStatus.FAILED },
+            { $set: { status: TaskStatus.PENDING} },
+            {},
+        )
+    }
+
     static async abortChildTasks(taskId: number) {
         const now = new Date();
         await new Promise((resolve, reject) => {

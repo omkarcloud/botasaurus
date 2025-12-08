@@ -371,8 +371,8 @@ export function validateUiPatchTask(jsonData: any): [string, number[]] {
         throw new JsonHTTPResponseWithMessage("'action' must be a string");
     }
     action = action.toLowerCase();
-    if (!['abort', 'delete'].includes(action)) {
-        throw new JsonHTTPResponseWithMessage('\'action\' must be either "abort" or "delete"');
+    if (!['abort', 'delete', 'retry'].includes(action)) {
+        throw new JsonHTTPResponseWithMessage('\'action\' must be either "abort", "delete", or "retry"');
     }
 
     if (isNullish(taskIds)) {

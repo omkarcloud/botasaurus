@@ -255,7 +255,7 @@ async function performPatchTask(action: string, taskId: number): Promise<void> {
   const task = await new Promise<any>((resolve, reject) => {
     db.findOne(
       { id: taskId },
-      { id:1, is_all_task: 1, parent_task_id: 1, scraper_name: 1 },
+      { id:1, is_all_task: 1, parent_task_id: 1, scraper_name: 1, status: 1 },
       (err, task) => {
         if (err) {
           reject(err);
@@ -270,12 +270,14 @@ async function performPatchTask(action: string, taskId: number): Promise<void> {
 
   if (task) {
     const removeDuplicatesBy = Server.getRemoveDuplicatesBy(task.scraper_name);
-    const { is_all_task, parent_task_id } = task;
+    const { is_all_task, parent_task_id, status } = task;
 
     if (action === 'delete') {
       await deleteTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy);
     } else if (action === 'abort') {
       await abortTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy);
+    } else if (action === 'retry') {
+      await retryTask(taskId, is_all_task, parent_task_id, status);
     }
   }
 }
@@ -1079,6 +1081,33 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
     }
   
     await TaskHelper.abortTask(taskId);
+  }
+
+  async function retryTask(
+    taskId: number,
+    is_all_task: boolean,
+    parent_task_id: number | null,
+    status: string
+  ): Promise<void> {
+    // Only allow retry for failed tasks
+    if (status !== TaskStatus.FAILED) {
+      return;
+    }
+
+    if (is_all_task) {
+        // Retry all failed children by setting them to pending
+        const { numAffected , } =await TaskHelper.retryFailedChildTasks(taskId);
+        if (numAffected > 0) {
+          // Reset the parent task to pending
+          await TaskHelper.retryParentTask(taskId);
+      }
+    } else {
+      // Single task - just reset it to pending
+      await TaskHelper.retryTask(taskId);
+      if (parent_task_id) {
+        await TaskHelper.retryParentTask(parent_task_id);
+    }
+    }
   }
   
   function executeGetAppProps(){

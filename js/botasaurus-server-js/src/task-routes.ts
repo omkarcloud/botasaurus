@@ -74,6 +74,11 @@ async function deleteSingleTask(taskId: number) {
   return OK_MESSAGE;
 }
 
+async function retrySingleTask(taskId: number) {
+  await performPatchTask('retry', validateAndGetTaskId(taskId));
+  return OK_MESSAGE;
+}
+
 async function bulkAbortTasks(jsonData: any) {
   const taskIds = validatePatchTask(jsonData);
 
@@ -89,6 +94,16 @@ async function bulkDeleteTasks(jsonData: any) {
 
   for (const taskId of taskIds) {
     await performPatchTask('delete', taskId);
+  }
+
+  return OK_MESSAGE;
+}
+
+async function bulkRetryTasks(jsonData: any) {
+  const taskIds = validatePatchTask(jsonData);
+
+  for (const taskId of taskIds) {
+    await performPatchTask('retry', taskId);
   }
 
   return OK_MESSAGE;
@@ -184,8 +199,10 @@ export {
   downloadTaskResults,
   abortSingleTask,
   deleteSingleTask,
+  retrySingleTask,
   bulkAbortTasks,
   bulkDeleteTasks,
+  bulkRetryTasks,
   getAppProps,
   isAnyTaskUpdated,
   isTaskUpdated,
