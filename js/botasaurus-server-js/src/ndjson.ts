@@ -186,7 +186,7 @@ export async function appendNdJson(data: any[], taskPath: string) {
   return taskPath
 }
   
-export async function readNdJsonCallback(taskPath: string, onData: (item: any, index: number) => undefined | false | Promise<undefined | false>, limit: number | null | undefined = null): Promise<{processedItems: number, hasExited: boolean}> {
+export async function readNdJsonCallback(taskPath: string, onData: (item: any, index: number) => void | false | Promise<void | false>, limit: number | null | undefined = null): Promise<{processedItems: number, hasExited: boolean}> {
   const fileStream = fs.createReadStream(taskPath, { encoding: 'utf-8' });
   let lineNumber = 0;
   let processedItems = 0;
@@ -204,13 +204,22 @@ export async function readNdJsonCallback(taskPath: string, onData: (item: any, i
       if (trimmedLine !== '') {
         try {
           const item = JSON.parse(trimmedLine);
-          const result = await onData(item, processedItems);
+          let result;
+          try {
+            result = await onData(item, processedItems);
+          } catch (error: any) {
+            error.isOnDataError = true;
+            throw error;
+          }
           processedItems++;
           if (result === false) {
             hasExited = true
             break;
           }
-        } catch (error) {
+        } catch (error: any) {
+          if (error.isOnDataError) {
+            throw error;
+          }
           // Handle potential malformed JSON
           const splitLines = trimmedLine.split('}{');
 
@@ -241,7 +250,7 @@ export async function readNdJsonCallback(taskPath: string, onData: (item: any, i
         }
         
         // @ts-ignore
-         isLimitReached = isNotNullish(limit) && processedItems >= limit
+        isLimitReached = isNotNullish(limit) && processedItems >= limit
         
         if (isLimitReached) {
           break;
@@ -279,7 +288,7 @@ function fixNdjsonFilename(filename: string): string {
  */
 export async function readNdjson<T = any>(
   filename: string,
-  onData: (item: T, index: number) => undefined | false,
+  onData: (item: T, index: number) => void | false,
   limit?: number | null
 ): Promise<number>{
   filename = fixNdjsonFilename(filename)

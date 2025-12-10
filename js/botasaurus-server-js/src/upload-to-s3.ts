@@ -1,6 +1,7 @@
 // Using AWS SDK v3 modular imports for smallest bundle size
-import { S3Client, PutObjectCommand, type ObjectCannedACL } from '@aws-sdk/client-s3'
-import { createReadStream, statSync } from 'fs'
+import { S3Client, type ObjectCannedACL } from '@aws-sdk/client-s3'
+import { Upload } from '@aws-sdk/lib-storage'
+import { createReadStream } from 'fs'
 import { basename } from 'path'
 
 export interface AwsCredentials {
@@ -31,7 +32,7 @@ export interface UploadResult {
 }
 
 /**
- * Uploads a local file to S3
+ * Uploads a local file to S3 (automatically uses multipart upload for large files)
  */
 export async function uploadToS3(options: UploadOptions): Promise<UploadResult> {
   const { filePath, bucket, credentials, key, contentType, acl = 'public-read' } = options
@@ -46,18 +47,23 @@ export async function uploadToS3(options: UploadOptions): Promise<UploadResult> 
 
   const fileKey = key || basename(filePath)
   const fileStream = createReadStream(filePath)
-  const fileStats = statSync(filePath)
 
-  const command = new PutObjectCommand({
-    Bucket: bucket,
-    Key: fileKey,
-    Body: fileStream,
-    ContentLength: fileStats.size,
-    ContentType: contentType || getContentType(filePath),
-    ...(acl && { ACL: acl }),
+  const upload = new Upload({
+    client: s3Client,
+    params: {
+      Bucket: bucket,
+      Key: fileKey,
+      Body: fileStream,
+      ContentType: contentType || getContentType(filePath),
+      ...(acl && { ACL: acl }),
+    },
+    // 100MB part size for large files
+    partSize: 100 * 1024 * 1024,
+    // Upload 4 parts concurrently
+    queueSize: 4,
   })
 
-  await s3Client.send(command)
+  await upload.done()
 
   return {
     bucket,

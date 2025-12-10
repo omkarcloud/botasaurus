@@ -31,13 +31,14 @@ import {
 import { FormatType } from "./formats";
 import { createPlaywrightChrome, PlaywrightChrome } from "./page";
 import { getBotasaurusStorage } from "./botasaurus-storage"
-import { determineMaxLimit, drainQueue, getItemRepr, removeItemFromSeenItemsSet } from "./task"
+import { determineMaxLimit, drainQueue, getItemRepr, removeItemFromSeenItemsSet, TaskRunOptions } from "./task"
 
-type PlaywrightRunOptions<I = any> = {
+
+
+type PlaywrightRunOptions<I = any> = TaskRunOptions<I> & {
     page: Page;
     context: BrowserContext;
-    data: I;
-    metadata: any;
+    
 };
 
 type PlaywrightOptions<I> = {
@@ -146,6 +147,10 @@ function createPlaywright<I>(
             : performPlaywright.__name__;
         // @ts-ignore
         const returnDontCacheAsIs = combined.returnDontCacheAsIs;
+        // @ts-ignore
+        const isAborted = combined.isAborted ?? (() => false);
+        // @ts-ignore 
+        const pushData = combined.pushData ?? (() => {});
         const fn_name = performPlaywright.__name__;
 
         if (cache) {
@@ -192,7 +197,7 @@ function createPlaywright<I>(
                     // ...
                 }
 
-                result = await run({ data, metadata, ...driver });
+                result = await run({ data, metadata, isAborted, pushData, ...driver });
                 if (result === undefined) {
                     result = null;
                 }

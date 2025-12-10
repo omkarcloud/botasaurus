@@ -2,6 +2,7 @@ import { Mutex } from 'async-mutex';
 import { getPendingTasks, TaskExecutor, TaskPriority } from './task-executor';
 import { db, Task, TaskStatus } from './models';
 import { Server } from './server';
+import { TaskResults } from './task-results';
 export const DEFAULT_TASK_TIMEOUT = 8 * 60 * 60
 /**
  * Payload for task completion from worker
@@ -26,6 +27,31 @@ export interface TaskCompletionPayload {
 export interface TaskFailurePayload {
     taskId: number;
     error: string;
+    parentTaskId?: number | null;
+    capacity?: {
+        scraperType?: string;
+        scraperName?: string;
+        maxTasks: number;
+    } | null;
+}
+
+/**
+ * Payload for pushData chunk from worker
+ */
+export interface PushDataChunkPayload {
+    taskId: number;
+    chunk: any[];
+}
+
+/**
+ * Payload for pushData completion from worker
+ */
+export interface PushDataCompletePayload {
+    taskId: number;
+    itemCount: number;
+    isDontCache: boolean;
+    scraperName: string;
+    taskData: any;
     parentTaskId?: number | null;
     capacity?: {
         scraperType?: string;
@@ -232,5 +258,42 @@ export class MasterExecutor extends TaskExecutor {
         const releasedCount = await this.resetTasksToPending(inProgressTaskIds);
         console.log(`[Master] Released ${releasedCount}/${inProgressTaskIds.length} tasks from shutting down worker`);
         return { releasedCount };
+    }
+
+    /**
+     * Handle pushData chunk from worker.
+     * Appends chunk to the task's result file.
+     */
+    async handlePushDataChunk(payload: PushDataChunkPayload) {
+        const { taskId, chunk } = payload;
+
+        try {
+            if (chunk && chunk.length > 0) {
+                await TaskResults.appendAllTask(taskId, chunk);
+            }
+            return {};
+        } catch (error) {
+            console.error('[Master] Error handling pushData chunk:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Handle pushData completion from worker.
+     * Finalizes the task (caching, status update, parent update).
+     * Piggyback pattern: also return new tasks for worker's available capacity.
+     */
+    async handlePushDataComplete(payload: PushDataCompletePayload): Promise<{ nextTasks: any[] }> {
+        const { taskId, itemCount, isDontCache, scraperName, taskData, parentTaskId, capacity } = payload;
+        const taskFilePath = TaskResults.generateTaskFilePath(taskId);
+
+        try {
+            await this.reportTaskSuccessWithPushData(taskId, taskFilePath, itemCount, isDontCache, scraperName, taskData, parentTaskId as any, null as any)
+        } catch (error) {
+            console.error('[Master] Error handling pushData complete:', error);
+        }
+
+        // Piggyback: Acquire next tasks if capacity is provided
+        return this.acquireNextTasks(capacity);
     }
 }

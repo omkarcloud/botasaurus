@@ -3,7 +3,7 @@ import { join } from 'path';
 import {  pathTaskResultsTasks,  pathTaskResultsCache, cacheStoragePath, isLargeFile, pathTaskResultsCacheDirect } from './utils';
 import { _readJsonFiles, _has,_remove, _deleteItems, _hash, readJson} from 'botasaurus/cache';
 import { LocalStorage } from 'botasaurus/botasaurus-storage';
-import { appendNdJson, readNdJson, readNdJsonCallback, writeNdJson } from './ndjson'
+import { appendNdJson, readNdJson, readNdJsonCallback, writeNdJson, NDJSONWriteStream } from './ndjson'
 import { writeJson } from 'botasaurus/utils'
 
 
@@ -110,6 +110,15 @@ export class TaskResults {
     return writeNdJson(result, taskPath);
   }
 
+  static copyTaskToCachedTask(scraperName: string, data: any, count: number, fromPath: string, isLarge:boolean) {
+    const cache_key = createCacheKey(scraperName, data);
+    // can save islarge metric as well.
+    getCacheStorage().setItem(cache_key, {"count":count, "isLarge":isLarge})
+
+    const targetPath = join(pathTaskResultsCache, cache_key);
+    return doCopyFile(fromPath, targetPath);
+  }
+
 static async getCachedItemDetails(cache_key: string) {
     let item:{
       count: number;
@@ -195,6 +204,34 @@ static saveTask(id: number, data: any){
       return taskPath;
     }
     return appendNdJson(data, taskPath)
+  }
+
+  /**
+   * Streams content from one task file to another (append mode).
+   * Returns the number of items streamed.
+   */
+  static async streamTaskToTask(fromId: number, toId: number): Promise<number> {
+    const fromPath = TaskResults.generateTaskFilePath(fromId)
+    const toPath = TaskResults.generateTaskFilePath(toId)
+    
+    if (!_has(fromPath)) {
+      return 0
+    }
+    
+    const writeStream = new NDJSONWriteStream(toPath, true) // append mode
+    
+    let count = 0
+    try {
+      await readNdJsonCallback(fromPath, async (item) => {
+        await writeStream.push(item)
+        count++
+        return undefined
+      })
+    } finally {
+      await writeStream.end()
+    }
+    
+    return count
   }
 
   static deleteAllTask(id: number): void {

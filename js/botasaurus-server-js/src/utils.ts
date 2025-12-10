@@ -1,4 +1,5 @@
-import * as fs from 'fs';
+import { statSync } from 'fs';
+
 import { totalmem } from 'os';
 import * as path from 'path';
 import {isMaster} from './env';
@@ -66,7 +67,7 @@ const FOUR_HUNDRED_MB = 400 * 1024 * 1024;
 function isLargeFile(filePath:string) {
   try {
       // Get file stats
-      const stats = fs.statSync(filePath);
+      const stats = statSync(filePath);
       // Compare file size with limit
       if(stats.size > MAX_SIZE_LIMIT){
         return true

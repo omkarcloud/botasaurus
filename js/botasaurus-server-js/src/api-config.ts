@@ -35,7 +35,7 @@ import { isDontCache } from "botasaurus/dontcache";
 import { JsonHTTPResponseWithMessage } from "./errors";
 import { cleanDataInPlace } from "botasaurus/output";
 import { db, removeDuplicatesByKey } from "./models";
-import { DEFAULT_TASK_TIMEOUT, MasterExecutor, TaskCompletionPayload, TaskFailurePayload } from "./master-executor";
+import { DEFAULT_TASK_TIMEOUT, MasterExecutor, TaskCompletionPayload, TaskFailurePayload, PushDataChunkPayload, PushDataCompletePayload } from "./master-executor";
 import { WorkerExecutor } from "./worker-executor";
 
 /**
@@ -402,6 +402,33 @@ function registerMasterRoutes(app: FastifyInstance) {
 
         const executor = getExecutor() as MasterExecutor;
         return executor.handleWorkerShutdown(taskIds);
+    });
+
+    // Check abortion status for multiple tasks (used by workers)
+    app.post('/k8s/check-abortion-status', async (request: FastifyRequest<{ Body: { taskIds: number[] } }>, _) => {
+        const taskIds = request.body?.taskIds || [];
+        
+        const executor = getExecutor() as MasterExecutor;
+        const results = await executor.getTasksAbortionResults(taskIds);
+        return results;
+    });
+
+    // PushData chunk endpoint - receives data chunks from workers
+    app.post('/k8s/push-data-chunk', async (request: FastifyRequest<{ Body: PushDataChunkPayload }>, _) => {
+        const payload = request.body;
+        validateTaskIdInPayload(payload.taskId);
+
+        const executor = getExecutor() as MasterExecutor;
+        return executor.handlePushDataChunk(payload);
+    });
+
+    // PushData complete endpoint - finalizes task after all chunks sent
+    app.post('/k8s/push-data-complete', async (request: FastifyRequest<{ Body: PushDataCompletePayload }>, _) => {
+        const payload = request.body;
+        validateTaskIdInPayload(payload.taskId);
+
+        const executor = getExecutor() as MasterExecutor;
+        return executor.handlePushDataComplete(payload);
     });
 }
 

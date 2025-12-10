@@ -1,8 +1,10 @@
 import { Mutex } from 'async-mutex';
+import { statSync } from 'fs';
 import { TaskExecutor } from './task-executor';
 import { Server } from './server';
 import { ScraperType } from './scraper-type';
 import { isNotNullish } from './null-utils'
+import { readNdJsonCallback } from './ndjson'
 
 /**
  * Backoff configuration for polling
@@ -22,6 +24,49 @@ const RETRY_CONFIG = {
     backoffFactor: 2,
     maxDelay: 60000          // 60 seconds
 };
+
+/**
+ * Chunk size configuration for streaming pushData to master
+ */
+const CHUNK_CONFIG = {
+    minChunkSize: 10,           // Minimum items per chunk
+    maxChunkSize: 10000,         // Maximum items per chunk
+    targetPayloadBytes: 100 * 1024 * 1024,  // Target ~100MB per chunk
+    defaultChunkSize: 1000,      // Default when file size unknown
+};
+
+/**
+ * Determines optimal chunk size based on file size and item count.
+ * Balances between minimizing HTTP requests and keeping payload size reasonable.
+ */
+function determineChunkSize(filePath: string, itemCount: number): number {
+    if (itemCount <= 0) {
+        return CHUNK_CONFIG.defaultChunkSize;
+    }
+
+    try {
+        const stats = statSync(filePath);
+        const fileSize = stats.size;
+
+        if (fileSize <= 0) {
+            return CHUNK_CONFIG.defaultChunkSize;
+        }
+
+        // Calculate average bytes per item
+        const avgBytesPerItem = fileSize / itemCount;
+
+        // Calculate chunk size to target payload size
+        const calculatedChunkSize = Math.floor(CHUNK_CONFIG.targetPayloadBytes / avgBytesPerItem);
+
+        // Clamp between min and max
+        return Math.max(
+            CHUNK_CONFIG.minChunkSize,
+            Math.min(CHUNK_CONFIG.maxChunkSize, calculatedChunkSize)
+        );
+    } catch {
+        return CHUNK_CONFIG.defaultChunkSize;
+    }
+}
 
 /**
  * Add random jitter to delay (0-10% of current delay)
@@ -61,6 +106,9 @@ export class WorkerExecutor extends TaskExecutor {
     public isShuttingDown: boolean = false;
     private masterMutex = new Mutex();
     private consecutiveEmptyPolls: number = 0;
+
+    // Longer interval for workers since they make HTTP calls to master
+    protected override readonly ABORT_CHECK_INTERVAL = 10000;
 
     constructor(masterUrl: string) {
         super();
@@ -229,7 +277,6 @@ export class WorkerExecutor extends TaskExecutor {
     }
 
     /**
-     * 
      * Report task failure to master and fetch next tasks.
      * Uses mutex to ensure only one concurrent request to master at a time.
      */
@@ -238,7 +285,6 @@ export class WorkerExecutor extends TaskExecutor {
         error: string,
         parentTaskId: number | null,
         key: string,
-
     ) {
         this.inProgressTaskIds.delete(taskId);
         await this.masterMutex.runExclusive(async () => {
@@ -258,6 +304,85 @@ export class WorkerExecutor extends TaskExecutor {
                 console.error('[Worker] Failed to report failure to master:', error);
             }
         });
+    }
+
+    /**
+     * Report task success with pushData to master.
+     * Streams data in chunks to avoid memory issues with large datasets.
+     */
+    protected override async reportTaskSuccessWithPushData(
+        taskId: number,
+        taskFilePath: string,
+        itemCount: number,
+        isResultDontCached: boolean,
+        scraperName: string,
+        taskData: any,
+        parentTaskId: number | null,
+        key: string,
+    ): Promise<void> {
+        this.inProgressTaskIds.delete(taskId);
+        
+        // Determine optimal chunk size based on file size and item count
+        const chunkSize = determineChunkSize(taskFilePath, itemCount);
+        
+        // Stream chunks to master (outside mutex to allow other operations)
+        let chunk: any[] = [];
+        
+        await readNdJsonCallback(taskFilePath, async (item) => {
+            chunk.push(item);
+            
+            if (chunk.length >= chunkSize) {
+                await this.sendChunkToMaster(taskId, chunk);
+                chunk = [];
+            }
+        });
+
+        // Send remaining items
+        if (chunk.length > 0) {
+            await this.sendChunkToMaster(taskId, chunk);
+        }
+
+        // Send completion signal with piggyback
+        await this.masterMutex.runExclusive(async () => {
+            try {
+                const capacity = this.buildCapacityInfo(key);
+
+                const requestPayload = {
+                    taskId,
+                    itemCount,
+                    isDontCache: isResultDontCached,
+                    scraperName,
+                    taskData,
+                    capacity,
+                    parentTaskId,
+                };
+
+                const response = await this.postToMaster('/k8s/push-data-complete', requestPayload, true);
+                await this.runNextTasks(response?.nextTasks, key);
+            } catch (error) {
+                console.error('[Worker] Failed to report pushData complete to master:', error);
+            }
+        });
+    }
+
+    /**
+     * Send a chunk of pushData to master.
+     */
+    private async sendChunkToMaster(taskId: number, chunk: any[]): Promise<void> {
+        try {
+            await this.postToMaster('/k8s/push-data-chunk', { taskId, chunk }, true);
+        } catch (error) {
+            console.error('[Worker] Failed to send pushData chunk to master:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Workers don't update result count locally during pushData.
+     * The final count is sent to master on completion.
+     */
+    protected override createResultCountUpdater(_taskId: number): undefined {
+        return
     }
 
     /**
@@ -405,5 +530,27 @@ export class WorkerExecutor extends TaskExecutor {
             inProgressTaskIds
         })
         console.log(`[Worker] Released ${response?.releasedCount || 0} tasks back to queue`);
+    }
+
+    /**
+     * Override to fetch abortion status from master instead of local DB.
+     */
+    override async getTasksAbortionResults(taskIds: number[]): Promise<Record<number, boolean>> {
+        if (taskIds.length === 0) {
+            return {};
+        }
+
+        try {
+            const response = await this.postToMaster('/k8s/check-abortion-status', { taskIds }, false);
+            return response;
+        } catch (error) {
+            console.error('[Worker] Failed to check abortion status from master:', error);
+            // On error, assume tasks are not aborted to avoid premature termination
+            const results: Record<number, boolean> = {};
+            for (const taskId of taskIds) {
+                results[taskId] = false;
+            }
+            return results;
+        }
     }
 }

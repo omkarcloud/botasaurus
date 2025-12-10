@@ -17,9 +17,11 @@ import {
 import { flatten } from './list-utils'
 import { FormatType } from './formats'
 
-type TaskRunOptions<I=any> = {
+export type TaskRunOptions<I=any> = {
     data: I
     metadata: any
+    isAborted: () => boolean
+    pushData: (data: Record<string, any> | Record<string, any>[]) => Promise<void> 
 }
 
 type TaskOptions<I> = {
@@ -55,6 +57,10 @@ function createTask<I>(options: TaskOptions<I>, is_async_queue: boolean) {
         performTask.__name__ = isNotEmptyString(name) ? name!.trim() : performTask.__name__
         // @ts-ignore
         const returnDontCacheAsIs = combined.returnDontCacheAsIs
+        // @ts-ignore
+        const isAborted = combined.isAborted ?? (() => false)
+        // @ts-ignore 
+        const pushData = combined.pushData ?? (() => {})
         const fn_name = performTask.__name__
 
         if (cache) {
@@ -80,10 +86,9 @@ function createTask<I>(options: TaskOptions<I>, is_async_queue: boolean) {
                 path = _getCachePath(fn_name, data)
             }
 
-
             let result: any
             try {
-                result = await run({ data, metadata })
+                result = await run({ data, metadata, isAborted, pushData })
                 if (result === undefined) {
                     result = null
                 }

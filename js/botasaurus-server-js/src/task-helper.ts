@@ -4,9 +4,10 @@ import { createTask, db, Task } from "./models";
 import { TaskResults } from "./task-results";
 import { TaskStatus } from "./models";
 import { NDJSONWriteStream } from "./ndjson"
+import { _has } from 'botasaurus/cache'
 import { isLargeFile } from './utils'
 import { sleep } from 'botasaurus/utils'
-import { normalizeItem } from 'botasaurus/output'
+import { normalizeData, normalizeItem } from 'botasaurus/output'
 
 export function createProjection(ets: string[]) {
     return ets.reduce((acc: any, field) => {
@@ -91,13 +92,13 @@ function renameTemporaryFile(tempFilePath: string, taskFilePathTemp: string) {
     })
 }
 
-interface KeyCollectionResult {
+export interface KeyCollectionResult {
     allKeysMapping: any
     firstItemKeyCount: number
     didEarlyExit: boolean
 }
 
-async function collectAllKeys(ids: number[], allowEarlyExit: boolean): Promise<KeyCollectionResult> {
+export async function collectAllKeysFromIds(ids: number[], allowEarlyExit: boolean): Promise<KeyCollectionResult> {
     let allKeysMapping: any = null
     let firstItemKeyCount = 0
     let lastKeysChangedIndex: null | number = null
@@ -114,29 +115,10 @@ async function collectAllKeys(ids: number[], allowEarlyExit: boolean): Promise<K
             allKeysMapping = createKeyToNullMapping(item)
             firstItemKeyCount = itemKeys.length
         } else {
-            const currentKeyCount = Object.keys(allKeysMapping).length
-
-            if (itemKeys.length !== currentKeyCount) {
-                // Different number of keys - collect new ones
-                const wasPopulated = populateMissingKeys(itemKeys, allKeysMapping)
-                if (wasPopulated) {
-                    lastKeysChangedIndex = index
-                    timesNewKeysAdded++
-                }
-
-            } else {
-                // Same number of keys, but check if there are any new keys (different keys, not just different order)
-                for (const key of itemKeys) {
-                    if (!(key in allKeysMapping)) {
-                        // Found a new key, collect all keys from this item
-                        const wasPopulated = populateMissingKeys(itemKeys, allKeysMapping)
-                        if (wasPopulated) {
-                            lastKeysChangedIndex = index
-                            timesNewKeysAdded++
-                        }
-                        break
-                    }
-                }
+            const wasPopulated = populateMissingKeys(itemKeys, allKeysMapping)
+            if (wasPopulated) {
+                lastKeysChangedIndex = index
+                timesNewKeysAdded++
             }
         }
         if (allowEarlyExit) {
@@ -157,6 +139,20 @@ async function collectAllKeys(ids: number[], allowEarlyExit: boolean): Promise<K
     return { allKeysMapping, firstItemKeyCount, didEarlyExit }
 }
 
+
+function shouldNormalize(allKeys: string[] | null, firstItemKeyCount: number) {
+    return allKeys && allKeys.length !== firstItemKeyCount
+}
+
+/**
+ * Write deduplicated tasks  and normalize if needed tasks to a file.
+ * @param ids - The ids of the tasks to write.
+ * @param taskFilePath - The path to the task file.
+ * @param allKeysMapping - The mapping of all keys.
+ * @param firstItemKeyCount - The count of the first item's keys.
+ * @param didEarlyExit - Whether to exit early.
+ * @param removeDuplicatesBy - The key to remove duplicates by.
+ */
 async function writeDeduplicatedTasks(
     ids: number[],
     taskFilePath: string,
@@ -166,8 +162,8 @@ async function writeDeduplicatedTasks(
     removeDuplicatesBy: string | null
 ): Promise<number> {
     let itemsCount = 0
-    let allKeys = allKeysMapping ? Object.keys(allKeysMapping) : null
-    let shouldNormalize = allKeys && allKeys.length !== firstItemKeyCount
+    const allKeys = allKeysMapping ? Object.keys(allKeysMapping) : null
+    const shouldNormalizeFlag = shouldNormalize(allKeys, firstItemKeyCount)
     let needsRerun = false
 
     const tempfile = taskFilePath + '.temp'
@@ -189,7 +185,7 @@ async function writeDeduplicatedTasks(
                 }
             }
 
-            if (shouldNormalize) {
+            if (shouldNormalizeFlag) {
                 item = normalizeItem(allKeys!, item)
             }
 
@@ -214,7 +210,7 @@ async function writeDeduplicatedTasks(
 
         if (needsRerun) {
             // Rerun key collection fully (no early exit)
-            const fullResult = await collectAllKeys(ids, false)
+            const fullResult = await collectAllKeysFromIds(ids, false)
             // Recursively call write with the complete keys and didEarlyExit=false
             return writeDeduplicatedTasks(
                 ids,
@@ -236,11 +232,127 @@ async function writeDeduplicatedTasks(
     return itemsCount
 }
 
+export class PushDataWriter {
+    private stream: NDJSONWriteStream | null = null
+    // @ts-ignore
+    private taskFilePath: string
+    private removeDuplicatesBy: string | null
+    private seen: Set<any> = new Set()
+    private itemCount = 0
+    private lastReportedCount = 0
+    private taskId: number
+    private isPushDataUsed = false
+    private onResultCountUpdate?: ((count: number) => Promise<void>)
+    
+    // Key collection for normalization
+    private allKeysMapping: Record<string, null> | null = null
+    private firstItemKeyCount = 0
+
+    constructor(
+        taskId: number,
+        removeDuplicatesBy: string | null,
+        onResultCountUpdate?: (count: number) => Promise<any>
+    ) {
+        this.taskId = taskId
+        this.removeDuplicatesBy = removeDuplicatesBy
+        this.onResultCountUpdate = onResultCountUpdate
+    }
+
+    async push(data: Record<string, any> | Record<string, any>[]): Promise<void> {
+        this.isPushDataUsed = true
+        if (!this.stream) {
+            this.taskFilePath = TaskResults.generateTaskFilePath(this.taskId)
+            this.stream = new NDJSONWriteStream(this.taskFilePath)
+        }
+
+        const items = normalizeData(data)
+
+        for (const item of items) {
+            // Handle deduplication if removeDuplicatesBy is set
+            if (this.removeDuplicatesBy && this.removeDuplicatesBy in item && !isNullish(item[this.removeDuplicatesBy])) {
+                const key = item[this.removeDuplicatesBy]
+                if (this.seen.has(key)) continue
+                this.seen.add(key)
+            }
+            
+            // Collect keys for normalization
+            const itemKeys = Object.keys(item)
+            if (this.allKeysMapping === null) {
+                // First item: initialize with its keys
+                this.allKeysMapping = createKeyToNullMapping(item)
+                this.firstItemKeyCount = itemKeys.length
+            } else {
+                // Add any new keys
+                populateMissingKeys(itemKeys, this.allKeysMapping)
+            }
+            
+            await this.stream.push(item)
+            this.itemCount++
+        }
+
+        // Report count update after each push call
+        await this.reportCountUpdate()
+    }
+
+    private async reportCountUpdate(): Promise<void> {
+        if (!this.onResultCountUpdate) return
+        
+        const isFirstUpdate = this.lastReportedCount === 0
+        const difference = this.itemCount - this.lastReportedCount
+        
+        if (isFirstUpdate || difference >= 10) {
+            await this.onResultCountUpdate(this.itemCount)
+            this.lastReportedCount = this.itemCount
+        }
+    }
+
+    async close() {
+        if (this.stream) {
+            await this.stream.end()
+            this.stream = null
+            
+            const allKeys = this.allKeysMapping ? Object.keys(this.allKeysMapping) : null
+            const shouldNormalizeFlag = shouldNormalize(allKeys, this.firstItemKeyCount)
+        
+            if (shouldNormalizeFlag) {
+                // Perform normalization pass with writeDeduplicatedTasks
+                // Pass removeDuplicatesBy as null since deduplication already happened during push
+                this.itemCount = await writeDeduplicatedTasks(
+                    [this.taskId],
+                    this.taskFilePath,
+                    this.allKeysMapping,
+                    this.firstItemKeyCount,
+                    false, // didEarlyExit - we collected all keys
+                    null   // removeDuplicatesBy - already deduplicated during push
+                )
+            }
+            // Update final count
+            await this.onResultCountUpdate?.(this.itemCount)
+        }
+    }
+
+    wasUsed(): boolean {
+        return this.isPushDataUsed
+    }
+
+    getItemCount(): number {
+        return this.itemCount
+    }
+
+    getFilePath(): string {
+        return this.taskFilePath
+    }
+
+    getRemoveDuplicatesBy(): string | null {
+        return this.removeDuplicatesBy
+    }
+}
+
 async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId: number, removeDuplicatesBy: string | null) {
     const taskFilePath = TaskResults.generateTaskFilePath(parentId)
 
     // First pass: collect all unique keys from all objects (with early exit allowed)
-    const { allKeysMapping, firstItemKeyCount, didEarlyExit } = await collectAllKeys(ids, true)
+    const { allKeysMapping, firstItemKeyCount, didEarlyExit } = await collectAllKeysFromIds(ids, true)
 
     // Second pass: write deduplicated tasks (will rerun key collection if needed)
     const itemsCount = await writeDeduplicatedTasks(
@@ -684,6 +796,26 @@ class TaskHelper {
             });
         }
         return null;
+    }
+
+    /**
+     * Streams child task results to parent task file (without loading into memory).
+     * Updates parent's result_count and is_large in the DB.
+     */
+    static async streamChildToParentResults(childId: number, parentId: number, is_already_large: boolean): Promise<void> {
+        const itemCount = await TaskResults.streamTaskToTask(childId, parentId)
+        
+        if (itemCount > 0) {
+            const parentPath = TaskResults.generateTaskFilePath(parentId)
+            const isLarge = is_already_large || isLargeFile(parentPath)
+
+            await db.updateAsync(
+                { id: parentId },
+                { 
+                    $set: { is_large: isLarge },
+                    $inc: { result_count: itemCount }
+                })
+        }
     }
 
     static getTask(taskId: number, inStatus?: string[]): Promise<Task> {
