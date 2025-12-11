@@ -204,6 +204,7 @@ export async function readNdJsonCallback(taskPath: string, onData: (item: any, i
       if (trimmedLine !== '') {
         try {
           const item = JSON.parse(trimmedLine);
+
           let result;
           try {
             result = await onData(item, processedItems);

@@ -310,7 +310,7 @@ function normalizeData(data: any): any[] {
     for (const item of data) {
       if (item === null || item === undefined) {
         continue
-      } else if (typeof item !== 'object') {
+      } else if (typeof item !== 'object' || Array.isArray(item)) {
         normalizedList.push({ data: item })
       } else {
         normalizedList.push(item)

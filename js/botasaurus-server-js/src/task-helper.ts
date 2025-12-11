@@ -98,6 +98,10 @@ export interface KeyCollectionResult {
     didEarlyExit: boolean
 }
 
+function isErrorItem(item: any) {
+    return typeof item === 'string'
+}
+
 export async function collectAllKeysFromIds(ids: number[], allowEarlyExit: boolean): Promise<KeyCollectionResult> {
     let allKeysMapping: any = null
     let firstItemKeyCount = 0
@@ -107,8 +111,17 @@ export async function collectAllKeysFromIds(ids: number[], allowEarlyExit: boole
     
     let index = 0
     // @ts-ignore
-    await TaskResults.streamMultipleTask(ids, (item) => {
+    await TaskResults.streamMultipleTask(ids, (item, ix) => {
+
+
+        if (isErrorItem(item)) {
+            // these are errors
+            return
+          }
+          
         index++
+
+        
         const itemKeys = Object.keys(item)
         if (allKeysMapping === null) {
             // First item: initialize with its keys
@@ -173,6 +186,11 @@ async function writeDeduplicatedTasks(
     try {
         // @ts-ignore
         await TaskResults.streamMultipleTask(ids, async (item) => {
+            if (isErrorItem(item)) {
+                // these are errors
+                return
+              }
+              
             // If we did early exit, check if this item has new keys
             if (didEarlyExit) {
                 const itemKeys = Object.keys(item)
@@ -391,6 +409,7 @@ class TaskHelper {
         const query = {
             parent_task_id: parentId,
             result_count: { $gte: 1 },
+            status: { $in: [TaskStatus.COMPLETED] }, // status in success
         };
 
         const docs = await db.findAsync(query, { id: 1 }).sort({ sort_id: -1 }) as any[];
@@ -398,7 +417,6 @@ class TaskHelper {
 
         return results;
     }
-
     
 
     static async areAllChildTaskDone(parentId: number): Promise<boolean> {
@@ -620,16 +638,17 @@ class TaskHelper {
 
     static abortTask(taskId: number): Promise<number> {
         const now = new Date();
+        const abortableStatuses = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
         return new Promise((resolve, reject) => {
             db.update(
-                { id: taskId, finished_at: null },
+                { id: taskId, status: { $in: abortableStatuses }, finished_at: null },
                 { $set: { finished_at: now } },
                 {},
                 (err: any, _: any) => {
                     if (err) {
                         reject(err);
                     } else {
-                        this.updateTask(taskId, { status: TaskStatus.ABORTED })
+                        this.updateTask(taskId, { status: TaskStatus.ABORTED }, abortableStatuses)
                             .then(resolve)
                             .catch(reject);
                     }
@@ -669,9 +688,10 @@ class TaskHelper {
 
     static async abortChildTasks(taskId: number) {
         const now = new Date();
+        const abortableStatuses = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
         await new Promise((resolve, reject) => {
             db.update(
-                { parent_task_id: taskId, finished_at: null },
+                { parent_task_id: taskId, status: { $in: abortableStatuses }, finished_at: null },
                 { $set: { finished_at: now } },
                 { multi: true },
                 (err: Error | null, numReplaced: number) => {
@@ -685,7 +705,7 @@ class TaskHelper {
         });
         await new Promise((resolve, reject) => {
             db.update(
-                { parent_task_id: taskId },
+                { parent_task_id: taskId, status: { $in: abortableStatuses } },
                 { $set: { status: TaskStatus.ABORTED } },
                 { multi: true },
                 (err: Error | null, numReplaced: number) => {

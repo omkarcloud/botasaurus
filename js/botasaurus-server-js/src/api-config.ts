@@ -37,6 +37,7 @@ import { cleanDataInPlace } from "botasaurus/output";
 import { db, removeDuplicatesByKey } from "./models";
 import { DEFAULT_TASK_TIMEOUT, MasterExecutor, TaskCompletionPayload, TaskFailurePayload, PushDataChunkPayload, PushDataCompletePayload } from "./master-executor";
 import { WorkerExecutor } from "./worker-executor";
+import { isMaster, isWorker } from "./env"
 
 /**
  * Node role in K8s deployment
@@ -58,15 +59,6 @@ function isValidUrl(urlString: string): boolean {
 /**
  * Parse command line arguments for --master or --worker flags
  */
-function isMaster() {
-    const args = process.argv;
-    return args.includes('--master')
-}
-
-function isWorker() {
-    const args = process.argv;
-    return args.includes('--worker')
-}
 
 /**
  * Check master endpoint health, retrying up to 3 times.
@@ -808,7 +800,7 @@ class ApiConfig {
 
         // Parse command line flags
 
-        if (isMaster()) {
+        if (isMaster) {
             // Validate visibility timeout against scrapers if it's an object
             if (typeof taskTimeout === 'object') {
                 Server.validateAgainstLimit(taskTimeout, 'task timeout');
@@ -820,6 +812,8 @@ class ApiConfig {
             this.nodeRole = 'master';
             console.log("[K8s] Starting as Kubernetes MASTER node 👑");
 
+            // @ts-ignore
+            global.master = true
             // Test self-connectivity (master calls itself)
             // @ts-ignore
             global.checkMasterHealth = () =>{
@@ -832,7 +826,7 @@ class ApiConfig {
                     }
             }, 2000); // Delay to allow server to start
 }
-        } else if (isWorker()) {
+        } else if (isWorker) {
             // Set up worker executor
             // @ts-ignore
             global.executor = new WorkerExecutor(masterEndpoint);

@@ -136,7 +136,7 @@ function isoformat(obj: Date | null | undefined): string | null {
 export function createTaskName(taskName:any, taskId:any) {
   return taskName !== null ? taskName : `Task ${taskId}`;
 }
-function serializeUiOutputTask(obj: Task, _: any): any {
+function serializeUiOutputTask(obj: Task, _: any) {
     const taskId = obj.id;
   
     return {
@@ -147,6 +147,7 @@ function serializeUiOutputTask(obj: Task, _: any): any {
       is_all_task: obj.is_all_task,
       started_at: isoformat(obj.started_at),
       finished_at: isoformat(obj.finished_at),
+      parent_task_id: obj.parent_task_id,
     };
   }
   

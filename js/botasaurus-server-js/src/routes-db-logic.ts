@@ -24,6 +24,7 @@ import { downloadResults, downloadResultsHttp } from './download'
 import { getBotasaurusStorage } from 'botasaurus/botasaurus-storage'
 import { Launcher } from 'chrome-launcher/dist/chrome-launcher';
 import { electronConfig } from './paths'
+import { isMaster } from './env'
 
 
 
@@ -33,14 +34,17 @@ async function performCreateAllTask(
   priority: number,
   scraper_name: string,
   scraper_type: string,
-  all_task_sort_id: number,
-  withResult: boolean = true
+  all_task_sort_id: number, 
+  withResult: boolean = true,
+  splitted_task_length: number = 0
 ): Promise<[any, string]> {
+  const task_name = splitted_task_length ? `All Task (${splitted_task_length} Tasks)` : 'All Task'
+  
   const allTask = new Task({
     id: await getAutoincrementId(),
     status: TaskStatus.PENDING,
     sort_id: all_task_sort_id,
-    task_name: 'All Task',
+    task_name: task_name,
     scraper_name,
     scraper_type,
     is_all_task: true,
@@ -275,7 +279,7 @@ async function performPatchTask(action: string, taskId: number): Promise<void> {
     if (action === 'delete') {
       await deleteTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy);
     } else if (action === 'abort') {
-      await abortTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy);
+      await abortTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy, status);
     } else if (action === 'retry') {
       await retryTask(taskId, is_all_task, parent_task_id, status);
     }
@@ -362,11 +366,13 @@ async function createTasks(
   let all_task_id:any = null;
 
   let tasksData: any[];
+  let splitted_task_length  = 0
   if (split_task) {
     tasksData = await split_task(deepCloneDict(data));
     if (tasksData.length === 0) {
       return [[], [], split_task];
     }
+    splitted_task_length = tasksData.length;
   } else {
     tasksData = [data];
   }
@@ -380,6 +386,7 @@ async function createTasks(
       scraper_type,
       all_task_sort_id,
       withResult,
+      splitted_task_length
     );
     const new_id = all_task_sort_id -1
     // make all task comes at the top
@@ -1028,8 +1035,15 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
     taskId: number,
     is_all_task: boolean,
     parentId: number | null,
-    removeDuplicatesBy: any
+    removeDuplicatesBy: any,
+    status: string
   ): Promise<void> {
+    // Only abort tasks that are in PENDING or IN_PROGRESS status
+    const abortableStatuses: string[] = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
+    if (!abortableStatuses.includes(status)) {
+      return;
+    }
+
     let fn: (() => Promise<void>) | null = null;
   
     if (is_all_task) {
@@ -1178,6 +1192,7 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
     'is_all_task',
     'finished_at',
     'started_at',
+    'parent_task_id',
   ];
   
 async function executeGetUiTasks(page: number): Promise<any> {
@@ -1193,7 +1208,165 @@ async function executeGetUiTasks(page: number): Promise<any> {
     page = 1
   }
 
-  return queryTasks(outputUiTasksEts, false, page, 100, serializeUiOutputTask);
+  const results = await queryTasks(outputUiTasksEts, false, page, 100, serializeUiOutputTask as any)
+  return await enrichWithEta(results);
+}
+
+// Helper: Get average completion time (in seconds) for completed children of a parent
+async function getAverageCompletionTimeForParent(parentTaskId: number): Promise<number | null> {
+  const completedChildren = await db.findAsync(
+    {
+      parent_task_id: parentTaskId,
+      status: TaskStatus.COMPLETED,
+      started_at: { $exists: true, $ne: null },
+      finished_at: { $exists: true, $ne: null },
+    },
+    { started_at: 1, finished_at: 1 }
+  ) as any[];
+  
+  if (!completedChildren || completedChildren.length === 0) {
+    return null;
+  }
+  
+  let totalTime = 0;
+  for (const child of completedChildren) {
+    const startedAt = new Date(child.started_at).getTime();
+    const finishedAt = new Date(child.finished_at).getTime();
+    totalTime += (finishedAt - startedAt) / 1000; // Convert to seconds
+  }
+  
+  return totalTime / completedChildren.length;
+}
+
+// Helper: Get count of remaining (pending + in_progress) children for a parent
+async function getRemainingChildrenCount(parentTaskId: number): Promise<number> {
+  return db.countAsync({
+    parent_task_id: parentTaskId,
+    status: { $in: [TaskStatus.PENDING, TaskStatus.IN_PROGRESS] },
+  }) as unknown as Promise<number>;
+}
+
+interface EnrichedTask {
+  id: number;
+  status: string;
+  task_name: string;
+  result_count: number;
+  is_all_task: boolean;
+  started_at: string | null;
+  finished_at: string | null;
+  parent_task_id: number | null;
+  eta: number | null;
+  eta_text: string | null;
+}
+
+async function enrichWithEta(paginatedResult: any): Promise<any> {
+  const tasks: ReturnType<typeof serializeUiOutputTask>[] = paginatedResult.results;
+  
+  if (!tasks || tasks.length === 0) {
+    return paginatedResult;
+  }
+  
+  // Identify tasks needing ETA (pending or in_progress)
+  const tasksNeedingEta = tasks.filter(
+    (t: any) => t.status === TaskStatus.PENDING || t.status === TaskStatus.IN_PROGRESS
+  );
+  
+  // If no tasks need ETA, return all tasks with eta: null, eta_text: null
+  if (tasksNeedingEta.length === 0) {
+    const enrichedResults = tasks.map((t: any) => ({
+      ...t,
+      eta: null,
+      eta_text: null,
+    }));
+    return { ...paginatedResult, results: enrichedResults };
+  }
+  
+  // Separate by type
+  const allTasks = tasksNeedingEta.filter((t: any) => t.is_all_task === true);
+  const individualTasks = tasksNeedingEta.filter((t: any) => t.is_all_task === false);
+  const tasksWithParent = individualTasks.filter((t: any) => t.parent_task_id != null);
+  
+  // Collect ALL unique parent IDs upfront (from all tasks + individual tasks with parents)
+  const allParentIds = new Set<number>();
+  for (const t of allTasks) {
+    allParentIds.add(t.id);
+  }
+  for (const t of tasksWithParent) {
+    allParentIds.add(t.parent_task_id as number);
+  }
+  
+  // Fetch average times + remaining counts for ALL parents in parallel (single batch)
+  const parentDataMap: Record<number, { avgTime: number | null; remainingCount: number }> = {};
+  
+  await Promise.all(
+    Array.from(allParentIds).map(async (parentId) => {
+      const [remainingCount, avgTime] = await Promise.all([
+        getRemainingChildrenCount(parentId),
+        getAverageCompletionTimeForParent(parentId),
+      ]);
+      parentDataMap[parentId] = { avgTime, remainingCount };
+    })
+  );
+  
+  // Map to store computed ETA data by task id
+  const etaMap: Record<number, { eta: number | null; eta_text: string | null }> = {};
+  
+  // ============ PROCESS ALL TASKS (sync - data already fetched) ============
+  for (const allTask of allTasks) {
+    const { avgTime, remainingCount } = parentDataMap[allTask.id];
+    
+    let eta: number | null = null;
+    let eta_text: string | null = null;
+    
+    if (remainingCount === 0) {
+      eta = null;
+      eta_text = null;
+    } else if (isMaster) {
+      // Master node doesn't execute tasks, so no ETA calculation
+      eta = null;
+      eta_text = `(${remainingCount} tasks remaining)`;
+    } else if (avgTime !== null) {
+      eta = Math.round(remainingCount * avgTime);
+      eta_text = `(${remainingCount} tasks remaining)`;
+    } else {
+      eta = null;
+      eta_text = `(${remainingCount} tasks remaining)`;
+    }
+    
+    etaMap[allTask.id] = { eta, eta_text };
+  }
+  
+  // ============ PROCESS INDIVIDUAL TASKS (sync - data already fetched) ============
+  for (const task of tasksWithParent) {
+    const taskId = task.id;
+    const parentTaskId = task.parent_task_id as number;
+    const { avgTime } = parentDataMap[parentTaskId];
+    
+    if (avgTime === null) {
+      etaMap[taskId] = { eta: null, eta_text: null };
+    } else if (task.status === TaskStatus.PENDING) {
+      etaMap[taskId] = { eta: Math.round(avgTime), eta_text: null };
+    } else {
+      // IN_PROGRESS
+      const startedAt = task.started_at ? new Date(task.started_at).getTime() : null;
+      if (startedAt === null) {
+        etaMap[taskId] = { eta: Math.round(avgTime), eta_text: null };
+      } else {
+        const elapsed = (Date.now() - startedAt) / 1000;
+        etaMap[taskId] = elapsed > avgTime
+          ? { eta: null, eta_text: null }
+          : { eta: Math.round(avgTime), eta_text: null };
+      }
+    }
+  }
+  
+  // ============ BUILD FINAL RESULT ============
+  const enrichedResults: EnrichedTask[] = tasks.map((task: any) => ({
+    ...task,
+    ...(etaMap[task.id] || { eta: null, eta_text: null }),
+  }));
+  
+  return { ...paginatedResult, results: enrichedResults };
 }
 
 async function executePatchTask(page: number, jsonData: any): Promise<any> {
@@ -1211,7 +1384,8 @@ async function executePatchTask(page: number, jsonData: any): Promise<any> {
     await performPatchTask(action, taskId);
   }
 
-  return queryTasks(outputUiTasksEts, false, page, 100, serializeUiOutputTask);
+  const results = await queryTasks(outputUiTasksEts, false, page, 100, serializeUiOutputTask as any);
+  return await enrichWithEta(results);
 }
 
   
