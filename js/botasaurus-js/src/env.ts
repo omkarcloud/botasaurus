@@ -29,8 +29,18 @@ const isGitpodEnvironment: boolean = 'GITPOD_WORKSPACE_ID' in process.env;
 
 const isVmish: boolean = isDocker || isVm || isGitpodEnvironment;
 
-const isWorker: boolean = isInKubernetes && process.env.NODE_TYPE === "WORKER";
-const isMaster: boolean = isInKubernetes && process.env.NODE_TYPE === "MASTER";
+function _isMaster() {
+    const args = process.argv;
+    return args.includes('--master')
+  }
+  
+  function _isWorker() {
+    const args = process.argv;
+    return args.includes('--worker')
+  }
+  
+const isWorker: boolean = _isWorker();
+const isMaster: boolean = _isMaster();
 
 const IS_VM_OR_DOCKER = isDocker || isVm;
 const IS_PRODUCTION = process.env.ENV === "production";
