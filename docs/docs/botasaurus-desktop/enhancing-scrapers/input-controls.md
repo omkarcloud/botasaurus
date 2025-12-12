@@ -112,7 +112,7 @@ A single-select dropdown menu. It requires either an `options` array or a `searc
 **Example - Dynamic Options**
 ```ts
 .select("city", {
-  searchMethod: "getCityOptions",  // Backend method that fetches options
+  searchMethod: "searchCityOptions",  // Backend method that fetches options
   canCreateOptions: true,          // Allow users to create custom options
   defaultValue: {value: 'US__CA__SF', label: "San Francisco"},
 })
@@ -136,7 +136,7 @@ To use `searchMethod`, you need to define async handler functions and add them u
 **Input JS Implementation:**
 ```ts
 .select("city", {
-  searchMethod: "getCityOptions",  // Backend method that fetches options
+  searchMethod: "searchCityOptions",  // Backend method that fetches options
   canCreateOptions: true,          // Allow users to create custom options
   defaultValue: {value: 'US__CA__SF', label: "San Francisco"},
 })
@@ -150,7 +150,7 @@ import { config } from '../../main/config';
 
 const baseUrl = config.isDev ? "http://0.0.0.0:3000" : "https://api.my-app.com";
 
-async function getCityOptions(query: string, data: any) {
+async function searchCityOptions(query: string, data: any) {
   const params = {
     query,
   };
@@ -165,7 +165,7 @@ async function getCityOptions(query: string, data: any) {
 
 // Register the search endpoint
 Server.addSearchOptionsEndpoints({
-  getCityOptions,
+  searchCityOptions,
 });
 ```
 
@@ -193,7 +193,7 @@ A multi-select dropdown menu. It requires either an `options` array or a `search
 **Example - Dynamic Search with Bulk Add**
 ```ts
 .multiSelect("cities", {
-  searchMethod: "getCityOptions",   // Backend method that fetches options
+  searchMethod: "searchCityOptions",   // Backend method that fetches options
   canCreateOptions: true,           // Allow users to create custom options
   canBulkAdd: true,                 // Enable bulk add/edit functionality
   defaultValue: [{value: 'US__CA__SF', label: "San Francisco"}],

@@ -36,9 +36,9 @@ async function performCreateAllTask(
   scraper_type: string,
   all_task_sort_id: number, 
   withResult: boolean = true,
-  splitted_task_length: number = 0
+  splitted_task_length: number
 ): Promise<[any, string]> {
-  const task_name = splitted_task_length ? `All Task (${splitted_task_length} Tasks)` : 'All Task'
+  const task_name = splitted_task_length > 1 ? `All Task (${splitted_task_length} Tasks)` : 'All Task'
   
   const allTask = new Task({
     id: await getAutoincrementId(),

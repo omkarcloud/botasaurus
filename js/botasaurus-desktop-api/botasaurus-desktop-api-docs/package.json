@@ -31,9 +31,9 @@
     "build": "PUBLIC_URL=https://botasaurus-api.omkar.cloud/ react-scripts build && rm -f ./build/static/js/*.map ./build/asset-manifest.json",
     "build-dev": "react-scripts build",
     "test": "react-scripts test",
+    "update": "npm update --legacy-peer-deps botasaurus-controls",
     "eject": "react-scripts eject",
-    "analyze": "source-map-explorer 'build/static/js/*.js'",
-    "update": "npm update botasaurus-controls"
+    "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "eslintConfig": {
     "extends": [
