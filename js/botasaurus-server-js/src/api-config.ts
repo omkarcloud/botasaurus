@@ -498,7 +498,7 @@ export function buildApp(
             apiBasePath || ""
         }";window.routeAliases=${JSON.stringify(
             routeAliases
-        )};</script><script defer="defer" src="https://botasaurus-api.omkar.cloud/static/js/main.5d995feb.js"></script><link href="https://botasaurus-api.omkar.cloud/static/css/main.69260e80.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>`;
+        )};</script><script defer="defer" src="https://botasaurus-api.omkar.cloud/static/js/main.e8772f3d.js"></script><link href="https://botasaurus-api.omkar.cloud/static/css/main.69260e80.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>`;
 
         return reply.type("text/html").send(html);
     });
