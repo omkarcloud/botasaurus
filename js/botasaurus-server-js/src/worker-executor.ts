@@ -320,11 +320,21 @@ export class WorkerExecutor extends TaskExecutor {
         parentTaskId: number | null,
         key: string,
     ): Promise<void> {
-        this.inProgressTaskIds.delete(taskId);
+        
         
         // Determine optimal chunk size based on file size and item count
         const chunkSize = determineChunkSize(taskFilePath, itemCount);
         
+        // If all items fit in a single chunk, use simpler reportTaskSuccess
+        if (chunkSize >= itemCount) {
+            const allItems: any[] = [];
+            await readNdJsonCallback(taskFilePath, async (item) => {
+                allItems.push(item);
+            });
+            return this.reportTaskSuccess(taskId, allItems, isResultDontCached, scraperName, taskData, parentTaskId, key);
+        }
+        
+        this.inProgressTaskIds.delete(taskId);
         // Stream chunks to master (outside mutex to allow other operations)
         let chunk: any[] = [];
         
