@@ -2,7 +2,6 @@ import { statSync } from 'fs';
 
 import { totalmem } from 'os';
 import * as path from 'path';
-import {isMaster} from './env';
 import { getTargetDirectoryPath } from './paths'
 import { getBotasaurusStorage } from 'botasaurus/botasaurus-storage'
 
@@ -18,11 +17,7 @@ function getTotalMemory() {
 const targetDirectory = getTargetDirectoryPath()
 
 function getPath(...paths: string[]): string {
-  if (isMaster) {
-    return path.join(targetDirectory, '..', 'db', ...paths);
-  } else {
-    return path.join(targetDirectory, ...paths);
-  }
+  return path.join(targetDirectory, ...paths);
 }
 
 

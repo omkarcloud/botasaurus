@@ -574,6 +574,18 @@ class _Server {
   getViewIds(scraperName: string): string[] {
     return this.getViews(scraperName).map((v) => v.id);
   }
+
+  /**
+   * Get the parallel count (how many scrapers can run at once) for a task.
+   * Uses scraper_name if scraper-based rate limiting, otherwise scraper_type.
+   */
+  getParallelCount(scraperName: string, scraperType: string): number {
+    const key = this.isScraperBasedRateLimit ? scraperName : scraperType;
+    // @ts-ignore
+    const limit = this.rateLimit[key];
+    // If no limit is set (null/undefined), default to 1
+    return limit != null && limit > 0 ? limit : 1;
+  }
 }
 
 export const Server = new _Server();

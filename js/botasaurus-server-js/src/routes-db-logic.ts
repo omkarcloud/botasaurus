@@ -1193,6 +1193,8 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
     'finished_at',
     'started_at',
     'parent_task_id',
+    'scraper_name',
+    'scraper_type',
   ];
   
 async function executeGetUiTasks(page: number): Promise<any> {
@@ -1324,13 +1326,14 @@ async function enrichWithEta(paginatedResult: any): Promise<any> {
     } else if (isMaster) {
       // Master node doesn't execute tasks, so no ETA calculation
       eta = null;
-      eta_text = `(${remainingCount} tasks remaining)`;
+      eta_text = `${remainingCount} tasks remaining`;
     } else if (avgTime !== null) {
-      eta = Math.round(remainingCount * avgTime);
+      const parallelCount = Server.getParallelCount(allTask.scraper_name, allTask.scraper_type);
+      eta = Math.round((remainingCount * avgTime) / parallelCount);
       eta_text = `(${remainingCount} tasks remaining)`;
     } else {
       eta = null;
-      eta_text = `(${remainingCount} tasks remaining)`;
+      eta_text = `${remainingCount} tasks remaining`;
     }
     
     etaMap[allTask.id] = { eta, eta_text };
@@ -1361,10 +1364,13 @@ async function enrichWithEta(paginatedResult: any): Promise<any> {
   }
   
   // ============ BUILD FINAL RESULT ============
-  const enrichedResults: EnrichedTask[] = tasks.map((task: any) => ({
-    ...task,
-    ...(etaMap[task.id] || { eta: null, eta_text: null }),
-  }));
+  const enrichedResults: EnrichedTask[] = tasks.map((task: any) => {
+    const { parent_task_id, scraper_name, scraper_type, ...rest } = task;
+    return {
+      ...rest,
+      ...(etaMap[task.id] || { eta: null, eta_text: null }),
+    };
+  });
   
   return { ...paginatedResult, results: enrichedResults };
 }

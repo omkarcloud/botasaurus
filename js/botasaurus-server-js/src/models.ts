@@ -148,6 +148,8 @@ function serializeUiOutputTask(obj: Task, _: any) {
       started_at: isoformat(obj.started_at),
       finished_at: isoformat(obj.finished_at),
       parent_task_id: obj.parent_task_id,
+      scraper_name: obj.scraper_name,
+      scraper_type: obj.scraper_type,
     };
   }
   
