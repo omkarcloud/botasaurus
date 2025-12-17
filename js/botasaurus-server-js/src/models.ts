@@ -181,6 +181,40 @@ export function serializeTaskForRunTask(obj: Task){
     result_count: obj.result_count,
   };
 }
+
+function sortDictByKeys(dictionary: Record<string, any>, keys: string[]): Record<string, any> {
+  const newDict: Record<string, any> = {};
+  const extraKeys: string[] = [];
+  
+  try {
+    // Create a Set from keys for O(1) lookups
+    const keysSet = new Set(keys);
+    
+    // Check for any keys in dictionary that aren't in the keys list
+    for (const key in dictionary) {
+      if (!keysSet.has(key)) {
+        extraKeys.push(key);
+      }
+    }
+    
+    // If we found extra keys, raise an error
+    if (extraKeys.length > 0) {
+      throw new Error(`Found keys in dictionary that weren't in keys list: ${extraKeys.join(', ')}`);
+    }
+    
+    // Add all keys from the provided keys list
+    for (const key of keys) {
+      newDict[key] = dictionary[key];
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Failed to sort dict by keys");
+  }
+  return newDict;
+}
+
 async function serializeTask(obj: Task, withResult: boolean): Promise<any> {
   const taskId = obj.id;
   const status = obj.status;
@@ -210,10 +244,12 @@ async function serializeTask(obj: Task, withResult: boolean): Promise<any> {
     updated_at: isoformat(obj.updated_at),
   };
 }
+export type StatusKind = typeof TaskStatus[keyof typeof TaskStatus]
+
 // Task model
 class Task {
     id!: number;
-    status!: string;
+    status!: StatusKind;
     sort_id!: number;
     task_name!: string;
     scraper_name!: string;
@@ -248,7 +284,7 @@ class Task {
 
     return new Task(x)
   }
-  export { getAutoincrementId, createTask, db, Task, TaskStatus, removeDuplicatesByKey, calculateDuration, isoformat, serializeUiOutputTask, serializeUiDisplayTask, serializeTask , initAutoIncrementDb};
+  export { getAutoincrementId, createTask, db, Task, TaskStatus, removeDuplicatesByKey, calculateDuration, isoformat, serializeUiOutputTask, serializeUiDisplayTask, serializeTask, sortDictByKeys, initAutoIncrementDb };
 
 
 

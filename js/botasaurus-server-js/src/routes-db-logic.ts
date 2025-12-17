@@ -1,6 +1,6 @@
 import { isAffirmative } from 'botasaurus/cache'
 import fs from 'fs';
-import { createTask, createTaskName, db, getAutoincrementId, isFailedAndNonAllTask, isoformat, serializeTask, serializeUiDisplayTask, serializeUiOutputTask, Task, TaskStatus } from './models';
+import { createTask, createTaskName, db, getAutoincrementId, isFailedAndNonAllTask, isoformat, serializeTask, serializeUiDisplayTask, serializeUiOutputTask, sortDictByKeys, StatusKind, Task, TaskStatus } from './models';
 import { isNotNullish, isNullish } from './null-utils';
 import { isObject, isNotEmptyObject, wrapDbOperationInPromise } from './utils';
 import { kebabCase } from 'change-case';
@@ -12,15 +12,14 @@ import { applyPagination, calculatePageEnd, calculatePageStart } from './apply-p
 import { applyFiltersInPlace } from './filters';
 import { applySorts } from './sorts';
 import { _applyViewForUi, _applyViewForUiLargeTask, findView, transformRecord, getFields } from './views';
-
-// import { downloadResults } from './download';
-// import { convertUnicodeDictToAsciiDict } from './convert-to-english';
 import { getExecutor } from './executor'
 import { TaskPriority } from './task-executor'
 import { sleep } from 'botasaurus/utils'
 import { JsonHTTPResponseWithMessage } from './errors'
 import { convertUnicodeDictToAsciiDict } from './convert-to-english'
 import { downloadResults, downloadResultsHttp } from './download'
+import { writeNdjsonResults } from './writer'
+import { getPathToDownloadsDirectory } from './paths'
 import { getBotasaurusStorage } from 'botasaurus/botasaurus-storage'
 import { Launcher } from 'chrome-launcher/dist/chrome-launcher';
 import { electronConfig } from './paths'
@@ -600,7 +599,7 @@ async function save(x: [number, string]) {
     return rst;
   }
   
-  function getEts(_: boolean): string[] {
+  function getEts(): string[] {
     return [
       'id',
       'status',
@@ -618,6 +617,7 @@ async function save(x: [number, string]) {
       'started_at',
       'created_at',
       'updated_at',
+      'sort_id',
     ];
   }
   
@@ -680,7 +680,7 @@ async function executeGetTasks(queryParams: Record<string, any>): Promise<any> {
     }
   }
 
-  return queryTasks(getEts(withResults), withResults, page, per_page, serializeTask, parent_task_id);
+  return queryTasks(getEts(), withResults, page, per_page, serializeTask, parent_task_id);
 }
   
   function isValidAllTasks(tasks: any[]): boolean {
@@ -960,9 +960,9 @@ async function performGetTaskResults(taskId: number): Promise<[string, boolean, 
         cleanedResults = convertUnicodeDictToAsciiDictInPlace(cleanedResults);
       }
       if (reply){
-        return downloadResultsHttp(reply,cleanedResults, fmt, filename, null as any, is_large, null);
+        return downloadResultsHttp(reply,cleanedResults, fmt, filename, taskId, is_large, null);
       }
-      return downloadResults(cleanedResults, fmt, filename, null as any, is_large, null, downloadFolder);
+      return downloadResults(cleanedResults, fmt, filename, taskId, is_large, null, downloadFolder);
     }
 }
   // Save MEMORY
@@ -993,6 +993,11 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
           const hasExecutingTasks = await TaskHelper.getPendingOrExecutingChildCount(parentId, taskId);
   
           if (!hasExecutingTasks) {
+            const parentTaskStatus = (await TaskHelper.getTask(parentId)).status
+            if (!([TaskStatus.PENDING, TaskStatus.IN_PROGRESS] as StatusKind[]).includes(parentTaskStatus)) {
+              await TaskHelper.deleteTask(taskId, is_all_task);
+              return 
+            }
             const abortedChildrenCount = await TaskHelper.getAbortedChildrenCount(parentId, taskId);
   
             if (abortedChildrenCount === allChildrenCount) {
@@ -1037,7 +1042,7 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
     parentId: number | null,
     removeDuplicatesBy: any,
     status: string
-  ): Promise<void> {
+  ) {
     // Only abort tasks that are in PENDING or IN_PROGRESS status
     const abortableStatuses: string[] = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
     if (!abortableStatuses.includes(status)) {
@@ -1059,6 +1064,12 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
           const hasExecutingTasks = await TaskHelper.getPendingOrExecutingChildCount(parentId, taskId);
   
           if (!hasExecutingTasks) {
+            const parentTaskStatus = (await TaskHelper.getTask(parentId)).status
+            if (!([TaskStatus.PENDING, TaskStatus.IN_PROGRESS] as StatusKind[]).includes(parentTaskStatus)) {
+              await TaskHelper.abortTask(taskId);
+              return 
+            }
+
             const abortedChildrenCount = await TaskHelper.getAbortedChildrenCount(parentId, taskId);
   
             if (abortedChildrenCount === allChildrenCount) {
@@ -1195,22 +1206,136 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
     'parent_task_id',
     'scraper_name',
     'scraper_type',
+    'sort_id',
   ];
-  
-async function executeGetUiTasks(page: number): Promise<any> {
-  if (isNotNullish(page) ) {
+
+// Helper: escape regex special characters
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Helper: check if string is numeric
+function isNumericString(str: string): boolean {
+  return /^\d+$/.test(str);
+}
+
+// Interface for task filters
+interface TaskFilters {
+  page?: number;
+  search?: string;
+  status?: string;
+  taskKind?: string;
+  scraperName?: string;
+}
+
+// Build NeDB query filter object from filter parameters
+function buildTaskQueryFilter(filters: TaskFilters): Record<string, any> {
+  const queryFilter: Record<string, any> = {};
+
+  // Search filter (search by ID or task_name)
+  if (filters.search && filters.search.trim() !== '') {
+    const searchTerm = filters.search.trim();
+
+    if (isNumericString(searchTerm)) {
+      const taskId = parseInt(searchTerm, 10);
+      queryFilter.$or = [
+        { id: taskId },
+        { task_name: { $regex: new RegExp(escapeRegex(searchTerm), 'i') } }
+      ];
+    } else {
+      // Text search on task_name only (case-insensitive)
+      queryFilter.task_name = { $regex: new RegExp(escapeRegex(searchTerm), 'i') };
+    }
+  }
+
+  // Status filter
+  if (filters.status && filters.status !== 'any') {
+    queryFilter.status = filters.status;
+  }
+
+  // Task Kind filter
+  if (filters.taskKind && filters.taskKind !== 'any') {
+    switch (filters.taskKind) {
+      case 'parent':
+        queryFilter.is_all_task = true;
+        break;
+      case 'subtask':
+        queryFilter.parent_task_id = { $ne: null };
+        break;
+    }
+  }
+
+  // Scraper Name filter
+  if (filters.scraperName && filters.scraperName !== 'any') {
+    queryFilter.scraper_name = filters.scraperName;
+  }
+
+  return queryFilter;
+}
+
+// Query tasks with filter support
+async function queryTasksWithFilters(
+  ets: string[],
+  withResults: boolean,
+  page: number,
+  per_page: number,
+  serializer: (task: any, withResults: boolean) => Promise<any>,
+  queryFilter: Record<string, any> = {}
+): Promise<any> {
+  const projectionFields = createProjection(ets);
+
+  const total_count = await wrapDbOperationInPromise((cb: any) => db.count(queryFilter, cb));
+
+  const total_pages = Math.max(Math.ceil(total_count / per_page), 1);
+  page = isNullish(page) ? 1 : Math.max(Math.min(page, total_pages), 1);
+
+  const tasks = await wrapDbOperationInPromise((cb: any) => {
+    db.find(queryFilter)
+      .projection(projectionFields)
+      .sort({ sort_id: -1 })
+      .skip((page - 1) * per_page)
+      .limit(per_page)
+      .exec(cb);
+  });
+
+  const currentPage = page;
+  const nextPage = currentPage * per_page < total_count ? currentPage + 1 : null;
+  const previousPage = currentPage > 1 ? currentPage - 1 : null;
+
+  return {
+    count: total_count,
+    total_pages,
+    next: nextPage ? createPageUrl(nextPage, per_page, withResults) : null,
+    previous: previousPage ? createPageUrl(previousPage, per_page, withResults) : null,
+    results: await Promise.all(tasks.map((task: any) => serializer(task, withResults))),
+  };
+}
+
+async function executeGetUiTasks(filters: TaskFilters = {}): Promise<any> {
+  let page = filters.page;
+
+  if (isNotNullish(page)) {
     page = tryIntConversion(page, "Invalid 'page' parameter. It must be a positive integer.");
     if (!isValidPositiveInteger(page)) {
       throw new JsonHTTPResponseWithMessage(
         "Invalid 'page' parameter. It must be a positive integer."
       );
-        
     }
-  }else{
-    page = 1
+  } else {
+    page = 1;
   }
 
-  const results = await queryTasks(outputUiTasksEts, false, page, 100, serializeUiOutputTask as any)
+  // Build query filter from filter parameters
+  const queryFilter = buildTaskQueryFilter(filters);
+
+  const results = await queryTasksWithFilters(
+    outputUiTasksEts,
+    false,
+    page,
+    100,
+    serializeUiOutputTask as any,
+    queryFilter
+  );
   return await enrichWithEta(results);
 }
 
@@ -1375,13 +1500,19 @@ async function enrichWithEta(paginatedResult: any): Promise<any> {
   return { ...paginatedResult, results: enrichedResults };
 }
 
-async function executePatchTask(page: number, jsonData: any): Promise<any> {
-  page = tryIntConversion(page, "Invalid 'page' parameter. Must be a positive integer.");
-  if (!isValidPositiveInteger(page)) {
-    throw new JsonHTTPResponseWithMessage(
-      "Invalid 'page' parameter. Must be a positive integer.",
-      400
-    );
+async function executePatchTask(filters: TaskFilters, jsonData: any): Promise<any> {
+  let page = filters.page;
+  
+  if (isNotNullish(page)) {
+    page = tryIntConversion(page, "Invalid 'page' parameter. Must be a positive integer.");
+    if (!isValidPositiveInteger(page)) {
+      throw new JsonHTTPResponseWithMessage(
+        "Invalid 'page' parameter. Must be a positive integer.",
+        400
+      );
+    }
+  } else {
+    page = 1;
   }
 
   const [action, taskIds] = validateUiPatchTask(jsonData);
@@ -1390,7 +1521,17 @@ async function executePatchTask(page: number, jsonData: any): Promise<any> {
     await performPatchTask(action, taskId);
   }
 
-  const results = await queryTasks(outputUiTasksEts, false, page, 100, serializeUiOutputTask as any);
+  // Build query filter from filter parameters
+  const queryFilter = buildTaskQueryFilter(filters);
+
+  const results = await queryTasksWithFilters(
+    outputUiTasksEts,
+    false,
+    page,
+    100,
+    serializeUiOutputTask as any,
+    queryFilter
+  );
   return await enrichWithEta(results);
 }
 
@@ -1494,6 +1635,151 @@ function checkViewForListField(view: string | null, scraper_name: string): any {
     return [containsListField, results];
   }
   
+// Fields for task list download - all fields needed by serializeTask
+const downloadTaskListEts = [
+  'id',
+  'task_name',
+  'scraper_name',
+  'scraper_type',
+  'status',
+  'priority',
+  'is_large',
+  'result_count',
+  'started_at',
+  'finished_at',
+  'created_at',
+  'updated_at',
+  'is_all_task',
+  'parent_task_id',
+  'data',
+  'meta_data',
+  'sort_id',
+];
+
+// Format duration as human readable string
+function timeToHumanReadable(seconds:number|null) {
+  if (seconds === null) {
+    return '';
+  }
+  if (seconds === 0) {
+    return '0s';
+  }
+
+  // remove decimals using bitwise
+  seconds = ~~seconds;
+
+  if (seconds < 60) return `${seconds}s`;
+
+  let time = '';
+  const days = Math.floor(seconds / 86400);
+  seconds %= 86400;
+  const hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+  const minutes = Math.floor(seconds / 60);
+  seconds = seconds % 60;
+
+  if (days > 0) time += `${days}d `;
+  if (hours > 0) time += `${hours}h `;
+  if (minutes > 0) time += `${minutes}m `;
+  if (seconds > 0) {
+    time += `${seconds}s`;
+  }
+
+  return time.trim();
+}
+
+
+// Get error message for failed tasks
+async function getTaskError(taskId: number, status: string): Promise<string | null> {
+  if (status !== TaskStatus.FAILED) return null;
+  
+  try {
+    const results = await TaskResults.getTask(taskId, 1);
+    if (Array.isArray(results) && results.length > 0) {
+      return results[0];
+    }
+  } catch {
+    // Ignore errors
+  }
+  return null;
+}
+
+// Key order for task list download
+const TASK_DOWNLOAD_KEY_ORDER = [
+  'id',
+  'task_name',
+  'status',
+  'error',
+  'scraper_name',
+  'scraper_type',
+  'result_count',
+  'duration',
+  'duration_seconds',
+  'started_at',
+  'finished_at',
+  'created_at',
+  'updated_at',
+  'priority',
+  'is_all_task',
+  'is_large',
+  'parent_task_id',
+  'data',
+  'metadata',
+];
+
+// Serialize task for download with all relevant fields
+async function serializeTaskForDownload(task: Task): Promise<Record<string, any>> {
+  // Use serializeTask to get base serialization (without result data)
+  const serialized = await serializeTask(task, false);
+  
+  // Add error for failed tasks
+  const error = await getTaskError(task.id, task.status);
+  serialized.error = error ?? '';
+  
+  // Rename duration to duration_seconds and add human-readable duration
+  serialized.duration_seconds = serialized.duration;
+  serialized.duration = timeToHumanReadable(serialized.duration_seconds);
+  
+  // Order keys appropriately
+  return sortDictByKeys(serialized, TASK_DOWNLOAD_KEY_ORDER);
+}
+
+// Download task list with filters
+async function executeDownloadTaskList(filters: TaskFilters, downloadParams: any): Promise<any> {
+  const { format: fmt } = downloadParams;
+  
+  // Build query filter
+  const queryFilter = buildTaskQueryFilter(filters);
+  const projectionFields = createProjection(downloadTaskListEts);
+  
+  // Get all matching tasks (no pagination for download)
+  const tasks: any[] = await wrapDbOperationInPromise((cb: any) => {
+    db.find(queryFilter)
+      .projection(projectionFields)
+      .sort({ sort_id: -1 })
+      .exec(cb);
+  });
+  
+  // Serialize all tasks for download
+  const results = await Promise.all(tasks.map(serializeTaskForDownload));
+  
+  // Generate unique filename with date and time
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const filename = `task-list-${timestamp}`;
+  
+  // Use default downloads folder
+  const targetFolder = electronConfig.downloadsPath;
+  
+  if (fmt === 'ndjson') {
+    // Handle ndjson separately - write array as ndjson
+    const filePath = getPathToDownloadsDirectory(filename, targetFolder);
+    return writeNdjsonResults(results, filePath);
+  }
+  
+  return downloadResults(results, fmt, filename, null as any, false, null, targetFolder);
+}
+
   export {
     executeAsyncTask,
     executeAsyncTasks,
@@ -1502,6 +1788,7 @@ function checkViewForListField(view: string | null, scraper_name: string): any {
     executeGetTasks,
     executeGetTaskResults,
     executeTaskResults,
+    executeDownloadTaskList,
     executeGetAppProps,
     executeIsAnyTaskFinished,
     executeIsTaskUpdated,

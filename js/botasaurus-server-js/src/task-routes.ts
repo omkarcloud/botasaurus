@@ -2,6 +2,7 @@ import { validateAndGetTaskId, validatePatchTask } from './validation';
 import {
   executeAsyncTask,
   executeAsyncTasks,
+  executeDownloadTaskList,
   executeGetAppProps,
   executeGetTaskResults,
   executeGetTasks,
@@ -125,20 +126,43 @@ async function isTaskUpdated(jsonData: any) {
 }
 
 async function getTasksForUiDisplay(queryParams: any) {
-  const page = queryParams.page;
-  const result = await executeGetUiTasks(page);
+  const filters = {
+    page: queryParams.page,
+    search: queryParams.search,
+    status: queryParams.status,
+    taskKind: queryParams.task_kind,
+    scraperName: queryParams.scraper_name,
+  };
+  const result = await executeGetUiTasks(filters);
   return result;
 }
 
 async function patchTask(queryParams: any, jsonData: any) {
-  const page = queryParams.page;
-  const result = await executePatchTask(page, jsonData);
+  const filters = {
+    page: queryParams.page,
+    search: queryParams.search,
+    status: queryParams.status,
+    taskKind: queryParams.task_kind,
+    scraperName: queryParams.scraper_name,
+  };
+  const result = await executePatchTask(filters, jsonData);
   return result;
 }
 
 async function getUiTaskResults(taskId: number, queryParams: any, jsonData: any, ) {
   const final = await executeGetUiTaskResults(validateAndGetTaskId(taskId), jsonData, queryParams);
   return final;
+}
+
+async function downloadTaskList(queryParams: any, jsonData: any) {
+  const filters = {
+    search: queryParams.search,
+    status: queryParams.status,
+    taskKind: queryParams.task_kind,
+    scraperName: queryParams.scraper_name,
+  };
+  const result = await executeDownloadTaskList(filters, jsonData);
+  return result;
 }
 
 async function getSearchOptions(searchMethod: string, query: string, data: any) {
@@ -197,6 +221,7 @@ export {
   getTask,
   getTaskResults,
   downloadTaskResults,
+  downloadTaskList,
   abortSingleTask,
   deleteSingleTask,
   retrySingleTask,

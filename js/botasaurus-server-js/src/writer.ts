@@ -4,6 +4,7 @@ import { CSVWriteStream, JSONWriteStream, readNdJsonCallback } from './ndjson'
 import { isNullish } from './null-utils'
 import ExcelJS, {Worksheet} from 'exceljs'
 import path from 'path'
+import { copyFile } from 'fs'
 
 function trimFilename(filename: string): string {
   filename = filename.trim()
@@ -191,6 +192,57 @@ function fixExcelFilename(filename: string): string {
   return filename
 }
 
+function fixNdjsonFilename(filename: string): string {
+  filename = trimFilename(filename)
+
+  if (!filename.endsWith('.ndjson')) {
+    filename = filename + '.ndjson'
+  }
+  return filename
+}
+
+export function doCopyFile(fromPath: string, toPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    copyFile(fromPath, toPath, (copyErr: any) => {
+      if (copyErr) {
+        reject(copyErr);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+async function writeNdjson(inputFilePath: string, filename: string): Promise<string> {
+  try {
+    filename = fixNdjsonFilename(filename)
+    await doCopyFile(inputFilePath, filename)
+  } catch (error: any) {
+    if (isFileOpenError(error)) {
+      const baseFilename = path.basename(filename)
+      throw new Error(`${baseFilename} is currently open in another application. Please close the application and try again.`)
+    }
+    throw error
+  }
+  return filename
+}
+
+// Write results array as NDJSON (newline-delimited JSON)
+async function writeNdjsonResults(data: any[], filename: string): Promise<string> {
+  try {
+    filename = fixNdjsonFilename(filename)
+    const ndjsonContent = data.map(item => JSON.stringify(item)).join('\n')
+    await _writeFile(ndjsonContent, filename)
+  } catch (error: any) {
+    if (isFileOpenError(error)) {
+      const baseFilename = path.basename(filename)
+      throw new Error(`${baseFilename} is currently open in another application. Please close the application and try again.`)
+    }
+    throw error
+  }
+  return filename
+}
+
 
 
 async function writeExcel(data: any[], filename: string ): Promise<string> {
@@ -336,8 +388,11 @@ export {
   writeJsonStreamed,writeJson,writeCsvStreamed,
   writeCsv,
   writeExcelStreamed,writeExcel,
+  writeNdjson,
+  writeNdjsonResults,
   fixExcelFilename, 
   fixCsvFilename, 
   fixJsonFilename,
+  fixNdjsonFilename,
   makeWorksheet, makeWorksheetStreamed,
 }

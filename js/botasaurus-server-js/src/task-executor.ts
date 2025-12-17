@@ -593,7 +593,7 @@ class TaskExecutor {
     protected async reportTaskFailure(taskId: any, exceptionLog: any, parent_task_id: any, _key: string) {
         await this.markTaskAsFailure(taskId, exceptionLog)
         if (parent_task_id) {
-            await this.updateParentTask(taskId, exceptionLog)
+            await this.updateParentTask(taskId, [])
         }
     }
 

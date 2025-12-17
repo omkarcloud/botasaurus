@@ -385,6 +385,7 @@ class _Server {
         views: viewsJson,
         default_sort: defaultSort,
         max_runs: this.getMaxRuns(scraper),
+        create_all_task: scraper.create_all_task,
       });
     }
 

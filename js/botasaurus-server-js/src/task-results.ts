@@ -1,10 +1,11 @@
-import {  writeFileSync, readdirSync, copyFile } from 'fs';
+import {  writeFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import {  pathTaskResultsTasks,  pathTaskResultsCache, cacheStoragePath, isLargeFile, pathTaskResultsCacheDirect } from './utils';
 import { _readJsonFiles, _has,_remove, _deleteItems, _hash, readJson} from 'botasaurus/cache';
 import { LocalStorage } from 'botasaurus/botasaurus-storage';
 import { appendNdJson, readNdJson, readNdJsonCallback, writeNdJson, NDJSONWriteStream } from './ndjson'
 import { writeJson } from 'botasaurus/utils'
+import { doCopyFile } from './writer'
 
 
 let _storage: LocalStorage | null = null;
@@ -33,17 +34,6 @@ function getFiles(): string[] {
 }
 
 
-function doCopyFile(fromPath: string, toPath: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    copyFile(fromPath, toPath, (copyErr:any) => {
-      if (copyErr) {
-          reject(copyErr);
-      } else {
-          resolve();
-      }
-  });
-  });
-}
 
 
 async function computeItemDetails(cache_key: string ) {

@@ -5,6 +5,7 @@ import { readFile as _readFile, writeJson as _writeJson, readJson as _readJson, 
 import { convertNestedToJsonForExcelInPlace,} from 'botasaurus/output'
 import ExcelJS from 'exceljs'
 import { makeWorksheet, makeWorksheetStreamed } from './writer'
+import * as fs from 'fs'
 function applyFunctionToResultSync(result: any, fn: (item: any) => any) {
   if (Array.isArray(result)) {
     for (const item of result) {
@@ -118,9 +119,28 @@ async function writeWorkbookStreamed(inputFilePath: any, rawStream: NodeJS.Writa
     makeWorksheetStreamed(worksheet, inputFilePath, streamFn)
   );
 }
+
+function writeNdjson(inputFilePath: string, rawStream: NodeJS.WritableStream): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const readStream = fs.createReadStream(inputFilePath, { encoding: 'utf-8' });
+    
+    readStream.on('error', (err) => {
+      reject(err);
+    });
+    
+    readStream.on('end', () => {
+      rawStream.end();
+      resolve();
+    });
+    
+    readStream.pipe(rawStream as any, { end: false });
+  });
+}
+
 export default {
   writeJsonStreamed,writeCsvStreamed,
   writeCsv,
   writeExcelStreamed,writeExcel,
-  writeJson
+  writeJson,
+  writeNdjson
 }

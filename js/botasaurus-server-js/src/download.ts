@@ -1,4 +1,4 @@
-import {writeExcelStreamed, writeJsonStreamed, writeJson, writeCsvStreamed, writeCsv, writeExcel } from './writer'; // Fixed import statement
+import {writeExcelStreamed, writeJsonStreamed, writeJson, writeCsvStreamed, writeCsv, writeExcel, writeNdjson } from './writer'; // Fixed import statement
 import writterHttp from './writer-http'; // Fixed import statement
 import { getPathToDownloadsDirectory } from './paths'
 import { TaskResults } from './task-results'
@@ -27,6 +27,9 @@ export function downloadResults(results: Array<Record<string, any>>, fmt: string
         } else {
             return writeExcel(results, filePath);
         }        
+    } else if (fmt === "ndjson") {
+        // Files are already stored as NDJSON, so just copy the file
+        return writeNdjson(TaskResults.generateTaskFilePath(taskId), filePath);
     }
 
     throw new Error("Unsupported format");
@@ -63,6 +66,12 @@ export async function downloadResultsHttp(reply: any, results: Array<Record<stri
         } else {
             return writterHttp.writeExcel(results, reply.raw);
         }     
+    } else if (fmt === "ndjson") {
+        headers["Content-Type"] = "application/x-ndjson";
+        headers["Content-Disposition"] = `attachment; filename="${filename}.ndjson"`;
+        reply.raw.writeHead(200, headers);
+        // Files are already stored as NDJSON, so stream directly
+        return writterHttp.writeNdjson(TaskResults.generateTaskFilePath(taskId), reply.raw);
     } else {
         throw new Error("Unsupported format");
     }

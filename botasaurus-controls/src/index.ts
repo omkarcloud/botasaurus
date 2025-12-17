@@ -430,7 +430,36 @@ const parseListOfTexts = (value:any)=>{
   }
   return value;
 }
+function createHelpfulJsonError(e: any, trimmedValue: string) {
+  const errorMessage = e.message || 'Invalid JSON'
 
+  // Extract position info if available
+  const positionMatch = errorMessage.match(/position\s+(\d+)/i)
+  const position = positionMatch ? parseInt(positionMatch[1], 10) : null
+
+  let helpfulMessage = 'Invalid JSON: '
+
+  // Check for common mistakes
+  if (trimmedValue.includes("'") && !trimmedValue.includes('"')) {
+    helpfulMessage += "Use double quotes (\") instead of single quotes (') for strings."
+  } else if (/,\s*[}\]]/.test(trimmedValue)) {
+    helpfulMessage += "Trailing comma found. Remove the comma before the closing bracket."
+  } else if (errorMessage.includes('Unexpected token')) {
+    if (position !== null) {
+      const contextStart = Math.max(0, position - 10)
+      const contextEnd = Math.min(trimmedValue.length, position + 10)
+      const context = trimmedValue.substring(contextStart, contextEnd)
+      helpfulMessage += `Unexpected character near position ${position}: "...${context}..."`
+    } else {
+      helpfulMessage += errorMessage
+    }
+  } else if (errorMessage.includes('Unexpected end')) {
+    helpfulMessage += "JSON is incomplete. Check for missing closing brackets or quotes."
+  } else {
+    helpfulMessage += errorMessage
+  }
+  return helpfulMessage
+}
 function parseJSON(value: any): { parsed: any; error: string | null } {
   if (typeof value !== 'string') {
     return { parsed: value, error: null };
@@ -446,33 +475,7 @@ function parseJSON(value: any): { parsed: any; error: string | null } {
     return { parsed, error: null };
   } catch (e: any) {
     // Provide helpful error messages based on common JSON mistakes
-    const errorMessage = e.message || 'Invalid JSON';
-    
-    // Extract position info if available
-    const positionMatch = errorMessage.match(/position\s+(\d+)/i);
-    const position = positionMatch ? parseInt(positionMatch[1], 10) : null;
-    
-    let helpfulMessage = 'Invalid JSON: ';
-    
-    // Check for common mistakes
-    if (trimmedValue.includes("'") && !trimmedValue.includes('"')) {
-      helpfulMessage += "Use double quotes (\") instead of single quotes (') for strings.";
-    } else if (/,\s*[}\]]/.test(trimmedValue)) {
-      helpfulMessage += "Trailing comma found. Remove the comma before the closing bracket.";
-    } else if (errorMessage.includes('Unexpected token')) {
-      if (position !== null) {
-        const contextStart = Math.max(0, position - 10);
-        const contextEnd = Math.min(trimmedValue.length, position + 10);
-        const context = trimmedValue.substring(contextStart, contextEnd);
-        helpfulMessage += `Unexpected character near position ${position}: "...${context}..."`;
-      } else {
-        helpfulMessage += errorMessage;
-      }
-    } else if (errorMessage.includes('Unexpected end')) {
-      helpfulMessage += "JSON is incomplete. Check for missing closing brackets or quotes.";
-    } else {
-      helpfulMessage += errorMessage;
-    }
+    let helpfulMessage = createHelpfulJsonError(e, trimmedValue)
     
     return { parsed: null, error: helpfulMessage };
   }
@@ -1204,7 +1207,6 @@ private parse(data: any) {
   }
 }
 
-
 function isInvalidFileType(file: any, acceptedFileTypes: any) {
   const fileExtension = file.name.split(".").pop()?.toLowerCase()
   return !acceptedFileTypes.includes(fileExtension)
@@ -1251,3 +1253,4 @@ function createControls(input_js: string | Function) {
 
 
 export { Controls, createControls, FileTypes }
+

@@ -385,6 +385,34 @@ async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId: num
     return [itemsCount, taskFilePath]
 }
 
+async function generateAllTaskSummaryName(parentId: number){
+    // Get all counts in parallel for efficiency
+    const [totalCount, failedCount, abortedCount] = await Promise.all([
+        TaskHelper.getAllChildrenCount(parentId),
+        TaskHelper.getFailedChildrenCount(parentId),
+        TaskHelper.getAbortedChildrenCount(parentId),
+    ])
+
+    if (totalCount <=1) {
+        return null
+    }
+
+    const completedCount = totalCount - failedCount - abortedCount
+
+    // Build summary parts - always include done, only include failed/aborted if > 0
+    const parts: string[] = [`${completedCount} done`]
+
+    if (failedCount > 0) {
+        parts.push(`${failedCount} failed`)
+    }
+
+    if (abortedCount > 0) {
+        parts.push(`${abortedCount} aborted`)
+    }
+
+    // Format: "All Task (1000 Tasks: 100 done, 3 failed, 907 aborted)"
+    return `All Task (${totalCount} Tasks: ${parts.join(', ')})`
+}
 
 class TaskHelper {
     static async getCompletedChildrenIds(
@@ -580,31 +608,28 @@ class TaskHelper {
         });
     }
 
-    static deleteChildTasks(taskId: number): Promise<void> {
-        return new Promise((resolve, reject) => {
-            db.find(
-                { parent_task_id: taskId },
-                (err: Error | null, tasks: any[]) => {
-                    if (err) {
-                        return reject(err);
-                    }
-
-                    const ids = tasks.map((task) => task.id);
-                    db.remove(
-                        { parent_task_id: taskId },
-                        { multi: true },
-                        (removeErr: Error | null) => {
-                            if (removeErr) {
-                                return reject(removeErr);
-                            } else {
-                                return resolve(TaskResults.deleteTasks(ids));
-                            }
-                        }
-                    );
+    static async deleteChildTasks(taskId: number): Promise<void> {
+        const tasks = await db.findAsync({ parent_task_id: taskId }, { id: 1 });
+        const ids = tasks.map((task: any) => task.id);
+        TaskResults.deleteTasks(ids);
+        
+        try {
+            await db.removeAsync({ parent_task_id: taskId }, { multi: true });
+        } catch (error) {
+            // Fallback to batch deletion on stack overflow (large datasets)
+            if (error instanceof RangeError && error.message.includes('call stack')) {
+                const BATCH_SIZE = 1000;
+                for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+                    const batchIds = ids.slice(i, i + BATCH_SIZE);
+                    await db.removeAsync({ id: { $in: batchIds } }, { multi: true });
                 }
-            );
-        });
+            } else {
+                console.error("DELETE CHILD TASKS FAILED", error);
+                throw error;
+            }
+        }
     }
+
 
     static updateTask(
         taskId: number,
@@ -687,22 +712,8 @@ class TaskHelper {
     }
 
     static async abortChildTasks(taskId: number) {
-        const now = new Date();
         const abortableStatuses = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
-        await new Promise((resolve, reject) => {
-            db.update(
-                { parent_task_id: taskId, status: { $in: abortableStatuses }, finished_at: null },
-                { $set: { finished_at: now } },
-                { multi: true },
-                (err: Error | null, numReplaced: number) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(numReplaced);
-                    }
-                }
-            );
-        });
+        
         await new Promise((resolve, reject) => {
             db.update(
                 { parent_task_id: taskId, status: { $in: abortableStatuses } },
@@ -742,6 +753,7 @@ class TaskHelper {
             result_count: itemsCount,
             status: status,
             is_large: isLarge,
+            ...await TaskHelper.getSummaryTaskName(parentId),
         }
         if (shouldFinish) {
             // this flow ran by task deletion/abortuin
@@ -753,6 +765,18 @@ class TaskHelper {
         }
 
         return this.updateTask(parentId, taskUpdateDetails)
+    }
+
+    private static async getSummaryTaskName(parentId: number) {
+        const summaryName = await generateAllTaskSummaryName(parentId)
+
+        if (!summaryName) {
+            return {}
+        }
+
+        return {
+            task_name: summaryName
+        }
     }
 
     static async collectAndSaveAllTaskForAbortedTask(
@@ -789,6 +813,7 @@ class TaskHelper {
             status: status,
             finished_at: finished_at,
             is_large: isLarge,
+            ...await TaskHelper.getSummaryTaskName(parentId),
         }
         const update_result = this.updateTask(parentId, taskUpdateData)
         return update_result;

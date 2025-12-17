@@ -1,7 +1,7 @@
 import {  JsonHTTPResponseWithMessage } from './errors';
 import { getScraperErrorMessage, Server } from './server';
 import { isNotNullish, isNullish } from './null-utils';
-import { isObject, isNotEmptyObject, parseBoolean } from './utils';
+import { isObject, isNotEmptyObject, parseBoolean, isEmpty } from './utils';
 
 
 export function tryIntConversion(value: any, errorMessage: string): number {
@@ -219,7 +219,7 @@ export function validateView(jsonData: any, allowedViews: string[]): string | un
 export function validateSort(jsonData: any, allowedSorts: string[], defaultSort: string): string | null {
     let sort = jsonData.sort ?? defaultSort;
 
-    if (sort === 'no_sort') {
+    if (sort === 'no_sort' || isEmpty(sort)) {
         sort = null;
     } else if (isNotNullish(sort)) {
         if (!isStringOfMinLength(sort)) {
@@ -284,8 +284,8 @@ export function validateDownloadParams(jsonData: any, allowedSorts: string[], al
     }
 
     fmt = fmt.toLowerCase();
-    if (!['json', 'csv', 'excel'].includes(fmt)) {
-        throw new JsonHTTPResponseWithMessage('Invalid format. Must be one of: JSON, CSV, Excel');
+    if (!['json', 'csv', 'excel', 'ndjson'].includes(fmt)) {
+        throw new JsonHTTPResponseWithMessage('Invalid format. Must be one of: JSON, CSV, Excel, NDJSON');
     }
 
     const filters = validateFilters(jsonData);

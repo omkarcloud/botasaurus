@@ -57,10 +57,6 @@ function isValidUrl(urlString: string): boolean {
 }
 
 /**
- * Parse command line arguments for --master or --worker flags
- */
-
-/**
  * Check master endpoint health, retrying up to 3 times.
  */
 async function checkMasterHealth(masterEndpoint: string) {
@@ -452,9 +448,8 @@ export function buildApp(
     enable_cache: boolean
 ): FastifyInstance {
     const app = fastify({
-        logger: true,
-        // TODO: change appropriately as needed
-        bodyLimit: 500 * 1024 * 1024 // 500MB
+        logger: !isMaster,
+        bodyLimit: 250 * 1024 * 1024 // 250MB (2.5× headroom for 100MB chunks)
     });
 
     // Add CORS handling
