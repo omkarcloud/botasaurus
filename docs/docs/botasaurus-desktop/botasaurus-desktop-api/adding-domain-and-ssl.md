@@ -43,17 +43,18 @@ The process involves two main steps:
 
    I recommend these registrars:
 
-   - **Cloudflare Domains** - Cheapest option (offers at-cost pricing, charging only the  ICANN registry fees with no markup)
+   - **Cloudflare Domains** - Cheapest option (offers at-cost pricing, charging only the ICANN registry fees with no markup)
    - **Porkbun** - Second cheapest option
-   - **Namecheap**
 
-   Avoid GoDaddy. While their initial registration costs are low, renewal prices are significantly higher than Porkbun and Namecheap, costing more in the long run.
+   Avoid GoDaddy and Namecheap. 
+    - Although their initial registration costs are low, their renewal prices are significantly higher than Porkbun and Cloudflare Domains. Therefore, it is unwise to buy from them.
+    - Also, do not even search for a domain on GoDaddy. They may purchase the domain themselves and then offer it to you at a much higher price.
 
-   I personally use Porkbun because it offers auto-renewals and sends multiple renewal reminders (45 days and 30 days before expiry), so I don't forget to renew my domains.
+   I personally use Porkbun because it offers automatic renewals 45 days before expiry and sends multiple renewal reminders (45 days and 30 days before expiry), so I don't forget to renew my domains.
 
    ![Porkbun Renewal Emails](https://raw.githubusercontent.com/omkarcloud/botasaurus/master/images/domains/porkbun-renewal-emails.png)
 
-   Also, Porkbun's logo and branding are funny, nevertheless they provide a good experience and are [highly ratings on Trustpilot.](https://www.trustpilot.com/review/porkbun.com)
+   Also, Porkbun's logo and branding are funny, nevertheless they provide a good experience and are [highly rated on Trustpilot.](https://www.trustpilot.com/review/porkbun.com)
 
 2. Next, log in to your domain registrar and create DNS **A records** pointing to your VM's IP address.
 

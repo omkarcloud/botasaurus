@@ -154,8 +154,8 @@ class TaskExecutor {
                 if (isAllChildTasksDone) {
                   const is_large: any = parentTask.is_large
       
-                  const failedChildrenCount = await TaskHelper.getFailedChildrenCount(parentId)
-                  const status = failedChildrenCount ? TaskStatus.FAILED : TaskStatus.COMPLETED
+                  const hasFailedChildrenCount = await TaskHelper.hasFailedChildren(parentId)
+                  const status = hasFailedChildrenCount ? TaskStatus.FAILED : TaskStatus.COMPLETED
                   
                   const removeDuplicatesBy = Server.getRemoveDuplicatesBy(parentTask.scraper_name)
                   // Find the oldest started_at task that is the parent of the current task
@@ -644,13 +644,12 @@ class TaskExecutor {
     ) {
         const parentTask = await TaskHelper.getTask(
             parentId,
-            [TaskStatus.PENDING, TaskStatus.IN_PROGRESS],
         )
 
         if (parentTask) {
             const is_large: any = parentTask.is_large
             await TaskHelper.updateParentTaskResults(parentId, result, is_large)
-            await this.finalizeParentIfAllChildrenDone(parentId, removeDuplicatesBy, is_large)
+            await this.finalizeParentIfAllChildrenDone(parentId, parentTask, removeDuplicatesBy, is_large)
         }
     }
 
@@ -664,13 +663,12 @@ class TaskExecutor {
     ) {
         const parentTask = await TaskHelper.getTask(
             parentId,
-            [TaskStatus.PENDING, TaskStatus.IN_PROGRESS],
         )
 
         if (parentTask) {
             const is_large: any = parentTask.is_large
             await TaskHelper.streamChildToParentResults(childId, parentId, is_large)
-            await this.finalizeParentIfAllChildrenDone(parentId, removeDuplicatesBy, is_large)
+            await this.finalizeParentIfAllChildrenDone(parentId, parentTask, removeDuplicatesBy, is_large)
         }
     }
 
@@ -679,13 +677,13 @@ class TaskExecutor {
      */
     private async finalizeParentIfAllChildrenDone(
         parentId: number,
+        parentTask: Task,
         removeDuplicatesBy: string | null,
         is_large: boolean
     ) {
         const isAllChildTasksDone = await TaskHelper.areAllChildTaskDone(parentId)
         if (isAllChildTasksDone) {
-            const failedChildrenCount = await TaskHelper.getFailedChildrenCount(parentId)
-            const status = failedChildrenCount ? TaskStatus.FAILED : TaskStatus.COMPLETED
+            const status = await this.getParentFinalizingStatus(parentId, parentTask)
             await TaskHelper.readCleanSaveTask(
                 parentId,
                 removeDuplicatesBy,
@@ -695,16 +693,24 @@ class TaskExecutor {
         }
     }
 
+    private async getParentFinalizingStatus(parentId: number, parentTask: Task) {
+        if (parentTask.status === TaskStatus.ABORTED) {
+            return TaskStatus.ABORTED
+        }
+        const hasFailedChildrenCount = await TaskHelper.hasFailedChildren(parentId)
+        return hasFailedChildrenCount ? TaskStatus.FAILED : TaskStatus.COMPLETED
+    }
+
     async completeAsMuchAllTaskAsPossible(
         parentId: number,
         removeDuplicatesBy: string | null
     ): Promise<void> {
         const isAllChildTasksDone = await TaskHelper.areAllChildTaskDone(parentId)
         if (isAllChildTasksDone) {
-            const failedChildrenCount = await TaskHelper.getFailedChildrenCount(
+            const hasFailedChildrenCount = await TaskHelper.hasFailedChildren(
                 parentId
             )
-            const status = failedChildrenCount
+            const status = hasFailedChildrenCount
                 ? TaskStatus.FAILED
                 : TaskStatus.COMPLETED
             await TaskHelper.collectAndSaveAllTask(

@@ -41,6 +41,9 @@ export class NDJSONWriteStream {
   }
 
   end(): Promise<void> {
+    if (!this.writeStream){
+      return Promise.resolve()
+    }
     return new Promise(async (resolve) => {
       await this.preEnd()
       this.writeStream.end(() => {

@@ -147,4 +147,7 @@ function wrapDbOperationInPromise<A=any>(operation: any): Promise<A> {
     })
   })
 }
-export { wrapDbOperationInPromise, parseBoolean, callOnce, db_path, id_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile, cleanBasePath};
+function isNoentError(error: any) {
+  return error.code === 'ENOENT'
+}
+export { isNoentError, wrapDbOperationInPromise, parseBoolean, callOnce, db_path, id_path, pathTaskResults, pathTaskResultsTasks, pathTaskResultsCacheDirect,pathTaskResultsCache ,cacheStoragePath, isNotEmptyObject,isEmpty,  isObject, isEmptyObject, targetDirectory, isLargeFile, cleanBasePath};

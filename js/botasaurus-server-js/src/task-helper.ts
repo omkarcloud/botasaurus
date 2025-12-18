@@ -5,8 +5,7 @@ import { TaskResults } from "./task-results";
 import { TaskStatus } from "./models";
 import { NDJSONWriteStream } from "./ndjson"
 import { _has } from 'botasaurus/cache'
-import { isLargeFile } from './utils'
-import { sleep } from 'botasaurus/utils'
+import { isLargeFile, isNoentError } from './utils'
 import { normalizeData, normalizeItem } from 'botasaurus/output'
 
 export function createProjection(ets: string[]) {
@@ -34,49 +33,27 @@ function createKeyToNullMapping(newLocal: any): any {
         return acc
     }, {})
 }
-function deleteFile(filePath:string) {
-    return new Promise((resolve, _) => {
-        fs.unlink(filePath, (_) => {
-                resolve(null);
-        });
-    });
+function deleteFile(filePath: string) {
+    if (fs.existsSync(filePath)) {
+        try {
+            fs.unlinkSync(filePath);
+        } catch (error) {
+            console.error("faced error while removing")
+            console.error(error)
+            // Ignore error
+        }
+    }
 }
   
-async function moveFile(tempFilePath:string, taskFilePath:string) {
+async function moveFile(tempFilePath: string, taskFilePath: string) {
     try {
-        await new Promise((resolve, reject) => {
-            fs.rename(tempFilePath, taskFilePath, (err) => {
-                if (err) {
-                    // this occurs in windows, don't know why. 
-                    return reject(err) // Reject the promise on error
-                }
-                resolve(null)
-            })
-        })
-    } catch (error) {
-        console.error("MOVE FILE FAILED", error)
-        // no need now. 
-        // TODO: REMOVE ERRORS ASAP. ONCE WE NO LONGER SEE THAT IN PROGRESS CONTINOUS BUG, noote there is no performance loss here.
-        console.error("DELETE FAILED, RETRYING...")
-        
-        try {
-            await deleteFile(taskFilePath)        
-        } catch (error) {
-            console.error("DELETE FAILED, RETRYING 2...")
-            await sleep(1)    
-            await deleteFile(taskFilePath)        
+        await renameTemporaryFile(tempFilePath, taskFilePath)
+    } catch (error: any) {
+        if (isNoentError(error)) {
+            throw error
         }
-        
-        console.error("DELETE taskFilePathTemp")
-        
-        try {
-            await renameTemporaryFile(tempFilePath, taskFilePath)    
-        } catch (error) {
-            await sleep(1)
-            console.error("DELETE taskFilePathTemp 2")
-            await renameTemporaryFile(tempFilePath, taskFilePath)
-            
-        }
+        deleteFile(taskFilePath)
+        await renameTemporaryFile(tempFilePath, taskFilePath)
     }
 }
 
@@ -183,7 +160,7 @@ async function writeDeduplicatedTasks(
     const ndjsonWriteStream = new NDJSONWriteStream(tempfile)
     const seen = new Set()
 
-    try {
+    
         // @ts-ignore
         await TaskResults.streamMultipleTask(ids, async (item) => {
             if (isErrorItem(item)) {
@@ -240,10 +217,19 @@ async function writeDeduplicatedTasks(
             )
         }
 
+    try {
         await moveFile(tempfile, taskFilePath)
     } catch (error) {
-        console.error('Error occurred while processing tasks:', error)
-        await ndjsonWriteStream.end()
+        if (isNoentError(error)) {
+            return writeDeduplicatedTasks(
+                ids,
+                taskFilePath,
+                allKeysMapping,
+                firstItemKeyCount,
+                didEarlyExit,
+                removeDuplicatesBy
+            )
+        }
         throw error
     }
 
@@ -421,7 +407,6 @@ class TaskHelper {
     ): Promise<any[]> {
         const query: any = {
             parent_task_id: parentId,
-            status: TaskStatus.COMPLETED,
             result_count: { $gte: 1 },
         };
 
@@ -433,19 +418,6 @@ class TaskHelper {
         return docs.map((doc) => doc.id);
     }
 
-    static async getChildrenIdsWithResults(parentId: number): Promise<any[]> {
-        const query = {
-            parent_task_id: parentId,
-            result_count: { $gte: 1 },
-            status: { $in: [TaskStatus.COMPLETED] }, // status in success
-        };
-
-        const docs = await db.findAsync(query, { id: 1 }).sort({ sort_id: -1 }) as any[];
-        const results = docs.map((doc) => doc.id);
-
-        return results;
-    }
-    
 
     static async areAllChildTaskDone(parentId: number): Promise<boolean> {
         const doneChildrenCount = await TaskHelper.getDoneChildrenCount(
@@ -546,27 +518,26 @@ class TaskHelper {
         });
     }
 
-    static getFailedChildrenCount(
+    static async getFailedChildrenCount(
         parentId: number,
-        exceptTaskId?: number
     ): Promise<number> {
-        return new Promise((resolve, reject) => {
-            const query: any = {
-                parent_task_id: parentId,
-                status: TaskStatus.FAILED,
-            };
-            if (exceptTaskId) {
-                query.id = { $ne: exceptTaskId };
-            }
+        const query: any = {
+            parent_task_id: parentId,
+            status: TaskStatus.FAILED,
+        };
+        return db.countAsync(query) as unknown as Promise<number>;
+    }
 
-            db.count(query, (err: Error | null, count: number) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(count);
-                }
-            });
-        });
+    static async hasFailedChildren(parentId: number, exceptTaskId?: number): Promise<boolean> {
+        const query: any = {
+            parent_task_id: parentId,
+            status: TaskStatus.FAILED,
+        };
+        if (exceptTaskId) {
+            query.id = { $ne: exceptTaskId };
+        }
+        const result = await db.findOneAsync(query, { id: 1 });
+        return !!result
     }
 
     static getAbortedChildrenCount(
@@ -661,25 +632,24 @@ class TaskHelper {
         })
     }
 
-    static abortTask(taskId: number): Promise<number> {
-        const now = new Date();
+    static async abortTask(taskId: number): Promise<number> {
         const abortableStatuses = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
-        return new Promise((resolve, reject) => {
-            db.update(
-                { id: taskId, status: { $in: abortableStatuses }, finished_at: null },
-                { $set: { finished_at: now } },
-                {},
-                (err: any, _: any) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        this.updateTask(taskId, { status: TaskStatus.ABORTED }, abortableStatuses)
-                            .then(resolve)
-                            .catch(reject);
-                    }
-                }
-            );
-        });
+        
+        const task = await db.findOneAsync(
+            { id: taskId },
+            { projection: { id: 1, finished_at: 1, status: 1 } }
+        );
+        
+        if (!task || !abortableStatuses.includes(task.status)) {
+            return 0;
+        }
+        
+        const updateData: any = { status: TaskStatus.ABORTED };
+        if (task.finished_at === null) {
+            updateData.finished_at = new Date();
+        }
+        
+        return this.updateTask(taskId, updateData, abortableStatuses);
     }
 
     static async retryTask(taskId: number){
@@ -745,7 +715,7 @@ class TaskHelper {
         return await this.finishParentTask(ids, parentId, removeDuplicatesBy, status, shouldFinish)
     }
 
-    static async finishParentTask(ids: any[], parentId: number, removeDuplicatesBy: string | null, status: string, shouldFinish: boolean) {
+    static async finishParentTask(ids: any[], parentId: number, removeDuplicatesBy: string | null, status: string, shouldFinish: boolean) {        
         let [itemsCount, path] = await normalizeAndDeduplicateChildrenTasks(ids, parentId, removeDuplicatesBy)
         const isLarge = isLargeFile(path as any)
 
@@ -756,7 +726,6 @@ class TaskHelper {
             ...await TaskHelper.getSummaryTaskName(parentId),
         }
         if (shouldFinish) {
-            // this flow ran by task deletion/abortuin
             const now_date = new Date()
             taskUpdateDetails['finished_at'] = now_date
 
@@ -779,16 +748,6 @@ class TaskHelper {
         }
     }
 
-    static async collectAndSaveAllTaskForAbortedTask(
-        parentId: number,
-        removeDuplicatesBy: string | null,
-    ) {
-        const ids = await this.getChildrenIdsWithResults(
-            parentId,
-        )
-        return await this.finishParentTask(ids, parentId, removeDuplicatesBy, TaskStatus.ABORTED, true)
-
-    }
 
     static async readCleanSaveTask(
         parentId: number,
@@ -797,7 +756,6 @@ class TaskHelper {
         extra_updates:any = null
         
     ) {
-
         const ids = await this.getCompletedChildrenIds(
             parentId,
             null,
@@ -810,7 +768,7 @@ class TaskHelper {
         const taskUpdateData = {
             ...(extra_updates ? extra_updates(finished_at) : {}),
             result_count: itemsCount,
-            status: status,
+            status,
             finished_at: finished_at,
             is_large: isLarge,
             ...await TaskHelper.getSummaryTaskName(parentId),

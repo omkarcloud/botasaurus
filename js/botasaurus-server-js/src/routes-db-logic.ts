@@ -1003,8 +1003,8 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
             if (abortedChildrenCount === allChildrenCount) {
               await TaskHelper.abortTask(parentId);
             } else {
-              const failedChildrenCount = await TaskHelper.getFailedChildrenCount(parentId, taskId);
-              if (failedChildrenCount) {
+              const hasFailedChildrenCount = await TaskHelper.hasFailedChildren(parentId, taskId);
+              if (hasFailedChildrenCount) {
                 fn = async () => {
                   await TaskHelper.collectAndSaveAllTask(
                     parentId,
@@ -1046,14 +1046,14 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
     // Only abort tasks that are in PENDING or IN_PROGRESS status
     const abortableStatuses: string[] = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
     if (!abortableStatuses.includes(status)) {
-      return;
+      // return;
     }
 
     let fn: (() => Promise<void>) | null = null;
   
     if (is_all_task) {
       await TaskHelper.abortChildTasks(taskId);
-      await TaskHelper.collectAndSaveAllTaskForAbortedTask(taskId, removeDuplicatesBy);
+      await TaskHelper.collectAndSaveAllTask(taskId, null, removeDuplicatesBy, TaskStatus.ABORTED, false);
     } else {
       if (parentId) {
         const allChildrenCount = await TaskHelper.getAllChildrenCount(parentId, taskId);
@@ -1075,8 +1075,8 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
             if (abortedChildrenCount === allChildrenCount) {
               await TaskHelper.abortTask(parentId);
             } else {
-              const failedChildrenCount = await TaskHelper.getFailedChildrenCount(parentId, taskId);
-              if (failedChildrenCount) {
+              const hasFailedChildrenCount = await TaskHelper.hasFailedChildren(parentId, taskId);
+              if (hasFailedChildrenCount) {
                 fn = async () => {
                   await TaskHelper.collectAndSaveAllTask(
                     parentId,

@@ -1,6 +1,6 @@
 import { BaseSort, Sort } from './sorts';
 import { ScraperType } from './scraper-type';
-import { isObject } from './utils';
+import { isNoentError, isObject } from './utils';
 import { _hash } from 'botasaurus/cache';
 import * as fs from 'fs';
 import { isNotNullish } from './null-utils'
@@ -24,8 +24,7 @@ function getReadme(): string {
     const text = fs.readFileSync(readmeFile, 'utf-8');
     return text;
   } catch (error) {
-    // @ts-ignore
-    if (error.code === 'ENOENT') {
+    if (isNoentError(error)) {
       return '';
     }
     throw error;
