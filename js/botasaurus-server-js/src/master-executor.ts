@@ -220,15 +220,16 @@ export class MasterExecutor extends TaskExecutor {
     }
 
     private async acquireNextTasks(capacity: { scraperType?: string; scraperName?: string; maxTasks: number|null } | null | undefined) {
-        let nextTasks: any[] = []
-        if (capacity) {
-            if (capacity.scraperType) {
-                nextTasks = await this.acquireTasksByScraperType(capacity.scraperType, capacity.maxTasks)
-            } else if (capacity.scraperName) {
-                nextTasks = await this.acquireTasksByScraperName(capacity.scraperName, capacity.maxTasks)
-            }
+        if (!capacity || capacity.maxTasks === 0) {
+            return { nextTasks: [] };
         }
-        return { nextTasks };
+        if (capacity.scraperType) {
+            return { nextTasks: await this.acquireTasksByScraperType(capacity.scraperType, capacity.maxTasks) };
+        }
+        if (capacity.scraperName) {
+            return { nextTasks: await this.acquireTasksByScraperName(capacity.scraperName, capacity.maxTasks) };
+        }
+        return { nextTasks: [] };
     }
 
     /**

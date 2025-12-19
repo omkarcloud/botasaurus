@@ -33,7 +33,7 @@ import { DirectCallCacheService } from "./task-results";
 import { cleanBasePath, isNotEmptyObject, isObject } from "./utils";
 import { isDontCache } from "botasaurus/dontcache";
 import { JsonHTTPResponseWithMessage } from "./errors";
-import { cleanDataInPlace } from "botasaurus/output";
+import { cleanDataInPlace, normalizeData } from "botasaurus/output";
 import { db, removeDuplicatesByKey } from "./models";
 import { DEFAULT_TASK_TIMEOUT, MasterExecutor, TaskCompletionPayload, TaskFailurePayload, PushDataChunkPayload, PushDataCompletePayload } from "./master-executor";
 import { WorkerExecutor } from "./worker-executor";
@@ -119,6 +119,12 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
             : scraper.scraper_type;
 
         const scrapingFunction = async (request: any, reply: any) => {
+            // Track if request was aborted by client
+            let aborted = false;
+            const onAbort = () => { aborted = true; };
+            request.raw.on('close', onAbort);
+            const isAborted = () => aborted;
+
             try {
                 const params: Record<string, any> = {};
                 for (const [key, value] of Object.entries(
@@ -171,6 +177,11 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                 try {
                     // Execute function for each data item
                     for (const dataItem of dataItems) {
+                        // Early exit if client disconnected
+                        if (aborted) {
+                            return [];
+                        }
+
                         let cacheKey: string | undefined;
                         let isFromCache = false;
                         let resultData: any = null;
@@ -200,15 +211,26 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                         if (!isFromCache) {
                             // Wait for capacity if needed (only on first execution)
                             if (!shouldDecrementCapacity) {
-                                while (!getExecutor().hasCapacity(key)) {
+                                while (!getExecutor().hasCapacity(key) && !aborted) {
                                     await sleep(0.1);
+                                }
+                                if (aborted) {
+                                    return [];
                                 }
                                 getExecutor().incrementCapacity(key);
                                 shouldDecrementCapacity = true;
                             }
+                            const xs:any = []
+                            function pushData(data: any) {
+                                const items = normalizeData(data)
+                                xs.push(...items)
+                                return Promise.resolve();
+                            }
 
                             const result = await fn(dataItem, {
                                 ...mt,
+                                isAborted,
+                                pushData,
                                 parallel: null,
                                 cache: false,
                                 beep: false,
@@ -226,6 +248,8 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                             } else {
                                 resultData = result;
                             }
+                            pushData(resultData)
+                            resultData = xs
                         }
 
                         // Collect result
@@ -238,6 +262,7 @@ function addScraperRoutes(app: FastifyInstance, apiBasePath: string) {
                     }
                 } finally {
                     restoreCapacity();
+                    request.raw.off('close', onAbort);
                 }
 
                 // Determine if we should return first object

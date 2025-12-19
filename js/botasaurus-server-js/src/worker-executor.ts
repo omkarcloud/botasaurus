@@ -132,7 +132,7 @@ export class WorkerExecutor extends TaskExecutor {
      * Worker loop for scraper-type-based rate limiting.
      * Polls master for tasks by scraper type.
      */
-    private async startScraperTypeBasedWorker(): Promise<void> {
+    private startScraperTypeBasedWorker(): void {
         const keys: string[] = [];
         
         if (Server.getBrowserScrapers().length > 0) {
@@ -152,7 +152,7 @@ export class WorkerExecutor extends TaskExecutor {
      * Worker loop for scraper-name-based rate limiting.
      * Polls master for tasks by scraper name.
      */
-    private async startScraperNameBasedWorker(): Promise<void> {
+    private startScraperNameBasedWorker(): void {
         this.runWorkerLoop(Server.getScrapersNames());
     }
 
@@ -425,23 +425,21 @@ export class WorkerExecutor extends TaskExecutor {
 
 
 
-    private runNextTasks(nextTasks: any, key: string) {
-        
+    private async runNextTasks(nextTasks: any, key: string): Promise<void> {
         if (!nextTasks || nextTasks.length === 0) {
             return;
         }
 
         if (this.isShuttingDown) {
             console.log(`[Worker] Shutting down, skipping next tasks`);
-            return this.releaseTasksToPending(nextTasks.map((task:any) => task.id));
-            
+            await this.releaseTasksToPending(nextTasks.map((task:any) => task.id));
+            return;
         }
         this.consecutiveEmptyPolls = 0
         for (const task of nextTasks) {
             this.inProgressTaskIds.add(task.id);
             this.runTaskAndUpdateCapacity(key, task)
         }
-        return;
     }
 
     /**

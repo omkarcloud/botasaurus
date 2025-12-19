@@ -498,72 +498,77 @@ class TaskExecutor {
         const pushDataWriter = new PushDataWriter(taskId, removeDuplicatesBy, onResultCountUpdate)
         const pushData = pushDataWriter.push.bind(pushDataWriter)
 
-        let exceptionLog: any = null
+        // Track whether task resources have been released to prevent double-release
+        let released = false
+        const releaseTask = () => {
+            if (!released) {
+                this.decrementCapacity(key)
+                cleanup()
+                released = true
+            }
+        }
+
         try {
-            let result: any = null
-            try {
-                result = await fn(taskData, {
-                    ...metadata,
-                    isAborted,
-                    pushData,
-                    parallel: null,
-                    cache: false,
-                    beep: false,
-                    raiseException: true,
-                    closeOnCrash: true,
-                    output: null,
-                    createErrorLogs: false,
-                    returnDontCacheAsIs: true,
-                })
-                let isResultDontCached = false
-                if (isDontCache(result)) {
-                    isResultDontCached = true
-                    result = result.data
-                }
+            const result = await fn(taskData, {
+                ...metadata,
+                isAborted,
+                pushData,
+                parallel: null,
+                cache: false,
+                beep: false,
+                raiseException: true,
+                closeOnCrash: true,
+                output: null,
+                createErrorLogs: false,
+                returnDontCacheAsIs: true,
+            })
 
+            let isResultDontCached = false
+            let processedResult = result
+            if (isDontCache(result)) {
+                isResultDontCached = true
+                processedResult = result.data
+            }
 
-                this.decrementCapacity(key)
-                cleanup()
+            releaseTask()
 
-                if (pushDataWriter.wasUsed()) {
-                    // Push any returned result as well
-                    await pushData(result)
-                    
-                    // Close stream and perform normalization (returns final result count)
-                    await pushDataWriter.close()
-                    
-                    // pushData was used - report success with the normalized result
-                    await this.reportTaskSuccessWithPushData(
-                        taskId,
-                        pushDataWriter.getFilePath(),
-                        pushDataWriter.getItemCount(),
-                        isResultDontCached,
-                        scraperName,
-                        taskData,
-                        parent_task_id,
-                        key
-                    )
-                } else {
-                    // Normal flow - result was returned
-                    result = cleanDataInPlace(result)
-                    if (removeDuplicatesBy && Array.isArray(result)) {
-                        result = removeDuplicatesByKey(result, removeDuplicatesBy)
-                    }
-                    await this.reportTaskSuccess(taskId, result, isResultDontCached, scraperName, taskData, parent_task_id, key)
-                }
+            if (pushDataWriter.wasUsed()) {
+                // Push any returned result as well
+                await pushData(processedResult)
                 
-            } catch (error) {
+                // Close stream and perform normalization (returns final result count)
                 await pushDataWriter.close()
-                cleanup()
-                this.decrementCapacity(key)
-                exceptionLog = formatExc(error)
-                console.error(error)
-                await this.reportTaskFailure(taskId, exceptionLog, parent_task_id, key)
-            } 
+                
+                // pushData was used - report success with the normalized result
+                await this.reportTaskSuccessWithPushData(
+                    taskId,
+                    pushDataWriter.getFilePath(),
+                    pushDataWriter.getItemCount(),
+                    isResultDontCached,
+                    scraperName,
+                    taskData,
+                    parent_task_id,
+                    key
+                )
+            } else {
+                // Normal flow - result was returned
+                processedResult = cleanDataInPlace(processedResult)
+                if (removeDuplicatesBy && Array.isArray(processedResult)) {
+                    processedResult = removeDuplicatesByKey(processedResult, removeDuplicatesBy)
+                }
+                await this.reportTaskSuccess(taskId, processedResult, isResultDontCached, scraperName, taskData, parent_task_id, key)
+            }
         } catch (error) {
+            // Release task resources FIRST to prevent capacity leak
+            releaseTask()
             await pushDataWriter.close()
-            cleanup()
-            console.error("Error in run_task", error)
+            const exceptionLog = formatExc(error)
+            console.error(error)
+            try {
+                await this.reportTaskFailure(taskId, exceptionLog, parent_task_id, key)
+            } catch (reportError) {
+                console.error("Error reporting task failure:", reportError)
+            }
         }
     }
 
