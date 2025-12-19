@@ -1259,7 +1259,7 @@ function buildTaskQueryFilter(filters: TaskFilters): Record<string, any> {
       case 'parent':
         queryFilter.is_all_task = true;
         break;
-      case 'subtask':
+      case 'child':
         queryFilter.parent_task_id = { $ne: null };
         break;
     }
