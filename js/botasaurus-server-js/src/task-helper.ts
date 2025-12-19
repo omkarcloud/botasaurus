@@ -4,7 +4,6 @@ import { createTask, db, Task } from "./models";
 import { TaskResults } from "./task-results";
 import { TaskStatus } from "./models";
 import { NDJSONWriteStream } from "./ndjson"
-import { _has } from 'botasaurus/cache'
 import { isLargeFile, isNoentError } from './utils'
 import { normalizeData, normalizeItem } from 'botasaurus/output'
 
@@ -33,18 +32,22 @@ function createKeyToNullMapping(newLocal: any): any {
         return acc
     }, {})
 }
-function deleteFile(filePath: string) {
+// @ts-ignore
+function deleteFile(filePath: string){
     if (fs.existsSync(filePath)) {
-        try {
-            fs.unlinkSync(filePath);
-        } catch (error) {
-            console.error("faced error while removing")
-            console.error(error)
-            // Ignore error
-        }
-    }
+        return new Promise((resolve, reject) => {
+            fs.unlink(filePath, (err) => {
+            if (err) {
+                return reject(err);
+            }
+            // @ts-ignore
+            resolve();
+        });
+    });
+
 }
-  
+}
+
 async function moveFile(tempFilePath: string, taskFilePath: string) {
     try {
         await renameTemporaryFile(tempFilePath, taskFilePath)
@@ -52,7 +55,7 @@ async function moveFile(tempFilePath: string, taskFilePath: string) {
         if (isNoentError(error)) {
             throw error
         }
-        deleteFile(taskFilePath)
+        await deleteFile(taskFilePath)
         await renameTemporaryFile(tempFilePath, taskFilePath)
     }
 }
@@ -726,11 +729,7 @@ class TaskHelper {
             ...await TaskHelper.getSummaryTaskName(parentId),
         }
         if (shouldFinish) {
-            const now_date = new Date()
-            taskUpdateDetails['finished_at'] = now_date
-
-        } else {
-            // this flow ran by cache completeion
+            taskUpdateDetails['finished_at'] = new Date()
         }
 
         return this.updateTask(parentId, taskUpdateDetails)

@@ -534,10 +534,10 @@ export class WorkerExecutor extends TaskExecutor {
     }
 
     private async releaseTasksToPending(inProgressTaskIds: number[]) {
-        const response =  await this.postToMaster('/k8s/worker-shutdown', {
+        await this.postToMaster('/k8s/worker-shutdown', {
             inProgressTaskIds
         })
-        console.log(`[Worker] Released ${response?.releasedCount || 0} tasks back to queue`);
+        console.log(`[Worker] Released ${JSON.stringify(inProgressTaskIds)} tasks back to queue`);
     }
 
     /**
