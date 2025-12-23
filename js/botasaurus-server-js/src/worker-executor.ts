@@ -508,9 +508,9 @@ export class WorkerExecutor extends TaskExecutor {
     private setupGracefulShutdown(): void {
         const shutdownHandler = async (signal: string) => {
             if (this.isShuttingDown) return;
+            this.isShuttingDown = true;
             
             console.log(`[Worker] Received ${signal}, initiating graceful shutdown...`);
-            this.isShuttingDown = true;
 
             // Immediately notify master about in-progress tasks
             if (this.inProgressTaskIds.size > 0) {
@@ -520,6 +520,8 @@ export class WorkerExecutor extends TaskExecutor {
                 } catch (error) {
                     console.warn('[Worker] Failed to notify master of shutdown, tasks will recover via visibility timeout:', error);
                 }
+            } else {
+                console.log('[Worker] No in-progress tasks to release');
             }
         };
 
