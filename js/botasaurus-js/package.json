@@ -1,58 +1,55 @@
 {
   "name": "botasaurus",
-  "version": "4.0.132",
+  "version": "4.0.133",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
+    "./dontcache": "./dist/dontcache.js",
+    "./decorators-utils": "./dist/decorators-utils.js",
     "./string-utils": "./dist/string-utils.js",
-    "./task": "./dist/task.js",
-    "./beep-utils": "./dist/beep-utils.js",
-    "./env": "./dist/env.js",
-    "./paths": "./dist/paths.js",
+    "./page": "./dist/page.js",
     "./increment": "./dist/increment.js",
-    "./formats": "./dist/formats.js",
-    "./output": "./dist/output.js",
+    "./env": "./dist/env.js",
+    "./cache": "./dist/cache.js",
     "./on-close": "./dist/on-close.js",
     "./utils": "./dist/utils.js",
-    "./cache": "./dist/cache.js",
-    "./page": "./dist/page.js",
-    "./botasaurus-storage": "./dist/botasaurus-storage.js",
-    "./decorators-utils": "./dist/decorators-utils.js",
-    "./decorators-common": "./dist/decorators-common.js",
+    "./output": "./dist/output.js",
+    "./formats": "./dist/formats.js",
+    "./paths": "./dist/paths.js",
+    "./task": "./dist/task.js",
     "./playwright": "./dist/playwright.js",
+    "./beep-utils": "./dist/beep-utils.js",
+    "./botasaurus-storage": "./dist/botasaurus-storage.js",
     "./list-utils": "./dist/list-utils.js",
-    "./dontcache": "./dist/dontcache.js"
+    "./decorators-common": "./dist/decorators-common.js"
   },
   "typesVersions": {
     "*": {
       "*": [
         "dist/*"
       ],
+      "dontcache": [
+        "dist/dontcache.d.ts"
+      ],
+      "decorators-utils": [
+        "dist/decorators-utils.d.ts"
+      ],
       "string-utils": [
         "dist/string-utils.d.ts"
       ],
-      "task": [
-        "dist/task.d.ts"
-      ],
-      "beep-utils": [
-        "dist/beep-utils.d.ts"
-      ],
-      "env": [
-        "dist/env.d.ts"
-      ],
-      "paths": [
-        "dist/paths.d.ts"
+      "page": [
+        "dist/page.d.ts"
       ],
       "increment": [
         "dist/increment.d.ts"
       ],
-      "formats": [
-        "dist/formats.d.ts"
+      "env": [
+        "dist/env.d.ts"
       ],
-      "output": [
-        "dist/output.d.ts"
+      "cache": [
+        "dist/cache.d.ts"
       ],
       "on-close": [
         "dist/on-close.d.ts"
@@ -60,29 +57,32 @@
       "utils": [
         "dist/utils.d.ts"
       ],
-      "cache": [
-        "dist/cache.d.ts"
+      "output": [
+        "dist/output.d.ts"
       ],
-      "page": [
-        "dist/page.d.ts"
+      "formats": [
+        "dist/formats.d.ts"
       ],
-      "botasaurus-storage": [
-        "dist/botasaurus-storage.d.ts"
+      "paths": [
+        "dist/paths.d.ts"
       ],
-      "decorators-utils": [
-        "dist/decorators-utils.d.ts"
-      ],
-      "decorators-common": [
-        "dist/decorators-common.d.ts"
+      "task": [
+        "dist/task.d.ts"
       ],
       "playwright": [
         "dist/playwright.d.ts"
       ],
+      "beep-utils": [
+        "dist/beep-utils.d.ts"
+      ],
+      "botasaurus-storage": [
+        "dist/botasaurus-storage.d.ts"
+      ],
       "list-utils": [
         "dist/list-utils.d.ts"
       ],
-      "dontcache": [
-        "dist/dontcache.d.ts"
+      "decorators-common": [
+        "dist/decorators-common.d.ts"
       ]
     }
   },
