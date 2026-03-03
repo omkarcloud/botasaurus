@@ -186,6 +186,10 @@ function createPlaywright<I>(
         const isAborted = combined.isAborted ?? (() => false);
         // @ts-ignore 
         const pushData = combined.pushData ?? (() => {});
+        // @ts-ignore
+        const taskId = combined.taskId ?? null;
+        // @ts-ignore
+        const parentTaskId = combined.parentTaskId ?? null;
         const fn_name = performPlaywright.__name__;
 
         if (cache) {
@@ -232,7 +236,7 @@ function createPlaywright<I>(
                     // ...
                 }
 
-                result = await run({ data, metadata, isAborted, pushData, ...driver });
+                result = await run({ data, metadata, taskId, parentTaskId, isAborted, pushData, ...driver });
                 if (result === undefined) {
                     result = null;
                 }

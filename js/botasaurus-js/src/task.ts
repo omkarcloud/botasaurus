@@ -63,6 +63,10 @@ function createTask<I>(options: TaskOptions<I>, is_async_queue: boolean) {
         const isAborted = combined.isAborted ?? (() => false)
         // @ts-ignore 
         const pushData = combined.pushData ?? (() => {})
+        // @ts-ignore
+        const taskId = combined.taskId ?? null
+        // @ts-ignore
+        const parentTaskId = combined.parentTaskId ?? null
         const fn_name = performTask.__name__
 
         if (cache) {
@@ -90,7 +94,7 @@ function createTask<I>(options: TaskOptions<I>, is_async_queue: boolean) {
 
             let result: any
             try {
-                result = await run({ data, metadata, isAborted, pushData })
+                result = await run({ data, metadata, taskId, parentTaskId, isAborted, pushData })
                 if (result === undefined) {
                     result = null
                 }
