@@ -20,6 +20,8 @@ import { FormatType } from './formats'
 export type TaskRunOptions<I=any> = {
     data: I
     metadata: any
+    taskId: number
+    parentTaskId: number | null
     isAborted: () => boolean
     pushData: (data: Record<string, any> | Record<string, any>[]) => Promise<void> 
 }

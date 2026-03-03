@@ -9,6 +9,7 @@ import { formatExc } from 'botasaurus/utils'
 import { cleanDataInPlace } from 'botasaurus/output'
 import { getScraperErrorMessage, Server } from './server'
 import { isLargeFile, isNotEmptyObject, omitKeys } from './utils'
+import { readNdJsonCallback } from './ndjson'
 
 /**
  * Task priority levels for queue ordering
@@ -511,6 +512,8 @@ class TaskExecutor {
         try {
             const result = await fn(taskData, {
                 ...metadata,
+                taskId,
+                parentTaskId: parent_task_id,
                 isAborted,
                 pushData,
                 parallel: null,
@@ -565,6 +568,25 @@ class TaskExecutor {
                 }
                 await this.reportTaskSuccess(taskId, processedResult, isResultDontCached, scraperName, taskData, parent_task_id, key)
             }
+
+            const onComplete = Server.getOnComplete(scraperName)
+            if (onComplete) {
+                try {
+                    let onCompleteResult: any[]
+                    if (pushDataWriter.wasUsed()) {
+                        onCompleteResult = []
+                        await readNdJsonCallback(pushDataWriter.getFilePath(), async (item) => {
+                            onCompleteResult.push(item)
+                        })
+                    } else {
+                        onCompleteResult = Array.isArray(processedResult) ? processedResult : []
+                    }
+                    await onComplete({ taskId, scraperName, parentTaskId: parent_task_id, taskData: task.data, result: onCompleteResult })
+                } catch (error) {
+                    console.error(`[onComplete] Error in callback for ${scraperName}:`, error)
+                }
+            }
+
         } catch (error) {
             // Release task resources FIRST to prevent capacity leak
             releaseTask()

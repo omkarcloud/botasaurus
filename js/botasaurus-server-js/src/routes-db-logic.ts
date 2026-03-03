@@ -261,7 +261,11 @@ async function performPatchTask(action: string, taskId: number): Promise<void> {
   const task = await new Promise<any>((resolve, reject) => {
     db.findOne(
       { id: taskId },
-      { id:1, is_all_task: 1, parent_task_id: 1, scraper_name: 1, status: 1 },
+      { 
+        // id:1,
+         is_all_task: 1, parent_task_id: 1, scraper_name: 1,
+        //  status: 1,
+         },
       (err, task) => {
         if (err) {
           reject(err);
@@ -276,14 +280,14 @@ async function performPatchTask(action: string, taskId: number): Promise<void> {
 
   if (task) {
     const removeDuplicatesBy = Server.getRemoveDuplicatesBy(task.scraper_name);
-    const { is_all_task, parent_task_id, status } = task;
+    const { is_all_task, parent_task_id } = task;
 
     if (action === 'delete') {
       await deleteTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy);
     } else if (action === 'abort') {
-      await abortTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy, status);
+      await abortTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy);
     } else if (action === 'retry') {
-      await retryTask(taskId, is_all_task, parent_task_id, status);
+      await retryTask(taskId, is_all_task, parent_task_id);
     }
   }
 }
@@ -1071,13 +1075,12 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
     is_all_task: boolean,
     parentId: number | null,
     removeDuplicatesBy: any,
-    status: string
   ) {
     // Only abort tasks that are in PENDING or IN_PROGRESS status
-    const abortableStatuses: string[] = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
-    if (!abortableStatuses.includes(status)) {
-      return;
-    }
+    // const abortableStatuses: string[] = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
+    // if (!abortableStatuses.includes(status)) {
+    //   return;
+    // }
 
     let fn: (() => Promise<void>) | null = null;
   
@@ -1142,12 +1145,7 @@ function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
     taskId: number,
     is_all_task: boolean,
     parent_task_id: number | null,
-    status: string
   ): Promise<void> {
-    // Only allow retry for failed tasks
-    if (status !== TaskStatus.FAILED) {
-      return;
-    }
 
     if (is_all_task) {
         // Retry all failed children by setting them to pending

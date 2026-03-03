@@ -103,6 +103,14 @@ type EmailSupportOptions = {
   body: string; // Default email body
 };
 
+export type OnCompleteInfo = {
+  taskId: number;
+  scraperName: string;
+  parentTaskId: number | null;
+  taskData: any;
+  result: any[];
+};
+
 type Scraper = {
   name: string;
   function: Function;
@@ -118,6 +126,7 @@ type Scraper = {
   default_sort: string;
   remove_duplicates_by: string | null;
   isGoogleChromeRequired: boolean;
+  onComplete?: (info: OnCompleteInfo) => void | Promise<void>;
 };
 class _Server {
   scrapers: Record<string, Scraper> = {};
@@ -244,7 +253,8 @@ class _Server {
       sorts = [],
       views = [],
       removeDuplicatesBy = null,
-      isGoogleChromeRequired
+      isGoogleChromeRequired,
+      onComplete
   }: {
     productName?: string | null;
     getTaskName?: Function;
@@ -255,6 +265,7 @@ class _Server {
     views?: View[];
     removeDuplicatesBy?: string | null;
     isGoogleChromeRequired?: boolean;
+    onComplete?: (info: OnCompleteInfo) => void | Promise<void>;
   } = {}
   ): void {
     // @ts-ignore
@@ -355,7 +366,8 @@ class _Server {
       views,
       default_sort: defaultSort as any,
       remove_duplicates_by: removeDuplicatesBy,
-      isGoogleChromeRequired: isGoogleChromeRequired || (scraper_type === ScraperType.BROWSER)
+      isGoogleChromeRequired: isGoogleChromeRequired || (scraper_type === ScraperType.BROWSER),
+      onComplete
     };
   }
 
@@ -411,6 +423,10 @@ class _Server {
 
   getRemoveDuplicatesBy(scraperName: string): string | null {
     return this.scrapers[scraperName].remove_duplicates_by;
+  }
+
+  getOnComplete(scraperName: string): ((info: OnCompleteInfo) => void | Promise<void>) | undefined {
+    return this.scrapers[scraperName]?.onComplete;
   }
 
   getScrapersNames(): string[] {
