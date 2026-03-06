@@ -335,6 +335,67 @@ function transformRecord(targetFields: (Field | CustomField | ExpandDictField | 
     return expandedRecords
 }
 
+function* transformRecordStream(targetFields: (Field | CustomField | ExpandDictField | ExpandListField)[], record: any): Generator<any> {
+    let expandedRecords: any[] = [{}]
+
+    for (let i = 0; i < targetFields.length; i++) {
+        const field = targetFields[i]
+
+        if (field instanceof Field) {
+            const value = record[field.key]
+            const result = field.map ? field.map(value, record) : value
+            for (const expandedRecord of expandedRecords) {
+                expandedRecord[field.outputKey] = result
+            }
+        } else if (field instanceof CustomField) {
+            const result = field.map(record)
+            for (const expandedRecord of expandedRecords) {
+                expandedRecord[field.outputKey] = result
+            }
+        } else if (field instanceof ExpandDictField) {
+            const nestedFieldValues = createNestedFieldValues(record, field)
+            for (const expandedRecord of expandedRecords) {
+                Object.assign(expandedRecord, nestedFieldValues)
+            }
+        } else if (field instanceof ExpandListField) {
+            const nestedList = record[field.key] || []
+            const remainingFields = targetFields.slice(i + 1)
+
+            for (const item of nestedList) {
+                for (const baseExpandedRecord of expandedRecords) {
+                    const newRecord = { ...baseExpandedRecord }
+                    for (const nestedField of field.fields) {
+                        if (nestedField instanceof Field) {
+                            const value = item[nestedField.key]
+                            newRecord[nestedField.outputKey] = nestedField.map ? nestedField.map(value, item, record) : value
+                        } else if (nestedField instanceof CustomField) {
+                            newRecord[nestedField.outputKey] = nestedField.map(item, record)
+                        } else if (nestedField instanceof ExpandDictField) {
+                            Object.assign(newRecord, createNestedFieldValuesListed(item, nestedField, record))
+                        }
+                    }
+                    for (const rf of remainingFields) {
+                        if (rf instanceof Field) {
+                            const value = record[rf.key]
+                            newRecord[rf.outputKey] = rf.map ? rf.map(value, record) : value
+                        } else if (rf instanceof CustomField) {
+                            newRecord[rf.outputKey] = rf.map(record)
+                        } else if (rf instanceof ExpandDictField) {
+                            Object.assign(newRecord, createNestedFieldValues(record, rf))
+                        }
+                    }
+                    yield newRecord
+                }
+            }
+            return
+        }
+    }
+
+    for (const r of expandedRecords) {
+        yield r
+    }
+}
+
 function performApplyView(results: any[], viewObj: View, inputData?: any): [any[], string[]] {
     const hidden_fields: string[] = [];
     const targetFields: (Field | CustomField | ExpandDictField | ExpandListField)[] = isNotNullish(inputData)?getFields(viewObj.fields, inputData, hidden_fields):viewObj.fields
@@ -366,21 +427,16 @@ function _applyViewForUi(
         if (pagination) {
             const { start, end, containsListField } = pagination;
             if (containsListField) {
-                // Need to count all expanded items, but only keep items in range
                 const result: any[] = [];
                 let items_count = 0;
                 for (let i = 0; i < results.length; i++) {
                     const record = results[i];
-                    const expandedRecords = transformRecord(targetFields, record);
-                    const prevCount = items_count;
-                    items_count += expandedRecords.length;
                     results[i] = null; // free memory
-                    
-                    // Add only the items that fall within [start, end)
-                    if (prevCount < end && items_count > start) {
-                        const sliceStart = Math.max(0, start - prevCount);
-                        const sliceEnd = Math.min(expandedRecords.length, end - prevCount);
-                        result.push(...expandedRecords.slice(sliceStart, sliceEnd));
+                    for (const expandedRecord of transformRecordStream(targetFields, record)) {
+                        if (items_count >= start && items_count < end) {
+                            result.push(expandedRecord);
+                        }
+                        items_count++;
                     }
                 }
                 return [result, hidden_fields, items_count];
@@ -432,15 +488,11 @@ async function _applyViewForUiLargeTask(taskId: number, view: string, views: Vie
             // @ts-ignore
             await TaskResults.streamTask(taskId, (record, _index) => {
                 if (items_count >= end) return false;
-                const expandedRecords: any[] = transformRecord(targetFields, record);
-                const prevCount = items_count;
-                items_count += expandedRecords.length;
-                
-                // Add only the items that fall within [start, end)
-                if (prevCount < end && items_count > start) {
-                    const sliceStart = Math.max(0, start - prevCount);
-                    const sliceEnd = Math.min(expandedRecords.length, end - prevCount);
-                    result.push(...expandedRecords.slice(sliceStart, sliceEnd));
+                for (const expandedRecord of transformRecordStream(targetFields, record)) {
+                    if (items_count >= start && items_count < end) {
+                        result.push(expandedRecord);
+                    }
+                    items_count++;
                 }
             });
 
@@ -490,5 +542,5 @@ export {
     findView,
     _applyViewForUi,
     applyView,
-    transformRecord,getFields, 
+    transformRecord,transformRecordStream,getFields, 
 };

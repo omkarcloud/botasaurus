@@ -30,6 +30,10 @@ async function applyFunctionToResult(result: any, fn: (item:any)=> any) {
     for (const item of result) {
       await fn(item);
     }
+  } else if (result != null && typeof result === 'object' && Symbol.iterator in result) {
+    for (const item of result) {
+      await fn(item);
+    }
   } else {
     return fn(result);
   }

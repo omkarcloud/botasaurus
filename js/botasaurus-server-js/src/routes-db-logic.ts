@@ -11,7 +11,7 @@ import { Server } from './server';
 import { applyPagination, calculatePageEnd, calculatePageStart } from './apply-pagination';
 import { applyFiltersInPlace } from './filters';
 import { applySorts } from './sorts';
-import { _applyViewForUi, _applyViewForUiLargeTask, findView, transformRecord, getFields } from './views';
+import { _applyViewForUi, _applyViewForUiLargeTask, findView, transformRecordStream, getFields } from './views';
 import { getExecutor } from './executor'
 import { TaskPriority } from './task-executor'
 import { sleep } from 'botasaurus/utils'
@@ -955,10 +955,17 @@ async function performGetTaskResults(taskId: number): Promise<[string, boolean, 
       let streamFn;
       if (viewObj) {
         const targetFields: any[] = isNotNullish(inputData) ? getFields(viewObj.fields, inputData, []) : viewObj.fields;
-        streamFn = (item: any) => {
-          item = transformRecord(targetFields, item);
-          return convertToEnglish ? convertUnicodeDictToAsciiDict(item) : item;
-        };
+        if (convertToEnglish) {
+          streamFn = function*(item: any) {
+            for (const row of transformRecordStream(targetFields, item)) {
+              yield convertUnicodeDictToAsciiDict(row);
+            }
+          };
+        } else {
+          streamFn = (item: any) => {
+            return transformRecordStream(targetFields, item);
+          };
+        }
       } else {
         streamFn = (item: any) => {
           return convertToEnglish ? convertUnicodeDictToAsciiDict(item) : item;

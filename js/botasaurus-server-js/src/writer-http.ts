@@ -11,6 +11,10 @@ function applyFunctionToResultSync(result: any, fn: (item: any) => any) {
     for (const item of result) {
       fn(item);
     }
+  } else if (result != null && typeof result === 'object' && Symbol.iterator in result) {
+    for (const item of result) {
+      fn(item);
+    }
   } else {
     return fn(result);
   }
