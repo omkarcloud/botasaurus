@@ -132,4 +132,3 @@ class PostgresCacheStorage:
         with self._get_connection() as conn:
             conn.execute("DELETE FROM %s" % self.table_name)
             conn.commit()
-

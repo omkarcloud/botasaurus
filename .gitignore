@@ -34,6 +34,7 @@ developing/
 scripts/
 
 /gpt
+docs/gpt
 local_storage.json
 
 profiles.json
@@ -43,3 +44,5 @@ botasaurus/botasaurus_storage.json
 bota/src/bota/package_storage.json
 FUTURE.md
 .history/
+docs/gpt copy
+docs/gpt
