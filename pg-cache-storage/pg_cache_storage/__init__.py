@@ -127,6 +127,9 @@ class PostgresCacheStorage:
             )
             conn.commit()
 
-
-
+    def clear(self) -> None:
+        """Delete all entries from the cache table."""
+        with self._get_connection() as conn:
+            conn.execute("DELETE FROM %s" % self.table_name)
+            conn.commit()
 
