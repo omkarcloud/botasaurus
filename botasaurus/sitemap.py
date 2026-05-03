@@ -7,7 +7,7 @@ from .cache import DontCache
 from .list_utils import flatten
 from .request_decorator import request
 from .output import write_json
-from .sitemap_parser_utils import clean_robots_txt_url, fix_bad_sitemap_response, clean_sitemap_url, extract_sitemaps, split_into_links_and_sitemaps, fix_gzip_response, is_empty_path, parse_sitemaps_from_robots_txt, wrap_in_sitemap
+from .sitemap_parser_utils import clean_robots_txt_url, fix_bad_sitemap_response, clean_default_sitemap_urls, extract_sitemaps, split_into_links_and_sitemaps, fix_gzip_response, is_empty_path, parse_sitemaps_from_robots_txt, wrap_in_sitemap
 
 default_request_options = {
     # "use_stealth": True,
@@ -150,10 +150,10 @@ def get_sitemaps_from_robots(request_options, urls):
             extract_link_upto_nth_segment(0, url), content
         )
         if not result:
-            sm_url = clean_sitemap_url(url)
-            content = fetch_content(sm_url,proxy = request_options['proxy'])
-            if content:
-                return [sm_url]
+            for sm_url in clean_default_sitemap_urls(url):
+                content = fetch_content(sm_url,proxy = request_options['proxy'])
+                if content:
+                    return [sm_url]
             return []
 
         return result
