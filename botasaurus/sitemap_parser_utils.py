@@ -137,6 +137,18 @@ def clean_robots_txt_url(url):
 def clean_sitemap_url(url):
     return extract_link_upto_nth_segment(0, url) + "sitemap.xml"
 
+
+def clean_default_sitemap_urls(url):
+    base_url = extract_link_upto_nth_segment(0, url)
+    candidates = (
+        "sitemap.xml",
+        "sitemap_index.xml",
+        "sitemap-index.xml",
+        "sitemap_index.html",
+        "sitemap-index.html",
+    )
+    return [base_url + candidate for candidate in candidates]
+
 def clean_url(base_url, url: str) -> bool:
     """
     Returns true if URL is of the "http" ("https") scheme.
