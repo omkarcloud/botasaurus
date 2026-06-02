@@ -134,11 +134,19 @@ def split_into_links_and_sitemaps(content):
 def clean_robots_txt_url(url):
     return extract_link_upto_nth_segment(0, url) + "robots.txt"
 
-def clean_sitemap_url(url):
-    return extract_link_upto_nth_segment(0, url) + "sitemap.xml"
 
+def get_default_sitemap_candidates(url):
+    """
+    Returns an ordered list of well-known sitemap URL candidates for *url*.
 
-def clean_default_sitemap_urls(url):
+    Candidates are tried in order; callers should stop at the first URL
+    whose response contains valid XML/sitemap content.
+
+    Note: ``fetch_content`` checks HTTP status but does **not** validate
+    Content-Type or XML structure, so a host that serves a 200 HTML error
+    page would be treated as a match.  The ordering below places the most
+    common pattern first to minimise false positives in practice.
+    """
     base_url = extract_link_upto_nth_segment(0, url)
     candidates = (
         "sitemap.xml",
@@ -148,6 +156,27 @@ def clean_default_sitemap_urls(url):
         "sitemap-index.html",
     )
     return [base_url + candidate for candidate in candidates]
+
+
+def looks_like_sitemap(content):
+    """
+    Returns ``True`` if *content* appears to be a valid XML sitemap payload.
+
+    Checks for the two standard sitemap XML root elements:
+
+    * ``<urlset``      — a regular URL sitemap
+    * ``<sitemapindex`` — a sitemap index
+
+    This is intentionally lightweight (no full XML parse) and is meant as
+    a quick guard against 200-OK HTML error pages being mistaken for
+    sitemaps.  ``fix_bad_sitemap_response`` is applied first so that any
+    leading junk before the first ``<`` is stripped before the check.
+    """
+    if not content:
+        return False
+    stripped = fix_bad_sitemap_response(content)
+    return "<urlset" in stripped or "<sitemapindex" in stripped
+
 
 def clean_url(base_url, url: str) -> bool:
     """
