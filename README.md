@@ -2439,8 +2439,8 @@ Use the following commands to clone the Botasaurus Starter Template, build a Doc
 ```
 git clone https://github.com/omkarcloud/botasaurus-starter my-botasaurus-project
 cd my-botasaurus-project
-docker-compose build
-docker-compose up
+docker compose build
+docker compose up
 ```
 
 ### How to Run Scraper in Gitpod?
@@ -2780,4 +2780,5 @@ It's just one click, but it means the world to me.
 > By using Botasaurus, you agree to comply with all applicable local and international laws related to data scraping, copyright, and privacy. The developers of Botasaurus are not responsible for any misuse of this software. It is the sole responsibility of the user to ensure adherence to all relevant laws regarding data scraping, copyright, and privacy, and to use Botasaurus in an ethical and legal manner.
 
 We take the concerns of the Botasaurus Project very seriously. For any inquiries or issues, please contact Chetan Jain at [chetan@omkar.cloud](mailto:chetan@omkar.cloud). We will take prompt and necessary action in response to your emails.
+
 
