@@ -10,20 +10,26 @@ jobs:
   build-and-deploy:
     permissions:
       contents: write
+      id-token: write # Required for npm trusted publishing (OIDC)
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+       uses: actions/checkout@v4
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
         fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
 
+    # NOTE: do NOT set `registry-url` here. It makes setup-node write a
+    # `_authToken=${NODE_AUTH_TOKEN}` line to .npmrc, which short-circuits the
+    # OIDC handshake and makes `npm publish` fail with a misleading 404.
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: 20
-        registry-url: 'https://registry.npmjs.org'
+        node-version: 24
+
+    - name: Upgrade npm (trusted publishing requires npm >= 11.5.1)
+      run: npm install -g npm@latest
 
     - name: Install dependencies and build
       working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
@@ -63,8 +69,6 @@ jobs:
       run: |
         npm i
         npm run upload
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     - name: Pull Changes
       run: |
