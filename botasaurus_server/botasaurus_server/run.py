@@ -58,7 +58,7 @@ def open_browser_in_thread():
 def install():
     print("Installing frontend...")
     frontend_dir = os.path.join(os.getcwd(), "frontend")
-    subprocess.check_call("npm install && npm run build", shell=True, cwd=frontend_dir)
+    subprocess.check_call("npm install --legacy-peer-deps && npm run build", shell=True, cwd=frontend_dir)
 
 def print_frontend_run_message():
     print("Starting frontend server at http://localhost:3000/")
@@ -153,4 +153,5 @@ def run():
             dd = " ".join(sys.argv[1:])
             print(f"Error: No such command: {dd}")
             print("Try '--help' for help.")
+
             sys.exit(1) 
