@@ -20,7 +20,7 @@ def get_description():
 
 setup(
     name="pg-cache-storage",
-    version='1.0.4',
+    version='1.0.5',
     author="Chetan Jain",
     author_email="53407137+Chetan11-dev@users.noreply.github.com",
     description="PostgreSQL cache storage for botasaurus.",
