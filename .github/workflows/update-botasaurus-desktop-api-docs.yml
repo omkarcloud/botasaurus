@@ -10,26 +10,19 @@ jobs:
   build-and-deploy:
     permissions:
       contents: write
-      id-token: write # Required for npm trusted publishing (OIDC)
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
-       uses: actions/checkout@v4
+      uses: actions/checkout@v4
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
         fetch-depth: 0             # otherwise, you will fail to push refs to dest repo
 
-    # NOTE: do NOT set `registry-url` here. It makes setup-node write a
-    # `_authToken=${NODE_AUTH_TOKEN}` line to .npmrc, which short-circuits the
-    # OIDC handshake and makes `npm publish` fail with a misleading 404.
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: 24
-
-    - name: Upgrade npm (trusted publishing requires npm >= 11.5.1)
-      run: npm install -g npm@latest
 
     - name: Install dependencies and build
       working-directory: js/botasaurus-desktop-api/botasaurus-desktop-api-docs
@@ -58,24 +51,23 @@ jobs:
       run: |
         aws s3 cp build/ s3://botasaurus-api/ --recursive
 
+    # Update the config file and push it. The push to `js/botasaurus-server-js/**`
+    # triggers the `Build and Deploy Botasaurus Server JS` workflow, which builds
+    # and publishes botasaurus-server-js to npm. No `npm run upload` needed here.
     - name: Update config file
       working-directory: js/botasaurus-server-js/src
       run: |
         sed -i "s/main.[a-z0-9]\{8\}.css/${{ steps.assets.outputs.CSS_FILE }}/g" api-config.ts
         sed -i "s/main.[a-z0-9]\{8\}.js/${{ steps.assets.outputs.JS_FILE }}/g" api-config.ts
 
-    - name: Install dependencies and build
-      working-directory: js/botasaurus-server-js
-      run: |
-        npm i
-        npm run upload
-
     - name: Pull Changes
       run: |
         git pull
 
+    # Push with a PAT (not GITHUB_TOKEN) so the push to js/botasaurus-server-js/**
+    # triggers the "Build and Deploy Botasaurus Server JS" workflow.
     - name: Commit & Push changes
       uses: actions-js/push@master
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.PAT }}
         branch: master
