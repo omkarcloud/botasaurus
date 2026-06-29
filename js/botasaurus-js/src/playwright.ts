@@ -37,7 +37,7 @@ import { determineMaxLimit, drainQueue, removeItemFromSeenItemsSet, TaskRunOptio
 const globalChromes = new Set<PlaywrightChrome>();
 
 // Global function to close all tracked Chromes (fire-and-forget, returns promises)
-function closeAllChromes(): Promise<void>[] {
+async function closeAllChromes(): Promise<void> {
     const promises: Promise<void>[] = [];
     
     for (const chrome of globalChromes) {
@@ -53,7 +53,7 @@ function closeAllChromes(): Promise<void>[] {
         promises.push(promise);
     }
     
-    return promises;
+    await Promise.all(promises);
 }
 
 // @ts-ignore
@@ -64,7 +64,10 @@ global.closeAllChromes = closeAllChromes;
 // Don't register SIGINT/SIGTERM handlers here as they would interfere with 
 // Electron's or other modules' shutdown handlers
 process.on('exit', () => {
-    closeAllChromes();
+    for (const chrome of globalChromes) {
+        try { chrome.forceKill(); } catch {}
+    }
+    globalChromes.clear();
 });
 
 

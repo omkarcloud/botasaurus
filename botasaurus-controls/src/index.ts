@@ -179,6 +179,7 @@ type TextControlInput<V, P = {}> = ControlInput<V, P> & {
   // defaults to true
   trim?: boolean
   placeholder?: string
+  maxLength?: number
 }
 
 type LimitOptions = {
@@ -189,6 +190,7 @@ type ListOfTextControlInput<V, P = {}> = TextControlInput<V,P> &LimitOptions
 
 type LinkControlInput<V, P = {}> = ControlInput<V, P> & {
   placeholder?: string
+  maxLength?: number
 }
 
 type ListOfLinkControlInput<V, P = {}> = LinkControlInput<V,P> &LimitOptions
@@ -990,6 +992,18 @@ private parse(data: any) {
               errorMessages.push("Please select at least one file."); // Updated error message
             }
           }
+        }
+
+        if (
+          !errorMessages.length &&
+          (type === "text" || type === "search" || type === "textarea" || type === "link") &&
+          isNotEmpty(value) &&
+          (control as any).maxLength &&
+          value.length > (control as any).maxLength
+        ) {
+          errorMessages.push(
+            `This field must be at most ${(control as any).maxLength} characters.`
+          )
         }
 
         if (

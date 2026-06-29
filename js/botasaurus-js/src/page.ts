@@ -4,6 +4,7 @@ import * as ChromeLauncher from "chrome-launcher";
 export type PlaywrightChrome = {
     context: BrowserContext;
     close: () => Promise<void>;
+    forceKill: () => void;
     page: Page;
 };
 
@@ -38,6 +39,7 @@ export async function createPlaywrightChrome(headless: boolean, userAgent:string
 
     const { port, kill } = await ChromeLauncher.launch({
         chromeFlags: flags,
+        handleSIGINT: false,
     });
 
     const browser = await chromium.connectOverCDP(`http://localhost:${port}`);
@@ -51,6 +53,9 @@ export async function createPlaywrightChrome(headless: boolean, userAgent:string
             await safeRun(() => browser.close());
             // @ts-ignore
             await safeRun(() => kill());
+        },
+        forceKill: () => {
+            try { kill(); } catch {}
         },
         page,
     };
