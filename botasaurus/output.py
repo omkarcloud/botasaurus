@@ -530,6 +530,57 @@ def _has_0_item(path):
     
     return True
 
+def _safe_extractall(zipf, output_folder_path):
+    """
+    Safely extract a zip archive to ``output_folder_path``, defending against
+    Zip Slip (CWE-22).
+
+    ``ZipFile.extractall`` on modern CPython strips leading ``/`` and ``..``
+    components from member names, but it does *not* prevent an entry from
+    being written *through* a pre-existing symlink inside the extraction
+    directory that points outside it. For each member we therefore resolve
+    the intended destination with ``os.path.realpath`` and refuse to extract
+    any entry whose resolved path escapes the (resolved) extraction dir.
+    """
+    import posixpath
+
+    resolved_base = os.path.realpath(output_folder_path)
+    for member in zipf.infolist():
+        # Normalise the archive-supplied name: forward-slash separated,
+        # drop drive letters, and split into path components.
+        name = member.filename.replace('\\', '/')
+        name = os.path.splitdrive(name)[1]
+        parts = [p for p in name.split('/') if p not in ('', '.')]
+        # Reject any '..' component outright.
+        if any(p == '..' for p in parts):
+            raise ValueError(
+                "Refusing to extract unsafe zip entry "
+                "(parent traversal): {!r}".format(member.filename)
+            )
+        safe_relative = posixpath.join(*parts) if parts else ''
+        if not safe_relative:
+            # Directory-only or empty entry after sanitisation; skip.
+            continue
+        target_path = os.path.realpath(
+            os.path.join(resolved_base, safe_relative)
+        )
+        # commonpath raises on mixed drives; treat any anomaly as escape.
+        try:
+            common = os.path.commonpath([resolved_base, target_path])
+        except ValueError:
+            common = None
+        if common != resolved_base:
+            raise ValueError(
+                "Refusing to extract unsafe zip entry "
+                "(escapes target dir): {!r}".format(member.filename)
+            )
+        # Rewrite the member filename to the sanitised, validated form
+        # so extract() writes to the checked location and cannot re-follow
+        # any pre-existing symlink under the original arcname.
+        member.filename = safe_relative
+        zipf.extract(member, resolved_base)
+
+
 def unzip_file(filename, output_folder_path=None, force=False, log=True):
     import zipfile
     import shutil
@@ -574,7 +625,7 @@ def unzip_file(filename, output_folder_path=None, force=False, log=True):
         os.makedirs(output_folder_path, exist_ok=True)
 
         with zipfile.ZipFile(filename, 'r') as zipf:
-            zipf.extractall(output_folder_path)
+            _safe_extractall(zipf, output_folder_path)
 
 
         folder_in_folder = os.path.join(output_folder_path, os.path.basename(output_folder_path))
