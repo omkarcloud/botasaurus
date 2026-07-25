@@ -174,7 +174,7 @@ function createScraperTaskDataText2(scraperName: string, hasSingleScraper: boole
   return `{ dataItems${x} }`
 }
 function createFilterString(filters: any[]): string {
-  return `\n filters: ${filtersToJsObjectString(filters, 8, 4)}`
+  return `\n  filters: ${filtersToJsObjectString(filters, 4, 2)}`
 }
 function joinStrings(strings: string[], separator: string = 'or'): string {
   if (strings.length === 0) {
@@ -193,7 +193,7 @@ function humaniseRoutes(final: string[]) {
 }
 
 function createSortString(sorts: any[], defaultSort: string): string {
-  return `\n sort: null, // sort can be one of: ${joinStrings(sorts.map((view) => {
+  return `\n  sort: null, // sort can be one of: ${joinStrings(sorts.map((view) => {
     if (view.id === defaultSort) {
       return `${view.id} (default)`
     }
@@ -202,9 +202,9 @@ function createSortString(sorts: any[], defaultSort: string): string {
 }
 function createViewsString(views: any[]): string {
   if (views.length === 1) {
-    return `\n view: null, // view can be ${views[0].id}`
+    return `\n  view: null, // view can be ${views[0].id}`
   } else {
-    return `\n view: null, // view can be one of: ${joinStrings(views.map((view) => view.id))}`
+    return `\n  view: null, // view can be one of: ${joinStrings(views.map((view) => view.id))}`
   }
 }
 function generateList(pagination: boolean, views: any, filters: any, sorts: any): string[] {
@@ -273,7 +273,7 @@ import fs from 'fs'
 
 const { buffer, filename } = await api.downloadTaskResults({
   taskId: 1,
-  format: 'csv',
+  format: 'csv', // format can be one of: json (default), csv or excel${hasViews(views) ? createViewsString(views) : ""}${hasSorts(sorts) ? createSortString(sorts, defaultSort) : ""}${hasFilters(filters) ? createFilterString(filters) : ""}
 })
 
 fs.writeFileSync(filename, buffer)

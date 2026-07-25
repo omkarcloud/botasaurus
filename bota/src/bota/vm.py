@@ -8,6 +8,13 @@ import traceback
 import re
 
 from .apache_utils import make_apache_content, read_conf, remove_apache_proxy_config
+
+import urllib.request
+def get_redirect_url_builtin(url):
+    # Opens the URL and automatically follows HTTP redirects
+    with urllib.request.urlopen(url) as response:
+        return response.geturl()
+
 def find_ip(attempts=5, proxy=None) -> str:
     """Finds the public IP address of the current connection."""
     url = 'https://checkip.amazonaws.com/'
@@ -507,8 +514,8 @@ def get_package_name_from_debian_url(debian_installer_url):
         str: Package name extracted from the debian file
     """
     # Validate URL first
-    validate_url(debian_installer_url)
-    
+    debian_installer_url = validate_url(debian_installer_url)
+
     temp_filename = get_filename_from_url(debian_installer_url)
     delete_installer(temp_filename)
     try:
@@ -667,7 +674,7 @@ def install_desktop_app_in_vm(
     api_base_path = clean_base_path(api_base_path)
 
     # Validate URL
-    validate_url(debian_installer_url)
+    debian_installer_url = validate_url(debian_installer_url)
 
     # Install the app
     uname = get_username()
@@ -784,16 +791,24 @@ def setup_apache_load_balancer_desktop_app(port, api_base_path):
     write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
 
 def validate_url(url):
+    if "/l/" in url:
+        # Short links like https://www.omkar.cloud/l/deb only redirect on GET
+        # (HEAD returns 200 without redirecting), so resolve the final .deb URL.
+        try:
+            return get_redirect_url_builtin(url)
+        except Exception:
+            raise Exception(f"The URL {url} does not point to a valid Debian installer.")
     try:
         response = requests.head(url, allow_redirects=True, timeout=20)
         response.raise_for_status()
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         # Retry with GET if HEAD fails (some servers don't support HEAD)
         try:
             response = requests.get(url, allow_redirects=True, timeout=20)
             response.raise_for_status()
-        except requests.exceptions.RequestException as e2:
+        except requests.exceptions.RequestException:
             raise Exception(f"The URL {url} does not point to a valid Debian installer.")
+    return url
 
 def api_config_disabled(service_name, seconds):
         """
