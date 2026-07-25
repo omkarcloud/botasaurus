@@ -119,8 +119,8 @@ type PlaywrightOptions<I> = {
 const closeDriver = async (driver: PlaywrightChrome | null) => {
     try {
         if (driver) {
-            globalChromes.delete(driver);
             await driver.close();
+            globalChromes.delete(driver);
         }
     } catch (error) {
         throw error;

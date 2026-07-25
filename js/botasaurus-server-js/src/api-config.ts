@@ -669,31 +669,54 @@ export function buildApp(
     return app;
 }
 let server: FastifyInstance;
+const MAX_PORT_ATTEMPTS = 10;
 async function startServer(
     port: number,
     scrapers: any[],
     apiBasePath: string,
     routeAliases: any,
     enable_cache: boolean
-): Promise<void> {
-    try {
-        if (server) {
-            await stopServer();
-        }
-        server = buildApp(scrapers, apiBasePath, routeAliases, enable_cache);
-
-        await server.listen({
-            port,
-            host: "0.0.0.0", // bind on all interfaces
-        });
-        console.log(
-            `Server running on http://localhost:${port}${apiBasePath || "/"} 🟢`
-        );
-    } catch (err) {
-        server = null as unknown as FastifyInstance;
-        console.error(err);
-        process.exit(1);
+): Promise<number> {
+    if (server) {
+        await stopServer();
     }
+    for (let attempt = 0; attempt < MAX_PORT_ATTEMPTS; attempt++) {
+        const candidatePort = port + attempt;
+        server = buildApp(scrapers, apiBasePath, routeAliases, enable_cache);
+        try {
+            await server.listen({
+                port: candidatePort,
+                host: "0.0.0.0", // bind on all interfaces
+            });
+            if (candidatePort !== port) {
+                console.warn(
+                    `Port ${port} is already in use, running on port ${candidatePort} instead.`
+                );
+            }
+            ApiConfig.apiPort = candidatePort;
+            console.log(
+                `Server running on http://localhost:${candidatePort}${apiBasePath || "/"} 🟢`
+            );
+            return candidatePort;
+        } catch (err: any) {
+            const failed = server;
+            server = null as unknown as FastifyInstance;
+            await failed.close().catch(() => {});
+            const portInUse = err?.code === "EADDRINUSE";
+            if (portInUse && attempt < MAX_PORT_ATTEMPTS - 1) {
+                continue;
+            }
+            if (portInUse) {
+                console.error(
+                    `Ports ${port}-${port + MAX_PORT_ATTEMPTS - 1} are all in use. Free one of them or set a different port via ApiConfig.setApiPort().`
+                );
+            }
+            console.error(err);
+            process.exit(1);
+        }
+    }
+    // Unreachable: the loop always returns or exits
+    return port;
 }
 
 async function stopServer(): Promise<void> {
