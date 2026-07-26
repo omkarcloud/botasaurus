@@ -791,7 +791,7 @@ def setup_apache_load_balancer_desktop_app(port, api_base_path):
     write_file_sudo(apache_conf, "/etc/apache2/sites-available/000-default.conf")
 
 def validate_url(url):
-    if "/l/" in url:
+    if "www.omkar.cloud/l/" in url:
         # Short links like https://www.omkar.cloud/l/deb only redirect on GET
         # (HEAD returns 200 without redirecting), so resolve the final .deb URL.
         try:
