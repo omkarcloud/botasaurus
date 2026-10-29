@@ -115,6 +115,12 @@ type PlaywrightOptions<I> = {
     // Driver options
     reuseDriver?: boolean;
     // createDriver?: () => Driver;
+
+    // Called before a browser is acquired for an item; return true to skip the
+    // item entirely (resolves to null) without launching a browser. Lets queued
+    // items drain instantly after an abort instead of launching a Chrome just
+    // to early-return inside run().
+    skipItem?: (data: any) => boolean;
 };
 const closeDriver = async (driver: PlaywrightChrome | null) => {
     try {
@@ -176,8 +182,9 @@ function createPlaywright<I>(
             retryWait = null,
             createErrorLogs = true,
             reuseDriver = false,
-            headless = false, 
-            userAgent = null
+            headless = false,
+            userAgent = null,
+            skipItem = null
         } = combined;
 
         performPlaywright.__name__ = isNotEmptyString(name)
@@ -204,6 +211,10 @@ function createPlaywright<I>(
             retryAttempt: number,
             retryDriver: PlaywrightChrome | null = null
         ): Promise<any> {
+            if (skipItem && skipItem(data)) {
+                return null;
+            }
+
             let path: string | undefined;
 
             if (cache === true) {

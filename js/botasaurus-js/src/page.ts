@@ -1,4 +1,4 @@
-import { chromium, BrowserContext, Page } from "rebrowser-playwright-core";
+import { chromium, Browser, BrowserContext, Page } from "rebrowser-playwright-core";
 import * as ChromeLauncher from "chrome-launcher";
 
 export type PlaywrightChrome = {
@@ -42,9 +42,20 @@ export async function createPlaywrightChrome(headless: boolean, userAgent:string
         handleSIGINT: false,
     });
 
-    const browser = await chromium.connectOverCDP(`http://localhost:${port}`);
-    const context = browser.contexts()[0];
-    const page = await context.newPage();
+    // If anything fails after Chrome has launched (CDP connect timeout,
+    // newPage failure), kill the launched Chrome — otherwise it is orphaned
+    // forever on about:blank since no PlaywrightChrome handle is ever returned.
+    let browser: Browser;
+    let context: BrowserContext;
+    let page: Page;
+    try {
+        browser = await chromium.connectOverCDP(`http://localhost:${port}`);
+        context = browser.contexts()[0];
+        page = await context.newPage();
+    } catch (error) {
+        try { kill(); } catch {}
+        throw error;
+    }
 
     return {
         context,
