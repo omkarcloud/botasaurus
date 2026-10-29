@@ -636,6 +636,14 @@ class TaskHelper {
         })
     }
 
+    static async isTaskAborted(taskId: number): Promise<boolean> {
+        const task = await db.findOneAsync(
+            { id: taskId },
+            { projection: { status: 1 } }
+        );
+        return task?.status === TaskStatus.ABORTED;
+    }
+
     static async abortTask(taskId: number): Promise<number> {
         const abortableStatuses = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
         

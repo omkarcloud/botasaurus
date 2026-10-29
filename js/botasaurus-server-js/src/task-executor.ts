@@ -769,6 +769,11 @@ class TaskExecutor {
         taskId: number,
         exceptionLog: string
     ): Promise<void> {
+        // A task stopped while running keeps the results it gathered, so
+        // don't overwrite them with the error
+        if (await TaskHelper.isTaskAborted(taskId)) {
+            return
+        }
         await TaskResults.saveTask(taskId, [exceptionLog])
         const updateResult = await TaskHelper.updateTask(
             taskId,
@@ -833,7 +838,15 @@ class TaskExecutor {
             is_large: isLarge
         }, [TaskStatus.IN_PROGRESS])
         if (!updateResult) {
-            TaskResults.deleteTask(taskId)
+            // Stopped while running: keep its results, since its parent is
+            // rebuilt from them (deleting them emptied the parent)
+            const keptResult = await TaskHelper.updateTask(taskId, {
+                result_count: resultCount,
+                is_large: isLarge
+            }, [TaskStatus.ABORTED])
+            if (!keptResult) {
+                TaskResults.deleteTask(taskId)
+            }
         }
     }
 
