@@ -6,8 +6,11 @@ import { db_path, id_path } from './utils'
 import './db-setup'
 import fs from 'fs';
 import { isNullish } from './null-utils'
+import { retryTransientWrites } from './retry-datafile-writes'
 // Database setup
 const db = new Datastore({ filename: db_path, autoload: true , timestampData:true});
+
+retryTransientWrites(db);
 
 // Global ID variable
 let globalId: number;

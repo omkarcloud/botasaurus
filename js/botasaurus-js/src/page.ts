@@ -8,6 +8,21 @@ export type PlaywrightChrome = {
     page: Page;
 };
 
+// Chrome launches that failed in a row, and the last one's error. The queues
+// retry a failed launch for every item and swallow the error, so a Chrome
+// that can never start (blocked by security software, a broken install) kept
+// a task crawling for hours with no error; callers read this to stop instead.
+let consecutiveLaunchFailures = 0;
+let lastLaunchError: unknown = null;
+
+export function getChromeLaunchFailures(): { consecutive: number; lastError: unknown } {
+    return { consecutive: consecutiveLaunchFailures, lastError: lastLaunchError };
+}
+
+export function resetChromeLaunchFailures(): void {
+    consecutiveLaunchFailures = 0;
+}
+
 export async function createPlaywrightChrome(headless: boolean, userAgent:string| null): Promise<PlaywrightChrome> {
     const flags = [
         "--start-maximized",
@@ -37,10 +52,18 @@ export async function createPlaywrightChrome(headless: boolean, userAgent:string
         flags.push("--no-sandbox");
     }
 
-    const { port, kill } = await ChromeLauncher.launch({
-        chromeFlags: flags,
-        handleSIGINT: false,
-    });
+    let launched: ChromeLauncher.LaunchedChrome;
+    try {
+        launched = await ChromeLauncher.launch({
+            chromeFlags: flags,
+            handleSIGINT: false,
+        });
+    } catch (error) {
+        consecutiveLaunchFailures++;
+        lastLaunchError = error;
+        throw error;
+    }
+    const { port, kill } = launched;
 
     // If anything fails after Chrome has launched (CDP connect timeout,
     // newPage failure), kill the launched Chrome — otherwise it is orphaned
@@ -54,8 +77,14 @@ export async function createPlaywrightChrome(headless: boolean, userAgent:string
         page = await context.newPage();
     } catch (error) {
         try { kill(); } catch {}
+        // A Chrome that starts but can't be connected to is a failed launch
+        // too: counting its start as a success reset the count, so a caller
+        // never stopped though every item failed
+        consecutiveLaunchFailures++;
+        lastLaunchError = error;
         throw error;
     }
+    consecutiveLaunchFailures = 0;
 
     return {
         context,

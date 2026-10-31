@@ -28,6 +28,21 @@ export function extractParentIds(tasks: any[]) {
     return Array.from(parentIdsSet);
 }
 
+/** The task's current status, or null when it was deleted. */
+async function getTaskStatus(taskId: number): Promise<string | null> {
+    const task: any = await db.findOneAsync({ id: taskId }, { status: 1 })
+    return task ? task.status : null
+}
+
+/**
+ * A task stopped (or deleted) while running has only part of its results;
+ * caching them served the partial list as complete, and marked completed, to
+ * the next identical search.
+ */
+async function isStillRunning(taskId: number): Promise<boolean> {
+    return (await getTaskStatus(taskId)) === TaskStatus.IN_PROGRESS
+}
+
 async function queryPendingTasks(maxTasks: number | null, query: any) {
     if (isNotNullish(maxTasks)) {
         // @ts-ignore
@@ -61,16 +76,29 @@ export async function getPendingTasks(query: any, maxTasks: number | null) {
             const parentIds = extractParentIds(tasks)
 
             // Mark tasks as IN_PROGRESS
-            await db.updateAsync(
-                { id: { $in: taskIds } },
-                {
-                    $set: {
-                        status: TaskStatus.IN_PROGRESS,
-                        started_at: new Date()
-                    }
-                },
-                { multi: true }
-            );
+            try {
+                await db.updateAsync(
+                    { id: { $in: taskIds } },
+                    {
+                        $set: {
+                            status: TaskStatus.IN_PROGRESS,
+                            started_at: new Date()
+                        }
+                    },
+                    { multi: true }
+                );
+            } catch (error) {
+                // nedb applies an update in memory before writing it to the
+                // datafile, so a failed write left these tasks "in progress"
+                // with nothing running them. Put them back so the next pick
+                // retries them.
+                await db.updateAsync(
+                    { id: { $in: taskIds }, status: TaskStatus.IN_PROGRESS },
+                    { $set: { status: TaskStatus.PENDING, started_at: null } },
+                    { multi: true }
+                ).catch(() => {});
+                throw error;
+            }
 
 
 
@@ -221,13 +249,24 @@ class TaskExecutor {
             console.error(error)
         }
     }
+    // A pick that fails (the datafile locked by an antivirus or backup tool,
+    // a full disk) must not stop the loop: it only rescheduled itself after a
+    // successful pick, so one failure left every task pending until restart.
     protected async taskWorkerScraperBased(): Promise<void> {
-        await this.processScraperBasedTasks();
+        try {
+            await this.processScraperBasedTasks();
+        } catch (error) {
+            console.error('[task-worker] Could not start pending tasks, retrying in 1 s:', error);
+        }
         setTimeout(this.taskWorkerScraperBased.bind(this), 1000);
     }
 
     protected async taskWorkerScraperTypeBased(): Promise<void> {
-        await this.processScraperTypeBasedTasks();
+        try {
+            await this.processScraperTypeBasedTasks();
+        } catch (error) {
+            console.error('[task-worker] Could not start pending tasks, retrying in 1 s:', error);
+        }
         setTimeout(this.taskWorkerScraperTypeBased.bind(this), 1000);
     }
 
@@ -590,7 +629,14 @@ class TaskExecutor {
         } catch (error) {
             // Release task resources FIRST to prevent capacity leak
             releaseTask()
-            await pushDataWriter.close()
+            try {
+                await pushDataWriter.close()
+            } catch (closeError) {
+                // close() saves the final result count; if that throws, the
+                // failure must still be reported below, or the task shows
+                // "in progress" forever
+                console.error(closeError)
+            }
             const exceptionLog = formatExc(error)
             console.error(error)
             try {
@@ -769,9 +815,20 @@ class TaskExecutor {
         taskId: number,
         exceptionLog: string
     ): Promise<void> {
-        // A task stopped while running keeps the results it gathered, so
-        // don't overwrite them with the error
-        if (await TaskHelper.isTaskAborted(taskId)) {
+        const status = await getTaskStatus(taskId)
+        if (status === null) {
+            // Deleted while running: nothing is left for its results to belong to
+            TaskResults.deleteTask(taskId)
+            return
+        }
+        // Only a task still running has its results replaced by the error.
+        // A task stopped while running keeps the results it gathered. So
+        // does one already marked completed: nedb changes a doc in memory
+        // before writing it, so when saving the completion (or updating the
+        // parent afterwards) throws, the task is completed with its results
+        // on disk; replacing and then deleting them left a completed task
+        // with no results.
+        if (status !== TaskStatus.IN_PROGRESS) {
             return
         }
         await TaskResults.saveTask(taskId, [exceptionLog])
@@ -797,8 +854,8 @@ class TaskExecutor {
     ): Promise<void> {
         const taskPath = await TaskResults.saveTask(taskId, result)
         const isLarge = isLargeFile(taskPath)
-        
-        if (cacheTask) {
+
+        if (cacheTask && await isStillRunning(taskId)) {
              await TaskResults.saveCachedTask(scraperName, data, result, isLarge)
         }
         await this.updateTaskAsCompleted(taskId, result.length, isLarge)
@@ -816,8 +873,8 @@ class TaskExecutor {
         data: any
     ): Promise<void> {
         const isLarge = isLargeFile(taskFilePath)
-        
-        if (cacheTask) {
+
+        if (cacheTask && await isStillRunning(taskId)) {
             await TaskResults.copyTaskToCachedTask(scraperName, data, itemCount, taskFilePath, isLarge)
         }
         await this.updateTaskAsCompleted(taskId, itemCount, isLarge)
@@ -855,7 +912,11 @@ class TaskExecutor {
      * Override in subclasses to customize or disable updates.
      */
     protected createResultCountUpdater(taskId: number): ((result_count: number) => Promise<any>) | undefined {
-        return (result_count: number) => TaskHelper.updateTask(taskId, { result_count })
+        // The count is only progress shown in the UI: a failed write of it
+        // must not reject pushData and fail the whole task
+        return (result_count: number) => TaskHelper.updateTask(taskId, { result_count }).catch((error) => {
+            console.error(`[task ${taskId}] Could not save the result count:`, error)
+        })
     }
 }
 
