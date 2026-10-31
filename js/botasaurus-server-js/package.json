@@ -1,6 +1,6 @@
 {
   "name": "botasaurus-server",
-  "version": "4.1.164",
+  "version": "4.1.165",
   "description": "controls adder for botasaurus.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,6 +16,7 @@
     "./server": "./dist/server.js",
     "./paths": "./dist/paths.js",
     "./run": "./dist/run.js",
+    "./retry-datafile-writes": "./dist/retry-datafile-writes.js",
     "./change-case": "./dist/change-case.js",
     "./convert-to-english": "./dist/convert-to-english.js",
     "./filters": "./dist/filters.js",
@@ -74,6 +75,9 @@
       ],
       "run": [
         "dist/run.d.ts"
+      ],
+      "retry-datafile-writes": [
+        "dist/retry-datafile-writes.d.ts"
       ],
       "change-case": [
         "dist/change-case.d.ts"
