@@ -7,6 +7,8 @@ import { stringify } from 'csv-stringify/sync'
 
 export class NDJSONWriteStream {
   private writeStream: fs.WriteStream;
+  private error: Error | null = null;
+  private rejectWaiting = new Set<(error: Error) => void>();
 
   constructor(filePath: string, append = false) {
       if (append) {
@@ -22,6 +24,17 @@ export class NDJSONWriteStream {
               highWaterMark: 64 * 1024 // 64 KB, you can adjust this value as needed
             });
       }
+      // A stream's failure (a file locked by Excel, a full disk) is an 'error'
+      // event. With no listener it was an uncaught exception, and the app shuts
+      // down on those: exporting over a CSV open in Excel closed the whole app,
+      // running tasks included (2026-10-31 test). It now rejects the writes.
+      this.writeStream.on('error', (error) => {
+        this.error = error;
+        for (const reject of this.rejectWaiting) {
+          reject(error);
+        }
+        this.rejectWaiting.clear();
+      });
   }
 
   async push(data: any): Promise<void> {
@@ -29,24 +42,54 @@ export class NDJSONWriteStream {
   }
 
    performWrite(content: any): void | PromiseLike<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      if (this.error) {
+        return reject(this.error);
+      }
       if (!this.writeStream.write(content)) {
-        this.writeStream.once('drain', () => {
+        const done = () => {
+          this.rejectWaiting.delete(rejectWrite);
           resolve() // Resolve the promise if write is successful
-        })
+        };
+        const rejectWrite = (error: Error) => {
+          this.writeStream.off('drain', done);
+          reject(error);
+        };
+        this.rejectWaiting.add(rejectWrite);
+        this.writeStream.once('drain', done)
       } else {
         resolve() // Resolve the promise if write is successful
       }
     })
   }
 
+  // After a failed export: closes the file without finishing it
+  destroy() {
+    this.writeStream?.destroy();
+  }
+
   end(): Promise<void> {
     if (!this.writeStream){
       return Promise.resolve()
     }
-    return new Promise(async (resolve) => {
-      await this.preEnd()
-      this.writeStream.end(() => {
+    return new Promise(async (resolve, reject) => {
+      if (this.error) {
+        return reject(this.error);
+      }
+      this.rejectWaiting.add(reject);
+      try {
+        await this.preEnd()
+      } catch (error) {
+        return reject(error);
+      }
+      if (this.error) {
+        return reject(this.error);
+      }
+      this.writeStream.end((error?: Error | null) => {
+        this.rejectWaiting.delete(reject);
+        if (error || this.error) {
+          return reject(this.error ?? error);
+        }
         resolve(); // Resolve when the stream is finished
         // @ts-ignore
         this.writeStream = null
@@ -116,6 +159,11 @@ export function readNdJson(taskPath: string, limit: number | null | undefined=nu
   
     rl.on('line', (line: string) => {
       lineNumber++
+      // rl.close() still delivers the rest of the chunk it has read
+      // @ts-ignore
+      if (isNotNullish(limit) && items.length >= limit) {
+        return
+      }
   
       line = line.trim()
       if (line !== '') {
@@ -151,8 +199,14 @@ export function readNdJson(taskPath: string, limit: number | null | undefined=nu
       }
     })
   
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      // Unlistened, a file that can't be read (held by security or backup software)
+      // was an uncaught exception, and the app shuts down on those
+      // (readline passes the stream's error on, and throws it with no listener too)
+      fileStream.on('error', reject)
+      rl.on('error', reject)
       rl.on('close', () => {
+        fileStream.destroy()
         // @ts-ignore
         if (isNotNullish(limit) && items.length > limit) {
           // @ts-ignore
@@ -199,6 +253,16 @@ export async function readNdJsonCallback(taskPath: string, onData: (item: any, i
     input: fileStream,
     crlfDelay: Infinity,
   });
+  // Unlistened, a file that can't be read (held by security or backup software)
+  // was an uncaught exception, and the app shuts down on those
+  let readError = null as Error | null;
+  const onReadError = (error: Error) => {
+    readError = error;
+    rl.close();
+  };
+  fileStream.on('error', onReadError);
+  // (readline passes the stream's error on, and throws it with no listener too)
+  rl.on('error', onReadError);
 
   try {
     for await (const line of rl) {
@@ -263,6 +327,13 @@ export async function readNdJsonCallback(taskPath: string, onData: (item: any, i
     }
   } finally {
     rl.close();
+    // rl.close() leaves the file open: every page of a file bigger than the read
+    // buffer kept a handle until the app closed
+    fileStream.destroy();
+  }
+
+  if (readError) {
+    throw readError;
   }
 
   if (isLimitReached) {

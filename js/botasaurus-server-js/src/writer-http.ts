@@ -6,14 +6,14 @@ import { convertNestedToJsonForExcelInPlace,} from 'botasaurus/output'
 import ExcelJS from 'exceljs'
 import { makeWorksheet, makeWorksheetStreamed } from './writer'
 import * as fs from 'fs'
-function applyFunctionToResultSync(result: any, fn: (item: any) => any) {
+async function applyFunctionToResult(result: any, fn: (item: any) => any) {
   if (Array.isArray(result)) {
     for (const item of result) {
-      fn(item);
+      await fn(item);
     }
   } else if (result != null && typeof result === 'object' && Symbol.iterator in result) {
     for (const item of result) {
-      fn(item);
+      await fn(item);
     }
   } else {
     return fn(result);
@@ -21,16 +21,18 @@ function applyFunctionToResultSync(result: any, fn: (item: any) => any) {
 }
 
 function createCsvItemWriterFn(streamFn: any, writer: any) {
-  let isPreStartCalled = false;
+  let headers: string[] | null = null;
 
   return (item: any) => {
     const result = streamFn(item);
-    return applyFunctionToResultSync(result, (x) => {
-      if (!isPreStartCalled) {
-        writer.preStart(Object.keys(x));
-        isPreStartCalled = true;
+    return applyFunctionToResult(result, async (x) => {
+      if (!headers) {
+        headers = Object.keys(x);
+        writer.preStart(headers);
       }
-      writer.push(convertNestedItemToJson(x));
+      // By key, so a row with other keys can't put its values under the wrong headers
+      const row = convertNestedItemToJson(x);
+      await writer.push(headers.map((key) => row[key]));
     });
   };
 }
@@ -38,8 +40,8 @@ function createCsvItemWriterFn(streamFn: any, writer: any) {
 function createJsonItemWriterFn(streamFn: any, writer: HTTPJSONWriteStream) {
   return (item: any) => {
     const result = streamFn(item);
-    return applyFunctionToResultSync(result, (x) => {
-      writer.push(x);
+    return applyFunctionToResult(result, async (x) => {
+      await writer.push(x);
     });
   };
 }
@@ -51,15 +53,16 @@ async function writeJsonStreamed(inputFilePath: any, raw: any, streamFn: any) {
   writer.end();
 }
 
-function writeJson(data: any, raw: any) {
+async function writeJson(data: any, raw: any) {
   const writer = new HTTPJSONWriteStream(raw);
   writer.preStart();
 
   for (let index = 0; index < data.length; index++) {
     const element = data[index];
-    applyFunctionToResultSync(element, (x) => {
+    await applyFunctionToResult(element, (x) => {
       return writer.push(x);
     });
+    data[index] = null; // free memory
   }
   writer.end();
 }
@@ -75,7 +78,7 @@ async function writeCsvStreamed(inputFilePath: any, raw: any, streamFn: any) {
   writer.end();
 }
 
-function writeCsv(data: any[], raw: any) {
+async function writeCsv(data: any[], raw: any) {
   data = convertNestedToJsonInPlace(data);
   const fieldnames = getFields(data);
   const writer = new HTTPCSVWriteStream(raw);
@@ -86,7 +89,8 @@ function writeCsv(data: any[], raw: any) {
 
   for (let index = 0; index < data.length; index++) {
     const element = data[index];
-    writer.push(element);
+    // By key, so a row with other keys can't put its values under the wrong headers
+    await writer.push(fieldnames.map((key) => element[key]));
     data[index] = null; // free memory
   }
 
@@ -108,9 +112,20 @@ async function writeWorkbookBase(rawStream: NodeJS.WritableStream, exec:any) {
   });
   const worksheet = workbook.addWorksheet('Sheet1');
 
-  await exec(worksheet);
+  // A workbook sent to a client that disconnected would never finish
+  let failure: Error | null = null;
+  const disconnected = new Promise<never>((_, reject) => rawStream.once('close', () => {
+    failure = new Error('The client disconnected');
+    reject(failure);
+  }));
 
-  await workbook.commit();
+  await Promise.race([
+    (async () => {
+      await exec(worksheet, () => failure);
+      await workbook.commit();
+    })(),
+    disconnected,
+  ]);
 }
 
 async function writeWorkbook(data: any[], rawStream: NodeJS.WritableStream) {
@@ -119,8 +134,8 @@ async function writeWorkbook(data: any[], rawStream: NodeJS.WritableStream) {
 
 async function writeWorkbookStreamed(inputFilePath: any, rawStream: NodeJS.WritableStream, streamFn: any) {
   
-  return writeWorkbookBase(rawStream,(worksheet:any) =>
-    makeWorksheetStreamed(worksheet, inputFilePath, streamFn)
+  return writeWorkbookBase(rawStream,(worksheet:any, getFailure:any) =>
+    makeWorksheetStreamed(worksheet, inputFilePath, streamFn, getFailure)
   );
 }
 
@@ -134,6 +149,12 @@ function writeNdjson(inputFilePath: string, rawStream: NodeJS.WritableStream): P
     
     readStream.on('end', () => {
       rawStream.end();
+      resolve();
+    });
+
+    // pipe stops when the client disconnects, and 'end' then never comes
+    rawStream.once('close', () => {
+      readStream.destroy();
       resolve();
     });
     

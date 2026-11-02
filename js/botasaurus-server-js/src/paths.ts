@@ -38,6 +38,23 @@ export function getPathToDownloadsDirectory(filename: string, downloadFolder?: s
     return filePath;
 }
 
+// A business type alone may be 255 characters, and on Windows the whole path must
+// fit in 260, so a task's name can be too long to be a filename: the export then
+// always failed. Bytes, because macOS and Linux limit names in bytes.
+const MAX_FILENAME_BYTES = 150;
+
+/** A name for a task's export: never empty, and short enough to be written. */
+export function taskFilename(kebabName: string, taskId: number) {
+    if (!kebabName) {
+        return `task-${taskId}`;
+    }
+    if (Buffer.byteLength(kebabName) <= MAX_FILENAME_BYTES) {
+        return kebabName;
+    }
+    // The id keeps two long names that start alike from overwriting each other
+    return `${Buffer.from(kebabName).subarray(0, MAX_FILENAME_BYTES).toString('utf-8').replace(/\uFFFD+$/, '')}-${taskId}`;
+}
+
 export function getTargetDirectoryPath() {
     if (isElectron) {
         if (isElectronAndDev) {

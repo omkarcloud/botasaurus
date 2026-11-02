@@ -2,7 +2,7 @@ import { isAffirmative } from 'botasaurus/cache'
 import fs from 'fs';
 import { createTask, createTaskName, db, getAutoincrementId, isFailedAndNonAllTask, isoformat, serializeTask, serializeUiDisplayTask, serializeUiOutputTask, sortDictByKeys, StatusKind, Task, TaskStatus } from './models';
 import { isNotNullish, isNullish } from './null-utils';
-import { isObject, isNotEmptyObject, wrapDbOperationInPromise, omitKeys } from './utils';
+import { isObject, isEmpty, isNotEmptyObject, wrapDbOperationInPromise, omitKeys } from './utils';
 import { kebabCase } from 'change-case';
 import { deepCloneDict, isStringOfMinLength, serialize, validateScraperName, validateTaskRequest, validateResultsRequest, validateDownloadParams, isValidPositiveInteger, isValidPositiveIntegerIncludingZero,isListOfValidIds,  isValidId, validateUiPatchTask, createTaskNotFoundError, tryIntConversion } from './validation';
 import { TaskHelper, createProjection } from './task-helper';
@@ -11,15 +11,17 @@ import { Server } from './server';
 import { applyPagination, calculatePageEnd, calculatePageStart } from './apply-pagination';
 import { applyFiltersInPlace } from './filters';
 import { applySorts } from './sorts';
-import { _applyViewForUi, _applyViewForUiLargeTask, findView, transformRecordStream, getFields } from './views';
+import { _applyViewForUi, _applyViewForUiLargeTask, findView, transformRecord, getFields } from './views';
 import { getExecutor } from './executor'
 import { TaskPriority } from './task-executor'
 import { sleep } from 'botasaurus/utils'
 import { JsonHTTPResponseWithMessage } from './errors'
 import { convertUnicodeDictToAsciiDict } from './convert-to-english'
 import { downloadResults, downloadResultsHttp } from './download'
+import { NDJSONWriteStream } from './ndjson'
+import { randomUUID } from 'crypto'
 import { writeNdjsonResults } from './writer'
-import { getPathToDownloadsDirectory } from './paths'
+import { getPathToDownloadsDirectory, taskFilename } from './paths'
 import { getBotasaurusStorage } from 'botasaurus/botasaurus-storage'
 import { Launcher } from 'chrome-launcher/dist/chrome-launcher';
 import { electronConfig } from './paths'
@@ -220,11 +222,8 @@ async function performDownloadTaskResults(taskId: number) {
     const task_name = task.task_name;
     const is_large = task.is_large;
     const status = task.status;
-    
 
-    const results = is_large ? null :await TaskResults.getTask(taskId);
-
-    return [scraper_name,status, results, task_data, is_all_task, is_large, task_name];
+    return [scraper_name, status, task_data, is_all_task, is_large, task_name];
   } else {
     throw createTaskNotFoundError(taskId);
   }
@@ -915,12 +914,12 @@ async function performGetTaskResults(taskId: number): Promise<[string, boolean, 
     if (is_all_task) {
       return view ? `all-task-${taskId}-${view}` : `all-task-${taskId}`;
     } else {
-      task_name = kebabCase(createTaskName(task_name, taskId));
+      task_name = taskFilename(kebabCase(createTaskName(task_name, taskId)), taskId);
       return view ? `${task_name}-${view}` : task_name;
     }
   }
   async function executeTaskResults(taskId: number, jsonData: any, reply=undefined): Promise<any> {
-    let [scraper_name, status,results, inputData, is_all_task, is_large, task_name] = await performDownloadTaskResults(taskId);
+    let [scraper_name, status, inputData, is_all_task, is_large, task_name] = await performDownloadTaskResults(taskId);
     validateScraperName(scraper_name);
   
   
@@ -946,73 +945,70 @@ async function performGetTaskResults(taskId: number): Promise<[string, boolean, 
     const filename = generateFilename(taskId, view as any, is_all_task, task_name);
 
 
-    if (is_large) {
-      if (!TaskResults.taskExists(taskId)) {
-        throw new JsonHTTPResponseWithMessage('No Results');
-      }      
-      const viewObj = view && views.find(v => v.id === view);
+    if (!TaskResults.taskExists(taskId)) {
+      throw new JsonHTTPResponseWithMessage('No Results');
+    }
+    if (!is_large && isFailedAndNonAllTask(status, is_all_task)) {
+      const error = (await TaskResults.getTask(taskId, 1))?.[0];
+      throw new JsonHTTPResponseWithMessage(`Task with ID ${taskId} failed due to the following error: \n${error?.message}\n. Please check the task details.`);
+    }
 
-      let streamFn;
-      if (viewObj) {
-        const targetFields: any[] = isNotNullish(inputData) ? getFields(viewObj.fields, inputData, []) : viewObj.fields;
-        if (convertToEnglish) {
-          streamFn = function*(item: any) {
-            for (const row of transformRecordStream(targetFields, item)) {
-              yield convertUnicodeDictToAsciiDict(row);
-            }
-          };
-        } else {
-          streamFn = (item: any) => {
-            return transformRecordStream(targetFields, item);
-          };
-        }
+    const viewObj = view && views.find(v => v.id === view);
+
+    let streamFn;
+    if (viewObj) {
+      const targetFields: any[] = isNotNullish(inputData) ? getFields(viewObj.fields, inputData, []) : viewObj.fields;
+      if (convertToEnglish) {
+        streamFn = (item: any) => transformRecord(targetFields, item).map((row: any) => convertUnicodeDictToAsciiDict(row));
       } else {
         streamFn = (item: any) => {
-          return convertToEnglish ? convertUnicodeDictToAsciiDict(item) : item;
+          return transformRecord(targetFields, item);
         };
       }
-      if (reply){
-        return downloadResultsHttp(reply,null as any, fmt, filename, taskId, is_large, streamFn);
-      }
-      return downloadResults(null as any, fmt, filename, taskId, is_large, streamFn, downloadFolder);
     } else {
-      if (!Array.isArray(results)) {
-        throw new JsonHTTPResponseWithMessage('No Results');
-      }      
-
-      if (isFailedAndNonAllTask(status, is_all_task)) {
-        const error = results[0]
-        throw new JsonHTTPResponseWithMessage(`Task with ID ${taskId} failed due to the following error: \n${error.message}\n. Please check the task details.`);
-      }
-      // filters than sort, efficent
-      let cleanedResults = applyFiltersInPlace(results, filters, Server.getFilters(scraper_name));
-
-      cleanedResults = applySorts(cleanedResults, sort, Server.getSorts(scraper_name));    
-      
-      [cleanedResults] = _applyViewForUi(
-        cleanedResults,
-        view as any,
-        views,
-        inputData,
-        undefined
-      );
-    
-      if (convertToEnglish) {
-        cleanedResults = convertUnicodeDictToAsciiDictInPlace(cleanedResults);
-      }
-      if (reply){
-        return downloadResultsHttp(reply,cleanedResults, fmt, filename, taskId, is_large, null);
-      }
-      return downloadResults(cleanedResults, fmt, filename, taskId, is_large, null, downloadFolder);
+      streamFn = (item: any) => {
+        return convertToEnglish ? convertUnicodeDictToAsciiDict(item) : item;
+      };
     }
-}
-  // Save MEMORY
-function convertUnicodeDictToAsciiDictInPlace(inputList: any[]): any[] {
-  for (let i = 0; i < inputList.length; i++) {
-    inputList[i] = convertUnicodeDictToAsciiDict(inputList[i]);
-  }
 
-  return inputList;
+    // Rows are written one at a time, from the results file. Holding them all, in
+    // their view's expanded form, used 3.4 GB for a 250 MB task, and a 490 MB task
+    // reached the 4 GB heap limit and crashed the app (2026-10-31 test). A filter
+    // or sort does need every row, but only until the outcome is in a temp file.
+    let inputPath = TaskResults.generateTaskFilePath(taskId);
+    let tempPath: string | null = null;
+    try {
+      if (!is_large && (!isEmpty(filters) || !isEmpty(sort))) {
+        let rows = (await TaskResults.getTask(taskId)) ?? [];
+        // filters than sort, efficent
+        rows = applyFiltersInPlace(rows, filters, Server.getFilters(scraper_name));
+        rows = applySorts(rows, sort, Server.getSorts(scraper_name));
+
+        tempPath = `${inputPath}.${randomUUID()}.temp`;
+        const writer = new NDJSONWriteStream(tempPath);
+        try {
+          for (let i = 0; i < rows.length; i++) {
+            await writer.push(rows[i]);
+            rows[i] = null; // free memory
+          }
+          await writer.end();
+        } catch (error) {
+          writer.destroy();
+          throw error;
+        }
+        inputPath = tempPath;
+      }
+
+      if (reply){
+        return await downloadResultsHttp(reply, null as any, fmt, filename, taskId, true, streamFn, inputPath);
+      }
+      return await downloadResults(null as any, fmt, filename, taskId, true, streamFn, downloadFolder, inputPath);
+    } finally {
+      if (tempPath) {
+        // A finished export must not fail because its temp file is briefly locked
+        await fs.promises.rm(tempPath, { force: true, maxRetries: 5 }).catch(() => {});
+      }
+    }
 }
   async function deleteTask(
     taskId: number,

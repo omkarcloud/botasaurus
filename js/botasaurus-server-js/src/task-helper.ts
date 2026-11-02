@@ -75,7 +75,6 @@ function renameTemporaryFile(tempFilePath: string, taskFilePathTemp: string) {
 
 export interface KeyCollectionResult {
     allKeysMapping: any
-    firstItemKeyCount: number
     didEarlyExit: boolean
 }
 
@@ -85,7 +84,6 @@ function isErrorItem(item: any) {
 
 export async function collectAllKeysFromIds(ids: number[], allowEarlyExit: boolean): Promise<KeyCollectionResult> {
     let allKeysMapping: any = null
-    let firstItemKeyCount = 0
     let lastKeysChangedIndex: null | number = null
     let didEarlyExit = false
     let timesNewKeysAdded = 0
@@ -107,7 +105,6 @@ export async function collectAllKeysFromIds(ids: number[], allowEarlyExit: boole
         if (allKeysMapping === null) {
             // First item: initialize with its keys
             allKeysMapping = createKeyToNullMapping(item)
-            firstItemKeyCount = itemKeys.length
         } else {
             const wasPopulated = populateMissingKeys(itemKeys, allKeysMapping)
             if (wasPopulated) {
@@ -130,12 +127,17 @@ export async function collectAllKeysFromIds(ids: number[], allowEarlyExit: boole
         }
     })
 
-    return { allKeysMapping, firstItemKeyCount, didEarlyExit }
+    return { allKeysMapping, didEarlyExit }
 }
 
 
-function shouldNormalize(allKeys: string[] | null, firstItemKeyCount: number) {
-    return allKeys && allKeys.length !== firstItemKeyCount
+// Items can differ in their keys: a parent's items come from several tasks, and
+// a task with an unusual item has more keys than one without. CSV and Excel write
+// values by position under the first item's keys, so an item with other keys, or
+// the same keys in another order, ended up under the wrong headers. Comparing key
+// counts missed this whenever the first item had every key.
+export function hasSameKeys(itemKeys: string[], keys: string[]) {
+    return itemKeys.length === keys.length && itemKeys.every((key, i) => key === keys[i])
 }
 
 /**
@@ -143,7 +145,6 @@ function shouldNormalize(allKeys: string[] | null, firstItemKeyCount: number) {
  * @param ids - The ids of the tasks to write.
  * @param taskFilePath - The path to the task file.
  * @param allKeysMapping - The mapping of all keys.
- * @param firstItemKeyCount - The count of the first item's keys.
  * @param didEarlyExit - Whether to exit early.
  * @param removeDuplicatesBy - The key to remove duplicates by.
  */
@@ -151,13 +152,11 @@ async function writeDeduplicatedTasks(
     ids: number[],
     taskFilePath: string,
     allKeysMapping: any,
-    firstItemKeyCount: number,
     didEarlyExit: boolean,
     removeDuplicatesBy: string | null
 ): Promise<number> {
     let itemsCount = 0
     const allKeys = allKeysMapping ? Object.keys(allKeysMapping) : null
-    const shouldNormalizeFlag = shouldNormalize(allKeys, firstItemKeyCount)
     let needsRerun = false
 
     const tempfile = taskFilePath + '.' + randomUUID() + '.temp' 
@@ -184,8 +183,8 @@ async function writeDeduplicatedTasks(
                 }
             }
 
-            if (shouldNormalizeFlag) {
-                item = normalizeItem(allKeys!, item)
+            if (allKeys && !hasSameKeys(Object.keys(item), allKeys)) {
+                item = normalizeItem(allKeys, item)
             }
 
             if (removeDuplicatesBy) {
@@ -215,7 +214,6 @@ async function writeDeduplicatedTasks(
                 ids,
                 taskFilePath,
                 fullResult.allKeysMapping,
-                fullResult.firstItemKeyCount,
                 false,
                 removeDuplicatesBy
             )
@@ -229,7 +227,6 @@ async function writeDeduplicatedTasks(
                 ids,
                 taskFilePath,
                 allKeysMapping,
-                firstItemKeyCount,
                 didEarlyExit,
                 removeDuplicatesBy
             )
@@ -254,7 +251,8 @@ export class PushDataWriter {
     
     // Key collection for normalization
     private allKeysMapping: Record<string, null> | null = null
-    private firstItemKeyCount = 0
+    private firstItemKeys: string[] = []
+    private itemKeysDiffer = false
 
     constructor(
         taskId: number,
@@ -288,10 +286,11 @@ export class PushDataWriter {
             if (this.allKeysMapping === null) {
                 // First item: initialize with its keys
                 this.allKeysMapping = createKeyToNullMapping(item)
-                this.firstItemKeyCount = itemKeys.length
+                this.firstItemKeys = itemKeys
             } else {
                 // Add any new keys
                 populateMissingKeys(itemKeys, this.allKeysMapping)
+                if (!hasSameKeys(itemKeys, this.firstItemKeys)) this.itemKeysDiffer = true
             }
             
             await this.stream.push(item)
@@ -319,17 +318,13 @@ export class PushDataWriter {
             await this.stream.end()
             this.stream = null
             
-            const allKeys = this.allKeysMapping ? Object.keys(this.allKeysMapping) : null
-            const shouldNormalizeFlag = shouldNormalize(allKeys, this.firstItemKeyCount)
-        
-            if (shouldNormalizeFlag) {
+            if (this.itemKeysDiffer) {
                 // Perform normalization pass with writeDeduplicatedTasks
                 // Pass removeDuplicatesBy as null since deduplication already happened during push
                 this.itemCount = await writeDeduplicatedTasks(
                     [this.taskId],
                     this.taskFilePath,
                     this.allKeysMapping,
-                    this.firstItemKeyCount,
                     false, // didEarlyExit - we collected all keys
                     null   // removeDuplicatesBy - already deduplicated during push
                 )
@@ -356,18 +351,17 @@ export class PushDataWriter {
     }
 }
 
-async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId: number, removeDuplicatesBy: string | null) {
+export async function normalizeAndDeduplicateChildrenTasks(ids: number[], parentId: number, removeDuplicatesBy: string | null) {
     const taskFilePath = TaskResults.generateTaskFilePath(parentId)
 
     // First pass: collect all unique keys from all objects (with early exit allowed)
-    const { allKeysMapping, firstItemKeyCount, didEarlyExit } = await collectAllKeysFromIds(ids, true)
+    const { allKeysMapping, didEarlyExit } = await collectAllKeysFromIds(ids, true)
 
     // Second pass: write deduplicated tasks (will rerun key collection if needed)
     const itemsCount = await writeDeduplicatedTasks(
         ids,
         taskFilePath,
         allKeysMapping,
-        firstItemKeyCount,
         didEarlyExit,
         removeDuplicatesBy
     )

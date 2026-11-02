@@ -18,8 +18,23 @@ export class HTTPNDJSONWriteStream {
         return this.performWrite(JSON.stringify(data) + "\n");
     }
 
-    performWrite(content: any) {
-        return this.raw.write(content);
+    // Waits for a slow reader: ignoring it kept the whole output in memory while
+    // the rows were read from disk faster than the socket took them
+    performWrite(content: any): Promise<void> | void {
+        // A closed response never drains: waiting for it hung the export forever
+        if (this.raw.destroyed) {
+            throw new Error("The client disconnected");
+        }
+        if (this.raw.write(content)) return;
+        return new Promise<void>((resolve) => {
+            const done = () => {
+                this.raw.off("drain", done);
+                this.raw.off("close", done);
+                resolve();
+            };
+            this.raw.on("drain", done);
+            this.raw.on("close", done);
+        });
     }
 
     end() {
@@ -66,7 +81,7 @@ export class HTTPCSVWriteStream extends HTTPNDJSONWriteStream {
         this.performWrite(headerLine);
     }
 
-    override push(data: string[]): Promise<void> {
+    override push(data: any[]) {
         const content = stringify([data]);
         return this.performWrite(content);
     }

@@ -4,7 +4,7 @@ import { CSVWriteStream, JSONWriteStream, readNdJsonCallback } from './ndjson'
 import { isNullish } from './null-utils'
 import ExcelJS, {Worksheet} from 'exceljs'
 import path from 'path'
-import { copyFile } from 'fs'
+import fs, { copyFile } from 'fs'
 
 function trimFilename(filename: string): string {
   filename = filename.trim()
@@ -39,17 +39,19 @@ async function applyFunctionToResult(result: any, fn: (item:any)=> any) {
   }
 }
 function createCsvItemWriterFn(streamFn: any, writer: any) {
-  let isPreStartCalled = false;
+  let headers: string[] | null = null;
 
   return async (item:any) => {
     const result = streamFn(item)
     return applyFunctionToResult(result, async (x)=>{
-      if (!isPreStartCalled) {
-        await writer.preStart(Object.keys(x)); // Call preStart before reading the file
-        isPreStartCalled = true;
+      if (!headers) {
+        headers = Object.keys(x);
+        await writer.preStart(headers); // Call preStart before reading the file
       }
     
-      await writer.push(convertNestedItemToJson(x))
+      // By key, so a row with other keys can't put its values under the wrong headers
+      const row = convertNestedItemToJson(x);
+      await writer.push(headers.map((key) => row[key]))
     })
   }
 }
@@ -64,6 +66,7 @@ function createJsonItemWriterFn(streamFn: any, writer: JSONWriteStream) {
 }
 
 async function writeJsonStreamed(inputFileNamePath: any, filename: string, streamFn:any): Promise<string> {
+  let writer: JSONWriteStream | undefined;
   try {
     filename = trimFilename(filename)
 
@@ -71,12 +74,13 @@ async function writeJsonStreamed(inputFileNamePath: any, filename: string, strea
       filename = filename + '.json'
     }
 
-    const writer = new JSONWriteStream(filename)
+    writer = new JSONWriteStream(filename)
     await writer.preStart()
     await readNdJsonCallback(inputFileNamePath, createJsonItemWriterFn(streamFn, writer))
     await writer.end()
 
   } catch (error: any) {
+    writer?.destroy()
     if (isFileOpenError(error)) {
       const baseFilename = path.basename(filename)
       throw new Error(`${baseFilename} is currently open in another application. Please close the application and try again.`)
@@ -100,10 +104,12 @@ async function writeJson(data: any, filename: string): Promise<string> {
     
     for (let index = 0; index < data.length; index++) {
       const element = data[index];
-      applyFunctionToResult(element, async (x)=>{
+      // Awaited: a push that fails rejects, and unawaited that was an unhandled
+      // rejection, which closes the app
+      await applyFunctionToResult(element, async (x)=>{
         await writer.push(x)
       })
-      
+      data[index] = null // free memory
     }
     await writer.end()
 
@@ -133,9 +139,10 @@ async function writeCsvStreamed(inputFileNamePath: any, filename: string, stream
     filenameNew = filenameNew + '.csv'
   }
 
+  let writer: CSVWriteStream | undefined;
   try {
 
-    const writer = new CSVWriteStream(filenameNew) // Use filenameNew here
+    writer = new CSVWriteStream(filenameNew) // Use filenameNew here
 
     const writefn = createCsvItemWriterFn(streamFn, writer)
 
@@ -144,6 +151,7 @@ async function writeCsvStreamed(inputFileNamePath: any, filename: string, stream
     })
     await writer.end()
   } catch (error) {
+    writer?.destroy()
     if (isFileOpenError(error)) {
       const baseFilename = path.basename(filenameNew)
       throw new Error(`${baseFilename} is currently open in another application (e.g., Excel). Please close the application and try again.`)
@@ -171,7 +179,8 @@ async function writeCsv(data: any[], filename: string): Promise<string> {
 
     for (let index = 0; index < data.length; index++) {
       const element = data[index];
-      await writer.push(element)
+      // By key, so a row with other keys can't put its values under the wrong headers
+      await writer.push(fieldnames.map((key) => element[key]))
       // release memory
       data[index] = null
     }
@@ -323,7 +332,9 @@ function isUrl(value:any) {
 }
 
 
-async function makeWorksheetStreamed(worksheet:Worksheet, inputFileNamePath: any, streamFn:any) {
+// getFailure: the output's failure, if any. Rows would otherwise go on being read
+// into a workbook that nothing is taking out of memory.
+async function makeWorksheetStreamed(worksheet:Worksheet, inputFileNamePath: any, streamFn:any, getFailure: () => Error | null = () => null) {
   const MAX_EXCEL_LIMIT = 65530
   let linkCount = 0;
   function createCell(value: unknown) {
@@ -343,33 +354,54 @@ async function makeWorksheetStreamed(worksheet:Worksheet, inputFileNamePath: any
     }
   }
 
-  let isPreStartCalled = false;
+  let headers: string[] | null = null;
 
   return await readNdJsonCallback(inputFileNamePath, (item) => {
+    const failure = getFailure();
+    if (failure) {
+      throw failure;
+    }
 
     return applyFunctionToResult(streamFn(item), (x)=> {
 
-      if (!isPreStartCalled) {
-        const headers = Object.keys(x)
+      if (!headers) {
+        headers = Object.keys(x)
         worksheet.addRow(headers).commit();
-        isPreStartCalled = true;
       }
 
-      const formattedRow = Object.values(convertNestedItemToJson(x)).map(createCell)
-      worksheet.addRow(formattedRow).commit() 
+      // Excel's cell limit applies here too: a longer cell makes it "repair" the file
+      const row = convertNestedToJsonForExcelInPlace([x])[0];
+      worksheet.addRow(headers.map((key) => createCell(row[key]))).commit()
     })
   })
 }
 
 async function writeWorkbookBase(filename:string, exec:any) {
-  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-    filename: filename,
-});
+  // Our own stream: with one ExcelJS opens itself, a failure to write it (the file
+  // open in Excel, a full disk) was an uncaught exception, which closes the app
+  const stream = fs.createWriteStream(filename);
+  let failure: Error | null = null;
+  const failed = new Promise<never>((_, reject) => stream.on('error', (error) => {
+    failure = error;
+    reject(error);
+  }));
+  await Promise.race([new Promise((resolve) => stream.once('open', resolve)), failed]);
+
+  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream });
   const worksheet = workbook.addWorksheet('Sheet1');
 
-  await exec(worksheet)
-  
-  await workbook.commit();
+  try {
+    await Promise.race([
+      (async () => {
+        await exec(worksheet, () => failure)
+        await workbook.commit();
+      })(),
+      failed,
+    ]);
+  } catch (error) {
+    stream.destroy();
+    throw error;
+  }
 
   return filename
   
@@ -382,8 +414,8 @@ async function writeWorkbook(data: any[], filename: string): Promise<string> {
 }
 
 async function writeWorkbookStreamed(inputFileNamePath: any, filename: string, streamFn:any): Promise<string> {
-  return writeWorkbookBase(filename, (worksheet:any) =>{
-    return makeWorksheetStreamed(worksheet, inputFileNamePath,streamFn )
+  return writeWorkbookBase(filename, (worksheet:any, getFailure:any) =>{
+    return makeWorksheetStreamed(worksheet, inputFileNamePath,streamFn, getFailure)
   })
 }
 

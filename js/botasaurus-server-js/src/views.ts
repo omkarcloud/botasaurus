@@ -62,11 +62,16 @@ class ExpandListField {
     key: string;
     fields: (Field | CustomField | ExpandDictField)[];
     showIf?: (data: any) => boolean;
+    // A record with an empty list keeps one row, with these columns empty. Otherwise
+    // it has no row at all, which suits a list of the record's reviews but not a view
+    // of the records themselves (a place with no leads vanished from the Overview).
+    keepWhenEmpty: boolean;
 
-    constructor(key: string, fields: (Field | CustomField | ExpandDictField)[], options?: { showIf?: (data: any) => boolean }) {
+    constructor(key: string, fields: (Field | CustomField | ExpandDictField)[], options?: { showIf?: (data: any) => boolean, keepWhenEmpty?: boolean }) {
         this.key = key;
         this.fields = fields;
         this.showIf = options?.showIf;
+        this.keepWhenEmpty = options?.keepWhenEmpty === true;
         for (const field of fields) {
             if (!(field instanceof Field) && !(field instanceof CustomField) && !(field instanceof ExpandDictField)) {
                 throw new Error(`ExpandListField '${this.key}' can only contain Field, CustomField and ExpandDictField`);
@@ -240,7 +245,7 @@ function getFields(fields: (Field | CustomField | ExpandDictField | ExpandListFi
         } else if (f instanceof ExpandListField) {
             if (f.showIf) {
                 if (f.showIf(inputData)) {
-                    result.push(new ExpandListField(f.key, getFields(f.fields, inputData, hidden_fields) as (Field | CustomField | ExpandDictField)[]));
+                    result.push(new ExpandListField(f.key, getFields(f.fields, inputData, hidden_fields) as (Field | CustomField | ExpandDictField)[], { keepWhenEmpty: f.keepWhenEmpty }));
                 } else {
                     for (const i of f.fields) {
                         if (i instanceof Field || i instanceof CustomField) {
@@ -253,7 +258,7 @@ function getFields(fields: (Field | CustomField | ExpandDictField | ExpandListFi
                     }
                 }
             } else {
-                result.push(new ExpandListField(f.key, getFields(f.fields, inputData, hidden_fields) as (Field | CustomField | ExpandDictField)[]));
+                result.push(new ExpandListField(f.key, getFields(f.fields, inputData, hidden_fields) as (Field | CustomField | ExpandDictField)[], { keepWhenEmpty: f.keepWhenEmpty }));
             }
         }
     }
@@ -284,6 +289,11 @@ function transformRecordsInPlace(results: any[], targetFields: (Field | CustomFi
     }
     return processedResults;
 }
+function listToExpand(field: ExpandListField, record: any): any[] {
+    const list = record[field.key] || [];
+    return field.keepWhenEmpty && list.length === 0 ? [{}] : list;
+}
+
 function transformRecord(targetFields: (Field | CustomField | ExpandDictField | ExpandListField)[], record: any) {
     let expandedRecords: any[] = [{}]
 
@@ -305,7 +315,7 @@ function transformRecord(targetFields: (Field | CustomField | ExpandDictField | 
                 Object.assign(expandedRecord, nestedFieldValues)
             }
         } else if (field instanceof ExpandListField) {
-            const nestedList = record[field.key] || []
+            const nestedList = listToExpand(field, record)
             const newExpandedRecords: any[] = []
 
             for (const item of nestedList) {
@@ -358,7 +368,7 @@ function* transformRecordStream(targetFields: (Field | CustomField | ExpandDictF
                 Object.assign(expandedRecord, nestedFieldValues)
             }
         } else if (field instanceof ExpandListField) {
-            const nestedList = record[field.key] || []
+            const nestedList = listToExpand(field, record)
             const remainingFields = targetFields.slice(i + 1)
 
             for (const item of nestedList) {
