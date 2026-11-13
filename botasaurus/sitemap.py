@@ -7,7 +7,7 @@ from .cache import DontCache
 from .list_utils import flatten
 from .request_decorator import request
 from .output import write_json
-from .sitemap_parser_utils import clean_robots_txt_url, fix_bad_sitemap_response, clean_sitemap_url, extract_sitemaps, split_into_links_and_sitemaps, fix_gzip_response, is_empty_path, parse_sitemaps_from_robots_txt, wrap_in_sitemap
+from .sitemap_parser_utils import clean_robots_txt_url, fix_bad_sitemap_response, get_default_sitemap_candidates, looks_like_sitemap, extract_sitemaps, split_into_links_and_sitemaps, fix_gzip_response, is_empty_path, parse_sitemaps_from_robots_txt, wrap_in_sitemap
 
 default_request_options = {
     # "use_stealth": True,
@@ -150,10 +150,15 @@ def get_sitemaps_from_robots(request_options, urls):
             extract_link_upto_nth_segment(0, url), content
         )
         if not result:
-            sm_url = clean_sitemap_url(url)
-            content = fetch_content(sm_url,proxy = request_options['proxy'])
-            if content:
-                return [sm_url]
+            for sm_url in get_default_sitemap_candidates(url):
+                content = fetch_content(sm_url, proxy=request_options['proxy'])
+                # Validate the response looks like a real sitemap (contains
+                # <urlset or <sitemapindex) before accepting it.  A bare
+                # truthiness check is not enough because some hosts return an
+                # HTML error page with HTTP 200, which would short-circuit the
+                # search before a real XML sitemap candidate is tried.
+                if looks_like_sitemap(content):
+                    return [sm_url]
             return []
 
         return result
