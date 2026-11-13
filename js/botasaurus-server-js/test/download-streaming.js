@@ -159,6 +159,27 @@ describe('exports written row by row', () => {
     await assert.rejects(writing, /disconnected/);
   });
 
+  it('a task streamed for GET /tasks/:id is the task it was in one piece', async () => {
+    const task = { id: 7, status: 'completed', task_name: 'Task 7', data: { query: 'q' }, metadata: {}, result_count: 3, created_at: 'c', updated_at: 'u' };
+    const { result_count, created_at, updated_at, ...head } = task;
+    for (const results of [rows, []]) {
+      const raw = new SlowResponse();
+      const drain = setInterval(() => raw.emit('drain'), 1);
+      await writerHttp.writeTaskJsonStreamed(task, inputFile(results), raw);
+      clearInterval(drain);
+      assert.strictEqual(raw.chunks.join(''), JSON.stringify({ ...head, result: results, result_count, created_at, updated_at }));
+      assert.ok(raw.ended);
+    }
+  });
+
+  it('a task streamed for GET /tasks/:id stops when the client disconnects', async () => {
+    const { PassThrough } = require('stream');
+    const raw = new PassThrough({ highWaterMark: 1 });
+    const writing = writerHttp.writeTaskJsonStreamed({ id: 1, result_count: 2000 }, bigFile(), raw);
+    setTimeout(() => raw.destroy(), 5);
+    await assert.rejects(writing, /disconnected/);
+  });
+
   it('an Excel file whose disk fills up stops reading rows', async () => {
     const { makeWorksheetStreamed } = require('../src/writer');
     let reads = 0;

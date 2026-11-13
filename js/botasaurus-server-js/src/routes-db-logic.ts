@@ -18,6 +18,7 @@ import { sleep } from 'botasaurus/utils'
 import { JsonHTTPResponseWithMessage } from './errors'
 import { convertUnicodeDictToAsciiDict } from './convert-to-english'
 import { downloadResults, downloadResultsHttp } from './download'
+import writterHttp from './writer-http'
 import { NDJSONWriteStream } from './ndjson'
 import { randomUUID } from 'crypto'
 import { writeNdjsonResults } from './writer'
@@ -147,13 +148,36 @@ async function queryTasks(
 
 
 
-async function getTaskFromDb(taskId: number): Promise<Task> {
+async function getTaskFromDb(taskId: number, reply?: any): Promise<Task | undefined> {
     const task = await TaskHelper.getTask(taskId);
-    if (task) { 
-        return serialize(task);
-    } else {
+    if (!task) {
         throw createTaskNotFoundError(taskId);
     }
+    // The tasks whose result serializeTask reads from the results file in full
+    // (a failed task's is its error, the first row)
+    const hasFullResult = task.status !== TaskStatus.PENDING
+        && (task.status !== TaskStatus.IN_PROGRESS || task.is_all_task)
+        && !isFailedAndNonAllTask(task.status, task.is_all_task)
+    if (reply && hasFullResult && TaskResults.taskExists(taskId)) {
+        const taskWithoutResult = await serialize(task, false);
+        // The response is written directly, so Fastify must not try to send one
+        // too: for a failure part way through (the client gone, a results file
+        // that can't be read) it did, which threw "headers already sent" as an
+        // unhandled rejection
+        reply.hijack();
+        try {
+            // Headers set on the reply (CORS) are only sent by Fastify's own send
+            reply.raw.writeHead(200, { ...reply.getHeaders(), 'content-type': 'application/json; charset=utf-8' });
+            await writterHttp.writeTaskJsonStreamed(taskWithoutResult, TaskResults.generateTaskFilePath(taskId), reply.raw);
+        } catch (error) {
+            // The status has already been sent, so all that can tell the client is
+            // closing the connection: left open, it waited for the rest forever
+            reply.raw.destroy();
+            throw error;
+        }
+        return;
+    }
+    return serialize(task);
 }
 
 
@@ -263,7 +287,7 @@ async function performPatchTask(action: string, taskId: number): Promise<void> {
       { 
         // id:1,
          is_all_task: 1, parent_task_id: 1, scraper_name: 1,
-        //  status: 1,
+         status: 1,
          },
       (err, task) => {
         if (err) {
@@ -279,12 +303,12 @@ async function performPatchTask(action: string, taskId: number): Promise<void> {
 
   if (task) {
     const removeDuplicatesBy = Server.getRemoveDuplicatesBy(task.scraper_name);
-    const { is_all_task, parent_task_id } = task;
+    const { is_all_task, parent_task_id, status } = task;
 
     if (action === 'delete') {
       await deleteTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy);
     } else if (action === 'abort') {
-      await abortTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy);
+      await abortTask(taskId, is_all_task, parent_task_id, removeDuplicatesBy, status);
     } else if (action === 'retry') {
       await retryTask(taskId, is_all_task, parent_task_id);
     }
@@ -1078,15 +1102,24 @@ async function performGetTaskResults(taskId: number): Promise<[string, boolean, 
     is_all_task: boolean,
     parentId: number | null,
     removeDuplicatesBy: any,
+    status: StatusKind,
   ) {
-    // Only abort tasks that are in PENDING or IN_PROGRESS status
-    // const abortableStatuses: string[] = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
-    // if (!abortableStatuses.includes(status)) {
-    //   return;
-    // }
+    // Only abort tasks that are in PENDING or IN_PROGRESS status. The UI offers
+    // Abort on every row: a finished parent was re-collected and saved as
+    // aborted (2026-11-03 soak: task 6879, 51 children done), and a finished
+    // child aborted while its parent was being finished left its results out.
+    const abortableStatuses: string[] = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS];
+    if (!abortableStatuses.includes(status)) {
+      // A finished parent can still have children running: retrying a child of
+      // a completed or aborted parent leaves the parent's status as it was.
+      // Those children must still stop when the parent is aborted.
+      if (!is_all_task || !(await TaskHelper.getPendingOrExecutingChildCount(taskId))) {
+        return;
+      }
+    }
 
     let fn: (() => Promise<void>) | null = null;
-  
+
     if (is_all_task) {
       await TaskHelper.abortChildTasks(taskId);
       await TaskHelper.collectAndSaveAllTask(taskId, null, removeDuplicatesBy, TaskStatus.ABORTED, false);

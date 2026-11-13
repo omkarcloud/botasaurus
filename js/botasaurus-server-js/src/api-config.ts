@@ -544,9 +544,12 @@ export function buildApp(
 
     app.get(
         `${apiBasePath}/tasks/:taskId`,
-        async (request: FastifyRequest<{ Params: { taskId: number } }>, _) => {
+        async (request: FastifyRequest<{ Params: { taskId: number } }>, reply) => {
             const taskId = request.params.taskId;
-            const result = await getTask(taskId);
+            // A task with results is written straight to the response, past the
+            // onSend hook that adds these
+            addCorsHeaders(reply);
+            const result = await getTask(taskId, reply as any);
             return result;
         }
     );

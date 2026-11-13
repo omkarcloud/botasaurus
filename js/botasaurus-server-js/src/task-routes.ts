@@ -52,8 +52,9 @@ async function getTasks(queryParams: any) {
   return await executeGetTasks(queryParams);
 }
 
-async function getTask(taskId: number) {
-  return await getTaskFromDb(validateAndGetTaskId(taskId));
+// With a reply, a task's results are streamed into it and nothing is returned
+async function getTask(taskId: number, reply?: any) {
+  return await getTaskFromDb(validateAndGetTaskId(taskId), reply);
 }
 
 async function getTaskResults(taskId: number, jsonData: any) {

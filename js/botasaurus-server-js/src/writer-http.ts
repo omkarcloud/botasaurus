@@ -53,6 +53,21 @@ async function writeJsonStreamed(inputFilePath: any, raw: any, streamFn: any) {
   writer.end();
 }
 
+// GET /tasks/:id with its results read row by row from the results file. Built
+// in one piece, a 19,909-place task (258 MB of JSON) took the app to 1.4 GB, and
+// one about twice as big is over the longest string V8 can hold (2026-11-03 test).
+// `task` is the task serialized without results; the keys keep their order.
+async function writeTaskJsonStreamed(task: Record<string, any>, inputFilePath: string, raw: any) {
+  const { result_count, created_at, updated_at, ...head } = task;
+  const writer = new HTTPJSONWriteStream(raw);
+  await writer.performWrite(JSON.stringify(head).slice(0, -1) + ',"result":');
+  writer.preStart();
+  await readNdJsonCallback(inputFilePath, (item) => writer.push(item));
+  writer.preEnd();
+  await writer.performWrite(',' + JSON.stringify({ result_count, created_at, updated_at }).slice(1));
+  raw.end();
+}
+
 async function writeJson(data: any, raw: any) {
   const writer = new HTTPJSONWriteStream(raw);
   writer.preStart();
@@ -164,6 +179,7 @@ function writeNdjson(inputFilePath: string, rawStream: NodeJS.WritableStream): P
 
 export default {
   writeJsonStreamed,writeCsvStreamed,
+  writeTaskJsonStreamed,
   writeCsv,
   writeExcelStreamed,writeExcel,
   writeJson,

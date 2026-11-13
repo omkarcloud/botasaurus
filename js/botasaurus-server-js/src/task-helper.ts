@@ -245,6 +245,7 @@ export class PushDataWriter {
     private seen: Set<any> = new Set()
     private itemCount = 0
     private lastReportedCount = 0
+    private countUpdateInFlight = false
     private taskId: number
     private isPushDataUsed = false
     private onResultCountUpdate?: ((count: number) => Promise<void>)
@@ -302,14 +303,24 @@ export class PushDataWriter {
     }
 
     private async reportCountUpdate(): Promise<void> {
-        if (!this.onResultCountUpdate) return
-        
+        // Scrapers push items concurrently (the maps scraper pushes each place
+        // on its own). A push made while a save waits behind other db.nedb
+        // writes skips it: before, each one saved again, and on a big search
+        // thousands of saves queued up, holding the task list for 100+ s.
+        // close() saves the final count.
+        if (!this.onResultCountUpdate || this.countUpdateInFlight) return
+
         const isFirstUpdate = this.lastReportedCount === 0
         const difference = this.itemCount - this.lastReportedCount
-        
+
         if (isFirstUpdate || difference >= 10) {
-            await this.onResultCountUpdate(this.itemCount)
             this.lastReportedCount = this.itemCount
+            this.countUpdateInFlight = true
+            try {
+                await this.onResultCountUpdate(this.itemCount)
+            } finally {
+                this.countUpdateInFlight = false
+            }
         }
     }
 
