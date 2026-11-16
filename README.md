@@ -856,7 +856,7 @@ def visit_whatsmyua(driver: Driver, data):
     
 visit_whatsmyua()
 
-# Everytime Same UserAgent and WindowSize
+# Every time Same UserAgent and WindowSize
 visit_whatsmyua()
 ```
 #### Passing Arguments to Chrome
